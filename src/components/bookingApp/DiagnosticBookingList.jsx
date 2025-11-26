@@ -11,16 +11,62 @@ const DiagnosticBookingList = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   const [formData, setFormData] = useState({
-    patient_id: "",
-    test_name: "",
-    test_date: "",
-    test_time: "",
+    name: "",
+    email: "",
+    phone: "",
+    testId: "",
+    patientId: "",
+    appointmentDate: "",
+    appointmentTime: "",
     status: "pending",
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [patients, setPatients] = useState([]);
+  const [patientPage, setPatientPage] = useState(1);
+  const [patientPagination, setPatientPagination] = useState(null);
+  const [tests, setTests] = useState([]);
+  const [testPage, setTestPage] = useState(1);
+  const [testPagination, setTestPagination] = useState(null);
 
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  useEffect(() => {
+    if (drawerOpen && mode === "add") {
+      fetchPatients(patientPage);
+    }
+  }, [drawerOpen, patientPage, mode]);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      fetchTests(testPage);
+    }
+  }, [drawerOpen, testPage]);
+
+  const fetchPatients = async (page = 1) => {
+    try {
+      const response = await axiosInstance.get(`/appointment-booking-app/patients?page=${page}&limit=10`);
+      if (response.data.success) {
+        setPatients(response.data.data || []);
+        setPatientPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+    }
+  };
+
+  const fetchTests = async (page = 1) => {
+    try {
+      const response = await axiosInstance.get(`/diagnostic/tests?page=${page}&limit=10`);
+      if (response.data.success) {
+        setTests(response.data.data || []);
+        setTestPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching tests:", error);
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -37,12 +83,16 @@ const DiagnosticBookingList = () => {
   const openAddDrawer = () => {
     setMode("add");
     setFormData({
-      patient_id: "",
-      test_name: "",
-      test_date: "",
-      test_time: "",
+      name: "",
+      email: "",
+      phone: "",
+      testId: "",
+      patientId: "",
+      appointmentDate: "",
+      appointmentTime: "",
       status: "pending",
     });
+    setSelectedFile(null);
     setDrawerOpen(true);
   };
 
@@ -50,27 +100,46 @@ const DiagnosticBookingList = () => {
     setMode("edit");
     setSelectedBooking(booking);
 
+    // Use formatted_time if available, otherwise extract from datetime
+    let timeValue = booking.formatted_time || "";
+    if (!timeValue && booking.appointment_time) {
+      const timeDate = new Date(booking.appointment_time);
+      const hours = timeDate.getUTCHours().toString().padStart(2, '0');
+      const minutes = timeDate.getUTCMinutes().toString().padStart(2, '0');
+      timeValue = `${hours}:${minutes}`;
+    }
+
     setFormData({
-      patient_id: booking.patient_id || "",
-      test_name: booking.test_name || "",
-      test_date: booking.appointment_date?.split("T")[0] || "",
-      test_time: booking.appointment_time || "",
+      name: booking.name || "",
+      email: booking.email || "",
+      phone: booking.phone || "",
+      testId: booking.test_id || "",
+      patientId: booking.patient_id || "",
+      appointmentDate: booking.appointment_date?.split("T")[0] || "",
+      appointmentTime: timeValue,
       status: booking.status || "pending",
     });
-
+    setSelectedFile(null);
     setDrawerOpen(true);
   };
 
   const handleSave = async () => {
     try {
       let response;
+      const fd = new FormData();
+      Object.keys(formData).forEach((key) => fd.append(key, formData[key]));
+      if (selectedFile) fd.append("diagnostic_prescription", selectedFile);
+
       if (mode === "edit") {
         response = await axiosInstance.put(
-          `/diagnostic/booking/${selectedBooking.id}/status`,
-          { status: formData.status }
+          `/diagnostic/booking/${selectedBooking.id}`,
+          fd,
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
       } else {
-        response = await axiosInstance.post("/diagnostic/booking", formData);
+        response = await axiosInstance.post("/diagnostic/booking", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
       }
 
       if (response.data.success) {
@@ -79,7 +148,33 @@ const DiagnosticBookingList = () => {
       }
     } catch (err) {
       console.log(err);
+      alert("Error saving booking");
     }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this booking?")) return;
+    try {
+      const response = await axiosInstance.delete(`/diagnostic/booking/${id}`);
+      if (response.data.success) {
+        fetchBookings();
+      }
+    } catch (error) {
+      console.error("Error deleting:", error);
+      alert("Error deleting booking");
+    }
+  };
+
+  const handlePatientSelect = (patientId) => {
+    const patient = patients.find((p) => p.id === parseInt(patientId));
+    if (!patient) return;
+    setFormData((prev) => ({
+      ...prev,
+      patientId: patientId,
+      name: patient.fullName,
+      email: patient.email || "",
+      phone: patient.mobileNo || "",
+    }));
   };
 
   const getStatusBadge = (status) => {
@@ -134,10 +229,16 @@ const DiagnosticBookingList = () => {
                         <tr key={row.id}>
                           <td className="text-start">
                             <button
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm btn-outline-primary me-1"
                               onClick={() => openEditDrawer(row)}
                             >
-                              Update Status
+                              Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDelete(row.id)}
+                            >
+                              Delete
                             </button>
                           </td>
 
@@ -148,7 +249,15 @@ const DiagnosticBookingList = () => {
                               ? new Date(row.appointment_date).toLocaleDateString()
                               : "N/A"}
                           </td>
-                          <td>{row.appointment_time || "N/A"}</td>
+                          <td>
+                            {row.formatted_time ? (() => {
+                              const [hours, minutes] = row.formatted_time.split(':');
+                              const hour = parseInt(hours);
+                              const ampm = hour >= 12 ? 'PM' : 'AM';
+                              const displayHour = hour % 12 || 12;
+                              return `${displayHour}:${minutes} ${ampm}`;
+                            })() : "N/A"}
+                          </td>
                           <td>{getStatusBadge(row.status)}</td>
                         </tr>
                       ))
@@ -191,61 +300,152 @@ const DiagnosticBookingList = () => {
                   className="dropdown-txt"
                   style={{ position: "sticky", top: 0, background: "#0a1735" }}
                 >
-                  {mode === "add" ? "➕ Add Booking" : "✏️ Update Status"}
+                  {mode === "add" ? "➕ Add Booking" : "✏️ Edit Booking"}
                 </div>
 
                 <OverlayScrollbarsComponent style={{ height: "calc(100% - 70px)" }}>
                   <div className="p-3">
                     <div className="row g-3">
                       {mode === "add" && (
-                        <>
+                        <div className="col-12">
+                          <label className="form-label">Select Patient</label>
+                          <select
+                            className="form-control"
+                            value={formData.patientId}
+                            onChange={(e) => handlePatientSelect(e.target.value)}
+                          >
+                            <option value="">Select Patient</option>
+                            {patients.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.fullName} - {p.mobileNo}
+                              </option>
+                            ))}
+                          </select>
                           
-
-                          <div className="col-md-12">
-                            <label>Test Name</label>
-                            <input
-                              className="form-control"
-                              value={formData.test_name}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  test_name: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-
-                          <div className="col-md-6">
-                            <label>Date</label>
-                            <input
-                              type="date"
-                              className="form-control"
-                              value={formData.test_date}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  test_date: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-
-                          <div className="col-md-6">
-                            <label>Time</label>
-                            <input
-                              type="time"
-                              className="form-control"
-                              value={formData.test_time}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  test_time: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-                        </>
+                          {patientPagination && (
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                              <small className="text-muted">
+                                Page {patientPagination.currentPage} of {patientPagination.totalPages}
+                              </small>
+                              <div className="btn-group btn-group-sm">
+                                <button
+                                  className="btn btn-outline-secondary"
+                                  disabled={!patientPagination.hasPrev}
+                                  onClick={() => setPatientPage(p => p - 1)}
+                                >
+                                  Prev
+                                </button>
+                                <button
+                                  className="btn btn-outline-secondary"
+                                  disabled={!patientPagination.hasNext}
+                                  onClick={() => setPatientPage(p => p + 1)}
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
+
+                      <div className="col-md-12">
+                        <label>Name</label>
+                        <input
+                          className="form-control"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <label>Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <label>Phone</label>
+                        <input
+                          className="form-control"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="col-md-12">
+                        <label>Select Test</label>
+                        <select
+                          className="form-control"
+                          value={formData.testId}
+                          onChange={(e) => setFormData({ ...formData, testId: e.target.value })}
+                        >
+                          <option value="">Select Test</option>
+                          {tests.map((t) => (
+                            <option key={t.TestId} value={t.TestId}>
+                              {t.Test} - ₹{t.Rate}
+                            </option>
+                          ))}
+                        </select>
+                        
+                        {testPagination && (
+                          <div className="d-flex justify-content-between align-items-center mt-2">
+                            <small className="text-muted">
+                              Page {testPagination.currentPage} of {testPagination.totalPages}
+                            </small>
+                            <div className="btn-group btn-group-sm">
+                              <button
+                                className="btn btn-outline-secondary"
+                                disabled={!testPagination.hasPrev}
+                                onClick={() => setTestPage(p => p - 1)}
+                              >
+                                Prev
+                              </button>
+                              <button
+                                className="btn btn-outline-secondary"
+                                disabled={!testPagination.hasNext}
+                                onClick={() => setTestPage(p => p + 1)}
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="col-md-6">
+                        <label>Appointment Date</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={formData.appointmentDate}
+                          onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <label>Appointment Time</label>
+                        <input
+                          type="time"
+                          className="form-control"
+                          value={formData.appointmentTime}
+                          onChange={(e) => setFormData({ ...formData, appointmentTime: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="col-md-12">
+                        <label>{mode === "edit" ? "Update Prescription (Optional)" : "Prescription File"}</label>
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="form-control"
+                          onChange={(e) => setSelectedFile(e.target.files[0])}
+                        />
+                        <small className="text-muted">{mode === "edit" ? "Leave empty to keep existing" : "Upload prescription"}</small>
+                      </div>
 
                       <div className="col-md-12">
                         <label>Status</label>
@@ -272,7 +472,7 @@ const DiagnosticBookingList = () => {
                         Cancel
                       </button>
                       <button className="btn btn-primary w-50" onClick={handleSave}>
-                        {mode === "add" ? "Create Booking" : "Update Status"}
+                        {mode === "add" ? "Create Booking" : "Update Booking"}
                       </button>
                     </div>
                   </div>
