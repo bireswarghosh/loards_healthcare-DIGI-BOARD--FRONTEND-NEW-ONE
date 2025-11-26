@@ -10,6 +10,8 @@ const PrescriptionDelivery = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [patientPage, setPatientPage] = useState(1);
+  const [patientPagination, setPatientPagination] = useState(null);
 
   const [formData, setFormData] = useState({
     patient_id: "",
@@ -23,8 +25,13 @@ const PrescriptionDelivery = () => {
 
   useEffect(() => {
     fetchDeliveries();
-    fetchPatients();
   }, []);
+
+  useEffect(() => {
+    if (drawerOpen && !isEditMode) {
+      fetchPatients(patientPage);
+    }
+  }, [drawerOpen, patientPage, isEditMode]);
 
   const fetchDeliveries = async () => {
     try {
@@ -40,11 +47,12 @@ const PrescriptionDelivery = () => {
     }
   };
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (page = 1) => {
     try {
-      const response = await axiosInstance.get("/prescription-delivery/patients");
+      const response = await axiosInstance.get(`/appointment-booking-app/patients?page=${page}&limit=10`);
       if (response.data.success) {
-        setPatients(response.data.patients || []);
+        setPatients(response.data.data || []);
+        setPatientPagination(response.data.pagination);
       }
     } catch (error) {
       console.error("Error fetching patients:", error);
@@ -91,7 +99,7 @@ const PrescriptionDelivery = () => {
       ...prev,
       patient_id: patientId,
       name: patient.fullName,
-      phone_number: patient.phoneNumber || "",
+      phone_number: patient.mobileNo || "",
     }));
   };
 
@@ -106,18 +114,17 @@ const PrescriptionDelivery = () => {
   const handleSave = async () => {
     try {
       let response;
+      const fd = new FormData();
+      Object.keys(formData).forEach((key) => fd.append(key, formData[key]));
+      if (selectedFile) fd.append("prescription_image", selectedFile);
 
       if (isEditMode) {
         response = await axiosInstance.put(
-          `/prescription-delivery/${selectedDelivery.id}/status`,
-          { status: formData.status }
+          `/prescription-delivery/${selectedDelivery.id}`,
+          fd,
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
       } else {
-        const fd = new FormData();
-        Object.keys(formData).forEach((key) => fd.append(key, formData[key]));
-
-        if (selectedFile) fd.append("prescription_image", selectedFile);
-
         response = await axiosInstance.post("/prescription-delivery", fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
@@ -130,6 +137,19 @@ const PrescriptionDelivery = () => {
     } catch (error) {
       console.error("Error saving:", error);
       alert("Error saving delivery");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this delivery?")) return;
+    try {
+      const response = await axiosInstance.delete(`/prescription-delivery/${id}`);
+      if (response.data.success) {
+        fetchDeliveries();
+      }
+    } catch (error) {
+      console.error("Error deleting:", error);
+      alert("Error deleting delivery");
     }
   };
 
@@ -193,10 +213,16 @@ const PrescriptionDelivery = () => {
                         <tr key={delivery.id}>
                           <td className="text-start">
                             <button
-                              className="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm btn-outline-primary me-1"
                               onClick={() => openEditDrawer(delivery)}
                             >
                               Edit
+                            </button>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDelete(delivery.id)}
+                            >
+                              Delete
                             </button>
                           </td>
 
@@ -273,99 +299,110 @@ const PrescriptionDelivery = () => {
                   <div className="p-3">
                     <div className="row g-3">
                       {!isEditMode && (
-                        <>
-                          {/* Patient Select */}
-                          <div className="col-12">
-                            <label className="form-label">Select Patient</label>
-                            <select
-                              className="form-control"
-                              value={formData.patient_id}
-                              onChange={(e) => handlePatientSelect(e.target.value)}
-                            >
-                              <option value="">Select Patient</option>
-                              {patients.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                  {p.fullName} - {p.phoneNumber}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="col-md-3">
-                            <label className="form-label">Patient Name</label>
-                            <input
-                              className="form-control"
-                              value={formData.name}
-                              onChange={(e) => handleInputChange("name", e.target.value)}
-                            />
-                          </div>
-
-                          <div className="col-md-3">
-                            <label className="form-label">Phone Number</label>
-                            <input
-                              className="form-control"
-                              value={formData.phone_number}
-                              onChange={(e) =>
-                                handleInputChange("phone_number", e.target.value)
-                              }
-                            />
-                          </div>
-
-                          <div className="col-md-3">
-                            <label className="form-label">Delivery Type</label>
-                            <select
-                              className="form-control"
-                              value={formData.delivery_type}
-                              onChange={(e) =>
-                                handleInputChange("delivery_type", e.target.value)
-                              }
-                            >
-                              <option value="home_delivery">Home Delivery</option>
-                              <option value="hospital_pickup">Hospital Pickup</option>
-                            </select>
-                          </div>
-
-                          {formData.delivery_type === "home_delivery" && (
-                            <>
-                              <div className="col-md-3">
-                                <label className="form-label">Location</label>
-                                <input
-                                  className="form-control"
-                                  value={formData.home_delivery_location}
-                                  onChange={(e) =>
-                                    handleInputChange("home_delivery_location", e.target.value)
-                                  }
-                                />
+                        <div className="col-12">
+                          <label className="form-label">Select Patient</label>
+                          <select
+                            className="form-control"
+                            value={formData.patient_id}
+                            onChange={(e) => handlePatientSelect(e.target.value)}
+                          >
+                            <option value="">Select Patient</option>
+                            {patients.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.fullName} - {p.mobileNo}
+                              </option>
+                            ))}
+                          </select>
+                          
+                          {patientPagination && (
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                              <small className="text-muted">
+                                Page {patientPagination.currentPage} of {patientPagination.totalPages}
+                              </small>
+                              <div className="btn-group btn-group-sm">
+                                <button
+                                  className="btn btn-outline-secondary"
+                                  disabled={!patientPagination.hasPrev}
+                                  onClick={() => setPatientPage(p => p - 1)}
+                                >
+                                  Prev
+                                </button>
+                                <button
+                                  className="btn btn-outline-secondary"
+                                  disabled={!patientPagination.hasNext}
+                                  onClick={() => setPatientPage(p => p + 1)}
+                                >
+                                  Next
+                                </button>
                               </div>
-
-                              <div className="col-12">
-                                <label className="form-label">Full Address</label>
-                                <input
-                                  className="form-control"
-                                  rows="3"
-                                  value={formData.home_delivery_address}
-                                  onChange={(e) =>
-                                    handleInputChange("home_delivery_address", e.target.value)
-                                  }
-                                ></input>
-                              </div>
-                            </>
+                            </div>
                           )}
+                        </div>
+                      )}
+
+                      <div className="col-md-6">
+                        <label className="form-label">Patient Name</label>
+                        <input
+                          className="form-control"
+                          value={formData.name}
+                          onChange={(e) => handleInputChange("name", e.target.value)}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <label className="form-label">Phone Number</label>
+                        <input
+                          className="form-control"
+                          value={formData.phone_number}
+                          onChange={(e) => handleInputChange("phone_number", e.target.value)}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <label className="form-label">Delivery Type</label>
+                        <select
+                          className="form-control"
+                          value={formData.delivery_type}
+                          onChange={(e) => handleInputChange("delivery_type", e.target.value)}
+                        >
+                          <option value="home_delivery">Home Delivery</option>
+                          <option value="hospital_pickup">Hospital Pickup</option>
+                        </select>
+                      </div>
+
+                      {formData.delivery_type === "home_delivery" && (
+                        <>
+                          <div className="col-md-6">
+                            <label className="form-label">Location</label>
+                            <input
+                              className="form-control"
+                              value={formData.home_delivery_location}
+                              onChange={(e) => handleInputChange("home_delivery_location", e.target.value)}
+                            />
+                          </div>
 
                           <div className="col-12">
-                            <label className="form-label">Prescription File</label>
-                            <input
-                              type="file"
-                              accept="image/*,application/pdf"
+                            <label className="form-label">Full Address</label>
+                            <textarea
                               className="form-control"
-                              onChange={handleFileChange}
-                            />
-                            <small className="text-muted">
-                              Upload image or PDF (Max 5MB)
-                            </small>
+                              rows="3"
+                              value={formData.home_delivery_address}
+                              onChange={(e) => handleInputChange("home_delivery_address", e.target.value)}
+                            ></textarea>
                           </div>
                         </>
                       )}
+
+                      <div className="col-12">
+                        <label className="form-label">{isEditMode ? "Update Prescription File (Optional)" : "Prescription File"}</label>
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="form-control"
+                          onChange={handleFileChange}
+                        />
+                        <small className="text-muted">{isEditMode ? "Leave empty to keep existing file" : "Upload image or PDF (Max 5MB)"}</small>
+                      </div>
 
                       {/* Status */}
                       <div className="col-12">
@@ -391,7 +428,7 @@ const PrescriptionDelivery = () => {
                         Cancel
                       </button>
                       <button className="btn btn-primary w-50" onClick={handleSave}>
-                        {isEditMode ? "Update Status" : "Save Delivery"}
+                        {isEditMode ? "Update Delivery" : "Save Delivery"}
                       </button>
                     </div>
                   </div>
