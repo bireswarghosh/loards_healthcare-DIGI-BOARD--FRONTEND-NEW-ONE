@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../axiosInstance";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import { toast } from "react-toastify";
 
 const GenericMedicineManagement = () => {
   const [medicines, setMedicines] = useState([]);
@@ -57,7 +58,7 @@ const GenericMedicineManagement = () => {
       }
     } catch (err) {
       console.error("Error fetching medicines:", err);
-      alert("Failed to fetch medicines");
+      toast.error(err.response?.data?.message || "Failed to fetch medicines", { position: "top-right", autoClose: 2000 });
     } finally {
       setLoading(false);
     }
@@ -90,11 +91,11 @@ const GenericMedicineManagement = () => {
       if (res.data && res.data.success) {
         await fetchMedicines();
       } else {
-        alert(res.data?.message || "Failed to delete medicine");
+        toast.error(res.data?.message || "Failed to delete medicine", { position: "top-right", autoClose: 2000 });
       }
     } catch (err) {
       console.error("Error deleting medicine:", err);
-      alert("Failed to delete medicine");
+      toast.error(err.response?.data?.message || "Failed to delete medicine", { position: "top-right", autoClose: 2000 });
     }
   };
 
@@ -119,10 +120,10 @@ const GenericMedicineManagement = () => {
 
       const payload = {
         name: formData.name,
-        generic_name: formData.genericName,
+        genericName: formData.genericName,
         manufacturer: formData.manufacturer,
         strength: formData.strength,
-        dosage_form: formData.dosageForm,
+        dosageForm: formData.dosageForm,
         price: formData.price,
         description: formData.description,
       };
@@ -130,15 +131,16 @@ const GenericMedicineManagement = () => {
       const response = await axiosInstance[method](url, payload);
 
       if (response.data && response.data.success) {
+        toast.success(editingMedicine ? "Medicine updated successfully" : "Medicine created successfully", { position: "top-right", autoClose: 2000 });
         await fetchMedicines();
         setDrawerOpen(false);
         resetForm();
       } else {
-        alert(response.data?.message || "Failed to save medicine");
+        toast.error(response.data?.message || "Failed to save medicine", { position: "top-right", autoClose: 2000 });
       }
     } catch (err) {
       console.error("Error saving medicine:", err);
-      alert("Failed to save medicine");
+      toast.error(err.response?.data?.message || "Failed to save medicine", { position: "top-right", autoClose: 2000 });
     }
   };
 
