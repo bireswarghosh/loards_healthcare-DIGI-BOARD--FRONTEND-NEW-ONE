@@ -169,8 +169,8 @@ import AppBannerSettings from "./components/bookingApp/AppBannerSettings.jsx";
 
 
 
-import NurshingBookingList from "./components/bookingApp/NurshingBooking/NurshingBookingList.jsx";
-import AppSocialMediaSettings from "./components/bookingApp/AppSocialMediaSettings/AppSocialMediaSettings.jsx";
+import NurshingCare from "./components/bookingApp/NurshingCare/NurshingCare.jsx";
+import NurshingBookingList from "./components/bookingApp/NurshingBooking/NurshingBookingList.jsx";import AppSocialMediaSettings from "./components/bookingApp/AppSocialMediaSettings/AppSocialMediaSettings.jsx";
 
 
 
@@ -365,7 +365,8 @@ function App() {
           {/* -----------------------------------------------------  */}
 
 
-<Route path="/nursing-bookings" element={<NurshingBookingList />} />
+ <Route path="/nurshing_care" element={<NurshingCare />} />
+          <Route path="/nursing-bookings" element={<NurshingBookingList />} />
           <Route path="/app-social-media-settings" element={<AppSocialMediaSettings/>} />
 
 
