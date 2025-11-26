@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"; // Assuming this is available and needed for scrollbars like in Emr1.jsx
 import axiosInstance from "../../../axiosInstance";
+import { toast } from 'react-toastify';
 
 // Note: MasterLayout and Breadcrumb imports are removed to match the Emr1 structure
 
@@ -30,6 +31,8 @@ const NursingList = () => {
     service_type: [],
     overview_points: [],
   });
+  const [selectedPackage, setSelectedPackage] = useState(null);
+  const [isPackageEditMode, setIsPackageEditMode] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -136,29 +139,30 @@ const NursingList = () => {
         fetchCategories();
         setShowModal(false);
       } else {
-        alert("Error saving category: " + response.data.message);
+        toast.error("Error saving category: " + response.data.message);
       }
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("Error saving category");
+      toast.error("Error saving category");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteCategory = async (category) => {
-    if (window.confirm(`Are you sure you want to delete ${category.name}?`)) {
+    if (confirm(`Are you sure you want to delete ${category.name}?`)) {
       try {
         setLoading(true);
         const response = await axiosInstance.delete(`/nursing/${category.id}`);
         if (response.data.success) {
           fetchCategories();
+          toast.success("Category deleted successfully!");
         } else {
-          alert("Error deleting category: " + response.data.message);
+          toast.error("Error deleting category: " + response.data.message);
         }
       } catch (error) {
         console.error("Error deleting category:", error);
-        alert("Error deleting category");
+        toast.error("Error deleting category");
       } finally {
         setLoading(false);
       }
@@ -180,22 +184,24 @@ const NursingList = () => {
 
   const handleAddNewPackage = () => {
     resetPackageForm();
+    setSelectedPackage(null);
+    setIsPackageEditMode(false);
     if (selectedCategory) {
       setPackageFormData((prev) => ({
         ...prev,
         nursing_category_id: selectedCategory.id,
+        service_type: [""],
+        overview_points: [""],
       }));
     }
     setModalType("add");
     setShowPackageModal(true);
   };
 
-  // NOTE: Original code only had Add/Save for packages. Adding simple Edit/View for theme consistency.
   const handleEditPackage = (pkg) => {
     let serviceTypes = [];
     let overviewPoints = [];
 
-    // Safely parse JSON fields
     try {
       serviceTypes = pkg.service_type ? JSON.parse(pkg.service_type) : [];
     } catch (e) {
@@ -207,6 +213,8 @@ const NursingList = () => {
       console.error("Error parsing overview_points for edit:", e);
     }
 
+    setSelectedPackage(pkg);
+    setIsPackageEditMode(true);
     setPackageFormData({
       nursing_category_id: pkg.nursing_category_id,
       package_name: pkg.package_name,
@@ -216,12 +224,30 @@ const NursingList = () => {
       service_type: Array.isArray(serviceTypes) ? serviceTypes : [],
       overview_points: Array.isArray(overviewPoints) ? overviewPoints : [],
     });
-    // For editing/viewing, we need to track the package ID, but packageFormData doesn't have it.
-    // In a real app, we'd need a separate state for selectedPackage or extend formData.
-    // For now, only supporting 'add' for SavePackage logic consistency with original implementation,
-    // but setting modalType for the *visual* look.
     setModalType("edit");
     setShowPackageModal(true);
+  };
+
+  const handleDeletePackage = async (pkg) => {
+    if (confirm(`Are you sure you want to delete ${pkg.package_name}?`)) {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.delete(`/nursing/packages/${pkg.id}`);
+        if (response.data.success) {
+          if (selectedCategory) {
+            fetchPackages(selectedCategory.id);
+          }
+          toast.success("Package deleted successfully!");
+        } else {
+          toast.error("Error deleting package: " + response.data.message);
+        }
+      } catch (error) {
+        console.error("Error deleting package:", error);
+        toast.error("Error deleting package");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handlePackageInputChange = (field, value) => {
@@ -231,60 +257,77 @@ const NursingList = () => {
     }));
   };
 
-  const handleServiceTypeChange = (value) => {
-    const serviceTypes = value
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item);
+  const addServiceType = () => {
     setPackageFormData((prev) => ({
       ...prev,
-      service_type: serviceTypes,
+      service_type: [...prev.service_type, ""],
     }));
   };
 
-  const handleOverviewPointsChange = (value) => {
-    const points = value
-      .split("\n")
-      .map((item) => item.trim())
-      .filter((item) => item);
+  const removeServiceType = (index) => {
     setPackageFormData((prev) => ({
       ...prev,
-      overview_points: points,
+      service_type: prev.service_type.filter((_, i) => i !== index),
     }));
+  };
+
+  const updateServiceType = (index, value) => {
+    setPackageFormData((prev) => {
+      const updated = [...prev.service_type];
+      updated[index] = value;
+      return { ...prev, service_type: updated };
+    });
+  };
+
+  const addOverviewPoint = () => {
+    setPackageFormData((prev) => ({
+      ...prev,
+      overview_points: [...prev.overview_points, ""],
+    }));
+  };
+
+  const removeOverviewPoint = (index) => {
+    setPackageFormData((prev) => ({
+      ...prev,
+      overview_points: prev.overview_points.filter((_, i) => i !== index),
+    }));
+  };
+
+  const updateOverviewPoint = (index, value) => {
+    setPackageFormData((prev) => {
+      const updated = [...prev.overview_points];
+      updated[index] = value;
+      return { ...prev, overview_points: updated };
+    });
   };
 
   const handleSavePackage = async () => {
     try {
       setLoading(true);
 
-      // Need to adjust packageFormData for API - service_type and overview_points must be strings
       const packageDataToSend = {
         ...packageFormData,
-        service_type: JSON.stringify(packageFormData.service_type),
-        overview_points: JSON.stringify(packageFormData.overview_points),
+        service_type: packageFormData.service_type,
+        overview_points: packageFormData.overview_points,
       };
 
-      // NOTE: Original code only handled POST (Add). For full functionality,
-      // you would need logic here to switch between POST (add) and PUT/PATCH (edit).
-      // Since the original was POST only, we stick to POST.
-      const response = await axiosInstance.post(
-        "/nursing/packages",
-        packageDataToSend
-      );
+      const response = isPackageEditMode
+        ? await axiosInstance.put(`/nursing/packages/${selectedPackage.id}`, packageDataToSend)
+        : await axiosInstance.post("/nursing/packages", packageDataToSend);
 
       if (response.data.success) {
-        alert("Package added successfully!");
+        toast.success(isPackageEditMode ? "Package updated successfully!" : "Package added successfully!");
         setShowPackageModal(false);
         if (packageFormData.nursing_category_id) {
           fetchPackages(packageFormData.nursing_category_id);
         }
         resetPackageForm();
       } else {
-        alert("Error saving package: " + response.data.message);
+        toast.error("Error saving package: " + response.data.message);
       }
     } catch (error) {
       console.error("Error saving package:", error);
-      alert("Error saving package");
+      toast.error("Error saving package");
     } finally {
       setLoading(false);
     }
@@ -404,30 +447,70 @@ const NursingList = () => {
         />
       </div>
       <div className="col-12 mb-3">
-        <label className="form-label fw-bold">
-          🏥 Service Types (comma separated)
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          value={packageFormData.service_type.join(", ")}
-          onChange={(e) => handleServiceTypeChange(e.target.value)}
-          placeholder="e.g., Home Care, ICU Care, Post Surgery Care"
-          disabled={modalType === "view"}
-        />
+        <label className="form-label fw-bold">🏥 Service Types</label>
+        {packageFormData.service_type.map((service, index) => (
+          <div key={index} className="input-group mb-2">
+            <input
+              type="text"
+              className="form-control"
+              value={service}
+              onChange={(e) => updateServiceType(index, e.target.value)}
+              placeholder="e.g., Home Care"
+              disabled={modalType === "view"}
+            />
+            {modalType !== "view" && (
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={() => removeServiceType(index)}
+              >
+                <i className="fa-light fa-trash"></i>
+              </button>
+            )}
+          </div>
+        ))}
+        {modalType !== "view" && (
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={addServiceType}
+          >
+            <i className="fa-light fa-plus"></i> Add Service Type
+          </button>
+        )}
       </div>
       <div className="col-12 mb-3">
-        <label className="form-label fw-bold">
-          📋 Overview Points (one per line)
-        </label>
-        <textarea
-          className="form-control"
-          rows="5"
-          value={packageFormData.overview_points.join("\n")}
-          onChange={(e) => handleOverviewPointsChange(e.target.value)}
-          placeholder="Nurse will be present in the workplace&#10;24/7 monitoring and care&#10;Medication administration"
-          disabled={modalType === "view"}
-        />
+        <label className="form-label fw-bold">📋 Overview Points</label>
+        {packageFormData.overview_points.map((point, index) => (
+          <div key={index} className="input-group mb-2">
+            <input
+              type="text"
+              className="form-control"
+              value={point}
+              onChange={(e) => updateOverviewPoint(index, e.target.value)}
+              placeholder="e.g., 24/7 monitoring and care"
+              disabled={modalType === "view"}
+            />
+            {modalType !== "view" && (
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={() => removeOverviewPoint(index)}
+              >
+                <i className="fa-light fa-trash"></i>
+              </button>
+            )}
+          </div>
+        ))}
+        {modalType !== "view" && (
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={addOverviewPoint}
+          >
+            <i className="fa-light fa-plus"></i> Add Overview Point
+          </button>
+        )}
       </div>
     </div>
   );
@@ -633,11 +716,16 @@ const NursingList = () => {
                   <div className="d-flex justify-content-center gap-2">
                     <button
                       className="btn btn-sm btn-outline-primary"
-                      onClick={() => handleEditPackage(pkg)} // Using Edit for consistency, but logic is not implemented
+                      onClick={() => handleEditPackage(pkg)}
                     >
                       ✏️ Edit
                     </button>
-                    {/* Delete package logic is not in original but would be here */}
+                    <button
+                      className="btn btn-sm btn-outline-danger"
+                      onClick={() => handleDeletePackage(pkg)}
+                    >
+                      🗑️ Delete
+                    </button>
                   </div>
                 </td>
               </tr>

@@ -189,6 +189,12 @@ import NurshingCare from "./components/bookingApp/NurshingCare/NurshingCare.jsx"
 import NurshingBookingList from "./components/bookingApp/NurshingBooking/NurshingBookingList.jsx";import AppSocialMediaSettings from "./components/bookingApp/AppSocialMediaSettings/AppSocialMediaSettings.jsx";
 
 
+// import AddAmbulance from "./components/Ambulance";
+import AddAmbulance from "./components/Ambulance/AddAmbulance.jsx";
+import AmbulanceList from "./components/Ambulance/AmbulanceList.jsx";
+import PickupRequestList from "./components/Ambulance/PickupRequestList.jsx";
+
+
 
 function App() {
   return (
@@ -376,9 +382,16 @@ function App() {
 <Route path="/pickup-requests" element={<PickupRequestList />} /> */}
 
 
-
+{/* ambulance------------------------  */}
+<Route path="/AddAmbulance" element={<AddAmbulance/>}/>
+<Route path="/ambulance-list" element={<AmbulanceList/>}/>
+<Route path="/pickup-requests" element={<PickupRequestList/>}/>
+          {/* newly added routes end here */}
 
 {/* bookingapp----------------------------  */}
+
+
+
 
           <Route path="/DiagnosticBookingList" element={<DiagnosticBookingList/>}/>
           <Route path="/PackageManagement" element={<PackageManagement/>}/>

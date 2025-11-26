@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../../../../axiosInstance';
 import Footer from '../../../../components/footer/Footer';
 
+
 const Emr = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -268,11 +269,11 @@ const Emr = () => {
 
   if (showDetail) {
     return (
-      <div className="container-fluid py-4" style={{ background: '#f8f9fa', minHeight: '100vh' }}>
+      <div className="container-fluid py-4" >
         <div className="card shadow-lg border-0 rounded-4">
-          <div className="card-header border-0 text-white rounded-top-4 d-flex justify-content-between align-items-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <div className="card-header border-0  rounded-top-4 d-flex justify-content-between align-items-center" >
             <div className="d-flex align-items-center">
-              <div className="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '50px', height: '50px' }}>
+              <div className=" rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '50px', height: '50px' }}>
                 <span className="fw-bold" style={{ fontSize: '24px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{selectedPatient?.PatientName?.charAt(0).toUpperCase()}</span>
               </div>
               <div>
@@ -286,7 +287,7 @@ const Emr = () => {
           </div>
           <div className="card-body">
             <div className="card mb-3 border">
-              <div className="card-header bg-light">
+              <div className="card-header ">
                 <h6 className="mb-0"><i className="fa-solid fa-user-injured me-2"></i>Patient Visit Information</h6>
               </div>
               <div className="card-body">
@@ -339,14 +340,11 @@ const Emr = () => {
                         className={`nav-link rounded-pill ${activeTab === tab.key ? 'active' : ''}`}
                         onClick={() => setActiveTab(tab.key)}
                         style={{
-                          background: activeTab === tab.key ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f8f9fa',
                           border: 'none',
-                          color: activeTab === tab.key ? 'white' : '#6c757d',
                           fontWeight: '600',
                           fontSize: '13px',
-                          padding: '8px 16px',
-                          transition: 'all 0.3s ease',
-                          boxShadow: activeTab === tab.key ? '0 4px 12px rgba(102, 126, 234, 0.4)' : 'none'
+                          padding: '8px 16px'
+                
                         }}
                       >
                         <i className={`fa-solid fa-${tab.icon} me-1`}></i> {tab.label}
@@ -354,11 +352,11 @@ const Emr = () => {
                     </li>
                   ))}
                 </ul>
-                <div className="p-3 bg-light rounded-3">
+                <div className="p-3 rounded-3">
                   {renderTabContent()}
                 </div>
                 <div className="d-flex justify-content-end mt-3">
-                  <button className="btn btn-primary rounded-pill px-4" onClick={handleSaveEmr} disabled={loading} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
+                  <button className="btn btn-primary rounded-pill px-4" onClick={handleSaveEmr} disabled={loading} >
                     <i className="fa-solid fa-save me-2"></i>{loading ? 'Saving...' : 'Save EMR'}
                   </button>
                 </div>
@@ -372,9 +370,9 @@ const Emr = () => {
   }
 
   return (
-    <div className="container-fluid py-4" style={{ background: '#f8f9fa', minHeight: '100vh' }}>
+    <div className="container-fluid py-4">
       <div className="card shadow-lg border-0 rounded-4">
-        <div className="card-header border-0 text-white rounded-top-4" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+        <div className="card-header border-0  rounded-top-4">
           <h5 className="mb-0"><i className="fa-solid fa-file-medical me-2"></i>EMR Patient Visit List</h5>
         </div>
         <div className="card-body">
@@ -395,7 +393,7 @@ const Emr = () => {
               <input type="date" className="form-control form-control-sm" value={searchFilters.toDate} onChange={(e) => handleFilterChange('toDate', e.target.value)} />
             </div>
             <div className="col-md-2">
-              <button className="btn btn-sm btn-primary w-100 rounded-pill" onClick={handleSearch} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
+              <button className="btn btn-sm btn-primary w-100 rounded-pill" onClick={handleSearch} >
                 <i className="fa-solid fa-search me-1"></i> Search
               </button>
             </div>
@@ -408,7 +406,7 @@ const Emr = () => {
             <>
               <div className="table-responsive">
                 <table className="table table-hover">
-                  <thead className="table-light">
+                  <thead >
                     <tr>
                       <th>Reg ID</th>
                       <th>Visit ID</th>
