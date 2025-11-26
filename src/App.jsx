@@ -109,6 +109,8 @@ import ServiceMaster from "./templates/OUTDOOR MASTER/ServiceMaster.jsx"
 import OutdoorOtherChargeMaster from "./templates/OUTDOOR MASTER/OutdoorOtherChargeMaster.jsx"
 import OutdoorParameterSetup from "./templates/OUTDOOR MASTER/OutdoorParameterSetup.jsx"
 import CategoryMaster from "./templates/DiagnosisMaster/CategoryMaster.jsx"
+
+
 import CulMedHdMaster from "./templates/DiagnosisMaster/CulMedHd.jsx"
 import GodownMaster from "./templates/DiagnosisMaster/GodownMaster.jsx"
 import ItemGroupMaster from "./templates/DiagnosisMaster/ItemGroupMaster.jsx"
@@ -156,6 +158,20 @@ import OtherChargesMaster from "./components/indoor-master/OtherChargesMaster/Ot
 
 
 // !   booking   app  deb
+
+
+
+// import AmbulanceList from "./templates/Booking App/ambulance";
+
+
+
+// import AmbulanceList from "./templates/Booking App/ambulance/AmbulanceList";
+// import AddAmbulance from "./templates/Booking App/ambulance/AddAmbulance";
+// import EditAmbulance from "./templates/Booking App/ambulance/EditAmbulance";
+// import PickupRequestList from "./templates/Booking App/ambulance/PickupRequestList";
+
+
+
 
 import DiagnosticBookingList from "./components/bookingApp/DiagnosticBookingList.jsx";
 import PackageManagement from "./components/bookingApp/PackageManagement.jsx";
@@ -352,6 +368,15 @@ function App() {
 
 
 {/* BOOKING  APP -- DEB */}
+
+{/* 
+<Route path="/ambulance-list" element={<AmbulanceList />} />
+<Route path="/add-ambulance" element={<AddAmbulance />} />
+<Route path="/edit-ambulance/:id" element={<EditAmbulance />} />
+<Route path="/pickup-requests" element={<PickupRequestList />} /> */}
+
+
+
 
 {/* bookingapp----------------------------  */}
 

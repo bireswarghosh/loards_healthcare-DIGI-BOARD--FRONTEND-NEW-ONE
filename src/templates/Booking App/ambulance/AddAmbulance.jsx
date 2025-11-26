@@ -1,7 +1,7 @@
 import { useState } from "react";
-import MasterLayout from "../../masterLayout/MasterLayout";
-import Breadcrumb from "../../masterLayout/Breadcrumb";
-import axiosInstance from "../../axiosInstance";
+// import MasterLayout from "../../masterLayout/MasterLayout";
+// import Breadcrumb from "../../masterLayout/Breadcrumb";
+import axiosInstance from "../../../axiosInstance";
 import { useNavigate } from 'react-router-dom';
 
 const AddAmbulance = () => {
