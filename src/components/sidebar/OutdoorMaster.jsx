@@ -4,112 +4,92 @@ import { DigiContext } from '../../context/DigiContext';
 
 const OutdoorMaster = () => {
   const { 
-    state, 
-    toggleCrmDropdown, 
-    toggleHrmDropdown, 
-    toggleEcommerceDropdown, 
-    toggleMainDropdown, 
-    toggleSubDropdown,
+    outdoorMasterState,
+    toggleMainOutdoorMasterDropdown,
     layoutPosition, 
     dropdownOpen,
-    mainAppsDropdownRef,
-    isExpanded,
-    isNavExpanded,
-    isSmallScreen
+    mainOutdoorMasterRef
   } = useContext(DigiContext);
-  const { 
-    isMainDropdownOpen, 
-    isCrmDropdownOpen, 
-    isHrmDropdownOpen, 
-    isEcommerceDropdownOpen, 
-    isSubDropdownOpen 
-  } = state;
-  
-  const handleSubNavLinkClick = () => {
-    if (!isSubDropdownOpen) {
-      toggleSubDropdown(); // Open the sub-dropdown
-    }
-  };
+  const { isMainDropdownOpen } = outdoorMasterState;
+
   return (
-    <li className="sidebar-item" ref={isExpanded || isNavExpanded.isSmall || layoutPosition.horizontal || (layoutPosition.twoColumn && isExpanded) || (layoutPosition.twoColumn && isSmallScreen) ? mainAppsDropdownRef : null}>
+    <li className="sidebar-item" ref={layoutPosition.horizontal ? mainOutdoorMasterRef : null}>
       <Link
         role="button"
         className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`}
-        onClick={toggleMainDropdown}
+        onClick={toggleMainOutdoorMasterDropdown}
       >
         Outdoor Master
       </Link>
-      <ul className={`sidebar-link-group 
-      ${layoutPosition.horizontal ? (dropdownOpen.apps ? 'd-block' : 'd-none') : (isMainDropdownOpen ? 'd-none' : '')}
-      `}>       
+      <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.outdoorMaster ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>       
 
         <li className="sidebar-dropdown-item">
-          <NavLink to="/OutdoorParameterSetup" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/OutdoorParameterSetup" className="sidebar-link">
             Outdoor Parameter Setup
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/ServiceMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/ServiceMaster" className="sidebar-link">
             Service Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/OutdoorOtherChargeMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/OutdoorOtherChargeMaster" className="sidebar-link">
             Outdoor Other Charge Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/RoomNoMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/RoomNoMaster" className="sidebar-link">
             Room No Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/VisitTypeGrpMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/VisitTypeGrpMaster" className="sidebar-link">
             Visit Type Group Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/ChiefMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/ChiefMaster" className="sidebar-link">
             Chief Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/DiagoMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/DiagoMaster" className="sidebar-link">
             Diagnosis Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/PastHistoryMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/PastHistoryMaster" className="sidebar-link">
             Past History Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/DoseMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/DoseMaster" className="sidebar-link">
             Dose Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/AdviceMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/AdviceMaster" className="sidebar-link">
             Advice Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/VisitourMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/VisitourMaster" className="sidebar-link">
             Visitor Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/VisittypegrpMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/VisittypegrpMaster" className="sidebar-link">
             Visit Type Group Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/VisittypeMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/VisittypeMaster" className="sidebar-link">
             Visit Type Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/CompanymstMaster" className="sidebar-link" onClick={handleSubNavLinkClick}>
+          <NavLink to="/CompanymstMaster" className="sidebar-link">
             Company Master
           </NavLink>
         </li>

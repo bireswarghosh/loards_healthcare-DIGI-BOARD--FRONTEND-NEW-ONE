@@ -4,26 +4,26 @@ import { DigiContext } from "../../context/DigiContext";
 
 const BookingApp = () => {
   const {
-    dashState,
-    toggleMainDashDropdown,
+    bookingAppState,
+    toggleMainBookingAppDropdown,
     dropdownOpen,
     layoutPosition,
-    mainDashboardRef,
+    mainBookingAppRef
   } = useContext(DigiContext);
 
-  const { isMainDropdownOpen } = dashState;
+  const { isMainDropdownOpen } = bookingAppState;
 
   return (
     <li
-      className="sidebar-item open"
-      ref={layoutPosition.horizontal ? mainDashboardRef : null}
+      className="sidebar-item"
+      ref={layoutPosition.horizontal ? mainBookingAppRef : null}
     >
       <Link
         role="button"
         className={`sidebar-link-group-title has-sub ${
           isMainDropdownOpen ? "show" : ""
         }`}
-        onClick={toggleMainDashDropdown}
+        onClick={toggleMainBookingAppDropdown}
       >
         Booking App
       </Link>
@@ -31,7 +31,7 @@ const BookingApp = () => {
       <ul
         className={`sidebar-link-group ${
           layoutPosition.horizontal
-            ? dropdownOpen.dashboard
+            ? dropdownOpen.bookingApp
               ? "d-block"
               : ""
             : isMainDropdownOpen

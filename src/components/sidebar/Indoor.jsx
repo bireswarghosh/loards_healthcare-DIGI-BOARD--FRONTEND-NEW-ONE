@@ -4,43 +4,24 @@ import { DigiContext } from '../../context/DigiContext';
 
 const Indoor = () => {
   const {
-    pagesState,
-    toggleMainPagesDropdown,
-    toggleSubPagesDropdown,
-    toggleAuthentication,
-    toggleError,
-    toggleUser,
+    indoorState,
+    toggleMainIndoorDropdown,
     layoutPosition,
     dropdownOpen,
-    mainPagesRef,
-    isExpanded,
-    isNavExpanded,
-    isSmallScreen,
-    toggleAdditional
+    mainIndoorRef
   } = useContext(DigiContext);
-  const { 
-    isMainDropdownOpen, 
-    isSubDropdownOpen, 
-    authentication, 
-    user, 
-    error,
-    additional 
-  } = pagesState;
-  const handleSubNavLinkClick = () => {
-    if (!isSubDropdownOpen) {
-      toggleSubPagesDropdown(); // Open the sub-dropdown
-    }
-  };
+  const { isMainDropdownOpen } = indoorState;
+
   return (
-    <li className="sidebar-item" ref={isExpanded || isNavExpanded.isSmall || layoutPosition.horizontal || (layoutPosition.twoColumn && isExpanded) || (layoutPosition.twoColumn && isSmallScreen) ? mainPagesRef : null}>
+    <li className="sidebar-item" ref={layoutPosition.horizontal ? mainIndoorRef : null}>
       <Link
         role="button"
         className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`}
-        onClick={toggleMainPagesDropdown}
+        onClick={toggleMainIndoorDropdown}
       >
         Indoor(IPD)
       </Link>
-      <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.pages ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>       
+      <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.indoor ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>       
         
      
      

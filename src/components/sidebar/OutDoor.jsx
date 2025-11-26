@@ -8,44 +8,24 @@ import { DigiContext } from '../../context/DigiContext';
 
 const OutDoor = () => {
   const {
-    state,
-    toggleCrmDropdown,
-    toggleHrmDropdown,
-    toggleEcommerceDropdown,
-    toggleMainDropdown,
-    toggleSubDropdown,
+    outdoorState,
+    toggleMainOutdoorDropdown,
     layoutPosition,
     dropdownOpen,
-    mainAppsDropdownRef,
-    isExpanded,
-    isNavExpanded,
-    isSmallScreen
+    mainOutdoorRef
   } = useContext(DigiContext);
-  const {
-    isMainDropdownOpen,
-    isCrmDropdownOpen,
-    isHrmDropdownOpen,
-    isEcommerceDropdownOpen,
-    isSubDropdownOpen
-  } = state;
- 
-  const handleSubNavLinkClick = () => {
-    if (!isSubDropdownOpen) {
-      toggleSubDropdown(); // Open the sub-dropdown
-    }
-  };
+  const { isMainDropdownOpen } = outdoorState;
+
   return (
-    <li className="sidebar-item" ref={isExpanded || isNavExpanded.isSmall || layoutPosition.horizontal || (layoutPosition.twoColumn && isExpanded) || (layoutPosition.twoColumn && isSmallScreen) ? mainAppsDropdownRef : null}>
+    <li className="sidebar-item" ref={layoutPosition.horizontal ? mainOutdoorRef : null}>
       <Link
         role="button"
         className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`}
-        onClick={toggleMainDropdown}
+        onClick={toggleMainOutdoorDropdown}
       >
        Outdoor(OPD)
       </Link>
-      <ul className={`sidebar-link-group
-      ${layoutPosition.horizontal ? (dropdownOpen.apps ? 'd-block' : 'd-none') : (isMainDropdownOpen ? 'd-none' : '')}
-      `}>      
+      <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.outdoor ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
 
         {/* visit entry */}
         <li className="sidebar-dropdown-item">

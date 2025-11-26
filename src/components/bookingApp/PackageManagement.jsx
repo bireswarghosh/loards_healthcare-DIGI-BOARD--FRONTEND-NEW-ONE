@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../axiosInstance";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import { toast } from 'react-toastify';
 
 const PackageManagement = () => {
   const [packages, setPackages] = useState([]);
@@ -113,11 +114,11 @@ const PackageManagement = () => {
       const response = await axiosInstance.delete(`/admin/packages/${id}`);
       if (response.data.success) {
         await fetchPackages();
-        alert("Package deleted successfully!");
+        toast.success("Package deleted successfully!", { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
       }
     } catch (err) {
       console.error("Error deleting package:", err);
-      alert("Failed to delete package");
+      toast.error("Failed to delete package", { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
     }
   };
 
@@ -182,13 +183,13 @@ const PackageManagement = () => {
         await fetchPackages();
         setDrawerOpen(false);
         resetForm();
-        alert(editingPackage ? "Package updated successfully!" : "Package created successfully!");
+        toast.success(editingPackage ? "Package updated successfully!" : "Package created successfully!", { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
       } else {
-        alert("Failed to save package");
+        toast.error("Failed to save package", { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
       }
     } catch (err) {
       console.error("Error saving package:", err);
-      alert("Failed to save package");
+      toast.error("Failed to save package", { position: toast.POSITION.TOP_RIGHT, autoClose: 2000 });
     }
   };
 

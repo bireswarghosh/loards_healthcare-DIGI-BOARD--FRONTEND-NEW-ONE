@@ -201,6 +201,12 @@ const DigiContextProvider = ({ children }) => {
     apps: false,
     pages: false,
     component: false,
+    outdoor: false,
+    outdoorMaster: false,
+    indoor: false,
+    indoorMaster: false,
+    diagnosisMaster: false,
+    bookingApp: false,
   });
 
   const handleDropdownClick = (dropdown) => {
@@ -209,7 +215,7 @@ const DigiContextProvider = ({ children }) => {
         (acc, key) => ({ ...acc, [key]: false }),
         {}
       ),
-      [dropdown]: !prevState[dropdown], // Toggle the value of the targeted dropdown
+      [dropdown]: !prevState[dropdown],
     }));
   };
 
@@ -971,6 +977,270 @@ const DigiContextProvider = ({ children }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [pagesState.authentication, pagesState.user, dropdownOpen.pages]);
+
+  // OutDoor Part
+  const initialOutdoorState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [outdoorState, setOutdoorState] = useState(
+    localStorage.getItem("outdoorState")
+      ? JSON.parse(localStorage.getItem("outdoorState"))
+      : initialOutdoorState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("outdoorState", JSON.stringify(outdoorState));
+  }, [outdoorState]);
+
+  const toggleMainOutdoorDropdown = () => {
+    setOutdoorState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("outdoor");
+  };
+
+  const mainOutdoorRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainOutdoorRef.current &&
+        !mainOutdoorRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, outdoor: false }));
+      }
+    };
+
+    if (dropdownOpen.outdoor) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.outdoor]);
+
+  // OutdoorMaster Part
+  const initialOutdoorMasterState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [outdoorMasterState, setOutdoorMasterState] = useState(
+    localStorage.getItem("outdoorMasterState")
+      ? JSON.parse(localStorage.getItem("outdoorMasterState"))
+      : initialOutdoorMasterState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("outdoorMasterState", JSON.stringify(outdoorMasterState));
+  }, [outdoorMasterState]);
+
+  const toggleMainOutdoorMasterDropdown = () => {
+    setOutdoorMasterState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("outdoorMaster");
+  };
+
+  const mainOutdoorMasterRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainOutdoorMasterRef.current &&
+        !mainOutdoorMasterRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, outdoorMaster: false }));
+      }
+    };
+
+    if (dropdownOpen.outdoorMaster) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.outdoorMaster]);
+
+  // Indoor Part
+  const initialIndoorState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [indoorState, setIndoorState] = useState(
+    localStorage.getItem("indoorState")
+      ? JSON.parse(localStorage.getItem("indoorState"))
+      : initialIndoorState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("indoorState", JSON.stringify(indoorState));
+  }, [indoorState]);
+
+  const toggleMainIndoorDropdown = () => {
+    setIndoorState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("indoor");
+  };
+
+  const mainIndoorRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainIndoorRef.current &&
+        !mainIndoorRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, indoor: false }));
+      }
+    };
+
+    if (dropdownOpen.indoor) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.indoor]);
+
+  // IndoorMaster Part
+  const initialIndoorMasterState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [indoorMasterState, setIndoorMasterState] = useState(
+    localStorage.getItem("indoorMasterState")
+      ? JSON.parse(localStorage.getItem("indoorMasterState"))
+      : initialIndoorMasterState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("indoorMasterState", JSON.stringify(indoorMasterState));
+  }, [indoorMasterState]);
+
+  const toggleMainIndoorMasterDropdown = () => {
+    setIndoorMasterState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("indoorMaster");
+  };
+
+  const mainIndoorMasterRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainIndoorMasterRef.current &&
+        !mainIndoorMasterRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, indoorMaster: false }));
+      }
+    };
+
+    if (dropdownOpen.indoorMaster) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.indoorMaster]);
+
+  // DiagnosisMaster Part
+  const initialDiagnosisMasterState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [diagnosisMasterState, setDiagnosisMasterState] = useState(
+    localStorage.getItem("diagnosisMasterState")
+      ? JSON.parse(localStorage.getItem("diagnosisMasterState"))
+      : initialDiagnosisMasterState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("diagnosisMasterState", JSON.stringify(diagnosisMasterState));
+  }, [diagnosisMasterState]);
+
+  const toggleMainDiagnosisMasterDropdown = () => {
+    setDiagnosisMasterState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("diagnosisMaster");
+  };
+
+  const mainDiagnosisMasterRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainDiagnosisMasterRef.current &&
+        !mainDiagnosisMasterRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, diagnosisMaster: false }));
+      }
+    };
+
+    if (dropdownOpen.diagnosisMaster) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.diagnosisMaster]);
+
+  // BookingApp Part
+  const initialBookingAppState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [bookingAppState, setBookingAppState] = useState(
+    localStorage.getItem("bookingAppState")
+      ? JSON.parse(localStorage.getItem("bookingAppState"))
+      : initialBookingAppState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("bookingAppState", JSON.stringify(bookingAppState));
+  }, [bookingAppState]);
+
+  const toggleMainBookingAppDropdown = () => {
+    setBookingAppState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("bookingApp");
+  };
+
+  const mainBookingAppRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainBookingAppRef.current &&
+        !mainBookingAppRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, bookingApp: false }));
+      }
+    };
+
+    if (dropdownOpen.bookingApp) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.bookingApp]);
 
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
@@ -2069,6 +2339,24 @@ const DigiContextProvider = ({ children }) => {
         toggleError,
         toggleAdditional,
         isTimerState,
+        outdoorState,
+        toggleMainOutdoorDropdown,
+        mainOutdoorRef,
+        outdoorMasterState,
+        toggleMainOutdoorMasterDropdown,
+        mainOutdoorMasterRef,
+        indoorState,
+        toggleMainIndoorDropdown,
+        mainIndoorRef,
+        indoorMasterState,
+        toggleMainIndoorMasterDropdown,
+        mainIndoorMasterRef,
+        diagnosisMasterState,
+        toggleMainDiagnosisMasterDropdown,
+        mainDiagnosisMasterRef,
+        bookingAppState,
+        toggleMainBookingAppDropdown,
+        mainBookingAppRef,
       }}
     >
       {children}

@@ -4,26 +4,26 @@ import { DigiContext } from "../../context/DigiContext";
 
 const IndoorMaster = () => {
   const {
-    dashState,
-    toggleMainDashDropdown,
+    indoorMasterState,
+    toggleMainIndoorMasterDropdown,
     dropdownOpen,
     layoutPosition,
-    mainDashboardRef,
+    mainIndoorMasterRef
   } = useContext(DigiContext);
 
-  const { isMainDropdownOpen } = dashState;
+  const { isMainDropdownOpen } = indoorMasterState;
 
   return (
     <li
-      className="sidebar-item open"
-      ref={layoutPosition.horizontal ? mainDashboardRef : null}
+      className="sidebar-item"
+      ref={layoutPosition.horizontal ? mainIndoorMasterRef : null}
     >
       <Link
         role="button"
         className={`sidebar-link-group-title has-sub ${
           isMainDropdownOpen ? "show" : ""
         }`}
-        onClick={toggleMainDashDropdown}
+        onClick={toggleMainIndoorMasterDropdown}
       >
         Indoor Master (IPD)
       </Link>
@@ -31,7 +31,7 @@ const IndoorMaster = () => {
       <ul
         className={`sidebar-link-group ${
           layoutPosition.horizontal
-            ? dropdownOpen.dashboard
+            ? dropdownOpen.indoorMaster
               ? "d-block"
               : ""
             : isMainDropdownOpen
