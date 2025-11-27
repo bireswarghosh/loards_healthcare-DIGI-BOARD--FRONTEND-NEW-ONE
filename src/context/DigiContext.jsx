@@ -207,6 +207,7 @@ const DigiContextProvider = ({ children }) => {
     indoorMaster: false,
     diagnosisMaster: false,
     bookingApp: false,
+    marketing: false,
   });
 
   const handleDropdownClick = (dropdown) => {
@@ -1241,6 +1242,50 @@ const DigiContextProvider = ({ children }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [dropdownOpen.bookingApp]);
+
+  // Marketing Part
+  const initialMarketingState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [marketingState, setMarketingState] = useState(
+    localStorage.getItem("marketingState")
+      ? JSON.parse(localStorage.getItem("marketingState"))
+      : initialMarketingState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("marketingState", JSON.stringify(marketingState));
+  }, [marketingState]);
+
+  const toggleMainMarketingDropdown = () => {
+    setMarketingState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("marketing");
+  };
+
+  const mainMarketingRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainMarketingRef.current &&
+        !mainMarketingRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, marketing: false }));
+      }
+    };
+
+    if (dropdownOpen.marketing) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.marketing]);
 
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
@@ -2357,6 +2402,9 @@ const DigiContextProvider = ({ children }) => {
         bookingAppState,
         toggleMainBookingAppDropdown,
         mainBookingAppRef,
+        marketingState,
+        toggleMainMarketingDropdown,
+        mainMarketingRef,
       }}
     >
       {children}

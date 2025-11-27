@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useContext, useRef } from "react";
-import Footer from '../components/footer/Footer';
-import axiosInstance from "../axiosInstance";
-import { DigiContext } from '../context/DigiContext';
+import Footer from '../../components/footer/Footer';
+import axiosInstance from "../../axiosInstance";
+import { DigiContext } from '../../context/DigiContext';
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 
-const Emr = () => {
+const CampingManagement = () => {
   const { isBelowLg } = useContext(DigiContext);
   const dropdownRef = useRef(null);
   const [activeTab, setActiveTab] = useState('camping');
@@ -574,4 +574,4 @@ const Emr = () => {
   );
 };
 
-export default Emr;
+export default CampingManagement;

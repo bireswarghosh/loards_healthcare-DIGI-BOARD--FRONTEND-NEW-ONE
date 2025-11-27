@@ -12,7 +12,7 @@ import Indoor from './Indoor';
 import OutdoorMaster from './OutdoorMaster';
 import DiagnosisMaster from './DiagnosisMaster';
 import BookingApp from './BookingApp';
-
+import Marketing from './Marketing';
 const MainSidebar = () => {
   const {
     isExpanded,
@@ -76,8 +76,9 @@ const MainSidebar = () => {
 
             <DiagnosisMaster/>
             <BookingApp/>
-
-
+            <Marketing/>
+            
+            
 
 
 
@@ -107,7 +108,7 @@ const MainSidebar = () => {
           <DiagnosisMaster/>
             <BookingApp/>
 
-
+ <Marketing/>
 
 
 

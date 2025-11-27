@@ -193,6 +193,8 @@ import NurshingBookingList from "./components/bookingApp/NurshingBooking/Nurshin
 import AddAmbulance from "./components/Ambulance/AddAmbulance.jsx";
 import AmbulanceList from "./components/Ambulance/AmbulanceList.jsx";
 import PickupRequestList from "./components/Ambulance/PickupRequestList.jsx";
+import CampingManagement from "./pages/Emr dummy/CampingManagement.jsx";
+import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 
 
@@ -408,6 +410,9 @@ function App() {
           <Route path="/app-social-media-settings" element={<AppSocialMediaSettings/>} />
 
 
+
+<Route path="/CampingManagement" element={<CampingManagement/>} />
+<Route path="/patient-actions" element={<PatientActions/>} />
 
 
     

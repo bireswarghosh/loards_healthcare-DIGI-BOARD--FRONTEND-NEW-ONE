@@ -10,22 +10,71 @@ const NursingBookingList = () => {
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
+    nursing_package_id: "",
+    patient_id: "",
+    existing_patient: "no",
     patient_name: "",
     phone_number: "",
+    email: "",
+    gender: "",
+    age: "",
     address: "",
-    nursing_type: "",
     start_date: "",
     end_date: "",
-    hours_per_day: "",
-    total_amount: "",
     advance_booking: "",
     transaction_id: "",
-    status: "pending",
   });
+
+  const [patients, setPatients] = useState([]);
+  const [patientPage, setPatientPage] = useState(1);
+  const [patientPagination, setPatientPagination] = useState(null);
+  const [packages, setPackages] = useState([]);
 
   useEffect(() => {
     fetchNursingBookings();
   }, []);
+
+  useEffect(() => {
+    if (showModal && !isEditMode) {
+      fetchPatients(patientPage);
+    }
+  }, [showModal, patientPage, isEditMode]);
+
+  useEffect(() => {
+    if (showModal) {
+      fetchPackages();
+    }
+  }, [showModal]);
+
+  const fetchPatients = async (page = 1) => {
+    try {
+      const response = await axiosInstance.get(`/appointment-booking-app/patients?page=${page}&limit=10`);
+      if (response.data.success) {
+        setPatients(response.data.data || []);
+        setPatientPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+    }
+  };
+
+  const fetchPackages = async () => {
+    try {
+      const response = await axiosInstance.get("/nursing");
+      if (response.data.success) {
+        const allPackages = [];
+        for (const category of response.data.categories) {
+          const pkgResponse = await axiosInstance.get(`/nursing/packages/${category.id}`);
+          if (pkgResponse.data.success) {
+            allPackages.push(...pkgResponse.data.packages);
+          }
+        }
+        setPackages(allPackages);
+      }
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+    }
+  };
 
   const fetchNursingBookings = async () => {
     try {
@@ -43,17 +92,19 @@ const NursingBookingList = () => {
 
   const handleAddNew = () => {
     setFormData({
+      nursing_package_id: "",
+      patient_id: "",
+      existing_patient: "no",
       patient_name: "",
       phone_number: "",
+      email: "",
+      gender: "",
+      age: "",
       address: "",
-      nursing_type: "",
       start_date: "",
       end_date: "",
-      hours_per_day: "",
-      total_amount: "",
       advance_booking: "",
       transaction_id: "",
-      status: "pending",
     });
     setSelectedBooking(null);
     setIsEditMode(false);
@@ -62,17 +113,19 @@ const NursingBookingList = () => {
 
   const handleEdit = (booking) => {
     setFormData({
+      nursing_package_id: booking.nursing_package_id,
+      patient_id: booking.patient_id || "",
+      existing_patient: booking.existing_patient || "no",
       patient_name: booking.patient_name,
       phone_number: booking.phone_number,
+      email: booking.email || "",
+      gender: booking.gender || "",
+      age: booking.age || "",
       address: booking.address,
-      nursing_type: booking.nursing_type,
       start_date: booking.start_date,
       end_date: booking.end_date,
-      hours_per_day: booking.hours_per_day,
-      total_amount: booking.total_amount,
       advance_booking: booking.advance_booking,
       transaction_id: booking.transaction_id,
-      status: booking.status,
     });
     setSelectedBooking(booking);
     setIsEditMode(true);
@@ -86,8 +139,34 @@ const NursingBookingList = () => {
     }));
   };
 
+  const handlePatientSelect = (patientId) => {
+    const patient = patients.find((p) => p.id === parseInt(patientId));
+    if (!patient) return;
+    setFormData((prev) => ({
+      ...prev,
+      patient_id: patientId,
+      patient_name: patient.fullName,
+      phone_number: patient.mobileNo || "",
+      email: patient.email || "",
+      gender: patient.gender || "",
+      age: patient.age || "",
+      address: patient.address || "",
+    }));
+  };
+
   const handleSave = async () => {
     try {
+      // Validate required fields
+      if (!formData.nursing_package_id || !formData.start_date || !formData.end_date) {
+        alert("Please fill in Package, Start Date, and End Date");
+        return;
+      }
+
+      if (!formData.patient_name || !formData.phone_number || !formData.email || !formData.gender || !formData.age || !formData.address) {
+        alert("Please fill in all patient details");
+        return;
+      }
+
       let response;
 
       if (isEditMode) {
@@ -96,18 +175,36 @@ const NursingBookingList = () => {
           formData
         );
       } else {
-        response = await axiosInstance.post("/nursing-bookings", formData);
+        const payload = {
+          nursing_package_id: parseInt(formData.nursing_package_id),
+          patient_id: formData.patient_id ? parseInt(formData.patient_id) : null,
+          existing_patient: formData.existing_patient,
+          patient_name: formData.patient_name,
+          phone_number: formData.phone_number,
+          email: formData.email,
+          gender: formData.gender,
+          age: parseInt(formData.age),
+          address: formData.address,
+          start_date: formData.start_date,
+          end_date: formData.end_date,
+          advance_booking: formData.advance_booking ? parseFloat(formData.advance_booking) : 0,
+          transaction_id: formData.transaction_id || null
+        };
+        console.log("Sending payload:", payload);
+        response = await axiosInstance.post("/nursing-bookings", payload);
       }
 
       if (response.data.success) {
+        alert("Booking saved successfully!");
         fetchNursingBookings();
         setShowModal(false);
       } else {
-        alert("Error saving nursing booking: " + response.data.message);
+        alert("Error: " + response.data.message);
       }
     } catch (error) {
-      console.error("Error saving nursing booking:", error);
-      alert("Error saving nursing booking");
+      console.error("Error saving:", error);
+      console.error("Error response:", error.response?.data);
+      alert("Error: " + (error.response?.data?.message || "Failed to save"));
     }
   };
 
@@ -338,6 +435,45 @@ const NursingBookingList = () => {
                     }}
                   >
                     <div className="row">
+                      {!isEditMode && (
+                        <div className="col-12 mb-3">
+                          <label className="form-label">Select Patient</label>
+                          <select
+                            className="form-control"
+                            onChange={(e) => handlePatientSelect(e.target.value)}
+                          >
+                            <option value="">Select Patient</option>
+                            {patients.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.fullName} - {p.mobileNo}
+                              </option>
+                            ))}
+                          </select>
+                          {patientPagination && (
+                            <div className="d-flex justify-content-between align-items-center mt-2">
+                              <small className="text-muted">
+                                Page {patientPagination.currentPage} of {patientPagination.totalPages}
+                              </small>
+                              <div className="btn-group btn-group-sm">
+                                <button
+                                  className="btn btn-outline-secondary"
+                                  disabled={!patientPagination.hasPrev}
+                                  onClick={() => setPatientPage(p => p - 1)}
+                                >
+                                  Prev
+                                </button>
+                                <button
+                                  className="btn btn-outline-secondary"
+                                  disabled={!patientPagination.hasNext}
+                                  onClick={() => setPatientPage(p => p + 1)}
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div className="col-md-6 mb-3">
                         <label className="form-label">Patient Name</label>
                         <input
@@ -372,31 +508,58 @@ const NursingBookingList = () => {
                         />
                       </div>
                       <div className="col-md-6 mb-3">
-                        <label className="form-label">Nursing Type</label>
+                        <label className="form-label">Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          value={formData.email}
+                          onChange={(e) =>
+                            handleInputChange("email", e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">Gender</label>
                         <select
                           className="form-control"
-                          value={formData.nursing_type}
+                          value={formData.gender}
                           onChange={(e) =>
-                            handleInputChange("nursing_type", e.target.value)
+                            handleInputChange("gender", e.target.value)
                           }
                         >
-                          <option value="">Select Type</option>
-                          <option value="home_care">Home Care</option>
-                          <option value="critical_care">Critical Care</option>
-                          <option value="elderly_care">Elderly Care</option>
-                          <option value="post_surgery">Post Surgery</option>
+                          <option value="">Select Gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
                         </select>
                       </div>
                       <div className="col-md-6 mb-3">
-                        <label className="form-label">Hours Per Day</label>
+                        <label className="form-label">Age</label>
                         <input
                           type="number"
                           className="form-control"
-                          value={formData.hours_per_day}
+                          value={formData.age}
                           onChange={(e) =>
-                            handleInputChange("hours_per_day", e.target.value)
+                            handleInputChange("age", e.target.value)
                           }
                         />
+                      </div>
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">Nursing Package</label>
+                        <select
+                          className="form-control"
+                          value={formData.nursing_package_id}
+                          onChange={(e) =>
+                            handleInputChange("nursing_package_id", e.target.value)
+                          }
+                        >
+                          <option value="">Select Package</option>
+                          {packages.map((pkg) => (
+                            <option key={pkg.id} value={pkg.id}>
+                              {pkg.package_name} - ₹{pkg.price}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div className="col-md-6 mb-3">
                         <label className="form-label">Start Date</label>
@@ -417,17 +580,6 @@ const NursingBookingList = () => {
                           value={formData.end_date}
                           onChange={(e) =>
                             handleInputChange("end_date", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Total Amount</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          value={formData.total_amount}
-                          onChange={(e) =>
-                            handleInputChange("total_amount", e.target.value)
                           }
                         />
                       </div>
@@ -458,21 +610,7 @@ const NursingBookingList = () => {
                         />
                       </div>
 
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Status</label>
-                        <select
-                          className="form-control"
-                          value={formData.status}
-                          onChange={(e) =>
-                            handleInputChange("status", e.target.value)
-                          }
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </div>
+
                     </div>
                     <div className="d-flex gap-2 mt-3">
                       <button
