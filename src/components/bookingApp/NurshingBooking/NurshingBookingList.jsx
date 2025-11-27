@@ -23,6 +23,7 @@ const NursingBookingList = () => {
     end_date: "",
     advance_booking: "",
     transaction_id: "",
+    status: "pending"
   });
 
   const [patients, setPatients] = useState([]);
@@ -105,6 +106,7 @@ const NursingBookingList = () => {
       end_date: "",
       advance_booking: "",
       transaction_id: "",
+      status: "pending"
     });
     setSelectedBooking(null);
     setIsEditMode(false);
@@ -122,10 +124,11 @@ const NursingBookingList = () => {
       gender: booking.gender || "",
       age: booking.age || "",
       address: booking.address,
-      start_date: booking.start_date,
-      end_date: booking.end_date,
+      start_date: booking.start_date ? booking.start_date.split('T')[0] : "",
+      end_date: booking.end_date ? booking.end_date.split('T')[0] : "",
       advance_booking: booking.advance_booking,
       transaction_id: booking.transaction_id,
+      status: booking.status || "pending"
     });
     setSelectedBooking(booking);
     setIsEditMode(true);
@@ -156,7 +159,6 @@ const NursingBookingList = () => {
 
   const handleSave = async () => {
     try {
-      // Validate required fields
       if (!formData.nursing_package_id || !formData.start_date || !formData.end_date) {
         alert("Please fill in Package, Start Date, and End Date");
         return;
@@ -167,30 +169,27 @@ const NursingBookingList = () => {
         return;
       }
 
-      let response;
+      const payload = {
+        nursing_package_id: parseInt(formData.nursing_package_id),
+        patient_name: formData.patient_name,
+        phone_number: formData.phone_number,
+        email: formData.email,
+        gender: formData.gender,
+        age: parseInt(formData.age),
+        address: formData.address,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        advance_booking: formData.advance_booking ? parseFloat(formData.advance_booking) : 0,
+        transaction_id: formData.transaction_id || null,
+        status: formData.status
+      };
 
+      let response;
       if (isEditMode) {
-        response = await axiosInstance.put(
-          `/nursing-bookings/${selectedBooking.id}/status`,
-          formData
-        );
+        response = await axiosInstance.put(`/nursing-bookings/${selectedBooking.id}`, payload);
       } else {
-        const payload = {
-          nursing_package_id: parseInt(formData.nursing_package_id),
-          patient_id: formData.patient_id ? parseInt(formData.patient_id) : null,
-          existing_patient: formData.existing_patient,
-          patient_name: formData.patient_name,
-          phone_number: formData.phone_number,
-          email: formData.email,
-          gender: formData.gender,
-          age: parseInt(formData.age),
-          address: formData.address,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          advance_booking: formData.advance_booking ? parseFloat(formData.advance_booking) : 0,
-          transaction_id: formData.transaction_id || null
-        };
-        console.log("Sending payload:", payload);
+        payload.patient_id = formData.patient_id ? parseInt(formData.patient_id) : null;
+        payload.existing_patient = formData.existing_patient;
         response = await axiosInstance.post("/nursing-bookings", payload);
       }
 
@@ -209,21 +208,21 @@ const NursingBookingList = () => {
   };
 
   const handleDelete = async (booking) => {
-    if (
-      window.confirm(`Are you sure you want to delete this nursing booking?`)
-    ) {
+    if (window.confirm(`Are you sure you want to cancel this booking?`)) {
       try {
-        const response = await axiosInstance.delete(
-          `/nursing-bookings/${booking.id}`
+        const response = await axiosInstance.put(
+          `/nursing-bookings/${booking.id}/status`,
+          { status: "cancelled" }
         );
         if (response.data.success) {
+          alert("Booking cancelled successfully!");
           fetchNursingBookings();
         } else {
-          alert("Error deleting nursing booking: " + response.data.message);
+          alert("Error: " + response.data.message);
         }
       } catch (error) {
-        console.error("Error deleting nursing booking:", error);
-        alert("Error deleting nursing booking");
+        console.error("Error:", error);
+        alert("Error: " + (error.response?.data?.message || "Failed to cancel"));
       }
     }
   };
@@ -291,12 +290,9 @@ const NursingBookingList = () => {
                           <th>SLNo.</th>
                           <th>Patient Name</th>
                           <th>Phone</th>
-                          <th>Address</th>
-                          <th>Nursing Type</th>
+                          <th>Package</th>
                           <th>Start Date</th>
                           <th>End Date</th>
-                          <th>Hours/Day</th>
-                          <th>Amount</th>
                           <th>Advance</th>
                           <th>Transaction ID</th>
                           <th>Status</th>
@@ -305,8 +301,7 @@ const NursingBookingList = () => {
                       <tbody>
                         {loading ? (
                           <tr>
-                            {/* Updated colSpan to 13 */}
-                            <td colSpan="13" className="text-center py-4">
+                            <td colSpan="10" className="text-center py-4">
                               <div
                                 className="spinner-border text-primary"
                                 role="status"
@@ -319,8 +314,7 @@ const NursingBookingList = () => {
                           </tr>
                         ) : nursingBookings.length === 0 ? (
                           <tr>
-                            {/* Updated colSpan to 13 */}
-                            <td colSpan="13" className="text-center py-4">
+                            <td colSpan="10" className="text-center py-4">
                               No nursing bookings found
                             </td>
                           </tr>
@@ -360,8 +354,7 @@ const NursingBookingList = () => {
                               <td>{index + 1}</td>
                               <td>{booking.patient_name}</td>
                               <td>{booking.phone_number}</td>
-                              <td>{booking.address}</td>
-                              <td>{booking.nursing_type}</td>
+                              <td>{booking.package_name || "N/A"}</td>
                               <td>
                                 {new Date(
                                   booking.start_date
@@ -372,8 +365,6 @@ const NursingBookingList = () => {
                                   booking.end_date
                                 ).toLocaleDateString()}
                               </td>
-                              <td>{booking.hours_per_day}</td>
-                              <td>₹{booking.total_amount}</td>
                               <td>₹{booking.advance_booking || 0}</td>
                               <td>{booking.transaction_id || "N/A"}</td>
                               <td>{getStatusBadge(booking.status)}</td>
@@ -609,8 +600,23 @@ const NursingBookingList = () => {
                           placeholder="Enter transaction ID"
                         />
                       </div>
-
-
+                      {isEditMode && (
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Status</label>
+                          <select
+                            className="form-control"
+                            value={formData.status}
+                            onChange={(e) =>
+                              handleInputChange("status", e.target.value)
+                            }
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
                     <div className="d-flex gap-2 mt-3">
                       <button
