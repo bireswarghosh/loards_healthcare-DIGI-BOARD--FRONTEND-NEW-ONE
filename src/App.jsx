@@ -195,6 +195,7 @@ import AmbulanceList from "./components/Ambulance/AmbulanceList.jsx";
 import PickupRequestList from "./components/Ambulance/PickupRequestList.jsx";
 import CampingManagement from "./pages/Emr dummy/CampingManagement.jsx";
 import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
+import PatientRegistrationDetail from "./components/indoor/indoor-patientAdmissionlist/PatientRegistrationDetail.jsx";
 
 
 
@@ -271,6 +272,8 @@ function App() {
           <Route path="/FinalBillingDetail" element={<ProtectedRoute><FinalBillingDetail/></ProtectedRoute>} />
           <Route path="/FinalBillingList" element={<ProtectedRoute><FinalBillingList/></ProtectedRoute>} />
           <Route path="/PatientEnquiryDetail" element={<ProtectedRoute><PatientEnquiryDetail/></ProtectedRoute>} />
+          <Route path="/PatientRegistrationDetail" element={<PatientRegistrationDetail />} />
+
           {/* indoor route end---------------------------------  */}
 
 
