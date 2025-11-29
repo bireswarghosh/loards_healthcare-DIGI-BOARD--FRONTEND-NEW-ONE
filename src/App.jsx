@@ -273,6 +273,7 @@ function App() {
           <Route path="/FinalBillingList" element={<ProtectedRoute><FinalBillingList/></ProtectedRoute>} />
           <Route path="/PatientEnquiryDetail" element={<ProtectedRoute><PatientEnquiryDetail/></ProtectedRoute>} />
           <Route path="/PatientRegistrationDetail" element={<PatientRegistrationDetail />} />
+          <Route path="/PatientRegistrationDetail/:id" element={<PatientRegistrationDetail />} />
 
           {/* indoor route end---------------------------------  */}
 

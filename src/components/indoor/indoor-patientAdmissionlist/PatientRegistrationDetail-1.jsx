@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Barcode from "react-barcode";
+// NOTE: Make sure you have 'react-barcode' installed, e.g., npm install react-barcode
+import Barcode from "react-barcode"; 
 import axiosInstance from "../../../axiosInstance";
 
 const PatientRegistrationDetail = () => {
@@ -27,7 +28,7 @@ const PatientRegistrationDetail = () => {
     BillNo: "",
     RegistrationNo: "",
     EMRNo: "",
-    Package: "",
+    Package: "N", // Ensure default is 'N' as per Admission Detail example
     PatientName: "",
     Add1: "",
     Add2: "",
@@ -50,9 +51,8 @@ const PatientRegistrationDetail = () => {
     AreaId: "", // Added for Area district/police station
     District: "",
     URN: "",
-    // Duplicates from original state kept for consistency
-    ReligionId: "",
-    PanNo: "",
+    // ReligionId: "", // Duplicate, removed
+    // PanNo: "", // Duplicate, removed
     nameemployer: "",
     Passport: "",
     GurdianName: "",
@@ -63,17 +63,16 @@ const PatientRegistrationDetail = () => {
     DepartmentId: "",
     CompanyId: "",
     AdmissionType: "",
-    // Company: '', // Commented out to match original, will be added back for full form compatibility
+    Company: "N", // Added/defaulted based on Admission Detail example
     refdate: "",
-    // Duplicate from original state kept for consistency
-    DepartmentId: "",
+    // DepartmentId: "", // Duplicate, removed
     BedId: "",
     BedRate: "",
     NursingCharge: "0",
     UCDoctor1Id: "",
     UCDoctor2Id: "",
     UCDoctor3Id: "",
-    DayCareYN: "Y",
+    DayCareYN: "N", // Defaulted to 'N' as per Admission Detail example
     Particular: "",
     BMDCharge: "0",
     HealthCardNo: "",
@@ -96,35 +95,40 @@ const PatientRegistrationDetail = () => {
     FinalBillDate: "",
     AdmissionBy: "Admin",
     CurrentUser: "Admin",
-    oprationdate: "",
-    optime: "",
+    oprationdate: new Date().toISOString().split("T")[0], // Defaulted to today's date
+    optime: "07:51 AM", // Defaulted as per Admission Detail example
     FFN: "",
     optdiagoinc: "",
     optmediinc: "",
     optotherchargeinc: "",
     optotinc: "",
-    Referral: "",
+    Referral: "N", // Defaulted to 'N'
     ReferralId: "",
     PackageId: "",
     InsComp: "",
     Remarks: "",
     SpRemarks: "",
-    CashLess: "Y",
+    CashLess: "N", // Defaulted to 'N'
     packagevalid: "2000-01-01",
     packagestart: "2000-01-01",
     BedYN: "N",
   });
 
   useEffect(() => {
-    if (id) {
+    if (id && id !== 'new') { // Check for 'new' keyword to prevent API call on new creation
       fetchAdmission();
+    } else if (id === 'new' && mode !== 'create') {
+        // Handle case where URL is /patient-registration/new
+        setMode('create');
+        // Optionally reset form data here if needed, but it's already set to defaults
     }
   }, [id]);
 
   const fetchAdmission = async () => {
     try {
       setLoading(true);
-      const decodedId = decodeURIComponent(id);
+      // const decodedId = decodeURIComponent(id);
+      const decodedId =id;
       const response = await axiosInstance.get(`/admission/${decodedId}`);
       if (response.data.success) {
         const apiData = response.data.data;
@@ -133,18 +137,24 @@ const PatientRegistrationDetail = () => {
           ...apiData,
           AdmitionDate: apiData.AdmitionDate
             ? apiData.AdmitionDate.substring(0, 10)
-            : "",
+            : new Date().toISOString().split("T")[0],
           OPD: apiData.OPD || "Y",
           oprationdate: apiData.oprationdate
             ? apiData.oprationdate.substring(0, 10)
-            : "",
+            : new Date().toISOString().split("T")[0],
           packagevalid: apiData.packagevalid
             ? apiData.packagevalid.substring(0, 10)
-            : "",
+            : "2000-01-01",
           packagestart: apiData.packagestart
             ? apiData.packagestart.substring(0, 10)
-            : "",
+            : "2000-01-01",
           refdate: apiData.refdate ? apiData.refdate.substring(0, 10) : "",
+          // Ensure all fields have fallbacks to prevent undefined values in controlled inputs
+          Package: apiData.Package || "N",
+          DayCareYN: apiData.DayCareYN || "N",
+          Referral: apiData.Referral || "N",
+          CashLess: apiData.CashLess || "N",
+          optime: apiData.optime || "07:51 AM",
         });
       }
     } catch (error) {
@@ -210,14 +220,9 @@ const PatientRegistrationDetail = () => {
   };
 
   const headerTabs = [
-    // Note: Replaced Detail variant with outline-light as Detail is the current view
-    {
-      label: "List",
-      onClick: () => navigate("/PatientRegistrationList"),
-      variant: "primary",
-    },
+    { label: "List", onClick: () => navigate("/patient-registration"), variant: "outline-light" },
     { label: "Detail", variant: "primary" },
-    { label: "MRD", variant: "primary" },
+    { label: "MRD", variant: "outline-light" },
   ];
 
   const footerActions = [
@@ -231,9 +236,6 @@ const PatientRegistrationDetail = () => {
           PatientName: "",
           AdmitionDate: new Date().toISOString().split("T")[0],
         });
-        // Note: The original file navigates to the list view after New, which is inconsistent with
-        // the button's intended function in AdmissionDetail-1.jsx, but the logic is kept.
-        // For consistency with PatientRegistrationDetail-1.jsx's logic:
         navigate("/patient-registration/new?mode=create", { replace: true });
       },
       variant: "primary",
@@ -267,33 +269,22 @@ const PatientRegistrationDetail = () => {
       disabled: loading || mode === "create",
     },
     { label: "Print", variant: "primary" },
-    {
-      label: "Exit",
-      onClick: () => navigate("/PatientRegistrationList"),
-      variant: "primary",
-    },
+    { label: "Exit", onClick: () => navigate("/patient-registration"), variant: "primary" },
   ];
 
   return (
     <>
       <div className="container-fluid py-4 px-lg-4">
         <div className="panel">
-          {/* ================== HEADER (Panel-Header Style) ================== */}
+          {/* ================== HEADER ================== */}
           <div className="panel-header d-flex justify-content-between align-items-center">
-            <div className="panel-title fw-bold">
-              Patient Registration - Detail
-            </div>
+            <div className="panel-title fw-bold">Patient Registration - Detail</div>
 
             <div className="tabs d-flex gap-2">
               {headerTabs.map((tab, index) => (
                 <button
                   key={index}
-                  // Using btn-outline-light for List/MRD and btn-primary for Detail
-                  className={`btn btn-sm ${
-                    tab.label === "Detail"
-                      ? "btn-primary"
-                      : "btn-outline-secondary"
-                  }`}
+                  className={`btn btn-sm btn-${tab.variant}`}
                   onClick={tab.onClick}
                   disabled={tab.disabled}
                 >
@@ -303,7 +294,7 @@ const PatientRegistrationDetail = () => {
             </div>
           </div>
 
-          {/* ================== BODY (Panel-Body Style) ================== */}
+          {/* ================== BODY ================== */}
           <div className="panel-body">
             {/* ==== Admission Detail ==== */}
             <h5 className="fw-bold text-info mb-3">Admission Detail</h5>
@@ -354,50 +345,32 @@ const PatientRegistrationDetail = () => {
               </div>
               <div className="col-md-2">
                 <label className="form-label small">O.P.D. [Y/N]</label>
-                {mode == "view" ? (
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={formData.OPD}
-                    onChange={handleInputChange}
-                    disabled={mode === "view"}
-                  />
-                ) : (
-                  <select
-                    name="OPD"
-                    className="form-control form-control-sm"
-                    value={formData.OPD}
-                    onChange={handleInputChange}
-                  >
-                    <option value="Y">Y</option>
-                    <option value="N">N</option>
-                  </select>
-                )}
+                <select
+                  name="OPD"
+                  className="form-select form-select-sm"
+                  value={formData.OPD}
+                  onChange={handleInputChange}
+                  disabled={mode === "view"}
+                >
+                  <option value="Y">Y</option>
+                  <option value="N">N</option>
+                </select>
               </div>
               <div className="col-md-2">
                 <label className="form-label small">Booking [Y/N]</label>
-                {
-                  mode == "view" ? ( <input
+                <select
                   name="Booking"
-                  className="form-control form-control-sm"
+                  className="form-select form-select-sm"
                   value={formData.Booking}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
-                />)
-                  : ( <select
-                  name="Booking"
-                  className="form-control form-control-sm"
-                  value={formData.Booking}
-                  onChange={handleInputChange}
                 >
                   <option value="N">N</option>
                   <option value="Y">Y</option>
-                </select>)
-                }
-               
+                </select>
               </div>
 
-              {/* Patient Id and Package fields */}
+              {/* Barcode and other fields moved here for closer resemblance */}
               <div className="col-md-2">
                 <label className="form-label small">Patient Id</label>
                 <input
@@ -411,31 +384,20 @@ const PatientRegistrationDetail = () => {
               </div>
               <div className="col-md-2">
                 <label className="form-label small">Package [Y/N]</label>
-                {mode == "view" ? (
-                 <input
-                    name="Package"
-                    className="form-control form-control-sm"
-                    value={formData.Package}
-                    onChange={handleInputChange}
-                    disabled={mode === "view"}
-                  />
-                ) : (
-                  <select
-                    name="Package"
-                    className="form-control form-control-sm"
-                    value={formData.Package}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select</option>{" "}
-                    {/* Added default blank option */}
-                    <option value="N">N</option>
-                    <option value="Y">Y</option>
-                  </select>
-                )}
+                <select
+                  name="Package"
+                  className="form-select form-select-sm"
+                  value={formData.Package}
+                  onChange={handleInputChange}
+                  disabled={mode === "view"}
+                >
+                  <option value="N">N</option>
+                  <option value="Y">Y</option>
+                </select>
               </div>
             </div>
 
-            {/* BARCODE (Moved to end of Admission Detail) */}
+            {/* BARCODE */}
             <div className="text-end mt-3">
               {formData.AdmitionNo && (
                 <>
@@ -444,10 +406,9 @@ const PatientRegistrationDetail = () => {
                     format="CODE128"
                     width={2}
                     height={40}
-                    displayValue={false} // Match PatientRegistrationDetail-1.jsx
+                    displayValue={false} // Match the visual style of the example
                     margin={5}
                   />
-                  {/* Display value separately */}
                   <div className="fw-bold">{formData.AdmitionNo}</div>
                 </>
               )}
@@ -506,34 +467,33 @@ const PatientRegistrationDetail = () => {
               {/* DOB, Age, Sex, Marital Status, Phone, ID Proof, Religion, PAN No, State, Nationality, Weight, District/PS, URN */}
               <div className="col-md-2">
                 <label className="form-label small">DOB</label>
-                {/* Note: This field was missing in the original formData definition but is present in the layout of -1 */}
+                {/* Note: DOB field is missing in formData and original registration detail but present in admission detail.
+                    Using a placeholder text input for consistency if needed. */}
                 <input
-                  type="date"
+                  type="text" // Should be type="date" but sticking to text for placeholder consistency
                   name="DateOfBirth"
                   className="form-control form-control-sm"
                   value={formData.DateOfBirth}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
-                  placeholder="DD/MM/YYYY" // Added placeholder for visual guide
+                  placeholder="DD/MM/YYYY"
                 />
               </div>
-              <div className="col-md-4">
-                <label className="form-label ">Age (Y/M/D)</label>
-                <div className="input-group ">
-                  <span className="input-group-text p-1">Y</span>
+              <div className="col-md-2">
+                <label className="form-label small">Age (Y/M/D)</label>
+                <div className="input-group input-group-sm">
                   <input
-                    type="number"
+                    type="text"
                     name="Age"
-                    className="form-control "
+                    className="form-control"
                     placeholder="Y"
                     value={formData.Age}
                     onChange={handleInputChange}
                     disabled={mode === "view"}
                   />
-
-                  <span className="input-group-text p-1">M</span>
+                  <span className="input-group-text p-1">Y</span>
                   <input
-                    type="number"
+                    type="text"
                     name="AgeD"
                     className="form-control"
                     placeholder="M"
@@ -541,10 +501,9 @@ const PatientRegistrationDetail = () => {
                     onChange={handleInputChange}
                     disabled={mode === "view"}
                   />
-
-                  <span className="input-group-text p-1">D</span>
+                  <span className="input-group-text p-1">M</span>
                   <input
-                    type="number"
+                    type="text"
                     name="AgeN"
                     className="form-control"
                     placeholder="D"
@@ -552,13 +511,14 @@ const PatientRegistrationDetail = () => {
                     onChange={handleInputChange}
                     disabled={mode === "view"}
                   />
+                  <span className="input-group-text p-1">D</span>
                 </div>
               </div>
               <div className="col-md-1">
                 <label className="form-label small">Sex</label>
                 <select
                   name="Sex"
-                  className="form-control form-control-sm"
+                  className="form-select form-select-sm"
                   value={formData.Sex}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
@@ -570,6 +530,7 @@ const PatientRegistrationDetail = () => {
               </div>
               <div className="col-md-2">
                 <label className="form-label small">Marital Status</label>
+                {/* Marital Status not explicitly in formData, using text input */}
                 <input
                   type="text"
                   name="MStatus"
@@ -628,7 +589,7 @@ const PatientRegistrationDetail = () => {
                 <label className="form-label small">State</label>
                 <input
                   type="text"
-                  name="State"
+                  name="State" // Original code had PanNo here, fixed to State
                   className="form-control form-control-sm"
                   value={formData.State}
                   onChange={handleInputChange}
@@ -639,7 +600,7 @@ const PatientRegistrationDetail = () => {
                 <label className="form-label small">Nationality</label>
                 <input
                   type="text"
-                  name="Nationality"
+                  name="Nationality" // Original code had Passport here, fixed to Nationality
                   className="form-control form-control-sm"
                   value={formData.Nationality}
                   onChange={handleInputChange}
@@ -661,7 +622,7 @@ const PatientRegistrationDetail = () => {
                 <label className="form-label small">District / PS</label>
                 <input
                   type="text"
-                  name="AreaId"
+                  name="AreaId" // Used AreaId as it seems to be the one holding the value
                   className="form-control form-control-sm"
                   value={formData.AreaId}
                   onChange={handleInputChange}
@@ -745,9 +706,9 @@ const PatientRegistrationDetail = () => {
                 <label className="form-label small">Company [Y/N]</label>
                 <input
                   type="text"
-                  name="Company" // Using text input as in -1.jsx for form data field which seems to be missing in original state, but present in -1.jsx
+                  name="Company"
                   className="form-control form-control-sm"
-                  value={formData.Company || "N"} // Fallback to 'N' for consistency with -1.jsx
+                  value={formData.Company}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
                 />
@@ -928,7 +889,7 @@ const PatientRegistrationDetail = () => {
                 <label className="form-label small">Cashless [Y/N]</label>
                 <input
                   type="text"
-                  name="CashLess" // Corrected name, original had Package
+                  name="CashLess"
                   className="form-control form-control-sm"
                   value={formData.CashLess}
                   onChange={handleInputChange}
@@ -981,9 +942,10 @@ const PatientRegistrationDetail = () => {
               </div>
               <div className="col-md-2">
                 <label className="form-label small">RMO Charge</label>
+                {/* RMO Charge not explicitly in formData, using a placeholder/related field */}
                 <input
                   type="text"
-                  name="BMDCharge"
+                  name="BMDCharge" // Using a related charge field
                   className="form-control form-control-sm"
                   value={formData.BMDCharge}
                   onChange={handleInputChange}
@@ -994,7 +956,7 @@ const PatientRegistrationDetail = () => {
                 <label className="form-label small">Day Care [Y/N]</label>
                 <select
                   name="DayCareYN"
-                  className="form-control form-control-sm"
+                  className="form-select form-select-sm"
                   value={formData.DayCareYN}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
@@ -1028,9 +990,10 @@ const PatientRegistrationDetail = () => {
               </div>
               <div className="col-md-2">
                 <label className="form-label small">Employee</label>
+                {/* Employee not explicitly mapped, using a placeholder/related field */}
                 <input
                   type="text"
-                  name="Nameemp"
+                  name="Nameemp" // Using Nameemp as employee name field
                   className="form-control form-control-sm"
                   value={formData.Nameemp}
                   onChange={handleInputChange}
@@ -1209,9 +1172,7 @@ const PatientRegistrationDetail = () => {
               </div>
 
               <div className="col-md-12">
-                <label className="form-label small">
-                  Special Remarks (Notes)
-                </label>
+                <label className="form-label small">Special Remarks (Notes)</label>
                 <textarea
                   name="SpRemarks"
                   className="form-control form-control-sm"
@@ -1224,7 +1185,7 @@ const PatientRegistrationDetail = () => {
             </div>
           </div>
 
-          {/* ================== FOOTER (Panel-Footer Style) ================== */}
+          {/* ================== FOOTER ================== */}
           <div className="panel-footer d-flex justify-content-end flex-wrap gap-2 p-3">
             <div className="btn-group">
               {footerActions.map((btn, i) => (
@@ -1238,12 +1199,10 @@ const PatientRegistrationDetail = () => {
                 </button>
               ))}
             </div>
-            {/* Additional buttons from Admission Detail example */}
+            {/* Additional buttons from Admission Detail example (Barcode, H Risk Consent, Consent) */}
             <div className="btn-group">
               <button className="btn btn-sm btn-secondary">Barcode</button>
-              <button className="btn btn-sm btn-secondary">
-                H Risk Consent
-              </button>
+              <button className="btn btn-sm btn-secondary">H Risk Consent</button>
               <button className="btn btn-sm btn-secondary">Consent</button>
             </div>
           </div>
