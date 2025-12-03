@@ -9,6 +9,7 @@ const VisitEntry = () => {
 const [searchResults, setSearchResults] = useState([]);
 const [showModal, setShowModal] = useState(false);
 const [cashlessData, setCashlessData] = useState([]);
+const [companyData, setCompanyData] = useState([]);
 
 
 
@@ -16,7 +17,7 @@ const [cashlessData, setCashlessData] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
-  const { mode, patientData } = location.state || {};
+  const { mode, patientData, searchState } = location.state || {};
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [religions, setReligions] = useState([]);
@@ -106,29 +107,38 @@ const [cashlessData, setCashlessData] = useState([]);
     CCNNo: "",
     CardNo: "",
 
-    "Cashless": "N",
-    CashLessName: "",      // ⭐ ADD THIS
-  CompanyYN: "",         // ⭐ ADD THIS
-  CompanyName: "",  
+    // Cashless & Company fields
+    Cashless: "N",
+    CashLessName: "",
+    CashLessId: "",
+    CompanyYN: "N",
+    CompanyName: "",
+    CompanyId: "",
   });
 
 
 
 
 useEffect(() => {
- const fetchCashLess = async () => {
+ const fetchCashLessAndCompany = async () => {
   try {
+    // Fetch Cashless data
     const cashless = await axiosInstance.get("/cashless");
     if(cashless.data.success){
-      setCashlessData(cashless.data.data)
-      console.log("CashLess Data:", cashless.data.data);
+      setCashlessData(cashless.data.data.filter(item => item.Cashless));
+    }
+
+    // Fetch Company data
+    const company = await axiosInstance.get("/acgenled?partyType=D");
+    if(company.data.success){
+      setCompanyData(company.data.data);
     }
   } catch (error) {
-    console.error("Error fetching CashLess:", error);
+    console.error("Error fetching data:", error);
   }
 }
 
-  fetchCashLess();
+  fetchCashLessAndCompany();
 }, []);
 
 
@@ -226,6 +236,33 @@ useEffect(() => {
           }
         }
 
+        // Fetch Cashless and Company names if IDs exist
+        let cashlessName = "";
+        let companyName = "";
+
+        if (data.CashLessId) {
+          try {
+            const cashlessRes = await axiosInstance.get(`/cashless/${data.CashLessId}`);
+            if (cashlessRes.data?.success) {
+              cashlessName = cashlessRes.data.data.Cashless;
+            }
+          } catch (error) {
+            console.error("Error fetching cashless:", error);
+          }
+        }
+
+        if (data.CompanyId || data.m_CompanyId) {
+          const companyId = data.CompanyId || data.m_CompanyId;
+          try {
+            const companyRes = await axiosInstance.get(`/acgenled/${companyId}`);
+            if (companyRes.data?.success) {
+              companyName = companyRes.data.data.Desc;
+            }
+          } catch (error) {
+            console.error("Error fetching company:", error);
+          }
+        }
+
         setFormData({
           // Patient Visit fields
           PVisitId: data.PVisitId,
@@ -286,6 +323,13 @@ useEffect(() => {
           quota: false,
           queueNo: data.QNo || 0,
           OPD: "Y",
+          // Cashless & Company
+          Cashless: data.CashLess || "N",
+          CashLessName: cashlessName,
+          CashLessId: data.CashLessId || "",
+          CompanyYN: (data.CompanyId || data.m_CompanyId) ? "Y" : "N",
+          CompanyName: companyName,
+          CompanyId: data.CompanyId || data.m_CompanyId || "",
         });
 
         // Load existing payment methods from patient visit data
@@ -589,6 +633,12 @@ useEffect(() => {
   DueAmt: dueAmount,
   FinalRecAmt: totalPaidAmount,
 
+  // CASHLESS & COMPANY
+  CashLess: formData.Cashless,
+  CashLessId: formData.Cashless === "Y" && formData.CashLessId ? parseInt(formData.CashLessId) : null,
+  CompanyId: formData.CompanyYN === "Y" && formData.CompanyId ? parseInt(formData.CompanyId) : null,
+  m_CompanyId: formData.CompanyYN === "Y" && formData.CompanyId ? parseInt(formData.CompanyId) : null,
+
   // EXTRA FIELDS
   REG: "Y",
   Asst1YN: "N",
@@ -601,8 +651,6 @@ useEffect(() => {
   CancelDt: null,
   ReferralId: 0,
   Referalid: 0,
-  CompanyId: 0,
-  m_CompanyId: 0,
   
   admissionid: " ",
   Admissionno: null,
@@ -844,7 +892,7 @@ useEffect(() => {
               </h5>
               <button
                 className="btn btn-sm btn-outline-secondary"
-                onClick={() => navigate("/table-data")}
+                onClick={() => navigate("/table-data", { state: { searchState } })}
               >
                 ← Back
               </button>
@@ -1297,7 +1345,7 @@ useEffect(() => {
   <div className="row g-3 mt-3">
 
 
-{/* new cashless-----  */}
+{/* Cashless Section */}
  <div className="col-md-2">
       <label className="form-label">Cashless (Y/N)</label>
        <select
@@ -1306,35 +1354,73 @@ useEffect(() => {
         value={formData.Cashless}
         onChange={handleChange}
       >
-        <option value="">Select</option>
-        <option value="Y">Y</option>
         <option value="N">N</option>
+        <option value="Y">Y</option>
       </select>
      </div>
-   {/* Cashless Name with Suggestion */}
- <div className="col-md-4">
+   <div className="col-md-4">
       <label className="form-label">Cashless Name</label>
-     <input
-        list="cashlessList"
-        type="text"
+     <select
         className="form-control"
         name="CashLessName"
-        value={formData.CashLessName || ""}
-        onChange={handleChange}
-        placeholder="Select Cashless"
+        value={formData.CashLessId || ""}
+        onChange={(e) => {
+          const selectedCashless = cashlessData.find(item => item.CashlessId == e.target.value);
+          setFormData(prev => ({
+            ...prev,
+            CashLessName: selectedCashless?.Cashless || "",
+            CashLessId: e.target.value
+          }));
+        }}
         disabled={formData.Cashless !== "Y"}
-      />
-
-       {/* Suggestion List */}
-  <datalist id="cashlessList">
-    {cashlessData.map((item) => (
-      <option key={item.id} value={item.cashless} />
-    ))}
-  </datalist>
+      >
+        <option value="">Select Cashless</option>
+        {cashlessData.map((item) => (
+          <option key={item.CashlessId} value={item.CashlessId}>{item.Cashless}</option>
+        ))}
+      </select>
 </div>
 
-    {/* Cashless Y/N
-    <div className="col-md-2">
+{/* Company Section */}
+<div className="col-md-2">
+      <label className="form-label">Company (Y/N)</label>
+       <select
+        name="CompanyYN"
+        className="form-control"
+        value={formData.CompanyYN}
+        onChange={handleChange}
+      >
+        <option value="N">N</option>
+        <option value="Y">Y</option>
+      </select>
+     </div>
+ <div className="col-md-4">
+      <label className="form-label">Company Name</label>
+     <select
+        className="form-control"
+        name="CompanyName"
+        value={formData.CompanyId || ""}
+        onChange={(e) => {
+          const selectedCompany = companyData.find(item => item.DescId == e.target.value);
+          setFormData(prev => ({
+            ...prev,
+            CompanyName: selectedCompany?.Desc || "",
+            CompanyId: e.target.value
+          }));
+        }}
+        disabled={formData.CompanyYN !== "Y"}
+      >
+        <option value="">Select Company</option>
+        {companyData.map((item) => (
+          <option key={item.DescId} value={item.DescId}>{item.Desc}</option>
+        ))}
+      </select>
+</div>
+
+
+
+    {/* Cashless Y/N */}
+    {/* <div className="col-md-2">
       <label className="form-label">Cashless (Y/N)</label>
       <select
         name="CashLess"
@@ -1820,7 +1906,7 @@ useEffect(() => {
                   <button
                     type="button"
                     className="btn btn-secondary me-2"
-                    onClick={() => navigate("/table-data")}
+                    onClick={() => navigate("/table-data", { state: { searchState } })}
                   >
                     Cancel
                   </button>

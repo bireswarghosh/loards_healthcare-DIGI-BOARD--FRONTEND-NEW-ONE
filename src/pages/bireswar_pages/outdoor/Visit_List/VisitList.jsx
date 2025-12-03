@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../../../axiosInstance";
 import jsPDF from "jspdf";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"; // From Emr.jsx
@@ -7,16 +7,20 @@ import Footer from "../../../../components/footer/Footer";
 
 const VisitList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dropdownRef = useRef(null); // Added from Emr.jsx
+
+  // Restore search state from navigation
+  const savedSearchState = location.state?.searchState;
 
   // State from original Visit_list.jsx - ALL PRESERVED
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchPhone, setSearchPhone] = useState("");
-  const [searchDate, setSearchDate] = useState("");
-  const [searchRegistrationId, setSearchRegistrationId] = useState("");
+  const [searchPhone, setSearchPhone] = useState(savedSearchState?.searchPhone || "");
+  const [searchDate, setSearchDate] = useState(savedSearchState?.searchDate || "");
+  const [searchRegistrationId, setSearchRegistrationId] = useState(savedSearchState?.searchRegistrationId || "");
   const [paginationModel, setPaginationModel] = useState({
-    page: 0,
+    page: savedSearchState?.page || 0,
     pageSize: 100,
   });
   const [rowCount, setRowCount] = useState(0);
@@ -81,7 +85,17 @@ const VisitList = () => {
   );
 
   useEffect(() => {
-    fetchVisits("", "", "", 1, paginationModel.pageSize);
+    if (savedSearchState) {
+      fetchVisits(
+        savedSearchState.searchPhone,
+        savedSearchState.searchDate,
+        savedSearchState.searchRegistrationId,
+        savedSearchState.page + 1,
+        paginationModel.pageSize
+      );
+    } else {
+      fetchVisits("", "", "", 1, paginationModel.pageSize);
+    }
   }, [fetchVisits]);
 
   // Original handler logic - PRESERVED
@@ -127,6 +141,12 @@ const VisitList = () => {
             mode: "view",
             patientData: fullData,
             isReadOnly: true,
+            searchState: {
+              searchPhone,
+              searchDate,
+              searchRegistrationId,
+              page: paginationModel.page,
+            },
           },
         });
       }
@@ -150,6 +170,12 @@ const VisitList = () => {
             mode: "edit",
             patientData: fullData,
             isReadOnly: false,
+            searchState: {
+              searchPhone,
+              searchDate,
+              searchRegistrationId,
+              page: paginationModel.page,
+            },
           },
         });
       }
