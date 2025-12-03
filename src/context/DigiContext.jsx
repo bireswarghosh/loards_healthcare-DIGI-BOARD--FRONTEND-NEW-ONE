@@ -203,6 +203,7 @@ const DigiContextProvider = ({ children }) => {
     component: false,
     outdoor: false,
     outdoorMaster: false,
+    outdoorReport: false,
     indoor: false,
     indoorMaster: false,
     diagnosisMaster: false,
@@ -1286,6 +1287,50 @@ const DigiContextProvider = ({ children }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [dropdownOpen.marketing]);
+
+  // OutdoorReport Part
+  const initialOutdoorReportState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [outdoorReportState, setOutdoorReportState] = useState(
+    localStorage.getItem("outdoorReportState")
+      ? JSON.parse(localStorage.getItem("outdoorReportState"))
+      : initialOutdoorReportState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("outdoorReportState", JSON.stringify(outdoorReportState));
+  }, [outdoorReportState]);
+
+  const toggleMainOutdoorReportDropdown = () => {
+    setOutdoorReportState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("outdoorReport");
+  };
+
+  const mainOutdoorReportRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainOutdoorReportRef.current &&
+        !mainOutdoorReportRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, outdoorReport: false }));
+      }
+    };
+
+    if (dropdownOpen.outdoorReport) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.outdoorReport]);
 
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
@@ -2405,6 +2450,9 @@ const DigiContextProvider = ({ children }) => {
         marketingState,
         toggleMainMarketingDropdown,
         mainMarketingRef,
+        outdoorReportState,
+        toggleMainOutdoorReportDropdown,
+        mainOutdoorReportRef,
       }}
     >
       {children}

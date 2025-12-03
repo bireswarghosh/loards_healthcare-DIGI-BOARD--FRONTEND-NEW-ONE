@@ -4,6 +4,15 @@ import axiosInstance from "../../../../axiosInstance";
 // Removed unused CSS import: import './OutdoorVisitDetail_Compact.css';
 
 const VisitEntry = () => {
+
+  // for modal and multiple member in same phone number
+const [searchResults, setSearchResults] = useState([]);
+const [showModal, setShowModal] = useState(false);
+const [cashlessData, setCashlessData] = useState([]);
+
+
+
+
   const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -29,6 +38,8 @@ const VisitEntry = () => {
   const getInitialTime = () => new Date().toTimeString().slice(0, 5);
 
   const [formData, setFormData] = useState({
+
+    
     // Booking fields
     Booking: "N",
     RegistrationDate: new Date().toISOString().split("T")[0],
@@ -44,7 +55,7 @@ const VisitEntry = () => {
     // Patient fields
     PPr: "",
     GurdianName: "",
-    CareOf: "",
+    Relation: "",
     Sex: "",
     MStatus: "",
     dob: "",
@@ -66,26 +77,27 @@ const VisitEntry = () => {
     emergencyContact: "",
     // Doctor fields
     DepartmentId: "",
+    SpecialityId: "",
     doctorId: "",
     dept: "",
     docName: "",
     // Billing fields
-    billNo: "",
+    VNo: "",
     OutBillDate: new Date().toISOString().split("T")[0],
-    RegCh: "0.00",
-    Rate: "0.00",
-    svrCh: "0.00",
-    pDisc: "0.00",
-    Discount: "0.00",
-    proffDisc: "0.00",
-    proffDiscAmt: "0.00",
-    discp: "0.00",
-    srvChDisc: "0.00",
-    billAmt: "0.00",
+    RegCh: "",
+    Rate: "",
+    svrCh: "",
+    pDisc: "",
+    Discount: "",
+    proffDisc: "",
+    proffDiscAmt: "",
+    discp: "",
+    srvChDisc: "",
+    billAmt: "",
     narration: "",
     // Payment fields (mostly handled by paymentMethods state now)
     receiptAmount: "",
-    dueamt: "",
+    dueamt: '',
     receiptType: "CASH",
     paidamt: "",
     bankName: "",
@@ -93,7 +105,34 @@ const VisitEntry = () => {
     PolcNo: "",
     CCNNo: "",
     CardNo: "",
+
+    "Cashless": "N",
+    CashLessName: "",      // ⭐ ADD THIS
+  CompanyYN: "",         // ⭐ ADD THIS
+  CompanyName: "",  
   });
+
+
+
+
+useEffect(() => {
+ const fetchCashLess = async () => {
+  try {
+    const cashless = await axiosInstance.get("/cashless");
+    if(cashless.data.success){
+      setCashlessData(cashless.data.data)
+      console.log("CashLess Data:", cashless.data.data);
+    }
+  } catch (error) {
+    console.error("Error fetching CashLess:", error);
+  }
+}
+
+  fetchCashLess();
+}, []);
+
+
+
 
   // Fetch religions and departments on component mount
   useEffect(() => {
@@ -131,7 +170,7 @@ const VisitEntry = () => {
         data = patientData;
       } else if (id) {
         const token = localStorage.getItem("token");
-        const response = await axiosInstance.get(`/outdoor-visit-entry/${id}`, {
+        const response = await axiosInstance.get('/admission/search?name=${name}&phone=${phone}', {
           headers: { Authorization: `Bearer ${token}` },
         });
         data = response.data.data;
@@ -206,7 +245,7 @@ const VisitEntry = () => {
           fullAddress: data.PatientAdd1 || data.Add1 || "",
           PPr: data.PPr || "",
           GurdianName: data.GurdianName || "",
-          CareOf: data.CareOf || "",
+          Relation: data.Relation || "",
           MStatus: data.MStatus || "",
           dob: data.Dob ? data.Dob.split("T")[0] : "",
           AgeD: data.AgeD?.toString() || "",
@@ -223,8 +262,10 @@ const VisitEntry = () => {
           DepartmentId: data.SpecialityId?.toString() || "",
           doctorId: data.DoctorId?.toString() || "",
           docName: data.DoctorName || doctorName,
+
+          
           // Billing fields from PatientVisit
-          billNo: data.PVisitId || "",
+          VNo: data.VNo || "",
           OutBillDate: data.PVisitDate
             ? data.PVisitDate.split("T")[0]
             : new Date().toISOString().split("T")[0],
@@ -248,9 +289,18 @@ const VisitEntry = () => {
         });
 
         // Load existing payment methods from patient visit data
-        if (data.RecAmt && parseFloat(data.RecAmt) > 0) {
-          const existingPayments = [];
-
+        if (data.paymentMethods && Array.isArray(data.paymentMethods) && data.paymentMethods.length > 0) {
+          const existingPayments = data.paymentMethods.map(pm => ({
+            type: pm.type?.toString() || "0",
+            amount: pm.amount?.toString() || "",
+            upiApp: pm.upiApp || "",
+            utrNumber: pm.utrNumber || "",
+            bankName: pm.bankName || "",
+            chequeNumber: pm.chequeNumber || "",
+          }));
+          setPaymentMethods(existingPayments);
+        } else if (data.RecAmt && parseFloat(data.RecAmt) > 0) {
+          // Fallback for old single payment format
           const paymentMethod = {
             type: data.PaymentType?.toString() || "0",
             amount: data.RecAmt?.toString() || "",
@@ -259,9 +309,7 @@ const VisitEntry = () => {
             bankName: data.PaymentType === 2 ? data.BANK || "" : "",
             chequeNumber: data.PaymentType === 2 ? data.Cheque || "" : "",
           };
-
-          existingPayments.push(paymentMethod);
-          setPaymentMethods(existingPayments);
+          setPaymentMethods([paymentMethod]);
         }
       }
     } catch (error) {
@@ -429,6 +477,18 @@ const VisitEntry = () => {
         setFormData((prev) => ({ ...prev, docName: selectedDoctor.Doctor }));
       }
     }
+
+    // ------cashlesh----- 
+// CASHLESS LOGIC
+
+
+// When user manually selects a cashless name
+
+
+// When user selects company
+
+
+
   };
 
   const handleSubmit = async (e) => {
@@ -445,43 +505,122 @@ const VisitEntry = () => {
       const dueAmount = totalBillAmount - totalPaidAmount;
 
       // For billing information, use patient visit API
-      const visitData = {
-        RegistrationId: formData.RegistrationId,
-        PVisitDate:
-          formData.RegistrationDate || new Date().toISOString().split("T")[0],
-        Rate: parseFloat(formData.Rate) || 0,
-        VisitTypeId: 1,
-        DoctorId: formData.doctorId ? parseInt(formData.doctorId) : null,
-        SpecialityId: formData.DepartmentId
-          ? parseInt(formData.DepartmentId)
-          : null,
-        TotAmount: totalBillAmount,
-        Weight: formData.Weight || "",
-        BpMin: parseFloat(formData.BpMin) || null,
-        BpMax: parseFloat(formData.BpMax) || null,
-        vTime: formData.RegistrationTime || "",
-        Remarks: formData.narration || "",
-        ServiceCh: parseFloat(formData.svrCh) || 0,
-        RegCh: parseFloat(formData.RegCh) || 0,
-        Discount: parseFloat(formData.Discount) || 0,
-        RecAmt: totalPaidAmount,
-        DueAmt: dueAmount,
-        // Using data from the first payment method for primary storage (API limitation assumption)
-        PaymentType: paymentMethods[0]?.type || "0",
-        BANK: paymentMethods[0]?.bankName || paymentMethods[0]?.upiApp || "",
-        Cheque:
-          paymentMethods[0]?.chequeNumber || paymentMethods[0]?.utrNumber || "",
-      };
+   const visitData = {
+  RegistrationDate: formData.RegistrationDate,
+  RegistrationTime: formData.RegistrationTime,
+  PatientName: formData.PatientName,
+  Add1: formData.Add1,
+  Add2: formData.Add2,
+  Add3: formData.Add3,
 
-      if (!visitData.RegistrationId || !visitData.PVisitDate) {
-        alert("Registration ID and Visit Date are required");
-        return;
-      }
+  // AGE
+  Age: parseInt(formData.Age) || 0,
+  AgeType: "Y",
+  AgeD: parseInt(formData.AgeD) || 0,
+  AgeTypeD: "M",
+  AgeN: parseInt(formData.AgeN) || 0,
+  AgeTypeN: "D",
+  Dob: formData.dob,
+
+  // BASIC INFO
+  Sex: formData.Sex,
+  MStatus: formData.MStatus,
+  PhoneNo: formData.PhoneNo,
+  AreaId: null, // if you have it add it
+  ReligionId: parseInt(formData.ReligionId) || null,
+  UserId: localStorage.getItem("userId") ?? 0,
+  EMailId: formData.email,
+  PPr: formData.PPr,
+  CareOf: formData.Relation,
+  GurdianName: formData.GurdianName,
+
+  // VITALS
+  Height: parseInt(formData.Height) || 0,
+  Hight: parseInt(formData.Height) || 0, // backend spelling mistake
+  Weight: parseInt(formData.Weight) || 0,
+  BloodGroup: formData.BloodGroup,
+  bpmin: parseInt(formData.BpMin) || 0,
+  bpmax: parseInt(formData.BpMax) || 0,
+  BpMin: parseInt(formData.BpMin) || 0,
+  BpMax: parseInt(formData.BpMax) || 0,
+  Temperatare: null,
+
+  // VISIT
+  PVisitDate: formData.RegistrationDate,
+  vTime: formData.RegistrationTime,
+  BTime: formData.RegistrationTime,
+  BDate: formData.RegistrationDate,
+  BookingYN: formData.Booking,
+  VisitTypeId: 1,
+  Rate: parseFloat(formData.Rate) || 0,
+  Discount: parseFloat(formData.Discount) || 0,
+  TotAmount: parseFloat(formData.billAmt) || 0,
+  AdvAmt: 0,
+  ServiceCh: parseFloat(formData.svrCh) || 0,
+  SrvChDisc: parseFloat(formData.srvChDisc) || 0,
+  RegCh: Number(formData.RegCh),
+  NewRegYN: "Y",
+
+  // QUEUE
+  QNo: formData.queueNo,
+  Quota: formData.quota ? 1 : 0,
+
+  // DOCTOR
+  SpecialityId: parseInt(formData.DepartmentId),
+  DoctorId: parseInt(formData.doctorId),
+
+  // REMARKS
+  Remarks: formData.narration,
+  Narration: formData.narration,
+
+  // PAYMENT - Multiple payment methods
+  paymentMethods: paymentMethods.map(pm => ({
+    type: pm.type,
+    amount: parseFloat(pm.amount) || 0,
+    upiApp: pm.upiApp || "",
+    utrNumber: pm.utrNumber || "",
+    bankName: pm.bankName || "",
+    chequeNumber: pm.chequeNumber || "",
+  })),
+  PaymentType: paymentMethods[0]?.type,
+  BANK: paymentMethods[0]?.bankName || paymentMethods[0]?.upiApp || "",
+  Cheque: paymentMethods[0]?.chequeNumber || paymentMethods[0]?.utrNumber || "",
+  RecAmt: totalPaidAmount,
+  DueAmt: dueAmount,
+  FinalRecAmt: totalPaidAmount,
+
+  // EXTRA FIELDS
+  REG: "Y",
+  Asst1YN: "N",
+  Asst1: 0,
+  Asst2YN: "N",
+  Asst2: 0,
+  Asst3YN: "N",
+  Asst3: 0,
+  CancelYN: null,
+  CancelDt: null,
+  ReferralId: 0,
+  Referalid: 0,
+  CompanyId: 0,
+  m_CompanyId: 0,
+  
+  admissionid: " ",
+  Admissionno: null,
+  Clearing: "N",
+};
+
+
+      // if (!visitData.RegistrationId || !visitData.PVisitDate) {
+      //   alert("Registration ID and Visit Date are required");
+      //   return;
+      // }
 
       let response;
 
       if (mode === "edit" && (id || formData.PVisitId)) {
         const visitId = id || formData.PVisitId;
+        console.log("Sending Data to Backend:", visitData);
+
         response = await axiosInstance.put(
           `/patient-visits/${visitId}`,
           visitData
@@ -503,6 +642,192 @@ const VisitEntry = () => {
       setIsSubmitting(false);
     }
   };
+
+
+
+
+
+
+
+const autoFillForm = async (data) => {
+  setFormData((prev) => ({
+    ...prev,
+
+    // BASIC DETAILS
+    RegistrationId: data.RegistrationId || "",
+    PatientName: data.PatientName || "",
+    PhoneNo: data.PhoneNo || "",
+    Sex: data.Sex || "",
+    MStatus: data.MStatus || "",
+    PPr: data.PPr || "",
+    GurdianName: data.GurdianName || "",
+    Relation: data.CareOf || "",
+    email: data.EMailId || "",
+
+    // ADDRESS
+    Add1: data.PatientAdd1 || "",
+    Add2: data.PatientAdd2 || "",
+    Add3: data.PatientAdd3 || "",
+    fullAddress: `${data.PatientAdd1 || ""} ${data.PatientAdd2 || ""} ${data.PatientAdd3 || ""}`.trim(),
+
+    // AGE
+    Age: data.Age?.toString() || "",
+    AgeD: data.AgeD?.toString() || "",
+    AgeN: data.AgeN?.toString() || "",
+    dob: data.Dob ? data.Dob.split("T")[0] : "",
+
+    // RELIGION
+    ReligionId: data.ReligionId?.toString() || "",
+
+    // DOCTOR & DEPARTMENT
+    DepartmentId: data.SpecialityId?.toString() || "",
+    doctorId: data.DoctorId?.toString() || "",
+    docName: data.DoctorName || "",
+
+    // VITALS
+    Weight: data.Weight?.toString() || data.PatientWeight?.toString() || "",
+    Height: data.Hight?.toString() || data.Height?.toString() || "",
+    BpMin: data.bpmin?.toString() || data.BpMin?.toString() || "",
+    BpMax: data.bpmax?.toString() || data.BpMax?.toString() || "",
+    BloodGroup: data.BloodGroup || "",
+
+    // VISIT DETAILS
+    RegistrationDate: data.RegistrationDate
+      ? data.RegistrationDate.split("T")[0]
+      : "",
+    RegistrationTime: data.RegistrationTime || "",
+    VNo: data.VNo || "",
+    OutBillDate: data.PVisitDate ? data.PVisitDate.split("T")[0] : "",
+    Rate: data.Rate?.toString() || "",
+    RegCh: data.RegCh?.toString() || "",
+    svrCh: data.ServiceCh?.toString() || "",
+    Discount: data.Discount?.toString() || "",
+    srvChDisc: data.SrvChDisc?.toString() || "",
+    billAmt: data.TotAmount?.toString() || "",
+    narration: data.Narration || data.Remarks || "",
+    queueNo: data.QNo || 0,
+
+
+
+
+
+
+
+  }));
+
+  // ⭐ Load doctors for that department
+  if (data.SpecialityId) {
+    const res = await axiosInstance.get(
+      `/doctormaster/department/${data.SpecialityId}`
+    );
+    setDoctors(res.data.data || []);
+  }
+};
+
+
+
+
+// search---------------------------------------------------------------------- 
+const searchExistingPatient = async () => {
+  const name = formData.PatientName?.trim();
+  const phone = formData.PhoneNo?.trim();
+
+  if (!name && !phone) {
+    alert("Enter Name or Phone Number");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axiosInstance.get("/patient-visits/search", {
+      params: { name, phone },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    console.log("SEARCH RESPONSE:", res.data);
+
+    // ✔ Extract the FIRST object from "data" array
+    const patient = res.data?.data?.[0];
+
+    if (!patient) {
+      alert("No matching patient found");
+      return;
+    }
+
+    autoFillForm(patient);
+
+    // ⭐ Department & Doctor auto-load
+   const selectedDept = patient?.SpecialityId
+    ? String(patient.SpecialityId)
+    : null;
+
+    if (selectedDept) {
+      setFormData(prev => ({ ...prev, DepartmentId: selectedDept }));
+
+      const resDept = await axiosInstance.get(
+        `/doctormaster/department/${selectedDept}`,
+        // {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // }
+      );
+console.log((resDept.data.data || []));
+      setDoctors(resDept.data.data || []);
+    }
+
+  } catch (error) {
+    console.error("Search Error:", error);
+    alert("Error searching patient");
+  }
+};
+
+
+// bill calculation---------------------------------------- 
+useEffect(() => {
+  const RegCh = parseFloat(formData.RegCh) || 0;
+  const Rate = parseFloat(formData.Rate) || 0;
+  const svrCh = parseFloat(formData.svrCh) || 0;
+  const Discount = parseFloat(formData.Discount) || 0;
+  const srvChDisc = parseFloat(formData.srvChDisc) || 0;
+
+  const total =
+    RegCh +
+    Rate +
+    svrCh -
+    Discount -
+    srvChDisc;
+
+  setFormData(prev => ({
+    ...prev,
+    billAmt: total.toFixed(2)
+  }));
+
+}, [
+  formData.RegCh,
+  formData.Rate,
+  formData.svrCh,
+  formData.Discount,
+  formData.srvChDisc
+]);
+
+
+
+
+  // ------------------------------------
+  // Due Amount Calculation Logic
+  // ------------------------------------
+  const totalPaid = paymentMethods.reduce(
+    (sum, p) => sum + parseFloat(p.amount || 0),
+    0
+  );
+  const billAmount = parseFloat(formData.billAmt || 0);
+
+  const calculatedDueAmount = billAmount - totalPaid;
+  const isDueAmountPositive = calculatedDueAmount > 0;
+
+
+
+
 
   return (
     <div>
@@ -559,8 +884,9 @@ const VisitEntry = () => {
                       type="date"
                       name="RegistrationDate"
                       className="form-control"
-                      value={formData.RegistrationDate}
+                      value={formData.RegistrationDate || ""}
                       onChange={handleChange}
+                    disabled={formData.Booking === "N"}
                     />
                   </div>
                   <div className="col-md-2">
@@ -572,7 +898,11 @@ const VisitEntry = () => {
                       className="form-control"
                       value={formData.RegistrationTime}
                       onChange={handleChange}
+                                          disabled={formData.Booking === "N"}
+
                     />
+                    {console.log(formData.RegistrationTime)
+                    }
                   </div>
                   <div className="col-md-2">
                     <label className="form-label">Quota</label>
@@ -593,7 +923,7 @@ const VisitEntry = () => {
                       type="number"
                       name="queueNo"
                       className="form-control"
-                      value={formData.queueNo}
+                      value={formData.queueNo || ""}
                       onChange={handleChange}
                       readOnly
                     />
@@ -605,7 +935,7 @@ const VisitEntry = () => {
                   Registration
                 </h6>
                 <div className="row g-3">
-                  <div className="col-md-3">
+                  <div className="col-md-2">
                     <label className="form-label">Registration Type</label>
                     <select
                       name="OPD"
@@ -618,44 +948,12 @@ const VisitEntry = () => {
                       <option value="N">Existing Patient</option>
                     </select>
                   </div>
-                  <div className="col-md-3">
-                    <label className="form-label">Patient Name</label>
-                    <input
-                      name="PatientName"
-                      className="form-control"
-                      value={formData.PatientName}
-                      onChange={handleChange}
-                      style={{ textTransform: "uppercase" }}
-                      disabled={mode === "view"}
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label">Phone Number</label>
-                    <input
-                      name="PhoneNo"
-                      className="form-control"
-                      maxLength="10"
-                      value={formData.PhoneNo}
-                      onChange={handleChange}
-                      placeholder="Enter phone number"
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label">Registration No</label>
-                    <input
-                      className="form-control"
-                      value={formData.RegistrationId || "Auto-generated"}
-                      readOnly
-                    />
-                  </div>
-                </div>
 
-                {/* Patient Detail */}
-                <h6 className="text-primary fw-bold border-bottom pb-1 mt-4 mb-3">
-                  Patient Detail
-                </h6>
-                <div className="row g-3">
-                  <div className="col-md-2">
+
+
+
+
+ <div className="col-md-1">
                     <label className="form-label">Prefix</label>
                     <select
                       name="PPr"
@@ -670,37 +968,122 @@ const VisitEntry = () => {
                       <option value="Dr.">Dr.</option>
                     </select>
                   </div>
-                  <div className="col-md-3">
+
+
+
+
+
+
+
+
+
+                  <div className="col-md-2">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    
+                    
+    <label className="form-label">Patient Name</label>
+    
+    <input
+      name="PatientName"
+      className="form-control"
+      value={formData.PatientName || ""}
+      onChange={handleChange}
+      style={{ textTransform: "uppercase" }}
+    />
+  </div>
+  <div className="col-md-2">
+    <label className="form-label">Phone Number</label>
+    <input
+      name="PhoneNo"
+      className="form-control"
+      maxLength="10"
+      value={formData.PhoneNo || ""}
+      onChange={handleChange}
+    />
+  </div>
+   {/* 🔥 Search Button — show ONLY if Existing Patient */}
+  {formData.OPD === "N" && (
+    <div className="col-md-2 d-flex align-items-end">
+      <button
+        type="button"
+        className="btn btn-sm btn-primary w-100"
+        onClick={searchExistingPatient}
+      >
+        🔍 Search
+      </button>
+    </div>
+  )}
+  <div className="col-md-2">
+                    <label className="form-label">Registration No</label>
+                    <input
+                      className="form-control"
+                      value={formData.RegistrationId || "Auto-generated"}
+                      readOnly
+                    />
+                  </div>
+                 <div className="row g-3">
+  
+
+  
+
+ 
+</div>
+
+                
+                  
+                </div>
+
+                {/* Patient Detail */}
+                <h6 className="text-primary fw-bold border-bottom pb-1 mt-4 mb-3">
+                  Patient Detail
+                </h6>
+                <div className="row g-3">
+                 
+                  <div className="col-md-2">
                     <label className="form-label">Guardian Name</label>
                     <input
                       name="GurdianName"
                       className="form-control"
                       style={{ textTransform: "uppercase" }}
-                      value={formData.GurdianName}
+                      value={formData.GurdianName || ""}
                       onChange={handleChange}
                     />
                   </div>
-                  <div className="col-md-2">
+                  <div className="col-md-1">
                     <label className="form-label">Care Of</label>
                     <select
-                      name="CareOf"
+                      name="Relation"
                       className="form-control"
-                      value={formData.CareOf}
+                      value={formData.Relation}
                       onChange={handleChange}
                     >
-                      <option value="">Select</option>
-                      <option value="Father">Father</option>
-                      <option value="Husband">Husband</option>
-                      <option value="Mother">Mother</option>
-                      <option value="Wife">Wife</option>
-                      <option value="Son">Son</option>
-                      <option value="Daughter">Daughter</option>
-                      <option value="W/O">W/O</option>
-                      <option value="S/O">S/O</option>
-                      <option value="D/O">D/O</option>
+                     <option value="">Select</option>
+                      <option value="HUSBANd">W/O</option>
+                      {formData.Sex !== "F" &&
+                      <option value="FATHER">S/O</option>}
+                     {formData.Sex !== "M" &&
+                      <option value="FATHER">D/O</option>}
+                      
+                      
                     </select>
                   </div>
-                  <div className="col-md-2">
+                  <div className="col-md-1">
                     <label className="form-label">Gender</label>
                     <select
                       name="Sex"
@@ -714,7 +1097,7 @@ const VisitEntry = () => {
                       <option value="O">OTHER</option>
                     </select>
                   </div>
-                  <div className="col-md-2">
+                  <div className="col-md-1">
                     <label className="form-label">Marital Status</label>
                     <select
                       name="MStatus"
@@ -725,11 +1108,10 @@ const VisitEntry = () => {
                       <option value="">Select</option>
                       <option value="M">MARRIED</option>
                       <option value="U">UNMARRIED</option>
-                      <option value="D">DIVORCED</option>
-                      <option value="W">WIDOWED</option>
+                    
                     </select>
                   </div>
-                  <div className="col-md-1">
+                  <div className="col-md-2">
                     <label className="form-label">Patient ID</label>
                     <div className="text-center p-2 border rounded">
                       <small className="text-muted">
@@ -737,139 +1119,13 @@ const VisitEntry = () => {
                       </small>
                     </div>
                   </div>
-
-                  {/* DOB & Age Row */}
-                  <div className="col-md-3">
-                    <label className="form-label">Date of Birth</label>
-                    <input
-                      type="date"
-                      name="dob"
-                      className="form-control"
-                      value={formData.dob}
-                      onChange={(e) => handleDobChange(e.target.value)}
-                    />
-                    {formData.dob && (
-                      <small className="text-muted">
-                        {formatDate(formData.dob)}
-                      </small>
-                    )}
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">Age (Years)</label>
-                    <input
-                      type="number"
-                      name="Age"
-                      className="form-control"
-                      value={formData.Age}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          Age: e.target.value,
-                        }));
-                      }}
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">Months</label>
-                    <input
-                      type="number"
-                      name="AgeD"
-                      className="form-control"
-                      value={formData.AgeD}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          AgeD: e.target.value,
-                        }));
-                      }}
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">Days</label>
-                    <input
-                      type="number"
-                      name="AgeN"
-                      className="form-control"
-                      value={formData.AgeN}
-                      onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          AgeN: e.target.value,
-                        }));
-                      }}
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label">Weight (kg)</label>
-                    <input
-                      name="Weight"
-                      type="number"
-                      className="form-control"
-                      value={formData.Weight}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  {/* Physical Measurements */}
-                  <div className="col-md-3">
-                    <label className="form-label">Height (cm)</label>
-                    <input
-                      name="Height"
-                      type="number"
-                      className="form-control"
-                      value={formData.Height}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">BP Max</label>
-                    <input
-                      name="BpMax"
-                      type="number"
-                      className="form-control"
-                      value={formData.BpMax}
-                      onChange={handleChange}
-                      placeholder="120"
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">BP Min</label>
-                    <input
-                      name="BpMin"
-                      type="number"
-                      className="form-control"
-                      value={formData.BpMin}
-                      onChange={handleChange}
-                      placeholder="80"
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label className="form-label">Blood Group</label>
-                    <select
-                      name="BloodGroup"
-                      className="form-control"
-                      value={formData.BloodGroup}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select</option>
-                      <option value="A+">A+</option>
-                      <option value="A-">A-</option>
-                      <option value="B+">B+</option>
-                      <option value="B-">B-</option>
-                      <option value="AB+">AB+</option>
-                      <option value="AB-">AB-</option>
-                      <option value="O+">O+</option>
-                      <option value="O-">O-</option>
-                    </select>
-                  </div>
-
-                  {/* Address & Contact */}
+{/* Address & Contact */}
                   <div className="col-md-6">
                     <label className="form-label">Complete Address</label>
                     <input
                       name="fullAddress"
                       className="form-control"
-                      value={formData.fullAddress}
+                      value={formData.fullAddress || ""}
                       onChange={handleChange}
                       placeholder="Enter complete address"
                     />
@@ -905,7 +1161,260 @@ const VisitEntry = () => {
                       onChange={handleChange}
                     />
                   </div>
+                  {/* DOB & Age Row */}
+                  <div className="col-md-2">
+                    <label className="form-label">Date of Birth</label>
+                    <input
+                      type="date"
+                      name="dob"
+                      className="form-control"
+                      value={formData.dob}
+                      onChange={(e) => handleDobChange(e.target.value)}
+                    />
+                    {formData.dob && (
+                      <small className="text-muted">
+                        {formatDate(formData.dob)}
+                      </small>
+                    )}
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">Age (Years)</label>
+                    <input
+                      type="number"
+                      name="Age"
+                      className="form-control"
+                      value={formData.Age}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          Age: e.target.value,
+                        }));
+                      }}
+                    />
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">Months</label>
+                    <input
+                      type="number"
+                      name="AgeD"
+                      className="form-control"
+                      value={formData.AgeD}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          AgeD: e.target.value,
+                        }));
+                      }}
+                    />
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">Days</label>
+                    <input
+                      type="number"
+                      name="AgeN"
+                      className="form-control"
+                      value={formData.AgeN}
+                      onChange={(e) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          AgeN: e.target.value,
+                        }));
+                      }}
+                    />
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">Weight (kg)</label>
+                    <input
+                      name="Weight"
+                      type="number"
+                      className="form-control"
+                      value={formData.Weight}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  {/* Physical Measurements */}
+                  <div className="col-md-1">
+                    <label className="form-label">Height (cm)</label>
+                    <input
+                      name="Height"
+                      type="number"
+                      className="form-control"
+                      value={formData.Height}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">BP Max</label>
+                    <input
+                      name="BpMax"
+                      type="number"
+                      className="form-control"
+                      value={formData.BpMax}
+                      onChange={handleChange}
+                      placeholder="120"
+                    />
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">BP Min</label>
+                    <input
+                      name="BpMin"
+                      type="number"
+                      className="form-control"
+                      value={formData.BpMin}
+                      onChange={handleChange}
+                      placeholder="80"
+                    />
+                  </div>
+                  <div className="col-md-1">
+                    <label className="form-label">Blood Group</label>
+                    <select
+                      name="BloodGroup"
+                      className="form-control"
+                      value={formData.BloodGroup}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                  </div>
+
+                  
                 </div>
+
+
+
+
+{/* Cashless + Cashless Name + Company (Y/N) + Company Name */}
+
+  <div className="row g-3 mt-3">
+
+
+{/* new cashless-----  */}
+ <div className="col-md-2">
+      <label className="form-label">Cashless (Y/N)</label>
+       <select
+        name="Cashless"
+        className="form-control"
+        value={formData.Cashless}
+        onChange={handleChange}
+      >
+        <option value="">Select</option>
+        <option value="Y">Y</option>
+        <option value="N">N</option>
+      </select>
+     </div>
+   {/* Cashless Name with Suggestion */}
+ <div className="col-md-4">
+      <label className="form-label">Cashless Name</label>
+     <input
+        list="cashlessList"
+        type="text"
+        className="form-control"
+        name="CashLessName"
+        value={formData.CashLessName || ""}
+        onChange={handleChange}
+        placeholder="Select Cashless"
+        disabled={formData.Cashless !== "Y"}
+      />
+
+       {/* Suggestion List */}
+  <datalist id="cashlessList">
+    {cashlessData.map((item) => (
+      <option key={item.id} value={item.cashless} />
+    ))}
+  </datalist>
+</div>
+
+    {/* Cashless Y/N
+    <div className="col-md-2">
+      <label className="form-label">Cashless (Y/N)</label>
+      <select
+        name="CashLess"
+        className="form-control"
+        value={formData.CashLess}
+        onChange={handleChange}
+      >
+        <option value="">--</option>
+        <option value="Y">Y</option>
+        <option value="N">N</option>
+      </select>
+    </div> */}
+
+    {/* Cashless Name with Suggestion */}
+    {/* <div className="col-md-4">
+      <label className="form-label">Cashless Name</label>
+
+      <input
+        list="cashlessList"
+        type="text"
+        className="form-control"
+        name="CashLessName"
+        value={formData.CashLessName || ""}
+        onChange={handleChange}
+        placeholder="Select Cashless"
+      />
+
+      <datalist id="cashlessList">
+        {cashlessData.map((item) => (
+          <option key={item.id} value={item.cashless} />
+        ))}
+      </datalist>
+    </div> */}
+
+    {/* Company Y/N */}
+    {/* <div className="col-md-2">
+      <label className="form-label">Company (Y/N)</label>
+      <select
+        name="CompanyYN"
+        className="form-control"
+        value={formData.CompanyYN || ""}
+        onChange={handleChange}
+      >
+        <option value="">--</option>
+        <option value="Y">Y</option>
+        <option value="N">N</option>
+      </select>
+    </div> */}
+
+    {/* Company Name with Suggestion */}
+    {/* <div className="col-md-4">
+      <label className="form-label">Company Name</label>
+
+      <input
+        list="companyList"
+        type="text"
+        className="form-control"
+        name="CompanyName"
+        value={formData.CompanyName || ""}
+        onChange={handleChange}
+        placeholder="Select Company"
+      />
+
+      <datalist id="companyList">
+        {cashlessData.map((item) => (
+          <option key={item.id} value={item.company} />
+        ))}
+      </datalist>
+    </div> */}
+
+  </div>
+
+
+
+
+
+
+
+
+
 
                 {/* Doctor & Department */}
                 <h6 className="text-primary fw-bold border-bottom pb-1 mt-4 mb-3">
@@ -917,7 +1426,12 @@ const VisitEntry = () => {
                     {mode === "view" ? (
                       <input
                         className="form-control"
-                        value={departmentName}
+                        value={
+      departmentName ||
+      departments.find(d => d.SpecialityId == formData.DepartmentId)?.Speciality ||
+      ""
+    }
+                        
                         readOnly
                       />
                     ) : (
@@ -939,7 +1453,7 @@ const VisitEntry = () => {
                       </select>
                     )}
                   </div>
-                  <div className="col-md-4">
+                  <div className="col-md-2">
                     <label className="form-label">Doctor</label>
                     {mode === "view" ? (
                       <input
@@ -980,12 +1494,12 @@ const VisitEntry = () => {
                   Billing
                 </h6>
                 <div className="row g-3">
-                  <div className="col-md-2">
+                  <div className="col-md-1">
                     <label className="form-label">Bill No</label>
                     <input
-                      name="billNo"
+                      name="VNo"
                       className="form-control"
-                      value={formData.billNo}
+                      value={formData.VNo}
                       onChange={handleChange}
                       readOnly
                     />
@@ -1098,9 +1612,10 @@ const VisitEntry = () => {
                       className="form-control"
                       value={formData.billAmt}
                       onChange={handleChange}
+                      disabled
                     />
                   </div>
-                  <div className="col-md-6">
+                  <div className="col-md-3">
                     <label className="form-label">Narration</label>
                     <input
                       name="narration"
@@ -1125,7 +1640,7 @@ const VisitEntry = () => {
                       type="number"
                       className="form-control"
                       value={formData.billAmt}
-                      readOnly
+                      disabled
                     />
                   </div>
                   <div className="col-md-3">
@@ -1146,11 +1661,7 @@ const VisitEntry = () => {
                       type="number"
                       className="form-control"
                       value={
-                        parseFloat(formData.billAmt || 0) -
-                        paymentMethods.reduce(
-                          (sum, p) => sum + parseFloat(p.amount || 0),
-                          0
-                        )
+                        calculatedDueAmount.toFixed(2)
                       }
                       readOnly
                     />
@@ -1158,13 +1669,14 @@ const VisitEntry = () => {
                   <div className="col-md-3">
                     <label className="form-label d-block">&nbsp;</label>{" "}
                     {/* Placeholder label for alignment */}
-                    <button
+                    {isDueAmountPositive &&  <button
                       type="button"
                       className="btn btn-sm btn-success"
                       onClick={addPaymentMethod}
                     >
                       + Add Payment
-                    </button>
+                    </button> }
+                   
                   </div>
                 </div>
 

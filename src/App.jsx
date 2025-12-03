@@ -63,7 +63,10 @@ import Emr from "./pages/bireswar_pages/outdoor/Emr/Emr.jsx";
 import VisitEntry from "./pages/bireswar_pages/outdoor/Visit_Entry/VisitEntry.jsx";
 import DrRectVisitDetail from "./pages/bireswar_pages/outdoor/Dr_Rect_Visit_Detail/DrRectVisitDetail.jsx";
 import OtherCharges from "./pages/bireswar_pages/outdoor/Other_Charges/OtherCharges.jsx";
+import DateWiseRegistrationCharge from "./pages/bireswar_pages/outdoor/DateWiseRegistrationCharge/DateWiseRegistrationCharge.jsx";
+import PatientHistory from "./pages/bireswar_pages/outdoor/PatientHistory/PatientHistory.jsx";
 import IVFBIODATAMASTER from "./pages/bireswar_pages/outdoor/IVF/IVFBIODATAMASTER.jsx";
+import OthersBillRegister from "./pages/bireswar_pages/outdoor/OthersBillRegister/OthersBillRegister.jsx";
 import VisitList from "./pages/bireswar_pages/outdoor/Visit_List/VisitList.jsx";
 import DPackageMaster from "./pages/bireswar_pages/IndoorMaster/DPackageMaster/DPackageMaster.jsx";
 
@@ -246,6 +249,9 @@ function App() {
           <Route path="/table-data" element={<ProtectedRoute><VisitList /></ProtectedRoute>} />
           <Route path="/dr-rect-visit-detail" element={<ProtectedRoute><DrRectVisitDetail /></ProtectedRoute>} />
           <Route path="/other_charges" element={<ProtectedRoute><OtherCharges /></ProtectedRoute>} />
+          <Route path="/date-wise-registration-charge" element={<ProtectedRoute><DateWiseRegistrationCharge /></ProtectedRoute>} />
+          <Route path="/patient-history" element={<ProtectedRoute><PatientHistory /></ProtectedRoute>} />
+          <Route path="/others-bill-register" element={<ProtectedRoute><OthersBillRegister /></ProtectedRoute>} />
           <Route path="/IVFBiodataMaster" element={<ProtectedRoute><IVFBIODATAMASTER /></ProtectedRoute>} />
           <Route path="/dpackage-master" element={<ProtectedRoute><DPackageMaster /></ProtectedRoute>} />
 

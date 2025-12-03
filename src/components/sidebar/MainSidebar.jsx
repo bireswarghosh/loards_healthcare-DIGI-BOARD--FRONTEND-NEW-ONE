@@ -10,6 +10,7 @@ import OutDoor from './OutDoor';
 import IndoorMaster from './IndoorMaster';
 import Indoor from './Indoor';
 import OutdoorMaster from './OutdoorMaster';
+import OutdoorReport from './OutdoorReport';
 import DiagnosisMaster from './DiagnosisMaster';
 import BookingApp from './BookingApp';
 import Marketing from './Marketing';
@@ -70,6 +71,12 @@ const MainSidebar = () => {
             <OutDoor />
             
 <OutdoorMaster/>
+<OutdoorReport/>
+
+
+
+
+
             <Indoor />
           <IndoorMaster/>
 
@@ -99,6 +106,7 @@ const MainSidebar = () => {
             <OutDoor />
             
 <OutdoorMaster/>
+<OutdoorReport/>
                   <Indoor />
 
 
