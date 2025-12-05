@@ -9,6 +9,10 @@ const BedMaster = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch Bed + Department Data
   useEffect(() => {
@@ -16,14 +20,23 @@ const BedMaster = () => {
     fetchDepartments();
   }, []);
 
-  const fetchBeds = async () => {
+  const fetchBeds = async (page = currentPage, search = searchQuery) => {
     try {
-      const response = await axiosInstance.get("/bedMaster");
+      setLoading(true);
+      let url = `/bedMaster?page=${page}&limit=${itemsPerPage}`;
+      
+      if (search && search.trim() !== "") {
+        url += `&search=${encodeURIComponent(search.trim())}`;
+      }
+      
+      const response = await axiosInstance.get(url);
       if (response.data.success) {
         const sorted = response.data.data.sort(
           (a, b) => a.DepartmentId - b.DepartmentId
         );
         setBedData(sorted);
+        setTotalPages(response.data.pagination?.totalPages || 1);
+        setCurrentPage(page);
       }
     } catch (err) {
       console.error(err);
@@ -125,7 +138,7 @@ const BedMaster = () => {
         : await axiosInstance.post("/bedMaster", formData);
 
       if (response.data.success) {
-        fetchBeds();
+        fetchBeds(currentPage, searchQuery);
         setShowModal(false);
       } else {
         alert("Error saving bed.");
@@ -134,6 +147,67 @@ const BedMaster = () => {
       console.error(err);
       alert("Error saving bed");
     }
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchBeds(1, searchQuery);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setCurrentPage(1);
+    fetchBeds(1, "");
+  };
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    fetchBeds(page, searchQuery);
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const maxPages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
+    let endPage = Math.min(totalPages, startPage + maxPages - 1);
+
+    if (endPage - startPage + 1 < maxPages) {
+      startPage = Math.max(1, endPage - maxPages + 1);
+    }
+
+    const pageNumbers = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <nav className="d-flex justify-content-center mt-3">
+        <ul className="pagination justify-content-center">
+          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(1)}>«</button>
+          </li>
+          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(currentPage - 1)}>‹</button>
+          </li>
+          
+          {pageNumbers.map((pageNumber) => (
+            <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? "active" : ""}`}>
+              <button className="page-link" onClick={() => goToPage(pageNumber)}>
+                {pageNumber}
+              </button>
+            </li>
+          ))}
+          
+          <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(currentPage + 1)}>›</button>
+          </li>
+          <li className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(totalPages)}>»</button>
+          </li>
+        </ul>
+      </nav>
+    );
   };
 
   const handleCloseModal = () => {
@@ -157,7 +231,29 @@ const BedMaster = () => {
             <div className="panel-header d-flex justify-content-between align-items-center">
               <h5 className="mb-0">🛏️ Bed Master - List</h5>
 
-              <div className="btn-box">
+              <div className="btn-box d-flex gap-2">
+                <div className="input-group" style={{ width: '300px' }}>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    placeholder="Search bed..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearch();
+                      }
+                    }}
+                  />
+                  <button className="btn btn-sm btn-outline-secondary" onClick={handleSearch}>
+                    <i className="fa-light fa-search"></i>
+                  </button>
+                  {searchQuery && (
+                    <button className="btn btn-sm btn-outline-danger" onClick={handleClearSearch}>
+                      <i className="fa-light fa-times"></i>
+                    </button>
+                  )}
+                </div>
                 <button className="btn btn-sm btn-primary" onClick={handleAddNew}>
                   <i className="fa-light fa-plus"></i> Add Bed
                 </button>
@@ -230,6 +326,7 @@ const BedMaster = () => {
                   </tbody>
                 </table>
               </div>
+              {renderPagination()}
             </div>
           </div>
 

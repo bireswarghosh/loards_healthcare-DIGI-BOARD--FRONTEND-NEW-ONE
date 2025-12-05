@@ -73,6 +73,17 @@ import DPackageMaster from "./pages/bireswar_pages/IndoorMaster/DPackageMaster/D
 
 
 
+// !  INDOOR
+
+import PatientRegistrationDetail from "./components/indoor/indoor-patientAdmissionlist/PatientRegistrationDetail.jsx";
+
+
+
+
+
+
+
+
 import AdmissionList from "./components/indoor/indoor-patientAdmissionlist/AdmissionList.jsx";
 import PatientAdmissionDetail from "./components/indoor/PatientAdmissionDetail/PatientAdmissionDetail.jsx";
 import SampleReceipt from "./components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleReceipt.jsx";
@@ -261,6 +272,13 @@ function App() {
 {/* indoor route start---------------------------------  */}
           <Route path="/PatientRegistrationList" element={<ProtectedRoute><AdmissionList /></ProtectedRoute>} />
           <Route path="/PatientAdmissionDetail" element={<ProtectedRoute><PatientAdmissionDetail /></ProtectedRoute>}/>
+
+
+<Route path="/PatientRegistrationDetail" element={<PatientRegistrationDetail />} />
+          <Route path="/PatientRegistrationDetail/:id" element={<PatientRegistrationDetail />} />
+
+
+
           <Route path="/sampleReceipts" element={<ProtectedRoute><SampleReceipt /></ProtectedRoute>} />
           <Route path="/othercharges" element={<ProtectedRoute><OtherCharges /></ProtectedRoute>} />
           <Route path="/OTBillingList" element={<ProtectedRoute><OTBillingList /></ProtectedRoute>} />
