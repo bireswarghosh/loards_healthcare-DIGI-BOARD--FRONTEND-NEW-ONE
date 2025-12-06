@@ -150,6 +150,24 @@ const PatientRegistrationDetail = () => {
   useEffect(() => {
     if (id) {
       fetchAdmission();
+    } else {
+      // In create mode, fetch all dropdown data
+      fetchDietChart();
+      fetchDepartment();
+      fetchDoctors();
+      fetchState();
+      fetchDistrict();
+      fetchReligion();
+      fetchMExecutive();
+      fetchDiseases();
+      fetcheBed();
+      fetchCashLess();
+      fetchCompany();
+      fetchInsCompany();
+      fetchReferral();
+      fetchDayCare();
+      fetchRMO();
+      fetchPackages();
     }
   }, [id]);
 
@@ -646,17 +664,7 @@ const PatientRegistrationDetail = () => {
     {
       label: "New",
       onClick: () => {
-        setMode("create");
-        setFormData({
-          ...formData,
-          AdmitionNo: "",
-          PatientName: "",
-          AdmitionDate: new Date().toISOString().split("T")[0],
-        });
-        // Note: The original file navigates to the list view after New, which is inconsistent with
-        // the button's intended function in AdmissionDetail-1.jsx, but the logic is kept.
-        // For consistency with PatientRegistrationDetail-1.jsx's logic:
-        navigate("/patient-registration/new?mode=create", { replace: true });
+        navigate("/PatientRegistrationDetail");
       },
       variant: "primary",
       disabled: loading,
@@ -1526,7 +1534,7 @@ const PatientRegistrationDetail = () => {
                 <label className="form-label small">M Executive</label>
 
                 <select
-                  name="MExecutive"
+                  name="MEXECUTIVE"
                   className="form-control form-control-sm"
                   value={formData.MEXECUTIVE}
                   onChange={handleInputChange}
@@ -1538,15 +1546,6 @@ const PatientRegistrationDetail = () => {
                     </option>
                   ))}
                 </select>
-
-                {/* <input
-                  type="text"
-                  name="InsComp"
-                  className="form-control form-control-sm"
-                  value={formData.InsComp}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                /> */}
               </div>
 
               <div className="col-md-2">
