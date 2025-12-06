@@ -34,126 +34,99 @@ const PatientRegistrationDetail = () => {
   const [loading, setLoading] = useState(false);
   const [district, setDistrict] = useState([]);
   const [formData, setFormData] = useState({
-    AdmitionNo: "",
     AdmitionDate: new Date().toISOString().split("T")[0],
-    BillTime: "12:00",
     AdmitionTime: "13:15",
+    BillTime: "12:00",
     OPD: "Y",
     OPDId: "",
     Booking: "N",
-    PatientId: "",
-    BillNo: "",
-    RegistrationNo: "",
-    EMRNo: "",
-    Package: "",
+    BookingId: null,
     PatientName: "",
     Add1: "",
     Add2: "",
     Add3: "",
-    PinCode: "",
-    Occupation: "",
-    DateOfBirth: "",
-    Age: "0",
-    AgeD: "0",
-    AgeN: "0",
+    Age: 0,
+    AgeType: "Y",
     Sex: "M",
     MStatus: "U",
-    ReligionId: "HINDU",
-    PanNo: "",
-    State: "Howrah",
-    Nationality: "",
-    Weight: "0.000",
     PhoneNo: "",
-    IdentNo: "",
-    AreaId: "", // Added for Area district/police station
-    District: "",
-    URN: "",
-    // Duplicates from original state kept for consistency
+    AreaId: "",
     ReligionId: "",
-    PanNo: "",
-    nameemployer: "",
-    Passport: "",
     GurdianName: "",
     Relation: "",
-    DietChartId: "",
     RelativeName: "",
     RelativePhoneNo: "",
-    DepartmentId: "",
+    Company: "N",
     CompanyId: "",
-    AdmType: 0,
-    // Company: '', // Commented out to match original, will be added back for full form compatibility
-    refdate: "",
-    // Duplicate from original state kept for consistency
     DepartmentId: "",
     BedId: "",
-    BedRate: "",
-    NursingCharge: "0",
     UCDoctor1Id: "",
     UCDoctor2Id: "",
-    UCDoctor3Id: "",
-    DayCareYN: "Y",
-    Particular: "",
-    BMDCharge: "0",
-    HealthCardNo: "",
-    DayCareBedRate: "0.00",
-    Nameemp: "",
-    empcode: "",
-    PatientsDoctor: "",
+    UCDoctor3Id: 0,
     DiseaseId: "",
-    PolcNo: "",
-    MEXECUTIVE: "",
     RMOId: "",
-    CardNo: "",
-    RefDoctorId: "",
-    CCNNo: "",
-    RefDoctorId2: "",
-    DiseaseCode: "",
-    PackageAmount: "0.00",
-    TotalPackage: "0.00",
-    DischargeDate: "",
-    FinalBillDate: "",
-    AdmissionBy: "Admin",
-    CurrentUser: "Admin",
-    oprationdate: "",
-    optime: "",
-    FFN: "",
-    optdiagoinc: "",
-    optmediinc: "",
-    optotherchargeinc: "",
-    optotinc: "",
-    Referral: "",
-    ReferralId: "",
+    Referral: "N",
+    ReferralId: 0,
+    RefDoctorId: 0,
+    Package: "N",
     PackageId: "",
-    InsComp: "",
-    Remarks: "",
-    SpRemarks: "",
+    PackageAmount: 0,
     CashLess: "Y",
-    packagevalid: "2000-01-01",
-    packagestart: "2000-01-01",
-    BedYN: "N",
-    Company: "N",
+    CashLessId: "",
     UserId: 42,
     Status: "O",
     Discharge: "N",
+    AdmitionNo: "",
     AdmitionNo1: "",
     Rename: null,
+    AdmType: 0,
     InsComp: null,
+    DayCareYN: "N",
+    BedRate: 0,
     DayCareId: 0,
+    PatientId: "",
+    Remarks: "",
+    SpRemarks: "",
+    IdentNo: "",
+    PolcNo: "",
+    CCNNo: "",
+    CardNo: "",
+    PPN: 0,
+    BillDone: "N",
+    Occupation: "",
+    Passport: "",
+    DietChartId: "",
     tpaper: null,
+    PanNo: "",
     PackageCHK: 0,
+    nameemployer: "",
+    refdate: "",
+    Nameemp: "",
+    empcode: "",
+    RefDoctorId2: 0,
+    packagevalid: "2000-01-01",
+    optdiagoinc: 0,
+    optmediinc: 0,
+    optotherchargeinc: 0,
+    Weight: "0",
+    oprationdate: "",
+    optime: "",
+    AgeD: 0,
+    AgeTypeD: "M",
+    AgeN: 0,
+    AgeTypeN: "D",
+    URN: "",
+    packagestart: "2000-01-01",
     AcGenLedCompany: 0,
+    optotinc: 0,
+    MEXECUTIVE: "",
     PackageId2: null,
     PackageId3: null,
     PackageId4: null,
     PackageAmount2: null,
     PackageAmount3: null,
     PackageAmount4: null,
-    PPN: 0,
-    BillDone: "N",
-    AgeType: "Y",
-    AgeTypeD: "M",
-    AgeTypeN: "D",
-    BookingId: null,
+
   });
   const [diet, setDiet] = useState([]);
   const [religion, setReligion] = useState([]);
@@ -571,7 +544,6 @@ const PatientRegistrationDetail = () => {
   const calDayCareBedRate = (dayCareId) => {
     const result = dayCare.find((item) => item.DayCareId == dayCareId);
     // console.log("DayCare Bed Rate Calculation:", result.Rate);
-    setFormData((prev) => ({ ...prev, DayCareBedRate: result.Rate }));
   };
 
   const calPackageAmount = (id) => {
@@ -584,9 +556,6 @@ const PatientRegistrationDetail = () => {
 
   const calDiseaseCode = (id) => {
     const item = diseases.find((disease) => disease.DiseaseId == id);
-    if (item) {
-      setFormData((prev) => ({ ...prev, DiseaseCode: item.Diseasecode }));
-    }
   };
 
   const handleInputChange = (e) => {
@@ -597,12 +566,31 @@ const PatientRegistrationDetail = () => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      // console.log("id is : ", id);
-      console.log("Submitting Form Data:", formData);
+      
+      // Remove any fields that don't exist in database
+      const cleanData = { ...formData };
+      delete cleanData.DateOfBirth;
+      delete cleanData.District;
+      delete cleanData.State;
+      delete cleanData.Nationality;
+      delete cleanData.PinCode;
+      delete cleanData.BillNo;
+      delete cleanData.RegistrationNo;
+      delete cleanData.EMRNo;
+      delete cleanData.Particular;
+      delete cleanData.HealthCardNo;
+      delete cleanData.PatientsDoctor;
+      delete cleanData.TotalPackage;
+      delete cleanData.DischargeDate;
+      delete cleanData.FinalBillDate;
+      delete cleanData.FFN;
+      delete cleanData.BedYN;
+      
+      console.log("Submitting Form Data:", cleanData);
       const response =
         mode === "create"
-          ? await axiosInstance.post("/admission", formData)
-          : await axiosInstance.put(`/admission/${id}`, formData);
+          ? await axiosInstance.post("/admission", cleanData)
+          : await axiosInstance.put(`/admission/${id}`, cleanData);
 
       if (response.data.success) {
         alert(
@@ -925,25 +913,7 @@ const PatientRegistrationDetail = () => {
                 />
               </div>
 
-              {/* DOB, Age, Sex, Marital Status, Phone, ID Proof, Religion, PAN No, State, Nationality, Weight, District/PS, URN */}
-              <div className="col-md-2">
-                <label className="form-label small">DOB</label>
-                {/* Note: This field was missing in the original formData definition but is present in the layout of -1 */}
-                <input
-                  type="text"
-                  name="DateOfBirth"
-                  className="form-control form-control-sm"
-                  value={`${String(new Date().getDate()).padStart(
-                    2,
-                    "0"
-                  )}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${
-                    new Date().getFullYear() - formData.Age
-                  }`}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                  placeholder="DD/MM/YYYY" // Added placeholder for visual guide
-                />
-              </div>
+              {/* Age, Sex, Marital Status, Phone, ID Proof, Religion, PAN No, Nationality, Weight, URN */}
               <div className="col-md-4">
                 <label className="form-label ">Age (Y/M/D)</label>
                 <div className="input-group ">
@@ -1082,15 +1052,7 @@ const PatientRegistrationDetail = () => {
                 />
               </div>
               <div className="col-md-2">
-                <label className="form-label small">State</label>
-                {/* <input
-                  type="text"
-                  name="State"
-                  className="form-control form-control-sm"
-                  value={"Howrah"}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                /> */}
+                <label className="form-label small">District/PS (AreaId)</label>
                 <select
                   name="AreaId"
                   className="form-control form-control-sm"
@@ -1098,7 +1060,7 @@ const PatientRegistrationDetail = () => {
                   onChange={handleInputChange}
                   disabled={mode === "view"}
                 >
-                  {fetchedState.map((d, indx) => (
+                  {district.map((d, indx) => (
                     <option key={indx} value={d.ZoneId}>
                       {d.Zone}
                     </option>
@@ -1126,30 +1088,6 @@ const PatientRegistrationDetail = () => {
                   onChange={handleInputChange}
                   disabled={mode === "view"}
                 />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label small">District/PS</label>
-                {/* <input
-                  type="text"
-                  name="AreaId"
-                  className="form-control form-control-sm"
-                  value={formData.AreaId}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                /> */}
-                <select
-                  name="District"
-                  className="form-control form-control-sm"
-                  value={formData.District}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                >
-                  {district.map((d, indx) => (
-                    <option key={indx} value={d.ZoneId}>
-                      {d.Zone}
-                    </option>
-                  ))}
-                </select>
               </div>
               <div className="col-md-2">
                 <label className="form-label small">URN</label>
@@ -1643,28 +1581,7 @@ const PatientRegistrationDetail = () => {
                   disabled={mode === "view"}
                 />
               </div>
-              <div className="col-md-2">
-                <label className="form-label small">Nursing Charge</label>
-                <input
-                  type="text"
-                  name="NursingCharge"
-                  className="form-control form-control-sm"
-                  value={formData.NursingCharge}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label small">RMO Charge</label>
-                <input
-                  type="text"
-                  name="BMDCharge"
-                  className="form-control form-control-sm"
-                  value={formData.BMDCharge}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                />
-              </div>
+
               <div className="col-md-2">
                 <label className="form-label small">Day Care [Y/N]</label>
                 <select
@@ -1712,19 +1629,7 @@ const PatientRegistrationDetail = () => {
                 </select>
               </div>
 
-              <div className="col-md-2">
-                <label className="form-label small">Day Care Bed Rate</label>
-                <input
-                  type="text"
-                  name="DayCareBedRate"
-                  className="form-control form-control-sm"
-                  value={
-                    formData.DayCareYN === "N" ? " " : formData.DayCareBedRate
-                  }
-                  // onChange={handleInputChange}
-                  disabled={mode === "view" || formData.DayCareYN === "N"}
-                />
-              </div>
+
               <div className="col-md-2">
                 <label className="form-label small">Employee</label>
                 <input
@@ -1892,17 +1797,7 @@ const PatientRegistrationDetail = () => {
                   disabled={mode === "view"}
                 />
               </div>
-              <div className="col-md-2">
-                <label className="form-label small">Diseasecode</label>
-                <input
-                  type="text"
-                  name="PackageAmount"
-                  className="form-control form-control-sm"
-                  value={formData.DiseaseCode}
-                  // onChange={handleInputChange}
-                  disabled={mode === "view"}
-                />
-              </div>
+
               <div className="col-md-3">
                 <label className="form-label small">CCN No</label>
                 <input
@@ -1926,28 +1821,7 @@ const PatientRegistrationDetail = () => {
                   disabled={mode === "view"}
                 />
               </div>
-              <div className="col-md-3">
-                <label className="form-label small">Admission By</label>
-                <input
-                  type="text"
-                  name="AdmissionBy"
-                  className="form-control form-control-sm"
-                  value={formData.AdmissionBy}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label small">Current User</label>
-                <input
-                  type="text"
-                  name="CurrentUser"
-                  className="form-control form-control-sm"
-                  value={formData.CurrentUser}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                />
-              </div>
+
 
               <div className="col-md-3">
                 <label className="form-label small">Operation Date</label>
@@ -2262,8 +2136,6 @@ const PatientRegistrationDetail = () => {
                                 ...prev,
                                 BedId: bedItem.BedId,
                                 BedRate: bedItem.BedCh,
-                                NursingCharge: bedItem.AtttndantCh,
-                                BMDCharge: bedItem.RMOCh,
                               }));
                               setSelectedBedName(bedItem.Bed);
                               setShowBedDrawer(false);
