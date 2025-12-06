@@ -80,7 +80,7 @@ const PatientRegistrationDetail = () => {
     RelativePhoneNo: "",
     DepartmentId: "",
     CompanyId: "",
-    AdmissionType: "",
+    AdmType: 0,
     // Company: '', // Commented out to match original, will be added back for full form compatibility
     refdate: "",
     // Duplicate from original state kept for consistency
@@ -131,6 +131,29 @@ const PatientRegistrationDetail = () => {
     packagevalid: "2000-01-01",
     packagestart: "2000-01-01",
     BedYN: "N",
+    Company: "N",
+    UserId: 42,
+    Status: "O",
+    Discharge: "N",
+    AdmitionNo1: "",
+    Rename: null,
+    InsComp: null,
+    DayCareId: 0,
+    tpaper: null,
+    PackageCHK: 0,
+    AcGenLedCompany: 0,
+    PackageId2: null,
+    PackageId3: null,
+    PackageId4: null,
+    PackageAmount2: null,
+    PackageAmount3: null,
+    PackageAmount4: null,
+    PPN: 0,
+    BillDone: "N",
+    AgeType: "Y",
+    AgeTypeD: "M",
+    AgeTypeN: "D",
+    BookingId: null,
   });
   const [diet, setDiet] = useState([]);
   const [religion, setReligion] = useState([]);
@@ -568,7 +591,6 @@ const PatientRegistrationDetail = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // console.log("Input Change:", name, value);
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -1271,20 +1293,20 @@ const PatientRegistrationDetail = () => {
               <div className="col-md-3">
                 <label className="form-label small">Admission Type</label>
                 <select
-                  name="AdmissionType"
+                  name="AdmType"
                   className="form-control form-control-sm"
-                  value={formData.AdmissionType}
+                  value={formData.AdmType}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
                 >
-                  <option value="">None</option>
-                  <option value="Police Case">Police Case</option>
-                  <option value="Accident Case">Accident Case</option>
-                  <option value="Born Case">Born Case</option>
-                  <option value="Suicide Case">Suicide Case</option>
-                  <option value="Insurance">Insurance</option>
-                  <option value="Blood Requition">Blood Requition</option>
-                  <option value="Hospital Case">Hospital Case</option>
+                  <option value="0">None</option>
+                  <option value="1">Police Case</option>
+                  <option value="2">Accident Case</option>
+                  <option value="3">Born Case</option>
+                  <option value="4">Suicide Case</option>
+                  <option value="5">Insurance</option>
+                  <option value="6">Blood Requition</option>
+                  <option value="7">Hospital Case</option>
                 </select>
               </div>
               <div className="col-md-3">
