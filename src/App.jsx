@@ -69,6 +69,7 @@ import IVFBIODATAMASTER from "./pages/bireswar_pages/outdoor/IVF/IVFBIODATAMASTE
 import OthersBillRegister from "./pages/bireswar_pages/outdoor/OthersBillRegister/OthersBillRegister.jsx";
 import VisitList from "./pages/bireswar_pages/outdoor/Visit_List/VisitList.jsx";
 import DPackageMaster from "./pages/bireswar_pages/IndoorMaster/DPackageMaster/DPackageMaster.jsx";
+import DiagnosticParameterSetup from "./pages/bireswar_pages/IndoorMaster/DiagnosticParameterSetup/DiagnosticParameterSetup.jsx";
 
 
 
@@ -326,6 +327,7 @@ function App() {
  <Route path="/ItemGroupMaster" element={<ProtectedRoute><ItemGroupMaster/></ProtectedRoute>}/>
  <Route path="/RemarksM" element={<ProtectedRoute><RemarksM/></ProtectedRoute>}/>
  <Route path="/TestMaster" element={<ProtectedRoute><TestMaster/></ProtectedRoute>}/>
+ <Route path="/DiagnosticParameterSetup" element={<ProtectedRoute><DiagnosticParameterSetup/></ProtectedRoute>}/>
 
 
 
