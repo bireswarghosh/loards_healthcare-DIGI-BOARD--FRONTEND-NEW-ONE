@@ -510,12 +510,36 @@ const PatientRegistrationDetail = () => {
       const response = await axiosInstance.get(`/admission/${decodedId}`);
       if (response.data.success) {
         const apiData = response.data.data;
+        
+        // Calculate DOB from age if not present
+        let calculatedDob = apiData.Dob ? apiData.Dob.substring(0, 10) : "";
+        if (!calculatedDob && apiData.AdmitionDate && (apiData.Age || apiData.AgeD || apiData.AgeN)) {
+          try {
+            const admDate = new Date(apiData.AdmitionDate);
+            const years = parseInt(apiData.Age) || 0;
+            const months = parseInt(apiData.AgeD) || 0;
+            const days = parseInt(apiData.AgeN) || 0;
+            
+            const birthDate = new Date(admDate);
+            birthDate.setFullYear(birthDate.getFullYear() - years);
+            birthDate.setMonth(birthDate.getMonth() - months);
+            birthDate.setDate(birthDate.getDate() - days);
+            
+            if (!isNaN(birthDate.getTime())) {
+              calculatedDob = birthDate.toISOString().substring(0, 10);
+            }
+          } catch (error) {
+            console.error("Error calculating DOB:", error);
+          }
+        }
+        
         setFormData({
           ...apiData,
           AdmitionDate: apiData.AdmitionDate
             ? apiData.AdmitionDate.substring(0, 10)
             : "",
           OPD: apiData.OPD || "Y",
+          Dob: calculatedDob,
           oprationdate: apiData.oprationdate
             ? apiData.oprationdate.substring(0, 10)
             : "",
@@ -579,6 +603,75 @@ const PatientRegistrationDetail = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Auto-calculate age when DOB changes
+  const handleDobChange = (value) => {
+    if (value && formData.AdmitionDate) {
+      try {
+        const birthDate = new Date(value);
+        const admDate = new Date(formData.AdmitionDate);
+
+        if (!isNaN(birthDate.getTime()) && !isNaN(admDate.getTime())) {
+          let years = admDate.getFullYear() - birthDate.getFullYear();
+          let months = admDate.getMonth() - birthDate.getMonth();
+          let days = admDate.getDate() - birthDate.getDate();
+
+          if (days < 0) {
+            months--;
+            const lastMonth = new Date(admDate.getFullYear(), admDate.getMonth(), 0);
+            days += lastMonth.getDate();
+          }
+
+          if (months < 0) {
+            years--;
+            months += 12;
+          }
+
+          setFormData((prev) => ({
+            ...prev,
+            Dob: value,
+            Age: years,
+            AgeD: months,
+            AgeN: days,
+          }));
+        }
+      } catch (error) {
+        console.error("Error calculating age:", error);
+        setFormData((prev) => ({ ...prev, Dob: value }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, Dob: value }));
+    }
+  };
+
+  // Auto-calculate DOB when age fields change
+  const handleAgeChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    
+    if (formData.AdmitionDate) {
+      try {
+        const years = parseInt(field === 'Age' ? value : formData.Age) || 0;
+        const months = parseInt(field === 'AgeD' ? value : formData.AgeD) || 0;
+        const days = parseInt(field === 'AgeN' ? value : formData.AgeN) || 0;
+
+        if (years || months || days) {
+          const admDate = new Date(formData.AdmitionDate);
+          if (!isNaN(admDate.getTime())) {
+            const birthDate = new Date(admDate);
+            birthDate.setFullYear(birthDate.getFullYear() - years);
+            birthDate.setMonth(birthDate.getMonth() - months);
+            birthDate.setDate(birthDate.getDate() - days);
+            if (!isNaN(birthDate.getTime())) {
+              const dobString = birthDate.toISOString().split("T")[0];
+              setFormData((prev) => ({ ...prev, Dob: dobString }));
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error calculating DOB:", error);
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -664,7 +757,7 @@ const PatientRegistrationDetail = () => {
     {
       label: "New",
       onClick: () => {
-        navigate("/PatientRegistrationDetail");
+        window.location.href = "/PatientRegistrationDetail";
       },
       variant: "primary",
       disabled: loading,
@@ -921,18 +1014,29 @@ const PatientRegistrationDetail = () => {
                 />
               </div>
 
-              {/* Age, Sex, Marital Status, Phone, ID Proof, Religion, PAN No, Nationality, Weight, URN */}
+              {/* DOB & Age */}
+              <div className="col-md-2">
+                <label className="form-label small">Date of Birth</label>
+                <input
+                  type="date"
+                  name="Dob"
+                  className="form-control form-control-sm"
+                  value={formData.Dob ? formData.Dob.split("T")[0] : ""}
+                  onChange={(e) => handleDobChange(e.target.value)}
+                  disabled={mode === "view"}
+                />
+              </div>
               <div className="col-md-4">
-                <label className="form-label ">Age (Y/M/D)</label>
-                <div className="input-group ">
+                <label className="form-label small">Age (Y/M/D)</label>
+                <div className="input-group">
                   <span className="input-group-text p-1">Y</span>
                   <input
                     type="number"
                     name="Age"
-                    className="form-control "
+                    className="form-control"
                     placeholder="Y"
                     value={formData.Age}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleAgeChange('Age', e.target.value)}
                     disabled={mode === "view"}
                   />
 
@@ -943,7 +1047,7 @@ const PatientRegistrationDetail = () => {
                     className="form-control"
                     placeholder="M"
                     value={formData.AgeD}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleAgeChange('AgeD', e.target.value)}
                     disabled={mode === "view"}
                   />
 
@@ -954,7 +1058,7 @@ const PatientRegistrationDetail = () => {
                     className="form-control"
                     placeholder="D"
                     value={formData.AgeN}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleAgeChange('AgeN', e.target.value)}
                     disabled={mode === "view"}
                   />
                 </div>

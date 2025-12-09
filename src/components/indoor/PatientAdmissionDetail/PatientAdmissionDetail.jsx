@@ -23,7 +23,7 @@ const PatientAdmissionDetail = () => {
 
         <div className="row g-3">
           <div className="col-md-3"><label className="form-label small">Admission No</label><input className="form-control form-control-sm" defaultValue="A-001043/24-25"/></div>
-          <div className="col-md-2"><label className="form-label small">Date</label><input type="date" className="form-control form-control-sm" defaultValue="2025-02-22"/></div>
+          <div className="col-md-2"><label className="form-label small">Date</label><input type="date" className="form-control form-  control-sm" defaultValue="2025-02-22"/></div>
           <div className="col-md-2"><label className="form-label small">Bill Time</label><input className="form-control form-control-sm" defaultValue="12:00 PM"/></div>
           <div className="col-md-2"><label className="form-label small">Admission Time</label><input className="form-control form-control-sm" defaultValue="07:51 AM"/></div>
           <div className="col-md-2"><label className="form-label small">O.P.D</label><input className="form-control form-control-sm" defaultValue="S-019378/24-25"/></div>
