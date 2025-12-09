@@ -175,20 +175,20 @@ const AdmissionList = () => {
                 {/* DATE FILTER */}
                 <div className="col-lg-6">
                   <div className="input-group input-group-sm">
-                    <span className="input-group-text">From</span>
+                    {/* <span className="input-group-text">From</span>
                     <input 
                       type="date" 
                       className="form-control" 
                       value={dateFrom} 
                       onChange={(e) => handleDateChange('from', e.target.value)} 
-                    />
-                    <span className="input-group-text">To</span>
+                    /> */}
+                    {/* <span className="input-group-text">To</span>
                     <input 
                       type="date" 
                       className="form-control" 
                       value={dateTo} 
                       onChange={(e) => handleDateChange('to', e.target.value)} 
-                    />
+                    /> */}
                   </div>
                 </div>
               </div>
