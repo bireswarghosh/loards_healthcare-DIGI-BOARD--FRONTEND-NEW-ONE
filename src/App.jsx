@@ -69,7 +69,7 @@ import IVFBIODATAMASTER from "./pages/bireswar_pages/outdoor/IVF/IVFBIODATAMASTE
 import OthersBillRegister from "./pages/bireswar_pages/outdoor/OthersBillRegister/OthersBillRegister.jsx";
 import VisitList from "./pages/bireswar_pages/outdoor/Visit_List/VisitList.jsx";
 import DPackageMaster from "./pages/bireswar_pages/IndoorMaster/DPackageMaster/DPackageMaster.jsx";
-import DiagnosticParameterSetup from "./pages/bireswar_pages/IndoorMaster/DiagnosticParameterSetup/DiagnosticParameterSetup.jsx";
+// import DiagnosticParameterSetup from "./pages/bireswar_pages/IndoorMaster/DiagnosticParameterSetup/DiagnosticParameterSetup.jsx";
 
 
 
@@ -129,8 +129,8 @@ import CategoryMaster from "./templates/DiagnosisMaster/CategoryMaster.jsx"
 import CulMedHdMaster from "./templates/DiagnosisMaster/CulMedHd.jsx"
 import GodownMaster from "./templates/DiagnosisMaster/GodownMaster.jsx"
 import ItemGroupMaster from "./templates/DiagnosisMaster/ItemGroupMaster.jsx"
-import RemarksM from "./templates/DiagnosisMaster/RemarksMaster.jsx"
-import TestMaster from "./templates/DiagnosisMaster/Test.jsx"
+// import RemarksM from "./templates/DiagnosisMaster/RemarksMaster.jsx"
+// import TestMaster from "./templates/DiagnosisMaster/Test.jsx"
 import PatientList from "./templates/Booking App/PatientList.jsx";
 
 
@@ -225,6 +225,16 @@ import EditMarketingExecutive from "./templates/DiagnosisMaster/EditMarketingExe
 import Composition from "./templates/DiagnosisMaster/Composition.jsx";
 import CompanyMaster from "./templates/DiagnosisMaster/CompanyMaster.jsx";
 import Batch from "./templates/DiagnosisMaster/Batch.jsx";  import TestMaster from "./templates/DiagnosisMaster/Test.jsx"
+
+
+// ! soum dia  mas
+import RemarksMaster_dia from "./templates/DiagnosisMaster/RemarksMaster.jsx"
+import TestParameter from "./templates/DiagnosisMaster/TestParameter.jsx";
+
+import DiscountAllowedMaster from "./templates/DiagnosisMaster/DiscountAllowedMaster.jsx";
+
+import DiagnosticParameterSetup from "./templates/DiagnosisMaster/DiagnosticParameterSetup.jsx";
+
 
 
 
@@ -340,9 +350,9 @@ function App() {
  <Route path="/CulMedHdMaster" element={<ProtectedRoute><CulMedHdMaster/></ProtectedRoute>}/>
  <Route path="/GodownMaster" element={<ProtectedRoute><GodownMaster/></ProtectedRoute>}/>
  <Route path="/ItemGroupMaster" element={<ProtectedRoute><ItemGroupMaster/></ProtectedRoute>}/>
- <Route path="/RemarksM" element={<ProtectedRoute><RemarksM/></ProtectedRoute>}/>
- <Route path="/TestMaster" element={<ProtectedRoute><TestMaster/></ProtectedRoute>}/>
- <Route path="/DiagnosticParameterSetup" element={<ProtectedRoute><DiagnosticParameterSetup/></ProtectedRoute>}/>
+ {/* <Route path="/RemarksM" element={<ProtectedRoute><RemarksM/></ProtectedRoute>}/> */}
+ {/* <Route path="/TestMaster" element={<ProtectedRoute><TestMaster/></ProtectedRoute>}/> */}
+ {/* <Route path="/DiagnosticParameterSetup" element={<ProtectedRoute><DiagnosticParameterSetup/></ProtectedRoute>}/> */}
 
 
 
@@ -473,6 +483,16 @@ function App() {
 
 
 
+      {/* sou dia  mas */}
+
+
+<Route path="/RemarksMaster_dia" element={<ProtectedRoute><RemarksMaster/></ProtectedRoute>}/>
+
+ <Route path="/TestPara" element={<TestParameter/>}/>
+
+ <Route path="/DiscountAllowedMaster" element={<DiscountAllowedMaster/>}/>
+
+ <Route path="/DiagnosticParameterSetup" element={<DiagnosticParameterSetup/>}/>
 
 
     
@@ -493,7 +513,7 @@ function App() {
         <Route path="/error500" element={<Error500 />} />
         <Route path="/error503" element={<Error503 />} />
         <Route path="/error504" element={<Error504 />} />
-        <Route path="/comingSoon" element={<ComingSoon />} />
+        <Route path="/ComingSoon" element={<ComingSoon />} />
         <Route path="/comingSoon2" element={<ComingSoon2 />} />
         <Route path="/pricingTable" element={<PricingTable />} />
         <Route path="/pricingTable2" element={<PricingTable2 />} />

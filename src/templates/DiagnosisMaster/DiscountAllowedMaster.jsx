@@ -5,7 +5,7 @@ import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const RemarksMaster = () => {
+const DiscountAllowedMaster = () => {
   const dropdownRef = useRef(null);
 
   // data state
@@ -17,9 +17,9 @@ const RemarksMaster = () => {
   const [modalType, setModalType] = useState("add"); // add | edit | view
   const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
-    RemarksId: "",
-    Remarks: "",
-    Type: "",
+    DiscOtherId: "",
+    DiscOtherName: "",
+    ComissionYN: "",
   });
 
   // search
@@ -38,11 +38,8 @@ const RemarksMaster = () => {
   const fetchItems = async (pageNumber = 1) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(
-        `/remarks?page=${pageNumber}&limit=20`
-      );
+      const res = await axiosInstance.get(`/discothers?page=${pageNumber}`);
       const data = res.data.success ? res.data.data : [];
-
       setItems(data.map((d) => ({ ...d, showDropdown: false })));
 
       if (res.data.pagination) {
@@ -66,11 +63,11 @@ const RemarksMaster = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (searchType.trim()) params.append("Remarks", searchType.trim());
+      if (searchType.trim()) params.append("name", searchType.trim());
       params.append("page", pageNumber);
 
       const res = await axiosInstance.get(
-        `/remarks/search?${params.toString()}`
+        `/discothers/search?${params.toString()}`
       );
       const data = res.data.success ? res.data.data : [];
 
@@ -104,7 +101,7 @@ const RemarksMaster = () => {
 
   // drawer openers
   const openDrawerAdd = () => {
-    setFormData({ RemarksId: "", Remarks: "", Type: "" });
+    setFormData({ DiscOtherId: "", DiscOtherName: "", ComissionYN: "" });
     setEditingItem(null);
     setModalType("add");
     setShowDrawer(true);
@@ -112,9 +109,9 @@ const RemarksMaster = () => {
 
   const openDrawerEdit = (item) => {
     setFormData({
-      RemarksId: item.RemarksId,
-      Remarks: item.Remarks,
-      Type: item.Type,
+      DiscOtherId: item.DiscOtherId,
+      DiscOtherName: item.DiscOtherName,
+      ComissionYN: item.ComissionYN,
     });
     setEditingItem(item);
     setModalType("edit");
@@ -123,9 +120,9 @@ const RemarksMaster = () => {
 
   const openDrawerView = (item) => {
     setFormData({
-     RemarksId: item.RemarksId,
-      Remarks: item.Remarks,
-      Type: item.Type,
+      DiscOtherId: item.DiscOtherId,
+      DiscOtherName: item.DiscOtherName,
+      ComissionYN: item.ComissionYN,
     });
     setEditingItem(item);
     setModalType("view");
@@ -139,20 +136,16 @@ const RemarksMaster = () => {
     try {
       if (modalType === "edit") {
         await axiosInstance.put(
-          `/remarks/${editingItem.RemarksId}`,
+          `/discothers/${editingItem.DiscOtherId}`,
           formData
         );
         toast.success("Updated successfully!", { autoClose: 1000 });
       } else {
-        console.log(formData)
-        await axiosInstance.post(`/remarks`, {
-          remarkname:formData.Remarks,
-          description:formData.Type
-        });
+        await axiosInstance.post(`/discothers`, formData);
         toast.success("Created successfully!", { autoClose: 1000 });
       }
       setShowDrawer(false);
-      fetchItems();
+      fetchItems(page);
     } catch (err) {
       console.error("Submit error:", err);
       toast.error("Failed to save");
@@ -162,7 +155,7 @@ const RemarksMaster = () => {
   // delete confirm
   const confirmDelete = async () => {
     try {
-      await axiosInstance.delete(`/Remarks/${deleteId}`);
+      await axiosInstance.delete(`/discothers/${deleteId}`);
       toast.success("Deleted successfully!", { autoClose: 1000 });
 
       setShowConfirm(false);
@@ -197,13 +190,13 @@ const RemarksMaster = () => {
 
       <div className="panel">
         <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>💬 Remarks Master</h5>
+          <h5>💸 Discount Allowed Master </h5>
 
           <div className="d-flex gap-2">
             <input
               type="text"
               className="form-control form-control-sm"
-              placeholder="Remarks..."
+              placeholder="DiscOtherName..."
               value={searchType}
               onChange={(e) => setSearchType(e.target.value)}
               style={{ width: 150 }}
@@ -235,8 +228,8 @@ const RemarksMaster = () => {
                   <tr>
                     <th>Action</th>
                     <th>Sl No</th>
-                    <th>Remarks</th>
-                    <th>Type (U/C)</th>
+                    <th>DiscOtherName</th>
+                    <th>Comission (Y/N)</th>
                   </tr>
                 </thead>
 
@@ -269,7 +262,7 @@ const RemarksMaster = () => {
                             <button
                               className="btn btn-sm btn-outline-danger"
                               onClick={() => {
-                                setDeleteId(item.RemarksId);
+                                setDeleteId(item.DiscOtherId);
                                 setShowConfirm(true);
                               }}
                             >
@@ -278,9 +271,9 @@ const RemarksMaster = () => {
                           </div>
                         </td>
 
-                        <td>{index + 1}</td>
-                        <td>{item.Remarks}</td>
-                        <td>{item.Type}</td>
+                        <td>{(page - 1) * limit + index + 1}</td>
+                        <td>{item.DiscOtherName}</td>
+                        <td>{item.ComissionYN}</td>
                       </tr>
                     ))
                   )}
@@ -331,10 +324,10 @@ const RemarksMaster = () => {
                 }}
               >
                 {modalType === "add"
-                  ? "➕ Add Remarks"
+                  ? "➕ Add Sample Type"
                   : modalType === "edit"
-                  ? "✏️ Edit Remarks"
-                  : "👁️ View Remarks"}
+                  ? "✏️ Edit Sample Type"
+                  : "👁️ View Sample Type"}
               </div>
 
               <OverlayScrollbarsComponent
@@ -344,15 +337,15 @@ const RemarksMaster = () => {
                   <form onSubmit={handleSubmit}>
                     {/* Sample Type */}
                     <div className="mb-3">
-                      <label className="form-label">Remarks</label>
+                      <label className="form-label">Name</label>
                       <input
                         type="text"
                         className="form-control"
-                        value={formData.Remarks}
+                        value={formData.DiscOtherName}
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
-                            Remarks: e.target.value,
+                            DiscOtherName: e.target.value,
                           }))
                         }
                         disabled={modalType === "view"}
@@ -362,23 +355,24 @@ const RemarksMaster = () => {
 
                     {/* Colour */}
                     <div className="mb-3">
-                      <label className="form-label">Type</label>
+                      <label className="form-label">
+                        Deduct From Comission [Y/N]
+                      </label>
 
                       <select
                         className="form-control"
-                        value={formData.Type}
+                        value={formData.ComissionYN}
                         onChange={(e) =>
                           setFormData((prev) => ({
                             ...prev,
-                            Type: e.target.value,
+                            ComissionYN: e.target.value,
                           }))
                         }
                         disabled={modalType === "view"}
                         required
                       >
-                        <option value="">--Select--</option>
-                        <option value="U">U</option>
-                        <option value="C">C</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
                       </select>
                     </div>
 
@@ -497,4 +491,4 @@ const RemarksMaster = () => {
   );
 };
 
-export default RemarksMaster;
+export default DiscountAllowedMaster;
