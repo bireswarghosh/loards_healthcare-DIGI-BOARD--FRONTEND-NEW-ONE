@@ -397,7 +397,7 @@ const onKeyPressSearch = (e) => {
             </div>
           ) : (
             <OverlayScrollbarsComponent>
-              <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+              <div >
                 <table className="table table-sm table-striped table-hover table-dashed">
                   <thead className=" sticky-top">
                     <tr>
@@ -504,6 +504,7 @@ const onKeyPressSearch = (e) => {
               height: "calc(100vh - 70px)",
               // background: "#fff",
               overflowX: "hidden",
+              overflowY: "hidden",
             }}
           >
             <button

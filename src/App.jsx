@@ -115,7 +115,7 @@ import CompanymstMaster from "./templates/OUTDOOR MASTER/CompanymstMaster.jsx"
 import DiagoMaster from "./templates/OUTDOOR MASTER/DiagoMaster.jsx"
 import DoseMaster from "./templates/OUTDOOR MASTER/DoseMaster.jsx"
 import PastHistoryMaster from "./templates/OUTDOOR MASTER/PastHistoryMaster.jsx"
-import RemarksMaster from "./templates/OUTDOOR MASTER/RemarksMaster.jsx"
+// import RemarksMaster from "./templates/OUTDOOR MASTER/RemarksMaster.jsx"
 import VisitourMaster from "./templates/OUTDOOR MASTER/VisitourMaster.jsx"
 import VisitTypeGrpMaster from "./templates/OUTDOOR MASTER/VisitTypeGrpMaster.jsx"
 import VisittypeMaster from "./templates/OUTDOOR MASTER/VisittypeMaster.jsx"
@@ -228,7 +228,7 @@ import Batch from "./templates/DiagnosisMaster/Batch.jsx";  import TestMaster fr
 
 
 // ! soum dia  mas
-import RemarksMaster_dia from "./templates/DiagnosisMaster/RemarksMaster.jsx"
+import RemarksMaster from "./templates/DiagnosisMaster/RemarksMaster.jsx"
 import TestParameter from "./templates/DiagnosisMaster/TestParameter.jsx";
 
 import DiscountAllowedMaster from "./templates/DiagnosisMaster/DiscountAllowedMaster.jsx";
@@ -338,7 +338,7 @@ function App() {
  <Route path="/DiagoMaster" element={<ProtectedRoute><DiagoMaster/></ProtectedRoute>}/>
  <Route path="/DoseMaster" element={<ProtectedRoute><DoseMaster/></ProtectedRoute>}/>
  <Route path="/PastHistoryMaster" element={<ProtectedRoute><PastHistoryMaster/></ProtectedRoute>}/>
- <Route path="/RemarksMaster" element={<ProtectedRoute><RemarksMaster/></ProtectedRoute>}/>
+ {/* <Route path="/RemarksMaster" element={<ProtectedRoute><RemarksMaster/></ProtectedRoute>}/> */}
  <Route path="/VisitourMaster" element={<ProtectedRoute><VisitourMaster/></ProtectedRoute>}/>
  <Route path="/VisitTypeGrpMaster" element={<ProtectedRoute><VisitTypeGrpMaster/></ProtectedRoute>}/>
  <Route path="/VisittypeMaster" element={<ProtectedRoute><VisittypeMaster/></ProtectedRoute>}/>
@@ -486,7 +486,7 @@ function App() {
       {/* sou dia  mas */}
 
 
-<Route path="/RemarksMaster_dia" element={<ProtectedRoute><RemarksMaster/></ProtectedRoute>}/>
+<Route path="/RemarksMaster" element={<ProtectedRoute><RemarksMaster/></ProtectedRoute>}/>
 
  <Route path="/TestPara" element={<TestParameter/>}/>
 
