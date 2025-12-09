@@ -15,6 +15,12 @@ const PatientActions = () => {
   const [patients, setPatients] = useState([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  
+  // Patient search states
+  const [patientSearchQuery, setPatientSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     patient_name: "",
@@ -42,6 +48,9 @@ const PatientActions = () => {
     resetForm();
     setSelectedPatient(null);
     setModalType("add");
+    setPatientSearchQuery("");
+    setSearchResults([]);
+    setShowSearchDropdown(false);
     setShowModal(true);
   };
 
@@ -57,6 +66,9 @@ const PatientActions = () => {
     });
     setSelectedPatient(patient);
     setModalType("edit");
+    setPatientSearchQuery(patient.patient_name);
+    setSearchResults([]);
+    setShowSearchDropdown(false);
     setShowModal(true);
   };
 
@@ -80,6 +92,49 @@ const PatientActions = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  // Search patients from admission API
+  const searchPatients = async (query) => {
+    if (!query || query.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const response = await axiosInstance.get(`/admission/search?q=${encodeURIComponent(query)}`);
+      
+      if (response.data.success && response.data.data) {
+        setSearchResults(response.data.data);
+        setShowSearchDropdown(true);
+      } else {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
+    } catch (error) {
+      console.error("Error searching patients:", error);
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle patient selection from search
+  const handlePatientSelect = (admission) => {
+    setFormData({
+      patient_name: admission.PatientName || "",
+      age: admission.Age || "",
+      address: `${admission.Add1 || ""} ${admission.Add2 || ""} ${admission.Add3 || ""}`.trim(),
+      phone: admission.PhoneNo || "",
+      case_details: "",
+      bed_number: "",
+      remarks: `Admission No: ${admission.AdmitionNo || ""}`
+    });
+    setPatientSearchQuery(admission.PatientName || "");
+    setShowSearchDropdown(false);
   };
 
   const handleSave = async (e) => {
@@ -195,10 +250,99 @@ const PatientActions = () => {
     fetchPatients();
   }, [fetchPatients]);
 
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showSearchDropdown && !e.target.closest('.patient-search-container')) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSearchDropdown]);
+
   // Custom Render Functions for DRY code and consistent styling
   const renderPatientForm = () => (
     <div className="row g-3">
-      <div className="col-md-6 mb-3">
+      {modalType !== "view" && (
+        <div className="col-12 mb-3 patient-search-container" style={{ position: "relative" }}>
+          <label className="form-label">🔍 Search Patient from Admission</label>
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Type Admission No or Patient Name..."
+              value={patientSearchQuery}
+              onChange={(e) => {
+                setPatientSearchQuery(e.target.value);
+                searchPatients(e.target.value);
+              }}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className="btn btn-info"
+              onClick={() => searchPatients(patientSearchQuery)}
+            >
+              <i className="fa-light fa-search"></i> SEARCH
+            </button>
+          </div>
+          
+          {/* Search Dropdown */}
+          {showSearchDropdown && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                maxHeight: "200px",
+                overflowY: "auto",
+                backgroundColor: "white",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                zIndex: 1000,
+                marginTop: "4px"
+              }}
+            >
+              {searchLoading ? (
+                <div className="p-3 text-center">
+                  <div className="spinner-border spinner-border-sm" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : searchResults.length > 0 ? (
+                searchResults.map((admission, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handlePatientSelect(admission)}
+                    style={{
+                      padding: "10px 15px",
+                      cursor: "pointer",
+                      borderBottom: "1px solid #f0f0f0",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8f9fa"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "white"}
+                  >
+                    <div style={{ fontWeight: "500" }}>{admission.PatientName}</div>
+                    <div style={{ fontSize: "12px", color: "#666" }}>
+                      {admission.AdmitionNo} | Age: {admission.Age} | Phone: {admission.PhoneNo}
+                    </div>
+                  </div>
+                ))
+              ) : patientSearchQuery.length >= 2 ? (
+                <div className="p-3 text-center text-muted">
+                  No patients found
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div className="col-12 mb-3">
         <label className="form-label">👤 Patient Name *</label>
         <input
           type="text"

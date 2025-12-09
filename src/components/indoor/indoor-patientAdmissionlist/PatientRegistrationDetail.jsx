@@ -1060,15 +1060,31 @@ const PatientRegistrationDetail = () => {
                 />
               </div>
               <div className="col-md-2">
-                <label className="form-label small">District/PS (AreaId)</label>
+                <label className="form-label small">District/PS</label>
                 <select
                   name="AreaId"
                   className="form-control form-control-sm"
-                  value={formData.AreaId}
+                  value={formData.AreaId || ""}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
                 >
                   {district.map((d, indx) => (
+                    <option key={indx} value={d.ZoneId}>
+                      {d.Zone}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2">
+                <label className="form-label small">State</label>
+                <select
+                  name="AreaId"
+                  className="form-control form-control-sm"
+                  value={formData.AreaId || ""}
+                  onChange={handleInputChange}
+                  disabled={mode === "view"}
+                >
+                  {fetchedState.map((d, indx) => (
                     <option key={indx} value={d.ZoneId}>
                       {d.Zone}
                     </option>
@@ -1531,15 +1547,15 @@ const PatientRegistrationDetail = () => {
               </div>
 
               <div className="col-md-3">
-                <label className="form-label small">M Executive</label>
-
+                <label className="form-label small">MF Executive</label>
                 <select
                   name="MEXECUTIVE"
                   className="form-control form-control-sm"
-                  value={formData.MEXECUTIVE}
+                  value={formData.MEXECUTIVE || ""}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
                 >
+                  <option value="">-- Select --</option>
                   {mExecutives.map((d, indx) => (
                     <option key={indx} value={d.MExecutiveId}>
                       {d.MExecutive}
@@ -1575,7 +1591,7 @@ const PatientRegistrationDetail = () => {
                   type="text"
                   name="BedRate"
                   className="form-control form-control-sm"
-                  value={formData.BedRate}
+                  value={formData.BedRate || "0"}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
                 />
@@ -1596,35 +1612,21 @@ const PatientRegistrationDetail = () => {
               </div>
               <div className="col-md-3">
                 <label className="form-label small">Particular</label>
-                {/* <input
-                  type="text"
-                  name="Particular"
-                  className="form-control form-control-sm"
-                  value={formData.Particular}
-                  onChange={handleInputChange}
-                  disabled={mode === "view"}
-                /> */}
                 <select
                   name="DayCareId"
                   className="form-control form-control-sm"
-                  value={formData.DayCareId}
+                  value={formData.DayCareId || "0"}
                   onChange={(e) => {
                     handleInputChange(e);
                     calDayCareBedRate(e.target.value);
                   }}
                   disabled={mode === "view" || formData.DayCareYN === "N"}
                 >
-                  {/* <option value="">--Select--</option> */}
-
-                  {formData.DayCareYN === "Y" ? (
-                    dayCare.map((d, indx) => (
-                      <option key={indx} value={d.DayCareId}>
-                        {d.DayCare} --- {d.Rate}
-                      </option>
-                    ))
-                  ) : (
-                    <option>---Select---</option>
-                  )}
+                  {dayCare.map((d, indx) => (
+                    <option key={indx} value={d.DayCareId}>
+                      {d.DayCare} {d.Rate ? `--- ${d.Rate}` : ""}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -1818,6 +1820,25 @@ const PatientRegistrationDetail = () => {
                   value={formData.PolcNo}
                   onChange={handleInputChange}
                   disabled={mode === "view"}
+                />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label small">Admission By</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  value={localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).name || 'Admin' : 'Admin'}
+                  disabled
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label small">Current User</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  value={localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).name || 'Admin' : 'Admin'}
+                  disabled
                 />
               </div>
 
