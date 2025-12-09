@@ -34,14 +34,14 @@ const Indoor = () => {
           </NavLink>
         </li>
 
-        <li className="sidebar-dropdown-item">
+        {/* <li className="sidebar-dropdown-item">
           <NavLink to="/PatientAdmissionDetail" className="sidebar-link">
             <span className="nav-icon">
               <i className="fa-light fa-user-headset"></i>
             </span>{' '}
             <span className="sidebar-txt">Patient Admission Detail</span>
           </NavLink>
-        </li>
+        </li> */}
 
         <li className="sidebar-dropdown-item">
           <NavLink to="/sampleReceipts" className="sidebar-link">

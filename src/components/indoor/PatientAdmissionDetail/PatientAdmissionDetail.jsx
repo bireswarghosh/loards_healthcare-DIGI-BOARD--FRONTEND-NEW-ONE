@@ -11,7 +11,7 @@ const PatientAdmissionDetail = () => {
         <div className="tabs d-flex gap-2">
           <button className="btn btn-sm btn-outline-light">List</button>
           <button className="btn btn-sm btn-primary">Detail</button>
-          <button className="btn btn-sm btn-outline-light">MRD</button>
+          {/* <button className="btn btn-sm btn-outline-light">MRD</button> */}
         </div>
       </div>
 

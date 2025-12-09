@@ -26,7 +26,7 @@ const AdmissionList = () => {
 
   useEffect(() => {
     fetchAdmissions();
-  }, [pagination.page, searchQuery]);
+  }, [pagination.page, searchQuery, dateFrom, dateTo]);
 
   const fetchAdmissions = async () => {
     try {
@@ -35,11 +35,11 @@ const AdmissionList = () => {
 
       if (searchQuery) {
         response = await axiosInstance.get(
-          `/admission/search?q=${encodeURIComponent(searchQuery)}`
+          `/admission/search?q=${encodeURIComponent(searchQuery)}&dateFrom=${dateFrom}&dateTo=${dateTo}`
         );
       } else {
         response = await axiosInstance.get(
-          `/admission?page=${pagination.page}&limit=${pagination.limit}`
+          `/admission?page=${pagination.page}&limit=${pagination.limit}&dateFrom=${dateFrom}&dateTo=${dateTo}`
         );
       }
 
@@ -68,8 +68,6 @@ const AdmissionList = () => {
   const handleDateChange = (field, value) => {
     if (field === "from") setDateFrom(value);
     else setDateTo(value);
-
-    setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   const handleRowClick = (admission) => {
