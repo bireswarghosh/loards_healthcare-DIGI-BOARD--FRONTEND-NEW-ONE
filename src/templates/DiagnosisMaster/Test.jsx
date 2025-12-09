@@ -1,49 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../axiosInstance";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import Footer from "../../components/footer/Footer";
-
-// table scroll style new
-const tableResponsiveStyle = {
-  maxHeight: "60vh",
-  overflowY: "auto",
-};
-
-const stickyHeaderStyle = {
-  zIndex: 10,
-  backgroundColor: "var(--bs-table-bg, #f8f9fa)",
-  boxShadow: "0 2px 2px rgba(0,0,0,0.1)",
-};
-
-// static sample type list (you can change ID according to DB)
-const sampleTypeOptions = [
-  { id: "", label: "Select Sample Type" },
-  { id: 0, label: "N/A" },
-  { id: 1, label: "Blood" },
-  { id: 2, label: "CSF" },
-  { id: 3, label: "EDTA" },
-  { id: 4, label: "Fluid" },
-  { id: 5, label: "FNAC" },
-  { id: 6, label: "Na.Heparin" },
-  { id: 7, label: "Plasma" },
-];
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const TestMaster = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [selectedTest, setSelectedTest] = useState(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const itemsPerPage = 20;
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [modalType, setModalType] = useState("add"); // add | edit | view
+  const [editingItem, setEditingItem] = useState(null);
 
-  // SubDepartment lookup
-  const [subDepartments, setSubDepartments] = useState([]);
-
-  // form state (add/edit)
+  // 🔹 ALL FIELDS (frontend + backend) – no undefined
   const emptyForm = {
     TestId: null,
     Test: "",
@@ -58,119 +28,222 @@ const TestMaster = () => {
     ICURate: "",
     CABRate: "",
     SUITRate: "",
-
-    // NEW FIELDS (from old software screen)
-    DeliveryAfter: "", // days
-    SampleTypeId: "", // dropdown
-    SMType: "", // free text if you want
-
-    // checkboxes / flags
-    NABLTag: true, // true => NABL, false => NOT NABL
-    NSBilling: false, // "Not in N S Billing"
-    NotReq: false, // "Not required in commission"
-    agent: false, // "FOR AGENT"
+    DeliveryAfter: "",
+    SampleTypeId: "",
+    SMType: "",
+    NABLTag: false, // true => NABL, false => NOT NABL
+    NSBilling: false,
+    NotReq: false,
+    agent: false,
     RateEdit: false,
-    IsFormulative: false,
-    FForm: false, // F-Form Required
+    IsFormulative: true,
+    FForm: false,
     IsProfile: false,
     OutSource: false,
     IsDisc: false,
-    cNotReq: false, // commission not required, if you use
-
-    // costing
+    cNotReq: false,
     cost: "",
-
-    // Interpretation & Instructions (big text box)
     Interpretation: "",
     Instructions: "",
+    BloodFormatMapping: "",
+    ProfileTagging: "",
+
+    // 🔥 EXTRA BACKEND FIELDS (from Postman)
+    Introduction: "",
+    Delivery: "",
+    RSlNo: "",
+    FormulaText: "",
+    FormulaValue: "",
+    Units: "",
+    Gender: "",
+    Container: "",
+    Storage: "",
+    Department: "",
+    Remarks: "",
+    ActualColName: "",
   };
 
   const [formData, setFormData] = useState(emptyForm);
 
-  useEffect(() => {
-    fetchData(currentPage);
-  }, [currentPage]);
+  const [subDepartments, setSubDepartments] = useState([]);
+  const [sampleTypes, setSampleTypes] = useState([]);
 
-  const fetchData = async (page) => {
-    setLoading(true);
-    await Promise.all([fetchTests(page), fetchSubDepartments()]);
+  // pagination (SampleType style)
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // delete modal
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const drawerRef = useRef(null);
+
+
+  //// for search-------
+  const [searchText, setSearchText] = useState("");
+const [isSearching, setIsSearching] = useState(false);
+
+// search api fetch ---------
+const handleSearch = async () => {
+  if (!searchText.trim()) {
+    toast.info("Enter test name to search");
+    return;
+  }
+
+  setIsSearching(true);
+  setLoading(true);
+
+  try {
+    const res = await axiosInstance.get(
+      `/tests/search/advanced?test=${encodeURIComponent(searchText)}&page=1&limit=${limit}`
+    );
+
+    setTests(res.data.data || []);
+    const pag = res.data.pagination || {};
+    setPage(pag.currentPage ?? 1);
+    setTotalPages(pag.totalPages ?? 1);
+
+  } catch (err) {
+    console.error("Search error:", err);
+    toast.error("Search failed");
+  } finally {
     setLoading(false);
+  }
+};
+// clear search----- 
+const clearSearch = () => {
+  setSearchText("");
+  setIsSearching(false);
+  fetchTests(1);   // back to normal list
+};
+// onkey press search--- 
+const onKeyPressSearch = (e) => {
+  if (e.key === "Enter") {
+    handleSearch();
+  }
+};
+
+
+  // helper
+  const toNumberOrNull = (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    return Number.isNaN(n) ? null : n;
   };
+
+  // =============================
+  // 📌 API CALLS
+  // =============================
 
   const fetchSubDepartments = async () => {
     try {
-      const response = await axiosInstance.get("/subdepartment");
-      if (response.data && Array.isArray(response.data.data)) {
-        setSubDepartments(response.data.data);
-      } else {
-        setSubDepartments([]);
-      }
-    } catch (error) {
-      console.error("Error fetching subdepartments:", error);
+      const res = await axiosInstance.get("/subdepartment");
+      setSubDepartments(res.data.data || []);
+    } catch (err) {
+      console.error("subdepartments error", err);
+      setSubDepartments([]);
     }
   };
 
-  const fetchTests = async (page) => {
+  const fetchSampleTypes = async () => {
     try {
-      const response = await axiosInstance.get(
-        `/tests?page=${page}&limit=${itemsPerPage}`
-      );
-
-      if (response.data && Array.isArray(response.data.data)) {
-        setTests(response.data.data);
-        if (response.data.pagination) {
-          setCurrentPage(response.data.pagination.currentPage);
-          setTotalPages(response.data.pagination.totalPages);
-        }
-      } else {
-        setTests([]);
-        setCurrentPage(1);
-        setTotalPages(1);
-      }
-    } catch (error) {
-      console.error("Error fetching tests:", error);
-      alert("Error fetching test data. Check network or API configuration.");
+      const res = await axiosInstance.get("/sampletypes?page=1&limit=1000");
+      setSampleTypes(res.data.data || []);
+    } catch (err) {
+      console.error("sampletypes error", err);
+      setSampleTypes([]);
     }
   };
 
-  const getSubDepartmentName = (id) => {
-    const subDep = subDepartments.find((dep) => dep.SubDepartmentId === id);
-    return subDep ? subDep.SubDepartment : "N/A";
+  const fetchTests = async (pageNumber = 1) => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get(`/tests?page=${pageNumber}&limit=${limit}`);
+      const data = res.data.data || [];
+      setTests(data);
+
+      const pag = res.data.pagination || {};
+      setPage(pag.currentPage ?? pag.page ?? pageNumber);
+      setTotalPages(pag.totalPages ?? 1);
+      setLimit(pag.limit ?? 20);
+    } catch (err) {
+      console.error("tests fetch error", err);
+      toast.error("Failed to fetch tests");
+      setTests([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // helper: number / null
-  const getValueOrNull = (value) => {
-    if (value === null || value === undefined) return null;
-    const v = String(value).trim();
-    if (v === "") return null;
-    return Number(v);
+
+  // init
+  useEffect(() => {
+    fetchSubDepartments();
+    fetchSampleTypes();
+    fetchTests(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // drawer openers
+  const openDrawerAdd = () => {
+    setFormData(emptyForm);
+    setEditingItem(null);
+    setModalType("add");
+    setShowDrawer(true);
   };
+
+  const openDrawerEdit = (item) => {
+    // merge with emptyForm to avoid any undefined field
+    setFormData({
+      ...emptyForm,
+      ...item,
+       NABLTag: item.NABLTag === 1 ? true : false,
+    });
+    setEditingItem(item);
+    setModalType("edit");
+    setShowDrawer(true);
+  };
+
+  const openDrawerView = (item) => {
+    setFormData({
+      ...emptyForm,
+      ...item,
+       NABLTag: item.NABLTag === 1 ? true : false,
+    });
+    setEditingItem(item);
+    setModalType("view");
+    setShowDrawer(true);
+  };
+
+  const handleInput = (field, value) =>
+    setFormData((p) => ({ ...p, [field]: value }));
+
+  const handleToggle = (field) =>
+    setFormData((p) => ({ ...p, [field]: !p[field] }));
 
   const handleSave = async () => {
     try {
       setLoading(true);
 
-      const submitData = {
-        Test: formData.Test,
-        ReportingName: formData.ReportingName,
-        SubDepartmentId: getValueOrNull(formData.SubDepartmentId),
-        Method: formData.Method,
-        Rate: getValueOrNull(formData.Rate),
-        DescFormat: getValueOrNull(formData.DescFormat),
-        TestCode: formData.TestCode,
-        ARate: getValueOrNull(formData.ARate),
-        BRate: getValueOrNull(formData.BRate),
-        ICURate: getValueOrNull(formData.ICURate),
-        CABRate: getValueOrNull(formData.CABRate),
-        SUITRate: getValueOrNull(formData.SUITRate),
+      const payload = {
+        Test: formData.Test || null,
+        ReportingName: formData.ReportingName || null,
+        SubDepartmentId: toNumberOrNull(formData.SubDepartmentId),
+        Method: formData.Method || null,
+        Rate: toNumberOrNull(formData.Rate),
+        DescFormat: toNumberOrNull(formData.DescFormat),
+        TestCode: formData.TestCode || null,
+        ARate: toNumberOrNull(formData.ARate),
+        BRate: toNumberOrNull(formData.BRate),
+        ICURate: toNumberOrNull(formData.ICURate),
+        CABRate: toNumberOrNull(formData.CABRate),
+        SUITRate: toNumberOrNull(formData.SUITRate),
+        DeliveryAfter: toNumberOrNull(formData.DeliveryAfter),
 
-        // extra fields
-        DeliveryAfter:
-          getValueOrNull(formData.DeliveryAfter) ?? 0, // default 0
-        SampleTypeId: getValueOrNull(formData.SampleTypeId),
+        SampleTypeId: toNumberOrNull(formData.SampleTypeId),
         SMType: formData.SMType || null,
 
-        // checkbox flags -> 0 / 1
         NABLTag: formData.NABLTag ? 1 : 0,
         NSBilling: formData.NSBilling ? 1 : 0,
         NotReq: formData.NotReq ? 1 : 0,
@@ -182,859 +255,1118 @@ const TestMaster = () => {
         OutSource: formData.OutSource ? 1 : 0,
         IsDisc: formData.IsDisc ? 1 : 0,
         cNotReq: formData.cNotReq ? 1 : 0,
-
-        cost: getValueOrNull(formData.cost),
+        cost: toNumberOrNull(formData.cost),
 
         Interpretation: formData.Interpretation || null,
         Instructions: formData.Instructions || null,
+        BloodFormatMapping: formData.BloodFormatMapping || null,
+        ProfileTagging: formData.ProfileTagging || null,
 
-        // constant / audit fields (same as before)
-        RSlNo: 1,
-        FFormReq: formData.FForm ? 1 : 0, // if your DB has FFormReq, otherwise remove
-        ActualColName: "glucose_fasting",
+        // 🔥 extra fields mapped safely (no undefined)
+        Introduction: formData.Introduction || null,
+        Delivery: formData.Delivery || null,
+        RSlNo: toNumberOrNull(formData.RSlNo),
+        FormulaText: formData.FormulaText || null,
+        FormulaValue: toNumberOrNull(formData.FormulaValue),
+        Units: formData.Units || null,
+        Gender: formData.Gender || null,
+        Container: formData.Container || null,
+        Storage: formData.Storage || null,
+        Department: formData.Department || null,
+        Remarks: formData.Remarks || null,
+        ActualColName: formData.ActualColName || null,
+
         CreatedBy: "admin",
         CreatedDate: new Date().toISOString(),
-        UpdatedBy: "lab_manager",
+        UpdatedBy: "admin",
         UpdatedDate: new Date().toISOString(),
         Status: "Active",
       };
 
-      console.log("Submitting cleaned data:", submitData);
+      // just to double-check: no undefined
+      // console.log("payload", payload);
 
-      if (formData.TestId) {
-        await axiosInstance.put(`/tests/${formData.TestId}`, submitData);
-        alert("Test updated successfully");
+      if (modalType === "edit" && editingItem?.TestId) {
+        await axiosInstance.put(`/tests/${editingItem.TestId}`, payload);
+        toast.success("Test updated");
       } else {
-        await axiosInstance.post("/tests", submitData);
-        alert("Test created successfully");
-        if (currentPage !== 1) {
-          setCurrentPage(1);
-          return;
-        }
+        await axiosInstance.post("/tests", payload);
+        toast.success("Test created");
       }
 
-      await fetchData(currentPage);
-      setShowModal(false);
-    } catch (error) {
-      console.error("Error saving test:", error.response?.data || error.message);
-      alert("Error saving test. Check console for details.");
+      fetchTests(page);
+      setShowDrawer(false);
+    } catch (err) {
+      console.error("save error", err?.response?.data || err);
+      toast.error("Save failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this Test?")) {
-      try {
-        setLoading(true);
-        await axiosInstance.delete(`/tests/${id}`);
-        await fetchData(currentPage);
-        alert("Test deleted successfully");
-      } catch (error) {
-        console.error("Error deleting test:", error);
-        alert("Error deleting test");
-      } finally {
-        setLoading(false);
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      setLoading(true);
+      await axiosInstance.delete(`/tests/${deleteId}`);
+      toast.success("Deleted");
+
+      if (tests.length === 1 && page > 1) {
+        fetchTests(page - 1);
+      } else {
+        fetchTests(page);
       }
+
+      setShowConfirm(false);
+      setDeleteId(null);
+    } catch (err) {
+      console.error("delete error", err);
+      toast.error("Delete failed");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages && page !== currentPage) {
-      setCurrentPage(page);
-    }
+  const getSubDeptName = (id) => {
+    const it = subDepartments.find(
+      (d) => Number(d.SubDepartmentId) === Number(id)
+    );
+    return it ? it.SubDepartment : "N/A";
   };
 
-  const handleAddNew = () => {
-    setFormData(emptyForm);
-    setSelectedTest(null);
-    setIsEditMode(false);
-    setShowModal(true);
+  const startSerial = (page - 1) * limit;
+
+  const goToPage = (p) => {
+    if (p < 1 || p > totalPages) return;
+    fetchTests(p);
   };
 
-  const handleEdit = (test) => {
-    setFormData({
-      TestId: test.TestId || null,
-      Test: test.Test || "",
-      ReportingName: test.ReportingName || "",
-      SubDepartmentId: test.SubDepartmentId || "",
-      Method: test.Method || "",
-      Rate: test.Rate ?? "",
-      DescFormat: test.DescFormat ?? "",
-      TestCode: test.TestCode || "",
-      ARate: test.ARate ?? "",
-      BRate: test.BRate ?? "",
-      ICURate: test.ICURate ?? "",
-      CABRate: test.CABRate ?? "",
-      SUITRate: test.SUITRate ?? "",
+  // Escape -> close drawer
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setShowDrawer(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
-      DeliveryAfter: test.DeliveryAfter ?? "",
-      SampleTypeId: test.SampleTypeId ?? "",
-      SMType: test.SMType || "",
 
-      NABLTag: !!test.NABLTag,
-      NSBilling: !!test.NSBilling,
-      NotReq: !!test.NotReq,
-      agent: !!test.agent,
-      RateEdit: !!test.RateEdit,
-      IsFormulative: !!test.IsFormulative,
-      FForm: !!test.FForm,
-      IsProfile: !!test.IsProfile,
-      OutSource: !!test.OutSource,
-      IsDisc: !!test.IsDisc,
-      cNotReq: !!test.cNotReq,
-
-      cost: test.cost ?? "",
-      Interpretation: test.Interpretation || "",
-      Instructions: test.Instructions || "",
-    });
-
-    setSelectedTest(test);
-    setIsEditMode(true);
-    setShowModal(true);
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleCheckboxChange = (field) => {
-    setFormData((prev) => ({ ...prev, [field]: !prev[field] }));
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedTest(null);
-    setIsEditMode(false);
-    setFormData(emptyForm);
-  };
-
-  const startSerialNumber = (currentPage - 1) * itemsPerPage;
-
-  const Pagination = () => {
-    const pageNumbers = [];
-    const maxPageButtons = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
-
-    if (endPage - startPage + 1 < maxPageButtons) {
-      startPage = Math.max(1, endPage - maxPageButtons + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pageNumbers.push(i);
-    }
 
     return (
-      <nav aria-label="Page navigation">
-        <ul className="pagination justify-content-center mt-3">
-          <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              Previous
+    <div className="main-content">
+      <ToastContainer />
+
+      {/* ---------- TABLE PANEL ---------- */}
+      <div className="panel">
+        <div className="panel-header d-flex justify-content-between align-items-center">
+          <h5>🧪 Test Master</h5>
+<div className="d-flex gap-2">
+  <input
+    type="text"
+    className="form-control form-control-sm"
+    placeholder="🔍 Search Test Name"
+    value={searchText}
+    onChange={(e) => setSearchText(e.target.value)}
+    onKeyDown={onKeyPressSearch}
+    style={{ width: 220 }}
+  />
+
+  <button className="btn btn-sm btn-info" onClick={handleSearch}>
+    <i className="fa fa-search"></i>
+  </button>
+
+  {isSearching && (
+    <button className="btn btn-sm btn-secondary" onClick={clearSearch}>
+      Clear
+    </button>
+  )}
+</div>
+
+          <div className="d-flex gap-2">
+            <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
+              <i className="fa-light fa-plus"></i> Add Test
+            </button>
+           
+          </div>
+        </div>
+
+        <div className="panel-body">
+          {loading ? (
+            <div className="text-center p-4">
+              <div className="spinner-border text-primary" />
+            </div>
+          ) : (
+            <OverlayScrollbarsComponent>
+              <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                <table className="table table-sm table-striped table-hover table-dashed">
+                  <thead className=" sticky-top">
+                    <tr>
+                      <th>Action</th>
+                      <th>Sl No</th>
+                      <th>Test</th>
+                      <th>SubDept</th>
+                      <th>Code</th>
+                      <th>Rate</th>
+                      <th>Format</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tests.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="text-center p-3">
+                          No data
+                        </td>
+                      </tr>
+                    ) : (
+                      tests.map((t, i) => (
+                        <tr key={t.TestId ?? i}>
+                          <td>
+                            <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={() => openDrawerView(t)}
+                              >
+                                <i className="fa-light fa-eye" />
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => openDrawerEdit(t)}
+                              >
+                                <i className="fa-light fa-pen" />
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => {
+                                  setDeleteId(t.TestId);
+                                  setShowConfirm(true);
+                                }}
+                              >
+                                <i className="fa-light fa-trash" />
+                              </button>
+                            </div>
+                          </td>
+                          <td>{startSerial + i + 1}</td>
+                          <td>{t.Test}</td>
+                          <td>{getSubDeptName(t.SubDepartmentId)}</td>
+                          <td>{t.TestCode}</td>
+                          <td>{t.Rate}</td>
+                          <td>{t.DescFormat}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </OverlayScrollbarsComponent>
+          )}
+        </div>
+      </div>
+
+      {/* ---------- PAGINATION (SampleType style) ---------- */}
+      <div className="d-flex justify-content-center mt-3">
+        <ul className="pagination pagination-sm">
+          <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(page - 1)}>
+              Prev
             </button>
           </li>
-          {startPage > 1 && (
-            <>
-              <li className="page-item">
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(1)}
-                >
-                  1
-                </button>
-              </li>
-              {startPage > 2 && (
-                <li className="page-item disabled">
-                  <span className="page-link">...</span>
-                </li>
-              )}
-            </>
-          )}
 
-          {pageNumbers.map((number) => (
-            <li
-              key={number}
-              className={`page-item ${
-                number === currentPage ? "active" : ""
-              }`}
-            >
-              <button
-                className="page-link"
-                onClick={() => handlePageChange(number)}
-              >
-                {number}
-              </button>
-            </li>
-          ))}
+          <li className="page-item disabled">
+            <button className="page-link">{page}/{totalPages}</button>
+          </li>
 
-          {endPage < totalPages && (
-            <>
-              {endPage < totalPages - 1 && (
-                <li className="page-item disabled">
-                  <span className="page-link">...</span>
-                </li>
-              )}
-              <li className="page-item">
-                <button
-                  className="page-link"
-                  onClick={() => handlePageChange(totalPages)}
-                >
-                  {totalPages}
-                </button>
-              </li>
-            </>
-          )}
-
-          <li
-            className={`page-item ${
-              currentPage === totalPages ? "disabled" : ""
-            }`}
-          >
-            <button
-              className="page-link"
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
+          <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(page + 1)}>
               Next
             </button>
           </li>
         </ul>
-        <p className="text-center text-muted small">
-          Page {currentPage} of {totalPages}
-        </p>
-      </nav>
-    );
-  };
+      </div>
 
-  return (
-    <div className="main-content">
-      <div className="container-fluid py-4">
-        <div className="card shadow border-0 rounded-4">
-          <div className="card-header border-bottom d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">
-              🧪 Test Master - List (Page {currentPage} of {totalPages}){" "}
-              {loading && " (Loading...)"}
-            </h5>
-
-            <button
-              className="btn btn-gradient-primary px-4 py-2 rounded-pill shadow-lg"
-              onClick={handleAddNew}
-              style={{
-                background:
-                  "linear-gradient(45deg, #667eea 0%, #764ba2 100%)",
-                border: "none",
-                color: "white",
-                fontWeight: "600",
-                fontSize: "14px",
-                transition: "all 0.3s ease",
-                boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
-              }}
-            >
-              ➕ ADD TEST
-            </button>
-          </div>
-
-          <div className="card-body">
-            <div className="table-responsive" style={tableResponsiveStyle}>
-              <table className="table table-bordered table-sm table-striped table-hover align-middle">
-                <thead
-                  className="table-primary sticky-top"
-                  style={stickyHeaderStyle}
-                >
-                  <tr>
-                    <th>Sl.No</th>
-                    <th>Test Name</th>
-                    <th>SubDepartment</th>
-                    <th>Code</th>
-                    <th>Rate</th>
-                    <th>Format ID</th>
-                    <th className="text-center">Action</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="7" className="text-center text-info">
-                        ⏳ Loading tests...
-                      </td>
-                    </tr>
-                  ) : tests.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="text-center text-warning">
-                        ⚠️ No tests found on this page.
-                      </td>
-                    </tr>
-                  ) : (
-                    tests.map((test, index) => (
-                      <tr key={test.TestId}>
-                        <td>{startSerialNumber + index + 1}</td>
-                        <td style={{ padding: "0.2rem" }}>
-                          {test.Test || "N/A"}
-                        </td>
-                        <td>
-                          {getSubDepartmentName(test.SubDepartmentId) ||
-                            "N/A"}
-                        </td>
-                        <td>{test.TestCode || "N/A"}</td>
-                        <td>{test.Rate || "N/A"}</td>
-                        <td>{test.DescFormat || "N/A"}</td>
-
-                        <td className="text-center">
-                          <button
-                            className="btn btn-outline-primary btn-sm me-1"
-                            onClick={() => handleEdit(test)}
-                            disabled={loading}
-                          >
-                            ✏️ Edit
-                          </button>
-
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => handleDelete(test.TestId)}
-                            disabled={loading}
-                          >
-                            🗑️ Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {!loading && totalPages > 1 && <Pagination />}
-          </div>
-        </div>
-
-       {
-  showModal && (
-    <div
-      className="modal fade show d-block"
-      tabIndex="-1"
-      role="dialog"
-      aria-labelledby="TestMasterModalLabel"
-      aria-modal="true"
-      style={{ backgroundColor: "rgba(0,0,0,0.7)" }} // Darker overlay for better focus
-      onClick={handleCloseModal}
-    >
-      <div
-        className="modal-dialog modal-dialog-centered"
-        // Applying a custom maximum width for better visibility on large screens
-        style={{ maxWidth: "90vw", width: "90vw" }} // Use 90% of viewport width
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-content border-0 rounded-4 shadow-lg">
+      {/* ---------- DRAWER (900px, multi-column) ---------- */}
+      {showDrawer && (
+        <>
           <div
-            className="modal-header text-white rounded-top-4"
+            className="modal-backdrop fade show"
+            style={{ zIndex: 9998 }}
+            onClick={() => setShowDrawer(false)}
+          ></div>
+
+          <div
+            ref={drawerRef}
+            className="profile-right-sidebar active"
             style={{
-              background:
-                "linear-gradient(45deg, #4c5dcc 0%, #5d3493 100%)", // Slightly richer gradient
-              padding: "1.5rem", // Increased padding for a better header look
+              zIndex: 9999,
+              width: "100%",
+              maxWidth: "1100px", // 900px drawer
+              right: showDrawer ? "0" : "-100%",
+              top: "70px",
+              height: "calc(100vh - 70px)",
+              // background: "#fff",
+              overflowX: "hidden",
             }}
           >
-            <h4 // Increased size of the title
-              className="modal-title fw-bold"
-              id="TestMasterModalLabel"
-              style={{ fontSize: "1.5rem" }}
-            >
-              🧪 {isEditMode ? "Edit Test Details" : "Add New Test"}
-            </h4>
             <button
-              type="button"
-              className="btn-close btn-close-white"
-              onClick={handleCloseModal}
-            ></button>
-          </div>
+              className="right-bar-close"
+              onClick={() => setShowDrawer(false)}
+            >
+              <i className="fa-light fa-angle-right"></i>
+            </button>
 
-          <div
-            className="modal-body p-5"
-            style={{ fontSize: "1rem" }} // Ensure base font size is legible
-          >
-            {/* TOP ROW: NABL / NOT NABL + COMMISSION/AGENT */}
-            <div className="row g-4 mb-3">
-              <div className="col-md-4 d-flex align-items-center">
-                <span className="fw-bold me-4 text-primary fs-5">NABL:</span>{" "}
-                {/* Larger font size for labels */}
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="nablRadio"
-                    id="nablYes"
-                    checked={formData.NABLTag === true}
-                    onChange={() => handleInputChange("NABLTag", true)}
-                  />
-                  <label className="form-check-label" htmlFor="nablYes">
-                    NABL
-                  </label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="nablRadio"
-                    id="nablNo"
-                    checked={formData.NABLTag === false}
-                    onChange={() => handleInputChange("NABLTag", false)}
-                  />
-                  <label className="form-check-label" htmlFor="nablNo">
-                    NOT NABL
-                  </label>
-                </div>
+            <div className="top-panel" style={{ height: "100%" }}>
+              <div className="d-flex justify-content-between me-3 ">
+                 <div
+                className="dropdown-txt"
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                  // backgroundColor: "#0a1735",
+                  // color: "#fff",
+                  padding: "10px",
+                }}
+              >
+                {modalType === "add"
+                  ? "➕ Add Test"
+                  : modalType === "edit"
+                  ? "✏️ Edit Test"
+                  : "👁️ View Test"}
               </div>
-
-              <div className="col-md-8 d-flex flex-wrap align-items-center">
-                <div className="form-check me-4">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="chkNotReq"
-                    checked={formData.NotReq}
-                    onChange={() => handleCheckboxChange("NotReq")}
-                  />
-                  <label className="form-check-label" htmlFor="chkNotReq">
-                    Not required in commission
-                  </label>
-                </div>
-
-                <div className="form-check me-4">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="chkAgent"
-                    checked={formData.agent}
-                    onChange={() => handleCheckboxChange("agent")}
-                  />
-                  <label className="form-check-label" htmlFor="chkAgent">
-                    FOR AGENT
-                  </label>
-                </div>
-
-                <div className="form-check me-4">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="chkNSBilling"
-                    checked={formData.NSBilling}
-                    onChange={() => handleCheckboxChange("NSBilling")}
-                  />
-                  <label className="form-check-label" htmlFor="chkNSBilling">
-                    Not in N S Billing
-                  </label>
-                </div>
+              <div style={{cursor:"pointer"}} onClick={() => setShowDrawer(false)}>
+                X
               </div>
-            </div>
-
-            <hr className="my-4" />
-
-            <div className="row g-4">
-              {/* Test Name */}
-              <div className="col-md-6">
-                <label className="form-label fw-bold text-primary">
-                  📝 Test Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control form-control-lg" // Larger input size
-                  value={formData.Test}
-                  onChange={(e) => handleInputChange("Test", e.target.value)}
-                  placeholder="Enter Test name"
-                  style={{
-                    backgroundColor: "#e3f2fd", // light blue
-                    border: "1px solid #90caf9", // darker blue border
-                  }}
-                />
               </div>
+             
+              
 
-              {/* Reporting Name */}
-              <div className="col-md-6">
-                <label className="form-label fw-bold text-primary">
-                  📑 Reporting Name
-                </label>
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  value={formData.ReportingName}
-                  onChange={(e) =>
-                    handleInputChange("ReportingName", e.target.value)
-                  }
-                  placeholder="Enter Reporting Name"
-                  style={{
-                    backgroundColor: "#e3f2fd", // light blue
-                    border: "1px solid #90caf9", // darker blue border
-                  }}
-                />
-              </div>
-
-              {/* SubDepartment */}
-              <div className="col-md-4">
-                <label className="form-label fw-bold text-primary">
-                  🏬 SubDepartment
-                </label>
-                <select
-                  className="form-select form-select-lg"
-                  value={formData.SubDepartmentId || ""}
-                  onChange={(e) =>
-                    handleInputChange("SubDepartmentId", e.target.value)
-                  }
-                  style={{
-                    backgroundColor: "#e8f5e9", // light green
-                    border: "1px solid #a5d6a7", // darker green border
-                  }}
-                >
-                  <option value="">Select SubDepartment</option>
-                  {/* Assuming subDepartments is defined */}
-                  {/* {subDepartments.map((dep) => (
-                    <option
-                      key={dep.SubDepartmentId}
-                      value={dep.SubDepartmentId}
+              <OverlayScrollbarsComponent
+                style={{ height: "calc(100% - 50px)" }}
+              >
+                <div className="p-3">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (modalType !== "view") handleSave();
+                    }}
+                  >
+                    {/* NABL + NotReq/Agent/NSBilling row */}
+                    <div
+                      style={{
+                        gridColumn: "1 / -1",
+                        display: "flex",
+                        gap: 12,
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                      }}
                     >
-                      {dep.SubDepartment}
-                    </option>
-                  ))} */}
-                </select>
-              </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <label className="form-label fw-bold small mb-0">
+                          NABL Tag
+                        </label>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="nablRadio"
+                            id="nablYes"
+                            checked={formData.NABLTag === true }
+                            onChange={() => handleInput("NABLTag", true)}
+                            disabled={modalType === "view"}
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="nablYes"
+                          >
+                            NABL
+                          </label>
+                        </div>
+                        <div className="form-check form-check-inline">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="nablRadio"
+                            id="nablNo"
+                            checked={formData.NABLTag === false }
+                            onChange={() => handleInput("NABLTag", false)}
+                            disabled={modalType === "view"}
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="nablNo"
+                          >
+                            NOT NABL
+                          </label>
+                        </div>
+                      </div>
 
-              {/* Sample Type (dropdown) */}
-              <div className="col-md-4">
-                <label className="form-label fw-bold text-primary">
-                  🧫 Sample Type
-                </label>
-                <select
-                  className="form-select form-select-lg"
-                  value={
-                    formData.SampleTypeId === null ? "" : formData.SampleTypeId
-                  }
-                  onChange={(e) =>
-                    handleInputChange("SampleTypeId", e.target.value)
-                  }
-                  style={{
-                    backgroundColor: "#e8f5e9", // light green
-                    border: "1px solid #a5d6a7", // darker green border
-                  }}
-                >
-                  {/* Assuming sampleTypeOptions is defined */}
-                  {sampleTypeOptions.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 12,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.NotReq}
+                            onChange={() => handleToggle("NotReq")}
+                            disabled={modalType === "view"}
+                            id="NotReq"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="NotReq"
+                          >
+                            NotReq
+                          </label>
+                        </div>
 
-              {/* Blood Format Mapping */}
-<div className="col-md-4">
-  <label className="form-label fw-bold text-primary">
-    🧬 Blood Format Mapping
-  </label>
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.agent}
+                            onChange={() => handleToggle("agent")}
+                            disabled={modalType === "view"}
+                            id="agent"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="agent"
+                          >
+                            Agent
+                          </label>
+                        </div>
 
-  <select
-    className="form-select"
-    value={formData.BloodFormatMapping || ""}
-    onChange={(e) =>
-      handleInputChange("BloodFormatMapping", e.target.value)
-    }
-  >
-    <option value="">Select Mapping</option>
-    <option value="HB">HB</option>
-    <option value="CBC">CBC</option>
-    <option value="Platelet">Platelet Count</option>
-    <option value="TC-DC">TC / DC</option>
-    <option value="ESR">ESR</option>
-  </select>
-</div>
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.NSBilling}
+                            onChange={() => handleToggle("NSBilling")}
+                            disabled={modalType === "view"}
+                            id="NSBilling"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="NSBilling"
+                          >
+                            NS Billing
+                          </label>
+                        </div>
+                      </div>
+                    </div>
 
+                    {/* Test / Reporting / Code */}
+                    <div className="row mt-1">
+                      <div className="col-md-4">
+                        <label className="form-label fw-bold small">
+                          Test Name
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.Test}
+                          onChange={(e) =>
+                            handleInput("Test", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                          required
+                        />
+                      </div>
 
-              {/* Optional free text SMType */}
-              <div className="col-md-4">
-                <label className="form-label fw-bold text-primary">
-                  Sample Text (SMType)
-                </label>
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  value={formData.SMType}
-                  onChange={(e) => handleInputChange("SMType", e.target.value)}
-                  placeholder="e.g., Serum"
-                />
-              </div>
+                      <div className="col-md-4">
+                        <label className="form-label fw-bold small">
+                          Reporting Name
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.ReportingName}
+                          onChange={(e) =>
+                            handleInput("ReportingName", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
 
-              {/* Method */}
-              <div className="col-md-5">
-                <label className="form-label fw-bold text-primary">
-                  🔬 Method
-                </label>
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  value={formData.Method}
-                  onChange={(e) => handleInputChange("Method", e.target.value)}
-                  placeholder="e.g., Enzymatic Method"
-                  style={{
-                    backgroundColor: "#fff3e0", // light orange
-                    border: "1px solid #ffb74d", // darker orange border
-                  }}
-                />
-              </div>
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Test Code
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.TestCode}
+                          onChange={(e) =>
+                            handleInput("TestCode", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                       <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Method
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.Method}
+                          onChange={(e) =>
+                            handleInput("Method", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                    </div>
 
-              {/* Test Code */}
-              <div className="col-md-3">
-                <label className="form-label fw-bold text-primary">
-                  # Test Code
-                </label>
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  value={formData.TestCode}
-                  onChange={(e) => handleInputChange("TestCode", e.target.value)}
-                  placeholder="e.g., HI01"
-                  style={{
-                    backgroundColor: "#fbeff2", // light pink
-                    border: "1px solid #f48fb1", // darker pink border
-                  }}
-                />
-              </div>
+                    {/* SubDept / SampleType / Method */}
+                    <div className="row mt-1">
+                      <div className="col-md-4">
+                        <label className="form-label fw-bold small">
+                          SubDepartment
+                        </label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={formData.SubDepartmentId ?? ""}
+                          onChange={(e) =>
+                            handleInput("SubDepartmentId", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        >
+                          <option value="">Select</option>
+                          {subDepartments.map((d) => (
+                            <option
+                              key={d.SubDepartmentId}
+                              value={d.SubDepartmentId}
+                            >
+                              {d.SubDepartment}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-              {/* Delivery After */}
-              <div className="col-md-2">
-                <label className="form-label fw-bold text-primary">
-                  📦 Delivery After (Days)
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.DeliveryAfter}
-                  onChange={(e) =>
-                    handleInputChange("DeliveryAfter", e.target.value)
-                  }
-                  placeholder="0"
-                />
-              </div>
+                      <div className="col-md-4">
+                        <label className="form-label fw-bold small">
+                          Sample Type
+                        </label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={formData.SampleTypeId ?? ""}
+                          onChange={(e) =>
+                            handleInput("SampleTypeId", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        >
+                          <option value="">Select</option>
+                          {sampleTypes.map((s) => (
+                            <option
+                              key={s.SampleTypeId}
+                              value={s.SampleTypeId}
+                            >
+                              {s.SampleType}
+                              {s.Colour ? ` (${s.Colour})` : ""}
+                            </option>
+                          ))}
+                        </select>
+                        
+                      </div>
+ <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Delivery After
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          placeholder="Days"
+                          value={formData.DeliveryAfter ?? ""}
+                          onChange={(e) =>
+                            handleInput("DeliveryAfter", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                     
+                    </div>
 
-              {/* Rate Edit + Is Formulative + F-Form */}
-              <div className="col-md-2 d-flex flex-column justify-content-end">
-                <div className="form-check mb-2">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="chkRateEdit"
-                    checked={formData.RateEdit}
-                    onChange={() => handleCheckboxChange("RateEdit")}
-                  />
-                  <label className="form-check-label" htmlFor="chkRateEdit">
-                    Rate Edit
-                  </label>
+                    {/* Delivery / DescFormat / Rate / ARate / BRate / ICU */}
+                    <div className="row mt-1">
+                     
+
+                      {/* <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Format ID
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.DescFormat ?? ""}
+                          onChange={(e) =>
+                            handleInput("DescFormat", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div> */}
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.Rate ?? ""}
+                          onChange={(e) =>
+                            handleInput("Rate", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+
+                      {/* <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          A Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.ARate ?? ""}
+                          onChange={(e) =>
+                            handleInput("ARate", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div> */}
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          IPD Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.BRate ?? ""}
+                          onChange={(e) =>
+                            handleInput("BRate", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          ICU Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.ICURate ?? ""}
+                          onChange={(e) =>
+                            handleInput("ICURate", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                       <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          CAB Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.CABRate ?? ""}
+                          onChange={(e) =>
+                            handleInput("CABRate", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                        <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          SUIT Rate
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.SUITRate ?? ""}
+                          onChange={(e) =>
+                            handleInput("SUITRate", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                        <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Cost
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.cost ?? ""}
+                          onChange={(e) =>
+                            handleInput("cost", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                    </div>
+
+                 
+                    
+
+                    {/* Profile Tag + BloodFormat */}
+                    <div className="row mt-1">
+                      <div className="col-md-3">
+                        <label className="form-label fw-bold small">
+                          Profile Tagging
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.ProfileTagging ?? ""}
+                          onChange={(e) =>
+                            handleInput("ProfileTagging", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+
+                      <div className="col-md-3">
+                        <label className="form-label fw-bold small">
+                          Blood Format Mapping
+                        </label>
+                        <select
+                          className="form-select form-select-sm"
+                          value={formData.BloodFormatMapping ?? ""}
+                          onChange={(e) =>
+                            handleInput("BloodFormatMapping", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        >
+                          <option value="">Select</option>
+                          <option value="HB">HB</option>
+                          <option value="CBC">CBC</option>
+                          <option value="Platelet">Platelet</option>
+                          <option value="TC-DC">TC / DC</option>
+                          <option value="ESR">ESR</option>
+                        </select>
+                      </div>
+
+                      {/* <div className="col-md-3">
+                        <label className="form-label fw-bold small">
+                          SM Type
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.SMType ?? ""}
+                          onChange={(e) =>
+                            handleInput("SMType", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div> */}
+
+                      {/* <div className="col-md-3">
+                        <label className="form-label fw-bold small">
+                          R Sl No
+                        </label>
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={formData.RSlNo ?? ""}
+                          onChange={(e) =>
+                            handleInput("RSlNo", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div> */}
+                    </div>
+
+                    {/* Checkboxes row */}
+                    <div className="row mt-1">
+                      <div className="col-md-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.RateEdit}
+                            onChange={() => handleToggle("RateEdit")}
+                            disabled={modalType === "view"}
+                            id="RateEdit"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="RateEdit"
+                          >
+                            Rate Edit
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="col-md-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.IsFormulative}
+                            onChange={() => handleToggle("IsFormulative")}
+                            disabled={modalType === "view"}
+                            id="IsFormulative"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="IsFormulative"
+                          >
+                            Is Formulative
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="col-md-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.FForm}
+                            onChange={() => handleToggle("FForm")}
+                            disabled={modalType === "view"}
+                            id="FForm"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="FForm"
+                          >
+                            F-Form
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="col-md-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.IsProfile}
+                            onChange={() => handleToggle("IsProfile")}
+                            disabled={modalType === "view"}
+                            id="IsProfile"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="IsProfile"
+                          >
+                            Profile
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="col-md-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.OutSource}
+                            onChange={() => handleToggle("OutSource")}
+                            disabled={modalType === "view"}
+                            id="OutSource"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="OutSource"
+                          >
+                            OutSource
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* <div className="col-md-2">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.IsDisc}
+                            onChange={() => handleToggle("IsDisc")}
+                            disabled={modalType === "view"}
+                            id="IsDisc"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="IsDisc"
+                          >
+                            IsDisc
+                          </label>
+                        </div>
+                      </div> */}
+
+                      <div className="col-md-2 ">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            checked={formData.cNotReq}
+                            onChange={() => handleToggle("cNotReq")}
+                            disabled={modalType === "view"}
+                            id="cNotReq"
+                          />
+                          <label
+                            className="form-check-label small"
+                            htmlFor="cNotReq"
+                          >
+                            cNotReq
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Units / Gender / Container / Storage / Department / ActualColName */}
+                    {/* <div className="row mt-1">
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Units
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.Units ?? ""}
+                          onChange={(e) =>
+                            handleInput("Units", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Gender
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.Gender ?? ""}
+                          onChange={(e) =>
+                            handleInput("Gender", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                          placeholder="Both / Male / Female"
+                        />
+                      </div>
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Container
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.Container ?? ""}
+                          onChange={(e) =>
+                            handleInput("Container", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Storage
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.Storage ?? ""}
+                          onChange={(e) =>
+                            handleInput("Storage", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Department
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.Department ?? ""}
+                          onChange={(e) =>
+                            handleInput("Department", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">
+                          Actual Column Name
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={formData.ActualColName ?? ""}
+                          onChange={(e) =>
+                            handleInput("ActualColName", e.target.value)
+                          }
+                          disabled={modalType === "view"}
+                        />
+                      </div>
+                    </div> */}
+
+                    {/* Introduction / Delivery / Remarks / Interpretation / Instructions */}
+                    {/* <div className="mt-2">
+                      <label className="form-label fw-bold small">
+                        Introduction
+                      </label>
+                      <textarea
+                        rows={2}
+                        className="form-control form-control-sm"
+                        value={formData.Introduction ?? ""}
+                        onChange={(e) =>
+                          handleInput("Introduction", e.target.value)
+                        }
+                        disabled={modalType === "view"}
+                      />
+                    </div> */}
+
+                    {/* <div className="mt-2">
+                      <label className="form-label fw-bold small">
+                        Delivery Text
+                      </label>
+                      <textarea
+                        rows={1}
+                        className="form-control form-control-sm"
+                        value={formData.Delivery ?? ""}
+                        onChange={(e) =>
+                          handleInput("Delivery", e.target.value)
+                        }
+                        disabled={modalType === "view"}
+                      />
+                    </div> */}
+
+                    {/* <div className="mt-2">
+                      <label className="form-label fw-bold small">
+                        Remarks
+                      </label>
+                      <textarea
+                        rows={1}
+                        className="form-control form-control-sm"
+                        value={formData.Remarks ?? ""}
+                        onChange={(e) =>
+                          handleInput("Remarks", e.target.value)
+                        }
+                        disabled={modalType === "view"}
+                      />
+                    </div> */}
+
+                    <div className="mt-1">
+                      <label className="form-label fw-bold small">
+                        Interpretation
+                      </label>
+                      <textarea
+                        rows={1}
+                        className="form-control form-control-sm"
+                        value={formData.Interpretation ?? ""}
+                        onChange={(e) =>
+                          handleInput("Interpretation", e.target.value)
+                        }
+                        disabled={modalType === "view"}
+                      />
+                    </div>
+
+                    <div className="mt-1">
+                      <label className="form-label fw-bold small">
+                        Instructions
+                      </label>
+                      <textarea
+                        rows={1}
+                        className="form-control form-control-sm"
+                        value={formData.Introduction ?? ""}
+                        onChange={(e) =>
+                          handleInput("Introduction", e.target.value)
+                        }
+                        disabled={modalType === "view"}
+                      />
+                    </div>
+
+                    {/* Footer buttons */}
+                    <div className="d-flex gap-2 mt-1">
+                      <button
+                        type="button"
+                        className="btn btn-secondary w-50"
+                        onClick={() => setShowDrawer(false)}
+                      >
+                        Cancel
+                      </button>
+
+                      {modalType !== "view" && (
+                        <button
+                          type="submit"
+                          className="btn btn-primary w-50"
+                          disabled={loading}
+                        >
+                          {loading
+                            ? "Saving..."
+                            : modalType === "edit"
+                            ? "Update Test"
+                            : "Save Test"}
+                        </button>
+                      )}
+                    </div>
+                  </form>
                 </div>
-                <div className="form-check mb-2">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="chkIsFormulative"
-                    checked={formData.IsFormulative}
-                    onChange={() => handleCheckboxChange("IsFormulative")}
-                  />
-                  <label className="form-check-label" htmlFor="chkIsFormulative">
-                    Is Formulative
-                  </label>
+              </OverlayScrollbarsComponent>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ---------- Delete Confirm Modal ---------- */}
+      {showConfirm && (
+        <>
+          <div
+            className="modal-backdrop fade show"
+            style={{ zIndex: 99999 }}
+          ></div>
+          <div
+            className="modal d-block"
+            style={{ zIndex: 100000, background: "rgba(0,0,0,0.2)" }}
+            onClick={() => setShowConfirm(false)}
+          >
+            <div
+              className="modal-dialog modal-dialog-centered"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <i className="fa-light fa-triangle-exclamation me-2"></i>
+                    Confirm Delete
+                  </h5>
+                  <button
+                    className="btn-close"
+                    onClick={() => setShowConfirm(false)}
+                  ></button>
                 </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="chkFForm"
-                    checked={formData.FForm}
-                    onChange={() => handleCheckboxChange("FForm")}
-                  />
-                  <label className="form-check-label" htmlFor="chkFForm">
-                    F-Form Req
-                  </label>
+
+                <div className="modal-body text-center">
+                  <p className="fs-6 mb-1">
+                    Are you sure you want to delete this test?
+                  </p>
+                  <p className="text-muted">This cannot be undone.</p>
                 </div>
-              </div>
 
-              <hr className="my-4" />
+                <div className="modal-footer d-flex justify-content-center gap-3">
+                  <button
+                    className="btn btn-secondary px-4"
+                    onClick={() => setShowConfirm(false)}
+                  >
+                    Cancel
+                  </button>
 
-              {/* standard rate & other rates */}
-              <div className="col-md-3">
-                <label className="form-label fw-bold text-success">
-                  💰 Standard Rate
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.Rate}
-                  onChange={(e) => handleInputChange("Rate", e.target.value)}
-                  placeholder="Rate"
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label fw-bold text-success">
-                  A Rate
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.ARate}
-                  onChange={(e) => handleInputChange("ARate", e.target.value)}
-                  placeholder="A Rate"
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label fw-bold text-success">
-                  B Rate
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.BRate}
-                  onChange={(e) => handleInputChange("BRate", e.target.value)}
-                  placeholder="B Rate"
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label fw-bold text-primary">
-                  🔢 Format ID (DescFormat)
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.DescFormat}
-                  onChange={(e) =>
-                    handleInputChange("DescFormat", e.target.value)
-                  }
-                  placeholder="e.g., 1"
-                />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label fw-bold text-success">
-                  ICU Rate
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.ICURate}
-                  onChange={(e) => handleInputChange("ICURate", e.target.value)}
-                  placeholder="ICU Rate"
-                />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label fw-bold text-success">
-                  CAB Rate
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.CABRate}
-                  onChange={(e) => handleInputChange("CABRate", e.target.value)}
-                  placeholder="CAB Rate"
-                />
-              </div>
-
-              <div className="col-md-4">
-                <label className="form-label fw-bold text-success">
-                  SUIT Rate
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.SUITRate}
-                  onChange={(e) => handleInputChange("SUITRate", e.target.value)}
-                  placeholder="SUIT Rate"
-                />
-              </div>
-
-              {/* Cost */}
-              <div className="col-md-3">
-                <label className="form-label fw-bold text-success">
-                  Cost
-                </label>
-                <input
-                  type="number"
-                  className="form-control form-control-lg"
-                  value={formData.cost}
-                  onChange={(e) => handleInputChange("cost", e.target.value)}
-                  placeholder="Cost"
-                />
-              </div>
-              <div className="col-md-9">{/* Spacer for alignment */}</div>
-
-              {/* Interpretation */}
-              <div className="col-md-12">
-                <label className="form-label fw-bold text-primary">
-                  Interpretation
-                </label>
-                <textarea
-                  className="form-control"
-                  rows="3" // Increased rows for more visible editing area
-                  value={formData.Interpretation}
-                  onChange={(e) =>
-                    handleInputChange("Interpretation", e.target.value)
-                  }
-                  style={{ minHeight: "80px" }}
-                />
-              </div>
-
-              {/* Instructions */}
-              <div className="col-md-12">
-                <label className="form-label fw-bold text-primary">
-                  Instructions
-                </label>
-                <textarea
-                  className="form-control"
-                  rows="3" // Increased rows for more visible editing area
-                  value={formData.Instructions}
-                  onChange={(e) =>
-                    handleInputChange("Instructions", e.target.value)
-                  }
-                  style={{ minHeight: "80px" }}
-                />
+                  <button
+                    className="btn btn-danger px-4"
+                    onClick={confirmDelete}
+                  >
+                    Yes, Delete
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+        </>
+      )}
 
-          <div className="modal-footer p-4 border-top-0">
-            <button
-              type="button"
-              className="btn btn-secondary rounded-pill px-5 py-2" // Increased button size
-              onClick={handleCloseModal}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn btn-gradient-success rounded-pill px-5 py-2" // Increased button size
-              onClick={handleSave}
-              disabled={loading}
-              style={{
-                background:
-                  "linear-gradient(45deg, #1fdf8c 0%, #00b09b 100%)",
-                border: "none",
-                color: "white",
-                fontWeight: "700", // Bolder text
-                fontSize: "1.1rem", // Slightly larger text
-              }}
-            >
-              {loading
-                ? "Saving..."
-                : isEditMode
-                ? "💾 Update Test" // Clearer action text
-                : "✅ Save New Test"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-      </div>
       <Footer />
     </div>
   );

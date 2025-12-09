@@ -1,0 +1,480 @@
+import { useState, useEffect, useRef } from "react";
+import axiosInstance from "../../axiosInstance";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import Footer from "../../components/footer/Footer";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const SampleType = () => {
+  const dropdownRef = useRef(null);
+
+  // data state
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // drawer
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [modalType, setModalType] = useState("add"); // add | edit | view
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({
+    SampleType: "",
+    Colour: "",
+  });
+
+  // search
+  const [searchType, setSearchType] = useState("");
+  const [searchColour, setSearchColour] = useState("");
+
+  // delete confirm
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  // pagination
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // fetch all items
+  const fetchItems = async (pageNumber = 1) => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get(`/sampletypes?page=${pageNumber}`);
+      const data = res.data.success ? res.data.data : [];
+
+      setItems(data.map((d) => ({ ...d, showDropdown: false })));
+
+      if (res.data.pagination) {
+        setPage(res.data.pagination.page);
+        setLimit(res.data.pagination.limit);
+        setTotalPages(res.data.pagination.totalPages);
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      toast.error("Failed to fetch!");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchItems(1);
+  }, []);
+
+  // search API
+  const fetchSearch = async (pageNumber = 1) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchType.trim()) params.append("sampletype", searchType.trim());
+      if (searchColour.trim()) params.append("colour", searchColour.trim());
+      params.append("page", pageNumber);
+
+      const res = await axiosInstance.get(`/sampletypes/search?${params.toString()}`);
+      const data = res.data.success ? res.data.data : [];
+
+      setItems(data.map((d) => ({ ...d, showDropdown: false })));
+
+      if (res.data.pagination) {
+        setPage(res.data.pagination.page);
+        setTotalPages(res.data.pagination.totalPages);
+        setLimit(res.data.pagination.limit);
+      }
+    } catch (err) {
+      console.error("Search error:", err);
+      toast.error("Search failed");
+    }
+    setLoading(false);
+  };
+
+  // search handle
+  const handleSearch = () => {
+    if (!searchType.trim() && !searchColour.trim()) {
+      fetchItems(1);
+    } else {
+      fetchSearch(1);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchType("");
+    setSearchColour("");
+    fetchItems(1);
+  };
+
+  // drawer openers
+  const openDrawerAdd = () => {
+    setFormData({ SampleType: "", Colour: "" });
+    setEditingItem(null);
+    setModalType("add");
+    setShowDrawer(true);
+  };
+
+  const openDrawerEdit = (item) => {
+    setFormData({ SampleType: item.SampleType, Colour: item.Colour });
+    setEditingItem(item);
+    setModalType("edit");
+    setShowDrawer(true);
+  };
+
+  const openDrawerView = (item) => {
+    setFormData({ SampleType: item.SampleType, Colour: item.Colour });
+    setEditingItem(item);
+    setModalType("view");
+    setShowDrawer(true);
+  };
+
+  // submit form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (modalType === "edit") {
+        await axiosInstance.put(`/sampletypes/${editingItem.SampleTypeId}`, formData);
+        toast.success("Updated successfully!", { autoClose: 1000 });
+      } else {
+        await axiosInstance.post(`/sampletypes`, formData);
+        toast.success("Created successfully!", { autoClose: 1000 });
+      }
+      setShowDrawer(false);
+      fetchItems(page);
+    } catch (err) {
+      console.error("Submit error:", err);
+      toast.error("Failed to save");
+    }
+  };
+
+  // delete confirm
+  const confirmDelete = async () => {
+    try {
+      await axiosInstance.delete(`/sampletypes/${deleteId}`);
+      toast.success("Deleted successfully!", { autoClose: 1000 });
+
+      setShowConfirm(false);
+      setDeleteId(null);
+
+      // reload logic
+      if (items.length === 1 && page > 1) {
+        fetchItems(page - 1);
+      } else {
+        fetchItems(page);
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Failed to delete!");
+    }
+  };
+
+  // pagination
+  const goToPage = (p) => {
+    if (p < 1 || p > totalPages) return;
+
+    if (!searchType.trim() && !searchColour.trim()) {
+      fetchItems(p);
+    } else {
+      fetchSearch(p);
+    }
+  };
+
+  return (
+    <div className="main-content">
+      <ToastContainer />
+
+      <div className="panel">
+        <div className="panel-header d-flex justify-content-between align-items-center">
+          <h5>🧪 Sample Type </h5>
+
+          <div className="d-flex gap-2">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="Sample Type..."
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value)}
+              style={{ width: 150 }}
+            />
+
+            <select
+              type="text"
+              className="form-control form-control-sm"
+              placeholder=" Top colour..."
+              value={searchColour}
+              onChange={(e) => setSearchColour(e.target.value)}
+              style={{ width: 120 }}
+            >    <option value="">Top Colour</option>
+                 <option value="REd">Red</option>
+              <option value="Lavender">Lavender</option>
+              <option value="Orange">Orange</option>
+              <option value="Light Blue">Light Blue</option>
+            <option value="Gray">Gray</option>
+               <option value="Green">Green</option>
+               <option value="Black">Black</option> </select>
+
+            <button className="btn btn-sm btn-info" onClick={handleSearch}>
+              <i className="fa fa-search"></i>
+            </button>
+
+            <button className="btn btn-sm btn-secondary" onClick={clearSearch}>
+              Clear
+            </button>
+
+            <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
+              <i className="fa-light fa-plus"></i> Add
+            </button>
+          </div>
+        </div>
+
+        <div className="panel-body">
+          {loading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary"></div>
+            </div>
+          ) : (
+            <OverlayScrollbarsComponent>
+              <table className="table table-striped table-hover table-dashed">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Sl No</th>
+                    <th>Sample Type</th>
+                    <th>Top Colour</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-center p-4">
+                        No data found
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((item, index) => (
+                      <tr key={item.SampleTypeId}>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <button
+                              className="btn btn-sm btn-outline-info"
+                              onClick={() => openDrawerView(item)}
+                            >
+                              <i className="fa-light fa-eye"></i>
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => openDrawerEdit(item)}
+                            >
+                              <i className="fa-light fa-pen-to-square"></i>
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => {
+                                setDeleteId(item.SampleTypeId);
+                                setShowConfirm(true);
+                              }}
+                            >
+                              <i className="fa-light fa-trash-can"></i>
+                            </button>
+                          </div>
+                        </td>
+
+                        <td>{(page - 1) * limit + index + 1}</td>
+                        <td>{item.SampleType}</td>
+                        <td>{item.Colour}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </OverlayScrollbarsComponent>
+          )}
+        </div>
+      </div>
+
+      {/* Drawer */}
+      {showDrawer && (
+        <>
+          <div
+            className="modal-backdrop fade show"
+            onClick={() => setShowDrawer(false)}
+            style={{ zIndex: 9998 }}
+          ></div>
+
+          <div
+            className="profile-right-sidebar active"
+            style={{
+              zIndex: 9999,
+              width: "100%",
+              maxWidth: "420px",
+              right: showDrawer ? "0" : "-100%",
+              top: "70px",
+              height: "calc(100vh - 70px)",
+            }}
+          >
+            <button className="right-bar-close" onClick={() => setShowDrawer(false)}>
+              <i className="fa-light fa-angle-right"></i>
+            </button>
+
+            <div className="top-panel" style={{ height: "100%" }}>
+              <div
+                className="dropdown-txt"
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                  backgroundColor: "#0a1735",
+                  color: "#fff",
+                  padding: "10px",
+                }}
+              >
+                {modalType === "add"
+                  ? "➕ Add Sample Type"
+                  : modalType === "edit"
+                  ? "✏️ Edit Sample Type"
+                  : "👁️ View Sample Type"}
+              </div>
+
+              <OverlayScrollbarsComponent style={{ height: "calc(100% - 70px)" }}>
+                <div className="p-3">
+                  <form onSubmit={handleSubmit}>
+                    {/* Sample Type */}
+                    <div className="mb-3">
+                      <label className="form-label">Sample Type *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.SampleType}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, SampleType: e.target.value }))
+                        }
+                        disabled={modalType === "view"}
+                        required
+                      />
+                    </div>
+
+                    {/* Colour */}
+                    <div className="mb-3">
+                      <label className="form-label">Top Colour *</label>
+                      
+                      <select
+                        className="form-control"
+                        value={formData.Colour}
+                        onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, Colour: e.target.value }))
+                        }
+                        disabled={modalType === "view"}
+                        required
+                      >
+                        
+              <option value="REd">Red</option>
+              <option value="Lavender">Lavender</option>
+              <option value="Orange">Orange</option>
+              <option value="Light Blue">Light Blue</option>
+            <option value="Gray">Gray</option>
+               <option value="Green">Green</option>
+               <option value="Black">Black</option>
+                        </select>
+                    </div>
+
+                    <div className="d-flex gap-2 mt-3">
+                      <button
+                        type="button"
+                        className="btn btn-secondary w-50"
+                        onClick={() => setShowDrawer(false)}
+                      >
+                        Cancel
+                      </button>
+
+                      {modalType !== "view" && (
+                        <button type="submit" className="btn btn-primary w-50">
+                          Save
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+              </OverlayScrollbarsComponent>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Pagination */}
+      <div className="d-flex justify-content-center mt-3">
+        <ul className="pagination pagination-sm">
+          <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(page - 1)}>
+              Prev
+            </button>
+          </li>
+
+          {[...Array(totalPages)].map((_, i) => (
+            <li
+              key={i}
+              className={`page-item ${page === i + 1 ? "active" : ""}`}
+            >
+              <button className="page-link" onClick={() => goToPage(i + 1)}>
+                {i + 1}
+              </button>
+            </li>
+          ))}
+
+          <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(page + 1)}>
+              Next
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      {/* Confirm Delete Modal */}
+      {showConfirm && <div className="modal-backdrop fade show" style={{ zIndex: 99999 }}></div>}
+      {showConfirm && (
+        <div
+          className="modal d-block"
+          style={{ zIndex: 100000, background: "rgba(0,0,0,0.2)" }}
+          onClick={() => setShowConfirm(false)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="modal-content"
+              style={{
+                borderRadius: "10px",
+                overflow: "hidden",
+              }}
+            >
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  <i className="fa-light fa-triangle-exclamation me-2"></i>
+                  Confirm Delete
+                </h5>
+                <button className="btn-close" onClick={() => setShowConfirm(false)}></button>
+              </div>
+
+              <div className="modal-body text-center">
+                <p className="fs-6 mb-1">Are you sure you want to delete this?</p>
+                <p className="text-muted">This cannot be undone.</p>
+              </div>
+
+              <div className="modal-footer d-flex justify-content-center gap-3">
+                <button className="btn btn-secondary px-4" onClick={() => setShowConfirm(false)}>
+                  Cancel
+                </button>
+
+                <button className="btn btn-danger px-4" onClick={confirmDelete}>
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
+};
+
+export default SampleType;

@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react"
 import axiosInstance from '../../axiosInstance'
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
 import Footer from '../../components/footer/Footer'
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 const CulMedHdMaster = () => {
   const dropdownRef = useRef(null)
@@ -12,13 +15,27 @@ const CulMedHdMaster = () => {
   const [modalType, setModalType] = useState('add')
   const [formData, setFormData] = useState({ CulMedHd: '' })
   const [search, setSearch] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false);
+const [deleteId, setDeleteId] = useState(null);
 
-  const fetchCulMedHds = async () => {
+
+  // for pagination----- 
+  const [page, setPage] = useState(1);
+const [limit,setLimit] = useState(20);
+const [totalPages, setTotalPages] = useState(1);
+
+
+  const fetchCulMedHds = async (pageNumber = page) => {
     setLoading(true)
     try {
-      const res = await axiosInstance.get('/culmedhds')
+      const  res = await axiosInstance.get(`/culmedhds?page=${pageNumber}`);
       const data = (res.data.success ? res.data.data : res.data).map(d => ({ ...d, showDropdown: false }))
       setCulMedHds(data)
+      if(res.data.pagination){
+        setPage(res.data.pagination.page)
+        setTotalPages(res.data.pagination.totalPages)
+        setLimit(res.data.pagination.limit)
+      }
     } catch (err) {
       console.error("Error:", err)
     }
@@ -64,6 +81,42 @@ const CulMedHdMaster = () => {
     setModalType('view')
     setShowDrawer(true)
   }
+// fetch search---------- 
+
+
+const fetchSearchCulMedHds = async (pageNumber = 1) => {
+  setLoading(true);
+  try {
+    const res = await axiosInstance.get(
+      `/culmedhds/search?name=${search}`
+    );
+setCulMedHds(res.data.data || []);
+    
+    if (res.data.pagination) {
+      setPage(res.data.pagination.page);
+      setTotalPages(res.data.pagination.totalPages);
+      setLimit(res.data.pagination.limit);
+    }
+
+  } catch (err) {
+    console.error("Search error:", err);
+  }
+  setLoading(false);
+};
+
+// handle search----------- 
+
+
+const handleSearch = () => {
+  if (search.trim() === "") {
+    // empty search → load normal list
+    fetchCulMedHds(1);
+  } else {
+    fetchSearchCulMedHds(1);
+  }
+};
+
+
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this item?')) return
@@ -74,12 +127,39 @@ const CulMedHdMaster = () => {
       console.error("Delete error:", err)
     }
   }
+  
+
+
+  // confirm delete-------- 
+  const confirmDelete = async () => {
+  try {
+    await axiosInstance.delete(`/culmedhds/${deleteId}`);
+
+    toast.success("Deleted successfully!", { autoClose: 1500 });
+
+    setShowConfirm(false);
+    setDeleteId(null);
+
+    // Reload logic
+    if (culMedHds.length === 1 && page > 1) {
+      fetchCulMedHds(page - 1);
+    } else {
+      fetchCulMedHds(page);
+    }
+
+  } catch (err) {
+    console.error("Delete error:", err);
+    toast.error("Failed to delete!", { autoClose: 1500 });
+  }
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
       if (modalType === 'edit') {
         await axiosInstance.put(`/culmedhds/${editingItem.CulMedHdId}`, formData)
+         toast.success("Updated Sucessfully",{autoClose:1000})
       } else {
         await axiosInstance.post('/culmedhds', formData)
       }
@@ -98,18 +178,24 @@ const CulMedHdMaster = () => {
         <div className="panel-header d-flex justify-content-between">
           <h5>💬 Culture Medicine Master</h5>
           <div className="d-flex gap-2">
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ width: "200px" }}
-            />
-            <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
-              <i className="fa-light fa-plus"></i> Add Item
-            </button>
-          </div>
+  <input
+    type="text"
+    className="form-control form-control-sm"
+    placeholder="Search..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    style={{ width: "200px" }}
+  />
+
+  <button className="btn btn-sm btn-info" onClick={handleSearch}>
+    <i className="fa fa-search"></i>
+  </button>
+
+  <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
+    <i className="fa-light fa-plus"></i> Add Item
+  </button>
+</div>
+
         </div>
 
         <div className="panel-body">
@@ -123,7 +209,7 @@ const CulMedHdMaster = () => {
                 <thead>
                   <tr>
                     <th>Action</th>
-                    <th>ID</th>
+                    <th>Sl No</th>
                     <th>Culture Medicine</th>
                   </tr>
                 </thead>
@@ -131,33 +217,37 @@ const CulMedHdMaster = () => {
                   {filtered.map((item, index) => (
                     <tr key={item.CulMedHdId}>
                       <td>
-                        <div className="digi-dropdown dropdown d-inline-block" ref={dropdownRef}>
-                          <button
-                            className={`btn btn-sm btn-outline-primary ${item.showDropdown ? 'show' : ''}`}
-                            onClick={(e) => toggleDropdown(e, index)}
-                          >
-                            Action <i className="fa-regular fa-angle-down"></i>
-                          </button>
-                          <ul className={`digi-table-dropdown digi-dropdown-menu dropdown-menu dropdown-slim dropdown-menu-sm ${item.showDropdown ? 'show' : ''}`}>
-                            <li>
-                              <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); openDrawerView(item); }}>
-                                <i className="fa-light fa-eye"></i> View
-                              </a>
-                            </li>
-                            <li>
-                              <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); openDrawerEdit(item); }}>
-                                <i className="fa-light fa-pen-to-square"></i> Edit
-                              </a>
-                            </li>
-                            <li>
-                              <a href="#" className="dropdown-item text-danger" onClick={(e) => { e.preventDefault(); handleDelete(item.CulMedHdId); }}>
-                                <i className="fa-light fa-trash-can"></i> Delete
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
-                      </td>
-                      <td>{item.CulMedHdId}</td>
+  <div className="d-flex gap-2">
+
+    <button
+      className="btn btn-sm btn-outline-info"
+      onClick={() => openDrawerView(item)}
+    >
+      <i className="fa-light fa-eye"></i> 
+    </button>
+
+    <button
+      className="btn btn-sm btn-outline-primary"
+      onClick={() => openDrawerEdit(item)}
+    >
+      <i className="fa-light fa-pen-to-square"></i> 
+    </button>
+
+    <button
+      className="btn btn-sm btn-outline-danger"
+      onClick={() =>{ 
+        // handleDelete(item.CulMedHdId)
+setDeleteId(item.CulMedHdId);
+    setShowConfirm(true);
+      }}
+    >
+      <i className="fa-light fa-trash-can"></i> 
+    </button>
+
+  </div>
+</td>
+
+                      <td>{(page - 1) * limit + index + 1}</td>
                       <td>{item.CulMedHd}</td>
                     </tr>
                   ))}
@@ -208,8 +298,137 @@ const CulMedHdMaster = () => {
               </OverlayScrollbarsComponent>
             </div>
           </div>
+          
         </>
       )}
+  <div className="d-flex justify-content-center mt-3">
+  <ul className="pagination pagination-sm">
+
+    <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
+      <button className="page-link" onClick={() => fetchCulMedHds(page - 1)}>
+        Prev
+      </button>
+    </li>
+
+    {[...Array(totalPages)].map((_, i) => (
+      <li
+        key={i}
+        className={`page-item ${page === i + 1 ? "active" : ""}`}
+      >
+        <button className="page-link" onClick={() => fetchCulMedHds(i + 1)}>
+          {i + 1}
+        </button>
+      </li>
+    ))}
+
+    <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
+      <button className="page-link" onClick={() => fetchCulMedHds(page + 1)}>
+        Next
+      </button>
+    </li>
+
+  </ul>
+</div>
+
+
+
+
+{/* modal--------------------------  */}
+
+{showConfirm && (
+  <div className="modal-backdrop fade show" style={{ zIndex: 99999 }}></div>
+)}
+
+{showConfirm && (
+  <div
+    className="modal d-block"
+    style={{
+      zIndex: 100000,
+      background: "rgba(0,0,0,0.2)",
+    }}
+    onClick={() => setShowConfirm(false)}
+  >
+    <div
+      className="modal-dialog modal-dialog-centered"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div
+        className="modal-content"
+        style={{
+          borderRadius: "10px",
+          border: "1px solid #1e3a8a15",
+          boxShadow: "0 0 25px rgba(0,0,0,0.35)",
+          overflow: "hidden",
+        }}
+      >
+        {/* THEME HEADER — based on #0a1735 */}
+        <div
+          className="modal-header"
+          style={{
+            // background: "#0a1735",
+            // color: "#fff",
+            padding: "12px 18px",
+          }}
+        >
+          <h5 className="modal-title">
+            <i className="fa-light fa-triangle-exclamation me-2"></i>
+            Confirm Delete
+          </h5>
+          <button
+            className="btn-close btn-close-white"
+            onClick={() => setShowConfirm(false)}
+          ></button>
+        </div>
+
+        {/* BODY */}
+        <div className="modal-body text-center" style={{ padding: "25px 20px" }}>
+          <p className="fs-6 mb-1" >
+            Are you sure you want to delete this item?
+          </p>
+          <p className="text-muted" style={{ fontSize: "14px" }}>
+            This action cannot be undone.
+          </p>
+        </div>
+
+        {/* FOOTER WITH THEME BUTTONS */}
+        <div
+          className="modal-footer"
+          style={{
+            borderTop: "1px solid #e5e5e5",
+            padding: "12px 16px",
+            display: "flex",
+            justifyContent: "center",
+            gap: "15px",
+          }}
+        >
+          <button
+            className="btn btn-secondary px-4"
+            style={{
+              borderRadius: "6px",
+            }}
+            onClick={() => setShowConfirm(false)}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="btn px-4"
+            style={{
+              background: "#dc3545",
+              color: "#fff",
+              borderRadius: "6px",
+            }}
+            onClick={confirmDelete}
+          >
+            Yes, Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
       <Footer />
     </div>
   )

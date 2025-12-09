@@ -213,6 +213,21 @@ import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 
 
+
+// !  deb dia  mas
+import Saluation from "./templates/DiagnosisMaster/Saluation.jsx";
+import SampleType from "./templates/DiagnosisMaster/SampleType.jsx";
+import SubCompany from "./templates/DiagnosisMaster/SubCompany.jsx";
+import DiagProfile from "./templates/DiagnosisMaster/DiagProfile.jsx";
+import Collector from "./templates/DiagnosisMaster/Collector.jsx";
+import ReportHeading from "./templates/DiagnosisMaster/ReportHeading.jsx";
+import EditMarketingExecutive from "./templates/DiagnosisMaster/EditMarketingExecutive.jsx";
+import Composition from "./templates/DiagnosisMaster/Composition.jsx";
+import CompanyMaster from "./templates/DiagnosisMaster/CompanyMaster.jsx";
+import Batch from "./templates/DiagnosisMaster/Batch.jsx";  import TestMaster from "./templates/DiagnosisMaster/Test.jsx"
+
+
+
 function App() {
   return (
     <Router>
@@ -439,6 +454,25 @@ function App() {
 
 <Route path="/CampingManagement" element={<CampingManagement/>} />
 <Route path="/patient-actions" element={<PatientActions/>} />
+
+
+
+
+{/* deb  dia mass */}
+<Route path="/CultureMedicine" element={<ProtectedRoute><CulMedHdMaster/></ProtectedRoute>}/>
+  <Route path="/Saluation" element={<ProtectedRoute><Saluation/></ProtectedRoute>}/> 
+  <Route path="/SampleType" element={<ProtectedRoute><SampleType/></ProtectedRoute>}/>
+   <Route path="/SubCompany" element={<ProtectedRoute><SubCompany/></ProtectedRoute>}/>
+   <Route path="/DiagProfile" element={<ProtectedRoute><DiagProfile/></ProtectedRoute>}/>
+    <Route path="/Collector" element={<ProtectedRoute><Collector/></ProtectedRoute>}/>
+   <Route path="/ReportHeading" element={<ProtectedRoute><ReportHeading/></ProtectedRoute>}/>
+  <Route path="/EditMarketingExecutive" element={<ProtectedRoute><EditMarketingExecutive/></ProtectedRoute>}/>
+  <Route path="/Composition" element={<ProtectedRoute><Composition/></ProtectedRoute>}/>
+   <Route path="/CompanyMaster" element={<ProtectedRoute><CompanyMaster/></ProtectedRoute>}/>
+      <Route path="/Batch" element={<ProtectedRoute><Batch/></ProtectedRoute>}/>  <Route path="/TestMaster" element={<ProtectedRoute><TestMaster/></ProtectedRoute>}/>
+
+
+
 
 
     
