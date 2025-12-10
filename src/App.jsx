@@ -87,7 +87,7 @@ import PatientRegistrationDetail from "./components/indoor/indoor-patientAdmissi
 
 import AdmissionList from "./components/indoor/indoor-patientAdmissionlist/AdmissionList.jsx";
 import PatientAdmissionDetail from "./components/indoor/PatientAdmissionDetail/PatientAdmissionDetail.jsx";
-import SampleReceipt from "./components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleReceipt.jsx";
+import SampleReceipt from "./components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleRe/SampleReceipt.jsx";
 import OtherCharges_indoor from "./components/indoor/PatientAdmissionDetail/OtherCharges/OtherCharges.jsx";
 import OTBillingList from "./components/indoor/PatientAdmissionDetail/OTBillingList.jsx";
 import OTBillingDetail from "./components/indoor/OTBillingDetail.jsx";
@@ -234,6 +234,7 @@ import TestParameter from "./templates/DiagnosisMaster/TestParameter.jsx";
 import DiscountAllowedMaster from "./templates/DiagnosisMaster/DiscountAllowedMaster.jsx";
 
 import DiagnosticParameterSetup from "./templates/DiagnosisMaster/DiagnosticParameterSetup.jsx";
+import InitialFormData from "./components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleRe/InitialFormData.jsx";
 
 
 
@@ -306,6 +307,9 @@ function App() {
 
 
           <Route path="/sampleReceipts" element={<ProtectedRoute><SampleReceipt /></ProtectedRoute>} />
+<Route path="/initialFormData" element={<InitialFormData />} />
+<Route path="/initialFormData/:id" element={<InitialFormData />} />
+
           <Route path="/othercharges" element={<ProtectedRoute><OtherCharges /></ProtectedRoute>} />
           <Route path="/OTBillingList" element={<ProtectedRoute><OTBillingList /></ProtectedRoute>} />
           <Route path="/OTBillingDetail" element={<ProtectedRoute><OTBillingDetail /></ProtectedRoute>} />
