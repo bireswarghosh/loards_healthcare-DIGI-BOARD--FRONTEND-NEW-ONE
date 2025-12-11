@@ -321,8 +321,8 @@ const SampleType = () => {
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
-                  backgroundColor: "#0a1735",
-                  color: "#fff",
+                  // backgroundColor: "#0a1735",
+                  // color: "#fff",
                   padding: "10px",
                 }}
               >

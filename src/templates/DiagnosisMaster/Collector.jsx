@@ -11,6 +11,7 @@ const Collector = () => {
   // data state
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const[zoneName,setZoneName]=useState([])
 
 
 
@@ -82,6 +83,16 @@ const fetchCollectorNames = async () => {
 };
 
 
+const fetchZoneName= async()=>{
+  try {
+    const res = await axiosInstance.get('/zone')
+    setZoneName(res.data)
+  } catch (error) {
+    console.log("error",error);
+    
+  }
+}
+
   useEffect(() => {
     fetchItems(1);
   }, []);
@@ -135,6 +146,7 @@ const fetchCollectorNames = async () => {
       Share: "",
     });
     fetchCollectorNames();
+    fetchZoneName()
     setEditingItem(null);
     setModalType("add");
     setShowDrawer(true);
@@ -143,6 +155,7 @@ const fetchCollectorNames = async () => {
   const openDrawerEdit = (item) => {
     setFormData(item);
     fetchCollectorNames();
+    fetchZoneName()
     setEditingItem(item);
     setModalType("edit");
     setShowDrawer(true);
@@ -158,7 +171,7 @@ const fetchCollectorNames = async () => {
   // submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+setLoading(true)
     try {
       if (modalType === "edit") {
         await axiosInstance.put(`/collector/${editingItem.CollectorId}`, formData);
@@ -173,10 +186,12 @@ const fetchCollectorNames = async () => {
     } catch (err) {
       toast.error("Failed to save collector!");
     }
+    finally{setLoading(false)}
   };
 
   // delete confirm
   const confirmDelete = async () => {
+    setLoading(true)
     try {
       await axiosInstance.delete(`/collector/${deleteId}`);
       toast.success("Deleted successfully!");
@@ -189,6 +204,7 @@ const fetchCollectorNames = async () => {
     } catch (err) {
       toast.error("Failed to delete!");
     }
+    finally{setLoading(false)}
   };
 
   // pagination
@@ -326,6 +342,8 @@ const fetchCollectorNames = async () => {
               right: showDrawer ? "0" : "-100%",
               top: "70px",
               height: "calc(100vh - 70px)",
+                 overflowY: "hidden" 
+              
             }}
           >
             <button className="right-bar-close" onClick={() => setShowDrawer(false)}>
@@ -339,8 +357,7 @@ const fetchCollectorNames = async () => {
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
-                  backgroundColor: "#0a1735",
-                  color: "#fff",
+                 
                   padding: "10px",
                 }}
               >
@@ -355,9 +372,9 @@ const fetchCollectorNames = async () => {
                 <div className="p-3">
                   <form onSubmit={handleSubmit}>
                     {/* Collector */}
-                    <div className="mb-3">
+                    <div className="mb-1">
                       <label className="form-label">Collector *</label>
-                      <select
+                      {/* <select
   className="form-control"
   value={formData.Collector}
   onChange={(e) =>
@@ -376,12 +393,24 @@ const fetchCollectorNames = async () => {
       {c.Collector}
     </option>
   ))}
-</select>
+</select> */}
+<input type="text"
+className="form-control"
+  value={formData.Collector}
+  onChange={(e) =>
+    setFormData((prev) => ({
+      ...prev,
+      Collector: e.target.value
+    }))
+  }
+  disabled={modalType === "view"}
+  required
+/>
 
                     </div>
 
                     {/* Short Name */}
-                    <div className="mb-3">
+                    <div className="mb-1">
                       <label className="form-label">Short Name</label>
                       <input
                         type="text"
@@ -395,7 +424,7 @@ const fetchCollectorNames = async () => {
                     </div>
 
                     {/* Add1 */}
-                    <div className="mb-3">
+                    <div className="mb-1">
                       <label className="form-label">Address 1</label>
                       <input
                         type="text"
@@ -409,7 +438,7 @@ const fetchCollectorNames = async () => {
                     </div>
 
                     {/* Add2 */}
-                    <div className="mb-3">
+                    <div className="mb-1">
                       <label className="form-label">Address 2</label>
                       <input
                         type="text"
@@ -423,7 +452,7 @@ const fetchCollectorNames = async () => {
                     </div>
 
                     {/* Add3 */}
-                    <div className="mb-3">
+                    <div className="mb-1">
                       <label className="form-label">Address 3</label>
                       <input
                         type="text"
@@ -437,7 +466,7 @@ const fetchCollectorNames = async () => {
                     </div>
 
                     {/* Phone */}
-                    <div className="mb-3">
+                    <div className="mb-1">
                       <label className="form-label">Phone No</label>
                       <input
                         type="text"
@@ -451,21 +480,29 @@ const fetchCollectorNames = async () => {
                     </div>
 <div className="row">
  {/* Zone */}
-                    <div className="mb-3 col-md-6">
+                    <div className="mb-1 col-md-6">
                       <label className="form-label">Zone</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.Zone}
-                        onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, Zone: e.target.value }))
-                        }
-                        disabled={modalType === "view"}
-                      />
+                     <select
+  className="form-control"
+  value={formData.Zone}
+  onChange={(e) =>
+    setFormData((prev) => ({ ...prev, Zone: e.target.value }))
+  }
+  disabled={modalType === "view"}
+>
+  <option value="">Select Zone</option>
+
+  {zoneName.map((z) => (
+    <option key={z.ZoneId} value={z.Zone}>
+      {z.Zone}
+    </option>
+  ))}
+</select>
+
                     </div>
 
                     {/* Share */}
-                    <div className="mb-3 col-md-6">
+                    <div className="mb-1 col-md-6">
                       <label className="form-label">% of Share</label>
                       <input
                         type="number"
@@ -481,9 +518,10 @@ const fetchCollectorNames = async () => {
                    
 
                     {/* Buttons */}
-                    <div className="d-flex gap-2 mt-3">
+                    <div className="d-flex gap-2">
                       <button
                         type="button"
+                        disabled={loading}
                         className="btn btn-secondary w-50"
                         onClick={() => setShowDrawer(false)}
                       >
@@ -491,7 +529,7 @@ const fetchCollectorNames = async () => {
                       </button>
 
                       {modalType !== "view" && (
-                        <button type="submit" className="btn btn-primary w-50">
+                        <button disabled={loading} type="submit" className="btn btn-primary w-50">
                           Save
                         </button>
                       )}
@@ -556,11 +594,11 @@ const fetchCollectorNames = async () => {
               </div>
 
               <div className="modal-footer d-flex justify-content-center gap-3">
-                <button className="btn btn-secondary px-4" onClick={() => setShowConfirm(false)}>
+                <button disabled={loading} className="btn btn-secondary px-4" onClick={() => setShowConfirm(false)}>
                   Cancel
                 </button>
 
-                <button className="btn btn-danger px-4" onClick={confirmDelete}>
+                <button disabled={loading} className="btn btn-danger px-4" onClick={confirmDelete}>
                   Yes, Delete
                 </button>
               </div>

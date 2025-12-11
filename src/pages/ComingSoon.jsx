@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 const ComingSoon = () => {
   return (
-    <div className="main-content p-0">
+    <div className="main-content ">
         <div className="panel coming-soon-panel">
             <div className="panel-body h-100 d-flex flex-column align-items-center justify-content-center">
                 <div className="part-img">
@@ -19,3 +19,13 @@ const ComingSoon = () => {
 }
 
 export default ComingSoon
+
+
+
+
+
+
+
+
+
+

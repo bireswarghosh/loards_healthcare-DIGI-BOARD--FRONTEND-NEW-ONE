@@ -107,7 +107,7 @@ const ReportHeading = () => {
   // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+setLoading(true)
     try {
       if (modalType === "edit") {
         await axiosInstance.put(
@@ -125,10 +125,12 @@ const ReportHeading = () => {
     } catch (err) {
       toast.error("Failed to save data!");
     }
+     finally{setLoading(false)}
   };
 
   // Delete Confirm
   const confirmDelete = async () => {
+    setLoading(true)
     try {
       await axiosInstance.delete(`/reportheading/${deleteId}`);
       toast.success("Deleted successfully!");
@@ -141,6 +143,7 @@ const ReportHeading = () => {
     } catch (err) {
       toast.error("Failed to delete!");
     }
+     finally{setLoading(false)}
   };
 
   // Pagination
@@ -193,7 +196,7 @@ const ReportHeading = () => {
                   <tr>
                     <th>Action</th>
                     <th>Sl No</th>
-                    <th>Report Heading</th>
+                    <th className="text-center">Report Heading</th>
                   </tr>
                 </thead>
 
@@ -236,7 +239,7 @@ const ReportHeading = () => {
                         </td>
 
                         <td>{(page - 1) * limit + index + 1}</td>
-                        <td>{item.ReportHeading}</td>
+                        <td className="text-center">{item.ReportHeading}</td>
                       </tr>
                     ))
                   )}
@@ -278,8 +281,7 @@ const ReportHeading = () => {
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
-                  backgroundColor: "#0a1735",
-                  color: "#fff",
+                  
                   padding: "10px",
                 }}
               >
@@ -310,6 +312,7 @@ const ReportHeading = () => {
                     <div className="d-flex gap-2 mt-3">
                       <button
                         type="button"
+                        disabled={loading}
                         className="btn btn-secondary w-50"
                         onClick={() => setShowDrawer(false)}
                       >
@@ -317,7 +320,7 @@ const ReportHeading = () => {
                       </button>
 
                       {modalType !== "view" && (
-                        <button type="submit" className="btn btn-primary w-50">
+                        <button type="submit" disabled={loading} className="btn btn-primary w-50">
                           Save
                         </button>
                       )}
@@ -382,11 +385,11 @@ const ReportHeading = () => {
               </div>
 
               <div className="modal-footer d-flex justify-content-center gap-3">
-                <button className="btn btn-secondary px-4" onClick={() => setShowConfirm(false)}>
+                <button disabled={loading} className="btn btn-secondary px-4" onClick={() => setShowConfirm(false)}>
                   Cancel
                 </button>
 
-                <button className="btn btn-danger px-4" onClick={confirmDelete}>
+                <button disabled={loading} className="btn btn-danger px-4" onClick={confirmDelete}>
                   Yes, Delete
                 </button>
               </div>

@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react"
 import axiosInstance from '../../axiosInstance'
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
 import Footer from '../../components/footer/Footer'
-import { ToastContainer } from "react-toastify";
+
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { toast } from "react-toastify";
 
 const CulMedHdMaster = () => {
   const dropdownRef = useRef(null)
@@ -132,10 +132,11 @@ const handleSearch = () => {
 
   // confirm delete-------- 
   const confirmDelete = async () => {
+    setLoading(true)
   try {
     await axiosInstance.delete(`/culmedhds/${deleteId}`);
 
-    toast.success("Deleted successfully!", { autoClose: 1500 });
+    toast.success("Deleted successfully!", { autoClose: 1000 });
 
     setShowConfirm(false);
     setDeleteId(null);
@@ -151,22 +152,30 @@ const handleSearch = () => {
     console.error("Delete error:", err);
     toast.error("Failed to delete!", { autoClose: 1500 });
   }
+  finally{
+    setLoading(false)
+  }
 };
 
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
     try {
       if (modalType === 'edit') {
         await axiosInstance.put(`/culmedhds/${editingItem.CulMedHdId}`, formData)
          toast.success("Updated Sucessfully",{autoClose:1000})
       } else {
         await axiosInstance.post('/culmedhds', formData)
+          toast.success("Created Sucessfully",{autoClose:1000})
       }
       setShowDrawer(false)
       fetchCulMedHds()
     } catch (err) {
       console.error("Save error:", err)
+    }
+    finally{
+      setLoading(false)
     }
   }
 
@@ -176,7 +185,7 @@ const handleSearch = () => {
     <div className="main-content">
       <div className="panel">
         <div className="panel-header d-flex justify-content-between">
-          <h5>💬 Culture Medicine Master</h5>
+          <h5>💬 Culture Medicine Head</h5>
           <div className="d-flex gap-2">
   <input
     type="text"
@@ -210,7 +219,7 @@ const handleSearch = () => {
                   <tr>
                     <th>Action</th>
                     <th>Sl No</th>
-                    <th>Culture Medicine</th>
+                    <th>CulMedHd Name</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -266,14 +275,14 @@ setDeleteId(item.CulMedHdId);
               <i className="fa-light fa-angle-right"></i>
             </button>
             <div className="top-panel" style={{ height: '100%' }}>
-              <div className="dropdown-txt" style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: '#0a1735' }}>
+              <div className="dropdown-txt" style={{ position: 'sticky', top: 0, zIndex: 10,  }}>
                 {modalType === 'add' ? '➕ Add Item' : modalType === 'edit' ? '✏️ Edit Item' : '👁️ View Item'}
               </div>
               <OverlayScrollbarsComponent style={{ height: 'calc(100% - 70px)' }}>
                 <div className="p-3">
                   <form onSubmit={handleSubmit}>
                     <div className="mb-3">
-                      <label className="form-label">Culture Medicine *</label>
+                      <label className="form-label">Culture Medicine Head *</label>
                       <input
                         type="text"
                         className="form-control"
@@ -288,7 +297,7 @@ setDeleteId(item.CulMedHdId);
                         Cancel
                       </button>
                       {modalType !== 'view' && (
-                        <button type="submit" className="btn btn-primary w-50">
+                        <button disabled={loading} type="submit" className="btn btn-primary w-50">
                           Save
                         </button>
                       )}
@@ -412,7 +421,7 @@ setDeleteId(item.CulMedHdId);
           </button>
 
           <button
-            className="btn px-4"
+            className="btn px-4" disabled={loading}
             style={{
               background: "#dc3545",
               color: "#fff",

@@ -215,6 +215,7 @@ import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 
 // !  deb dia  mas
+import ActiveDoctors from "./templates/DiagnosisMaster/ActiveDoctors.jsx";
 import Saluation from "./templates/DiagnosisMaster/Saluation.jsx";
 import SampleType from "./templates/DiagnosisMaster/SampleType.jsx";
 import SubCompany from "./templates/DiagnosisMaster/SubCompany.jsx";
@@ -235,6 +236,9 @@ import DiscountAllowedMaster from "./templates/DiagnosisMaster/DiscountAllowedMa
 
 import DiagnosticParameterSetup from "./templates/DiagnosisMaster/DiagnosticParameterSetup.jsx";
 import InitialFormData from "./components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleRe/InitialFormData.jsx";
+import DepartmentSubdepartment from "./components/outdoor/DeptSubDept.jsx";
+import DoctorManagement from "./components/outdoor/DoctorManagement.jsx";
+import DoctorWiseAppointments from "./components/outdoor/DoctorWiseAppointments.jsx";
 
 
 
@@ -473,6 +477,7 @@ function App() {
 
 
 {/* deb  dia mass */}
+<Route path="/active-doctors" element={<ProtectedRoute><ActiveDoctors/></ProtectedRoute>} />
 <Route path="/CultureMedicine" element={<ProtectedRoute><CulMedHdMaster/></ProtectedRoute>}/>
   <Route path="/Saluation" element={<ProtectedRoute><Saluation/></ProtectedRoute>}/> 
   <Route path="/SampleType" element={<ProtectedRoute><SampleType/></ProtectedRoute>}/>
@@ -485,8 +490,9 @@ function App() {
    <Route path="/CompanyMaster" element={<ProtectedRoute><CompanyMaster/></ProtectedRoute>}/>
       <Route path="/Batch" element={<ProtectedRoute><Batch/></ProtectedRoute>}/>  <Route path="/TestMaster" element={<ProtectedRoute><TestMaster/></ProtectedRoute>}/>
 
-
-
+ <Route path="/department" element={<DepartmentSubdepartment/>}/>
+ <Route path="/doctor" element={<DoctorManagement/>}/>
+<Route path="/doctor-wise-appointments" element={<DoctorWiseAppointments />} />
       {/* sou dia  mas */}
 
 
@@ -498,7 +504,7 @@ function App() {
 
  <Route path="/DiagnosticParameterSetup" element={<DiagnosticParameterSetup/>}/>
 
-
+  <Route path="/*" element={<ComingSoon />} />
     
         </Route>
         <Route path="/login" element={<Login3 />} />
@@ -517,7 +523,7 @@ function App() {
         <Route path="/error500" element={<Error500 />} />
         <Route path="/error503" element={<Error503 />} />
         <Route path="/error504" element={<Error504 />} />
-        <Route path="/ComingSoon" element={<ComingSoon />} />
+        {/* <Route path="/*" element={<ComingSoon />} /> */}
         <Route path="/comingSoon2" element={<ComingSoon2 />} />
         <Route path="/pricingTable" element={<PricingTable />} />
         <Route path="/pricingTable2" element={<PricingTable2 />} />

@@ -107,7 +107,7 @@ const EditMarketingExecutive = () => {
   // update executive
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+setLoading(true)
     try {
       await axiosInstance.put(`/doctormasters-mexecutive/${formData.DoctorId}`, {
         MExecutiveId: formData.MExecutiveId,
@@ -120,6 +120,7 @@ const EditMarketingExecutive = () => {
       console.error("Update error", err);
       toast.error("Update failed");
     }
+     finally{setLoading(false)}
   };
 
   // pagination
@@ -173,7 +174,7 @@ const EditMarketingExecutive = () => {
                   <tr>
                     <th>Action</th>
                     <th>Sl No</th>
-                    <th>Doctor Name</th>
+                    <th>Doctor</th>
                     <th>Marketing Executive</th>
                   </tr>
                 </thead>
@@ -241,8 +242,7 @@ const EditMarketingExecutive = () => {
               <div
                 className="dropdown-txt"
                 style={{
-                  backgroundColor: "#0a1735",
-                  color: "#fff",
+                 
                   padding: "10px",
                 }}
               >
@@ -254,7 +254,7 @@ const EditMarketingExecutive = () => {
                   <form onSubmit={handleSubmit}>
                     {/* Doctor Name */}
                     <div className="mb-3">
-                      <label className="form-label">Doctor Name</label>
+                      <label className="form-label">Doctor</label>
                       <input
                         type="text"
                         className="form-control"
@@ -290,13 +290,14 @@ const EditMarketingExecutive = () => {
                     <div className="d-flex gap-2 mt-3">
                       <button
                         type="button"
+                        disabled={loading}
                         className="btn btn-secondary w-50"
                         onClick={() => setShowDrawer(false)}
                       >
                         Cancel
                       </button>
 
-                      <button type="submit" className="btn btn-primary w-50">
+                      <button disabled={loading} type="submit" className="btn btn-primary w-50">
                         Save
                       </button>
                     </div>

@@ -409,7 +409,7 @@ if (sd?.DepartmentId) {
 </div>
                     <div className="row">
                       <div className="col-md-4 mb-2">
-                        <label className="form-label">Rate *</label>
+                        <label className="form-label">Rate(Rs.) *</label>
                         <input
                           type="number"
                           className="form-control"
@@ -422,7 +422,7 @@ if (sd?.DepartmentId) {
                       </div>
 
                       <div className="col-md-4 mb-2">
-                        <label className="form-label">Cost *</label>
+                        <label className="form-label">Costing *</label>
                         <input
                           type="number"
                           className="form-control"
@@ -434,10 +434,12 @@ if (sd?.DepartmentId) {
                         />
                       </div>
                         <div className="mb-2 col-md-4">
-                      <label className="form-label">Delivery After (days)</label>
+                      <label className="form-label">Delivery After</label>
                       <input
                         type="number"
                         className="form-control"
+                        placeholder="day(s)"
+                        min="0"
                         value={formData.DeliveryAfter}
                         onChange={(e) =>
                           setFormData((p) => ({ ...p, DeliveryAfter: e.target.value }))

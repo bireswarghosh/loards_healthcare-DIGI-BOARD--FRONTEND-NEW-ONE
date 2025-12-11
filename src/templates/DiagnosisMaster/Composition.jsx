@@ -83,6 +83,7 @@ const Composition = () => {
   // Submit form (POST / PUT)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true)
     try {
       if (modalType === "edit") {
         await axiosInstance.put(
@@ -100,6 +101,7 @@ const Composition = () => {
     } catch {
       toast.error("Error saving data!");
     }
+     finally{setLoading(false)}
   };
 
   // Delete
@@ -107,6 +109,7 @@ const Composition = () => {
   const [deleteId, setDeleteId] = useState(null);
 
   const confirmDelete = async () => {
+    setLoading(true)
     try {
       await axiosInstance.delete(`/item-subgroups/${deleteId}`);
       toast.success("Deleted!");
@@ -118,6 +121,7 @@ const Composition = () => {
     } catch {
       toast.error("Failed to delete!");
     }
+     finally{setLoading(false)}
   };
 
   // Pagination
@@ -131,7 +135,7 @@ const Composition = () => {
 
       <div className="panel">
         <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>📦 Composition (Item Sub Group)</h5>
+          <h5>📦 Composition</h5>
 
           <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
             <i className="fa-light fa-plus"></i> Add
@@ -150,7 +154,7 @@ const Composition = () => {
                   <tr>
                     <th>Action</th>
                     <th>SL</th>
-                    <th>Item Sub Group</th>
+                    <th className="text-center">Sub Group</th>
                   </tr>
                 </thead>
 
@@ -191,7 +195,7 @@ const Composition = () => {
                         </td>
 
                         <td>{(page - 1) * limit + index + 1}</td>
-                        <td>{item.ItemSubGroup}</td>
+                        <td className="text-center">{item.ItemSubGroup}</td>
                       </tr>
                     ))
                   )}
@@ -232,16 +236,15 @@ const Composition = () => {
                 style={{
                   position: "sticky",
                   top: 0,
-                  background: "#0a1735",
-                  color: "#fff",
+                 
                   padding: 10,
                 }}
               >
                 {modalType === "add"
-                  ? "➕ Add Sub Group"
+                  ? "➕ Add Composition"
                   : modalType === "edit"
-                  ? "✏️ Edit Sub Group"
-                  : "👁️ View Sub Group"}
+                  ? "✏️ Edit Composition"
+                  : "👁️ View Composition"}
               </div>
 
               <OverlayScrollbarsComponent style={{ height: "calc(100% - 70px)" }}>
@@ -249,7 +252,7 @@ const Composition = () => {
                   <form onSubmit={handleSubmit}>
                     {/* Sub Group Field */}
                     <div className="mb-3">
-                      <label className="form-label">Item Sub Group *</label>
+                      <label className="form-label">Composition *</label>
                       <input
                         type="text"
                         className="form-control"
@@ -267,54 +270,15 @@ const Composition = () => {
                         required
                       />
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label">SubGroupType *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.SubGroupType}
-                        onChange={(e) =>
-                        {console.log(e.target.value);
-                        
-                          
-                        setFormData(prev => ({
-  ...prev,
-  SubGroupType: e.target.value
-}))
-                        }
-                        }
-                        disabled={modalType === "view"}
-                        required
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">ItemGroupId *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.ItemGroupId}
-                        onChange={(e) =>
-                        {console.log(e.target.value);
-                        
-                          setFormData(prev => ({
-  ...prev,
-  ItemGroupId: e.target.value
-}));
-
-                        
-                        }
-                        }
-                        disabled={modalType === "view"}
-                        required
-                      />
-                    </div>
+                    
+                   
                     <div className="d-flex gap-2 mt-3">
-                      <button type="button" className="btn btn-secondary w-50" onClick={() => setShowDrawer(false)}>
+                      <button type="button" disabled={loading} className="btn btn-secondary w-50" onClick={() => setShowDrawer(false)}>
                         Cancel
                       </button>
 
                       {modalType !== "view" && (
-                        <button type="submit" className="btn btn-primary w-50">
+                        <button type="submit" disabled={loading} className="btn btn-primary w-50">
                           Save
                         </button>
                       )}
@@ -326,6 +290,34 @@ const Composition = () => {
           </div>
         </>
       )}
+      {/* Pagination */}
+      <div className="d-flex justify-content-center mt-3">
+        <ul className="pagination pagination-sm">
+          <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(page - 1)}>
+              Prev
+            </button>
+          </li>
+
+          {/* {[...Array(totalPages)].map((_, i) => (
+            <li
+              key={i}
+              className={`page-item ${page === i + 1 ? "active" : ""}`}
+            >
+              <button className="page-link" onClick={() => goToPage(i + 1)}>
+                {i + 1}
+              </button>
+            </li>
+          ))} */}
+          <button className="ms-1 me-1">{`${page}/${totalPages}`}</button>
+
+          <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
+            <button className="page-link" onClick={() => goToPage(page + 1)}>
+              Next
+            </button>
+          </li>
+        </ul>
+      </div>
 
       {/* DELETE MODAL */}
       {showConfirm && (
@@ -349,10 +341,10 @@ const Composition = () => {
                 </div>
 
                 <div className="modal-footer d-flex justify-content-center gap-3">
-                  <button className="btn btn-secondary" onClick={() => setShowConfirm(false)}>
+                  <button className="btn btn-secondary" disabled={loading} onClick={() => setShowConfirm(false)}>
                     Cancel
                   </button>
-                  <button className="btn btn-danger" onClick={confirmDelete}>
+                  <button disabled={loading} className="btn btn-danger" onClick={confirmDelete}>
                     Yes, Delete
                   </button>
                 </div>

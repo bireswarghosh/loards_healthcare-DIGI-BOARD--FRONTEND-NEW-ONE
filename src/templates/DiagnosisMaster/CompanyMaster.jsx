@@ -189,7 +189,7 @@ const CompanyMaster = () => {
                   <tr>
                     <th>Action</th>
                     <th>SL</th>
-                    <th>Item Group (Company)</th>
+                    <th className="text-center">Item Group </th>
                   </tr>
                 </thead>
 
@@ -299,7 +299,7 @@ const CompanyMaster = () => {
                   <form onSubmit={handleSubmit}>
                     {/* Company Name */}
                     <div className="mb-3">
-                      <label className="form-label">Item Group (Company) *</label>
+                      <label className="form-label">Company Name *</label>
                       <input
                         type="text"
                         className="form-control"

@@ -5,7 +5,7 @@ import Footer from '../../components/footer/Footer';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const Soluation = () => {
+const Saluation = () => {
   const dropdownRef = useRef(null);
 
   // data
@@ -140,6 +140,7 @@ const Soluation = () => {
   // create / update
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true)
     try {
       if (modalType === "edit" && editingItem) {
         await axiosInstance.put(`/salutations/${editingItem.SalutationId}`, formData);
@@ -152,14 +153,16 @@ const Soluation = () => {
       // reload current page (or page 1 if new created)
       fetchItems(page);
     } catch (err) {
-      console.error("Save error:", err);
+    
       toast.error("Save failed");
     }
+    finally{setLoading(false)}
   };
 
   // delete flow
   const confirmDelete = async () => {
     if (!deleteId) return;
+    setLoading(true)
     try {
       await axiosInstance.delete(`/salutations/${deleteId}`);
       toast.success("Deleted successfully", { autoClose: 1200 });
@@ -176,6 +179,7 @@ const Soluation = () => {
       console.error("Delete error:", err);
       toast.error("Delete failed");
     }
+  finally{setLoading(false)}
   };
 
   // pagination click
@@ -194,7 +198,7 @@ const Soluation = () => {
       <ToastContainer />
       <div className="panel">
         <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>🎯 Salutations</h5>
+          <h5>🎯 Salutation</h5>
 
           <div className="d-flex gap-2 align-items-center">
             <input
@@ -212,9 +216,9 @@ const Soluation = () => {
               style={{ width: 110 }}
             >
               <option value="">Sex</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="F">F</option>
+              <option value="Male">M</option>
+              <option value="Female">F</option>
+              <option value="T">T</option>
               <option value="-">-</option>
             </select>
 
@@ -242,7 +246,7 @@ const Soluation = () => {
                     <th>Action</th>
                     <th>Sl No</th>
                     <th>Sex</th>
-                    <th>Salutation</th>
+                    <th>Salutation Name</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -315,7 +319,7 @@ const Soluation = () => {
             </button>
 
             <div className="top-panel" style={{ height: "100%" }}>
-              <div className="dropdown-txt" style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "#0a1735", color: "#fff", padding: "10px" }}>
+              <div className="dropdown-txt" style={{ position: "sticky", top: 0, zIndex: 10,  padding: "10px" }}>
                 {modalType === "add" ? "➕ Add Salutation" : modalType === "edit" ? "✏️ Edit Salutation" : "👁️ View Salutation"}
               </div>
 
@@ -344,9 +348,9 @@ const Soluation = () => {
                         required
                       >
                         <option value="">Select sex</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="F">F</option>
+                        <option value="Male">M</option>
+                        <option value="Female">F</option>
+                        <option value="T">T</option>
                         <option value="-">-</option>
                       </select>
                     </div>
@@ -357,7 +361,7 @@ const Soluation = () => {
                       </button>
 
                       {modalType !== "view" && (
-                        <button type="submit" className="btn btn-primary w-50">
+                        <button disabled={loading} type="submit" className="btn btn-primary w-50">
                           Save
                         </button>
                       )}
@@ -411,7 +415,7 @@ const Soluation = () => {
 
               <div className="modal-footer" style={{ borderTop: "1px solid #e5e5e5", padding: "12px 16px", display: "flex", justifyContent: "center", gap: "15px" }}>
                 <button className="btn btn-secondary px-4" style={{ borderRadius: "6px" }} onClick={() => setShowConfirm(false)}>Cancel</button>
-                <button className="btn px-4" style={{ background: "#dc3545", color: "#fff", borderRadius: "6px" }} onClick={confirmDelete}>Yes, Delete</button>
+                <button className="btn px-4" style={{ background: "#dc3545", color: "#fff", borderRadius: "6px" }} onClick={confirmDelete} disabled={loading}>Yes, Delete</button>
               </div>
             </div>
           </div>
@@ -423,5 +427,4 @@ const Soluation = () => {
   );
 };
 
-export default Soluation;
-
+export default Saluation;
