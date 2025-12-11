@@ -1,54 +1,64 @@
-import React, { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useContext} from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import { DigiContext } from '../../context/DigiContext';
 
 const Doctor = () => {
-  const { isNavExpanded, layoutPosition } = useContext(DigiContext);
-  const [isOpen, setIsOpen] = useState(false);
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
+  const {
+    doctorState,
+    toggleMainDoctorDropdown,
+    layoutPosition,
+    dropdownOpen,
+    mainDoctorRef
+  } = useContext(DigiContext);
+  const { isMainDropdownOpen } = doctorState;
 
   return (
-    <li className={`sidebar-item ${isOpen ? 'open' : ''}`}>
-      <a 
-        href="#" 
-        className="sidebar-link has-sub" 
-        onClick={(e) => {
-          e.preventDefault();
-          toggleDropdown();
-        }}
+    <li className="sidebar-item" ref={layoutPosition.horizontal ? mainDoctorRef : null}>
+      <Link
+        role="button"
+        className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`}
+        onClick={toggleMainDoctorDropdown}
       >
-        <span className="nav-icon">
-          <i className="fa-light fa-user-doctor"></i>
-        </span>
-        <span className="sidebar-txt">Doctor Section</span>
-        <span className="sidebar-arrow">
-          <i className="fa-regular fa-angle-right"></i>
-        </span>
-      </a>
-      <ul className={`sidebar-dropdown-menu ${isOpen ? 'open' : ''}`}>
-        <li className="sidebar-dropdown-item">
-          <Link to="/active-doctors" className="sidebar-link">
-            Active Doctors
-          </Link>
+Doctor Section
+      </Link>
+      <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.doctor ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
+
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/active-doctors" className="sidebar-link">
+            <span className="nav-icon">
+              <i className="fa-light fa-user-doctor"></i>
+            </span>{" "}
+            <span className="sidebar-txt">Active Doctors</span>
+          </NavLink>
         </li>
-        <li className="sidebar-dropdown-item">
-          <Link to="/department" className="sidebar-link">
-            Department
-          </Link>
+
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/department" className="sidebar-link">
+            <span className="nav-icon">
+              <i className="fa-light fa-building"></i>
+            </span>{" "}
+            <span className="sidebar-txt">Department</span>
+          </NavLink>
         </li>
-        <li className="sidebar-dropdown-item">
-          <Link to="/doctor" className="sidebar-link">
-            Doctor
-          </Link>
+
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/doctor" className="sidebar-link">
+            <span className="nav-icon">
+              <i className="fa-light fa-stethoscope"></i>
+            </span>{" "}
+            <span className="sidebar-txt">Doctor</span>
+          </NavLink>
         </li>
-        <li className="sidebar-dropdown-item">
-          <Link to="/doctor-wise-appointments" className="sidebar-link">
-            Doctor Wise Appointments
-          </Link>
+
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/doctor-wise-appointments" className="sidebar-link">
+            <span className="nav-icon">
+              <i className="fa-light fa-calendar-check"></i>
+            </span>{" "}
+            <span className="sidebar-txt">Doctor Wise Appointments</span>
+          </NavLink>
         </li>
+
       </ul>
     </li>
   );
