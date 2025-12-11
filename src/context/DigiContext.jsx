@@ -209,6 +209,7 @@ const DigiContextProvider = ({ children }) => {
     diagnosisMaster: false,
     bookingApp: false,
     marketing: false,
+    doctor: false,
   });
 
   const handleDropdownClick = (dropdown) => {
@@ -1332,6 +1333,50 @@ const DigiContextProvider = ({ children }) => {
     };
   }, [dropdownOpen.outdoorReport]);
 
+  // Doctor Part
+  const initialDoctorState = {
+    isMainDropdownOpen: false,
+  };
+
+  const [doctorState, setDoctorState] = useState(
+    localStorage.getItem("doctorState")
+      ? JSON.parse(localStorage.getItem("doctorState"))
+      : initialDoctorState
+  );
+
+  useEffect(() => {
+    localStorage.setItem("doctorState", JSON.stringify(doctorState));
+  }, [doctorState]);
+
+  const toggleMainDoctorDropdown = () => {
+    setDoctorState((prevState) => ({
+      ...prevState,
+      isMainDropdownOpen: !prevState.isMainDropdownOpen,
+    }));
+    handleDropdownClick("doctor");
+  };
+
+  const mainDoctorRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mainDoctorRef.current &&
+        !mainDoctorRef.current.contains(event.target)
+      ) {
+        setDropdownOpen((prev) => ({ ...prev, doctor: false }));
+      }
+    };
+
+    if (dropdownOpen.doctor) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen.doctor]);
+
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -2453,6 +2498,9 @@ const DigiContextProvider = ({ children }) => {
         outdoorReportState,
         toggleMainOutdoorReportDropdown,
         mainOutdoorReportRef,
+        doctorState,
+        toggleMainDoctorDropdown,
+        mainDoctorRef,
       }}
     >
       {children}
