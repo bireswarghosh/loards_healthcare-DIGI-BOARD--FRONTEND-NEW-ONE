@@ -210,6 +210,16 @@ const DigiContextProvider = ({ children }) => {
     bookingApp: false,
     marketing: false,
     doctor: false,
+    section1: false,
+    section2: false,
+    section3: false,
+    section4: false,
+    section5: false,
+    section6: false,
+    section7: false,
+    section8: false,
+    section9: false,
+    section10: false,
   });
 
   const handleDropdownClick = (dropdown) => {
@@ -1377,6 +1387,81 @@ const DigiContextProvider = ({ children }) => {
     };
   }, [dropdownOpen.doctor]);
 
+  // Section1 Part
+  const initialSection1State = { isMainDropdownOpen: false };
+  const [section1State, setSection1State] = useState(
+    localStorage.getItem("section1State") ? JSON.parse(localStorage.getItem("section1State")) : initialSection1State
+  );
+  useEffect(() => { localStorage.setItem("section1State", JSON.stringify(section1State)); }, [section1State]);
+  const toggleMainSection1Dropdown = () => {
+    setSection1State((prevState) => ({ ...prevState, isMainDropdownOpen: !prevState.isMainDropdownOpen }));
+    handleDropdownClick("section1");
+  };
+  const mainSection1Ref = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mainSection1Ref.current && !mainSection1Ref.current.contains(event.target)) {
+        setDropdownOpen((prev) => ({ ...prev, section1: false }));
+      }
+    };
+    if (dropdownOpen.section1) { document.addEventListener("mousedown", handleClickOutside); }
+    return () => { document.removeEventListener("mousedown", handleClickOutside); };
+  }, [dropdownOpen.section1]);
+
+  // Section2 Part
+  const initialSection2State = { isMainDropdownOpen: false };
+  const [section2State, setSection2State] = useState(
+    localStorage.getItem("section2State") ? JSON.parse(localStorage.getItem("section2State")) : initialSection2State
+  );
+  useEffect(() => { localStorage.setItem("section2State", JSON.stringify(section2State)); }, [section2State]);
+  const toggleMainSection2Dropdown = () => {
+    setSection2State((prevState) => ({ ...prevState, isMainDropdownOpen: !prevState.isMainDropdownOpen }));
+    handleDropdownClick("section2");
+  };
+  const mainSection2Ref = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mainSection2Ref.current && !mainSection2Ref.current.contains(event.target)) {
+        setDropdownOpen((prev) => ({ ...prev, section2: false }));
+      }
+    };
+    if (dropdownOpen.section2) { document.addEventListener("mousedown", handleClickOutside); }
+    return () => { document.removeEventListener("mousedown", handleClickOutside); };
+  }, [dropdownOpen.section2]);
+
+  // Section3-10 Parts (condensed)
+  const createSectionState = (num) => {
+    const initialState = { isMainDropdownOpen: false };
+    const [state, setState] = useState(
+      localStorage.getItem(`section${num}State`) ? JSON.parse(localStorage.getItem(`section${num}State`)) : initialState
+    );
+    useEffect(() => { localStorage.setItem(`section${num}State`, JSON.stringify(state)); }, [state]);
+    const toggle = () => {
+      setState((prevState) => ({ ...prevState, isMainDropdownOpen: !prevState.isMainDropdownOpen }));
+      handleDropdownClick(`section${num}`);
+    };
+    const ref = useRef(null);
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (ref.current && !ref.current.contains(event.target)) {
+          setDropdownOpen((prev) => ({ ...prev, [`section${num}`]: false }));
+        }
+      };
+      if (dropdownOpen[`section${num}`]) { document.addEventListener("mousedown", handleClickOutside); }
+      return () => { document.removeEventListener("mousedown", handleClickOutside); };
+    }, [dropdownOpen[`section${num}`]]);
+    return { state, toggle, ref };
+  };
+
+  const section3 = createSectionState(3);
+  const section4 = createSectionState(4);
+  const section5 = createSectionState(5);
+  const section6 = createSectionState(6);
+  const section7 = createSectionState(7);
+  const section8 = createSectionState(8);
+  const section9 = createSectionState(9);
+  const section10 = createSectionState(10);
+
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -2501,6 +2586,36 @@ const DigiContextProvider = ({ children }) => {
         doctorState,
         toggleMainDoctorDropdown,
         mainDoctorRef,
+        section1State,
+        toggleMainSection1Dropdown,
+        mainSection1Ref,
+        section2State,
+        toggleMainSection2Dropdown,
+        mainSection2Ref,
+        section3State: section3.state,
+        toggleMainSection3Dropdown: section3.toggle,
+        mainSection3Ref: section3.ref,
+        section4State: section4.state,
+        toggleMainSection4Dropdown: section4.toggle,
+        mainSection4Ref: section4.ref,
+        section5State: section5.state,
+        toggleMainSection5Dropdown: section5.toggle,
+        mainSection5Ref: section5.ref,
+        section6State: section6.state,
+        toggleMainSection6Dropdown: section6.toggle,
+        mainSection6Ref: section6.ref,
+        section7State: section7.state,
+        toggleMainSection7Dropdown: section7.toggle,
+        mainSection7Ref: section7.ref,
+        section8State: section8.state,
+        toggleMainSection8Dropdown: section8.toggle,
+        mainSection8Ref: section8.ref,
+        section9State: section9.state,
+        toggleMainSection9Dropdown: section9.toggle,
+        mainSection9Ref: section9.ref,
+        section10State: section10.state,
+        toggleMainSection10Dropdown: section10.toggle,
+        mainSection10Ref: section10.ref,
       }}
     >
       {children}

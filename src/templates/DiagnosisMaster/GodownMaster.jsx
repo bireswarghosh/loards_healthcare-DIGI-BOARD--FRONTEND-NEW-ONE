@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import axiosInstance from '../../axiosInstance'
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
 import Footer from '../../components/footer/Footer'
+import { toast } from "react-toastify"
 
 const GodownMaster = () => {
   const dropdownRef = useRef(null)
@@ -12,6 +13,8 @@ const GodownMaster = () => {
   const [modalType, setModalType] = useState('add')
   const [formData, setFormData] = useState({ Godown: '', GodownTYPE: '' })
   const [search, setSearch] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedId, setSelectedId] = useState("");
 
   const fetchGodowns = async () => {
     setLoading(true)
@@ -66,11 +69,13 @@ const GodownMaster = () => {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this godown?')) return
     try {
-      await axiosInstance.delete(`/godowns/${id}`)
+      await axiosInstance.delete(`/godowns/${selectedId}`)
       fetchGodowns()
+      toast.success("Godown deleted successfully")
+      setShowConfirm(false)
     } catch (err) {
+       toast.error("Failed to delete godown")
       console.error("Delete error:", err)
     }
   }
@@ -80,12 +85,15 @@ const GodownMaster = () => {
     try {
       if (modalType === 'edit') {
         await axiosInstance.put(`/godowns/${editingItem.GodownId}`, formData)
+        toast.success("Godown updated successfully")
       } else {
         await axiosInstance.post('/godowns', formData)
+        toast.success("Godown added successfully")
       }
       setShowDrawer(false)
       fetchGodowns()
     } catch (err) {
+      toast.error("Failed to save")
       console.error("Save error:", err)
     }
   }
@@ -123,9 +131,9 @@ const GodownMaster = () => {
                 <thead>
                   <tr>
                     <th>Action</th>
-                    <th>ID</th>
+                    <th>SLNo.</th>
                     <th>Godown</th>
-                    <th>Type</th>
+                    {/* <th>Type</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -133,34 +141,37 @@ const GodownMaster = () => {
                     <tr key={item.GodownId}>
                       <td>
                         <div className="digi-dropdown dropdown d-inline-block" ref={dropdownRef}>
-                          <button
+                          {/* <button
                             className={`btn btn-sm btn-outline-primary ${item.showDropdown ? 'show' : ''}`}
                             onClick={(e) => toggleDropdown(e, index)}
                           >
                             Action <i className="fa-regular fa-angle-down"></i>
-                          </button>
-                          <ul className={`digi-table-dropdown digi-dropdown-menu dropdown-menu dropdown-slim dropdown-menu-sm ${item.showDropdown ? 'show' : ''}`}>
+                          </button> */}
+                          <ul className="d-flex flex-row gap-2">
                             <li>
                               <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); openDrawerView(item); }}>
-                                <i className="fa-light fa-eye"></i> View
+                                <i className="fa-light fa-eye"></i>
                               </a>
                             </li>
                             <li>
                               <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); openDrawerEdit(item); }}>
-                                <i className="fa-light fa-pen-to-square"></i> Edit
+                                <i className="fa-light fa-pen-to-square"></i>
                               </a>
                             </li>
                             <li>
-                              <a href="#" className="dropdown-item text-danger" onClick={(e) => { e.preventDefault(); handleDelete(item.GodownId); }}>
-                                <i className="fa-light fa-trash-can"></i> Delete
+                              <a href="#" className="dropdown-item text-danger" onClick={(e) => { 
+                                e.preventDefault(); 
+                              setSelectedId(item.GodownId);
+                               setShowConfirm(true); }}>
+                                <i className="fa-light fa-trash-can"></i> 
                               </a>
                             </li>
                           </ul>
                         </div>
                       </td>
-                      <td>{item.GodownId}</td>
+                      <td>{index+1}</td>
                       <td>{item.Godown}</td>
-                      <td>{item.GodownTYPE || '-'}</td>
+                      {/* <td>{item.GodownTYPE || '-'}</td> */}
                     </tr>
                   ))}
                 </tbody>
@@ -195,7 +206,7 @@ const GodownMaster = () => {
                         required
                       />
                     </div>
-                    <div className="mb-3">
+                    {/* <div className="mb-3">
                       <label className="form-label">Godown Type</label>
                       <input
                         type="text"
@@ -204,7 +215,7 @@ const GodownMaster = () => {
                         onChange={(e) => setFormData({ ...formData, GodownTYPE: e.target.value })}
                         disabled={modalType === 'view'}
                       />
-                    </div>
+                    </div> */}
                     <div className="d-flex gap-2 mt-3">
                       <button type="button" className="btn btn-secondary w-50" onClick={() => setShowDrawer(false)}>
                         Cancel
@@ -222,6 +233,48 @@ const GodownMaster = () => {
           </div>
         </>
       )}
+
+ {/* Delete Modal */}
+      {showConfirm && (
+        <div
+          className="modal d-block"
+          style={{ background: "rgba(0,0,0,0.3)" }}
+          onClick={() => setShowConfirm(false)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5>Delete?</h5>
+                <button
+                  className="btn-close"
+                  onClick={() => setShowConfirm(false)}
+                ></button>
+              </div>
+
+              <div className="modal-body text-center">
+                <p>Are you sure?</p>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowConfirm(false)}
+                >
+                  Cancel
+                </button>
+
+                <button className="btn btn-danger" onClick={handleDelete}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   )

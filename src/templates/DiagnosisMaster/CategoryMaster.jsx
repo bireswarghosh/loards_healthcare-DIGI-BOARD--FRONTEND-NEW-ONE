@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import axiosInstance from '../../axiosInstance'
 import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
 import Footer from '../../components/footer/Footer'
+import { toast } from "react-toastify"
 
 const CategoryMaster = () => {
   const dropdownRef = useRef(null)
@@ -12,6 +13,8 @@ const CategoryMaster = () => {
   const [modalType, setModalType] = useState('add')
   const [formData, setFormData] = useState({ Category: '', CategoryType: '' })
   const [search, setSearch] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedId, setSelectedId] = useState("");
 
   const fetchCategories = async () => {
     setLoading(true)
@@ -65,13 +68,16 @@ const CategoryMaster = () => {
     setShowDrawer(true)
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this category?')) return
+  const handleDelete = async () => {
+   
     try {
-      await axiosInstance.delete(`/categories/${id}`)
+      await axiosInstance.delete(`/categories/${selectedId}`)
       fetchCategories()
+      setShowConfirm(false)
+      toast.success("Category deleted successfully")
     } catch (err) {
       console.error("Delete error:", err)
+      toast.error("Failed to delete")
     }
   }
 
@@ -80,12 +86,15 @@ const CategoryMaster = () => {
     try {
       if (modalType === 'edit') {
         await axiosInstance.put(`/categories/${editingItem.CategoryId}`, formData)
+        toast.success("Category updated successfully")
       } else {
         await axiosInstance.post('/categories', formData)
+        toast.success("Category added successfully")
       }
       setShowDrawer(false)
       fetchCategories()
     } catch (err) {
+      toast.error("Failed to save")
       console.error("Save error:", err)
     }
   }
@@ -123,44 +132,42 @@ const CategoryMaster = () => {
                 <thead>
                   <tr>
                     <th>Action</th>
-                    <th>ID</th>
+                    <th>SLNO.</th>
                     <th>Category</th>
-                    <th>Type</th>
+                    {/* <th>Type</th> */}
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((item, index) => (
                     <tr key={item.CategoryId}>
                       <td>
-                        <div className="digi-dropdown dropdown d-inline-block" ref={dropdownRef}>
-                          <button
-                            className={`btn btn-sm btn-outline-primary ${item.showDropdown ? 'show' : ''}`}
-                            onClick={(e) => toggleDropdown(e, index)}
-                          >
-                            Action <i className="fa-regular fa-angle-down"></i>
-                          </button>
-                          <ul className={`digi-table-dropdown digi-dropdown-menu dropdown-menu dropdown-slim dropdown-menu-sm ${item.showDropdown ? 'show' : ''}`}>
+                        
+                          <ul className="d-flex flex-row gap-2">
                             <li>
                               <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); openDrawerView(item); }}>
-                                <i className="fa-light fa-eye"></i> View
+                                <i className="fa-light fa-eye"></i>
                               </a>
                             </li>
                             <li>
                               <a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); openDrawerEdit(item); }}>
-                                <i className="fa-light fa-pen-to-square"></i> Edit
+                                <i className="fa-light fa-pen-to-square"></i>
                               </a>
                             </li>
                             <li>
-                              <a href="#" className="dropdown-item text-danger" onClick={(e) => { e.preventDefault(); handleDelete(item.CategoryId); }}>
-                                <i className="fa-light fa-trash-can"></i> Delete
+                              <a href="#" className="dropdown-item text-danger" onClick={(e) => { 
+                                e.preventDefault(); 
+                                setSelectedId(item.CategoryId)
+                                setShowConfirm(true);
+                            }}>
+                                <i className="fa-light fa-trash-can"></i>
                               </a>
                             </li>
                           </ul>
-                        </div>
+                        
                       </td>
-                      <td>{item.CategoryId}</td>
+                      <td>{index+1}</td>
                       <td>{item.Category}</td>
-                      <td>{item.CategoryType || '-'}</td>
+                      {/* <td>{item.CategoryType || '-'}</td> */}
                     </tr>
                   ))}
                 </tbody>
@@ -195,7 +202,7 @@ const CategoryMaster = () => {
                         required
                       />
                     </div>
-                    <div className="mb-3">
+                    {/* <div className="mb-3">
                       <label className="form-label">Category Type</label>
                       <input
                         type="text"
@@ -204,7 +211,7 @@ const CategoryMaster = () => {
                         onChange={(e) => setFormData({ ...formData, CategoryType: e.target.value })}
                         disabled={modalType === 'view'}
                       />
-                    </div>
+                    </div> */}
                     <div className="d-flex gap-2 mt-3">
                       <button type="button" className="btn btn-secondary w-50" onClick={() => setShowDrawer(false)}>
                         Cancel
@@ -222,6 +229,48 @@ const CategoryMaster = () => {
           </div>
         </>
       )}
+{/* Delete Modal */}
+      {showConfirm && (
+        <div
+          className="modal d-block"
+          style={{ background: "rgba(0,0,0,0.3)" }}
+          onClick={() => setShowConfirm(false)}
+        >
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5>Delete?</h5>
+                <button
+                  className="btn-close"
+                  onClick={() => setShowConfirm(false)}
+                ></button>
+              </div>
+
+              <div className="modal-body text-center">
+                <p>Are you sure?</p>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowConfirm(false)}
+                >
+                  Cancel
+                </button>
+
+                <button className="btn btn-danger" onClick={handleDelete}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <Footer />
     </div>
   )

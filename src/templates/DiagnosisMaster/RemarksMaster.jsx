@@ -236,7 +236,7 @@ const RemarksMaster = () => {
                     <th>Action</th>
                     <th>Sl No</th>
                     <th>Remarks</th>
-                    <th>Type (U/C)</th>
+                    {/* <th>Type (U/C)</th> */}
                   </tr>
                 </thead>
 
@@ -280,7 +280,7 @@ const RemarksMaster = () => {
 
                         <td>{index + 1}</td>
                         <td>{item.Remarks}</td>
-                        <td>{item.Type}</td>
+                        {/* <td>{item.Type}</td> */}
                       </tr>
                     ))
                   )}

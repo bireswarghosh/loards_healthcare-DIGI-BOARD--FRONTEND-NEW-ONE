@@ -75,6 +75,7 @@ const TestParameter = () => {
       await axiosInstance.delete(`/testparameters/${selectedId}`);
       fetchTestParameters();
       toast.success("Deleted successfully");
+      setShowConfirm(false)
     } catch (err) {
       console.error("Delete error:", err);
       toast.error("Failed to deleted");
@@ -185,7 +186,7 @@ const TestParameter = () => {
                     <th>Action</th>
                     <th>SLNo.</th>
                     <th>Parameter Name</th>
-                    <th>Rate</th>
+                    {/* <th>Rate</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -229,8 +230,8 @@ const TestParameter = () => {
                         </div>
                       </td>
                       <td>{index + 1}</td>
-                      <td>{item.PARAMETER}</td>
-                      <td>{item.Rate}</td>
+                      <td className="pe-4">{item.PARAMETER}</td>
+                      {/* <td>{item.Rate}</td> */}
                     </tr>
                   ))}
                 </tbody>
@@ -286,43 +287,13 @@ const TestParameter = () => {
               >
                 <div className="p-3">
                   <form onSubmit={handleSubmit}>
-                    <div className="mb-3">
-                      <label className="form-label">Parameter Name *</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formData.PARAMETER}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            PARAMETER: e.target.value,
-                          })
-                        }
-                        disabled={modalType === "view"}
-                        required
-                      />
-                    </div>
-
-                    <div className="mb-3">
+                     <div className="mb-3">
                       <label className="form-label">Test *</label>
-                      {/* <input
-                        type="number"
-                        className="form-control mb-1"
-                        value={formData.TESTId}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            TESTId: e.target.value,
-                          })
-                        }
-                        disabled={modalType === "view"}
-                        required
-                      /> */}
                       {modalType != "view" && (
                         <input
                           type="text"
                           className="form-control mb-1"
-                          placeholder="Search test"
+                          placeholder="Search by test name"
                           value={searchedTest}
                           onChange={(e) => setSearchedTest(e.target.value)}
                         />
@@ -345,8 +316,23 @@ const TestParameter = () => {
                         ))}
                       </select>
                     </div>
-
                     <div className="mb-3">
+                      <label className="form-label">Parameter Name *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formData.PARAMETER}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            PARAMETER: e.target.value,
+                          })
+                        }
+                        disabled={modalType === "view"}
+                        required
+                      />
+                    </div>
+                    {/* <div className="mb-3">
                       <label className="form-label">Rate</label>
                       <input
                         type="number"
@@ -360,7 +346,7 @@ const TestParameter = () => {
                         }
                         disabled={modalType === "view"}
                       />
-                    </div>
+                    </div> */}
 
                     {/* Action Buttons */}
                     <div className="d-flex gap-2 mt-3">
