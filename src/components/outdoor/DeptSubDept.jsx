@@ -439,7 +439,11 @@ const DepartmentSubdepartment = () => {
                             <td colSpan="5" className="p-0 border-top-0">
                               <div
                                 className="p-3"
-                                style={{ borderTop: "1px solid #e9ecef" }}
+                                style={{ 
+                                  borderTop: "1px solid #e9ecef",
+                                  width: '100%',
+                                  overflow: 'hidden'
+                                }}
                               >
                                 <div className="d-flex justify-content-between align-items-center mb-3">
                                   <h6 className="mb-0 fw-bold ">
@@ -456,16 +460,22 @@ const DepartmentSubdepartment = () => {
                                 </div>
                                 {getSubdepartments(dept.DepartmentId).length >
                                 0 ? (
-                                  <div className="row g-3">
+                                  <div 
+                                    style={{
+                                      display: 'grid',
+                                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                      gap: '12px',
+                                      width: '100%'
+                                    }}
+                                  >
                                     {getSubdepartments(dept.DepartmentId).map(
                                       (subdept) => (
                                         <div
                                           key={subdept.SubDepartmentId}
-                                          className="col-12 col-sm-6 col-md-4"
                                         >
                                           <div className="card shadow-sm h-100">
                                             <div className="card-body d-flex justify-content-between align-items-center p-2">
-                                              <div className="fw-bold ">
+                                              <div className="fw-bold" style={{ wordBreak: 'break-word', flex: 1, marginRight: '8px' }}>
                                                 {subdept.SubDepartment}
                                                 {subdept.SpRemTag > 0 && (
                                                   <span className="badge bg-warning text-dark ms-2">
@@ -473,7 +483,7 @@ const DepartmentSubdepartment = () => {
                                                   </span>
                                                 )}
                                               </div>
-                                              <div className="d-flex gap-2">
+                                              <div className="d-flex gap-2" style={{ flexShrink: 0 }}>
                                                 <div
                                                   onClick={() =>
                                                     openSubdeptDrawer(
@@ -805,3 +815,13 @@ const DepartmentSubdepartment = () => {
 };
 
 export default DepartmentSubdepartment;
+
+
+
+
+
+
+
+
+
+

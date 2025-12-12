@@ -225,8 +225,10 @@ import ReportHeading from "./templates/DiagnosisMaster/ReportHeading.jsx";
 import EditMarketingExecutive from "./templates/DiagnosisMaster/EditMarketingExecutive.jsx";
 import Composition from "./templates/DiagnosisMaster/Composition.jsx";
 import CompanyMaster from "./templates/DiagnosisMaster/CompanyMaster.jsx";
-import Batch from "./templates/DiagnosisMaster/Batch.jsx";  import TestMaster from "./templates/DiagnosisMaster/Test.jsx"
+import Batch from "./templates/DiagnosisMaster/Batch.jsx";
+import TestMaster from "./templates/DiagnosisMaster/Test.jsx";
 import SpecialProperty from "./templates/DiagnosisMaster/SpecialProperty.jsx";
+import TypeOfService from "./templates/DiagnosisMaster/TypeOfService.jsx";
 
 // ! soum dia  mas
 import RemarksMaster from "./templates/DiagnosisMaster/RemarksMaster.jsx"
