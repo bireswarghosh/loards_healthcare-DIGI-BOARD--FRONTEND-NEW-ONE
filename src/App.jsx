@@ -226,7 +226,7 @@ import EditMarketingExecutive from "./templates/DiagnosisMaster/EditMarketingExe
 import Composition from "./templates/DiagnosisMaster/Composition.jsx";
 import CompanyMaster from "./templates/DiagnosisMaster/CompanyMaster.jsx";
 import Batch from "./templates/DiagnosisMaster/Batch.jsx";  import TestMaster from "./templates/DiagnosisMaster/Test.jsx"
-
+import SpecialProperty from "./templates/DiagnosisMaster/SpecialProperty.jsx";
 
 // ! soum dia  mas
 import RemarksMaster from "./templates/DiagnosisMaster/RemarksMaster.jsx"
@@ -235,10 +235,13 @@ import TestParameter from "./templates/DiagnosisMaster/TestParameter.jsx";
 import DiscountAllowedMaster from "./templates/DiagnosisMaster/DiscountAllowedMaster.jsx";
 
 import DiagnosticParameterSetup from "./templates/DiagnosisMaster/DiagnosticParameterSetup.jsx";
+import DrIPCategory from "./templates/DiagnosisMaster/DrIPCategory.jsx";
 import InitialFormData from "./components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleRe/InitialFormData.jsx";
 import DepartmentSubdepartment from "./components/outdoor/DeptSubDept.jsx";
 import DoctorManagement from "./components/outdoor/DoctorManagement.jsx";
 import DoctorWiseAppointments from "./components/outdoor/DoctorWiseAppointments.jsx";
+import EditTestRate from "./templates/DiagnosisMaster/EditTestRate.jsx";
+import PackageMaster from "./templates/DiagnosisMaster/PackageMaster.jsx";
 
 
 
@@ -477,6 +480,7 @@ function App() {
 
 
 {/* deb  dia mass */}
+<Route path="/TypeOfService" element={<ProtectedRoute><TypeOfService/></ProtectedRoute>}/>
 <Route path="/active-doctors" element={<ProtectedRoute><ActiveDoctors/></ProtectedRoute>} />
 <Route path="/CultureMedicine" element={<ProtectedRoute><CulMedHdMaster/></ProtectedRoute>}/>
   <Route path="/Saluation" element={<ProtectedRoute><Saluation/></ProtectedRoute>}/> 
@@ -503,7 +507,11 @@ function App() {
  <Route path="/DiscountAllowedMaster" element={<DiscountAllowedMaster/>}/>
 
  <Route path="/DiagnosticParameterSetup" element={<DiagnosticParameterSetup/>}/>
+ <Route path="/DrIPCategory" element={<ProtectedRoute><DrIPCategory/></ProtectedRoute>}/>
 
+ <Route path="/EditTestRate" element={<EditTestRate />} />
+
+<Route path="/PackageMaster" element={<PackageMaster/>}/>
   <Route path="/*" element={<ComingSoon />} />
     
         </Route>
