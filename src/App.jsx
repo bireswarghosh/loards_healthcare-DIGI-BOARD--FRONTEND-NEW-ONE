@@ -215,6 +215,7 @@ import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 
 // !  deb dia  mas
+import TestReportSeq from "./templates/DiagnosisMaster/TestReportSeq.jsx";
 import ActiveDoctors from "./templates/DiagnosisMaster/ActiveDoctors.jsx";
 import Saluation from "./templates/DiagnosisMaster/Saluation.jsx";
 import SampleType from "./templates/DiagnosisMaster/SampleType.jsx";
@@ -244,6 +245,7 @@ import DoctorManagement from "./components/outdoor/DoctorManagement.jsx";
 import DoctorWiseAppointments from "./components/outdoor/DoctorWiseAppointments.jsx";
 import EditTestRate from "./templates/DiagnosisMaster/EditTestRate.jsx";
 import PackageMaster from "./templates/DiagnosisMaster/PackageMaster.jsx";
+import Formula from "./templates/DiagnosisMaster/Formula.jsx";
 
 
 
@@ -482,6 +484,8 @@ function App() {
 
 
 {/* deb  dia mass */}
+<Route path="/TestReportSeq" element={<ProtectedRoute><TestReportSeq/></ProtectedRoute>}/>
+<Route path="/Formula" element={<Formula />} />
 <Route path="/TypeOfService" element={<ProtectedRoute><TypeOfService/></ProtectedRoute>}/>
 <Route path="/active-doctors" element={<ProtectedRoute><ActiveDoctors/></ProtectedRoute>} />
 <Route path="/CultureMedicine" element={<ProtectedRoute><CulMedHdMaster/></ProtectedRoute>}/>
