@@ -680,6 +680,7 @@ const PatientRegistrationDetail = () => {
       
       // Remove any fields that don't exist in database
       const cleanData = { ...formData };
+      delete cleanData.Dob; // DOB is calculated field, not in DB
       delete cleanData.DateOfBirth;
       delete cleanData.District;
       delete cleanData.State;
