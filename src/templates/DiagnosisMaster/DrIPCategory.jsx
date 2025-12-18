@@ -1,92 +1,127 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../axiosInstance";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import useAxiosFetch from "./Fetch";
 
-const DrIPCategory = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
-
+const DrIpCategory = () => {
+  // drawer
   const [showDrawer, setShowDrawer] = useState(false);
   const [modalType, setModalType] = useState("add");
   const [editingItem, setEditingItem] = useState(null);
 
+  // form
   const [formData, setFormData] = useState({
     Category: "",
+    DoctorName: "",
+    PhoneNo: "",
+    DrIPCategoryId: " ",
+    DoctorId: " ",
   });
-
-  // search
-  const [searchName, setSearchName] = useState("");
 
   // delete confirm
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
-  // pagination
-  const [page, setPage] = useState(1);
-  const [limit] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
+  // drip category
+  const {
+    data: items,
+    loading: itemLoading,
+    refetch: fetchItems,
+  } = useAxiosFetch("/dripcategory", []);
 
-  // fetch all
-  const fetchItems = async (pageNumber = 1) => {
-    setLoading(true);
+  // doctor
+  const [doctorList, setDoctorList] = useState([]);
+  const [doctorLoading, setDoctorLoading] = useState(false);
+  const [doctorSearch, setDoctorSearch] = useState("");
+  const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
+
+  const doctorRef = useRef(null);
+
+  /* =========================
+     FETCH ALL DOCTORS (TOTAL)
+  ========================== */
+  const fetchAllDoctors = async () => {
     try {
-      const res = await axiosInstance.get(`/dripcategory?page=${pageNumber}`);
-      const data = res.data.success ? res.data.data : [];
+      setDoctorLoading(true);
 
-      setCategories(data);
-      if (res.data.pagination) {
-        setTotalPages(res.data.pagination.totalPages || 1);
-        setPage(res.data.pagination.currentPage || 1);
-      }
+      const firstRes = await axiosInstance.get("/doctormaster", {
+        params: { limit: 1, page: 1 },
+      });
+
+      const total = firstRes.data?.total || 0;
+      if (!total) return;
+
+      const allRes = await axiosInstance.get("/doctormaster", {
+        params: { limit: total, page: 1 },
+      });
+
+      setDoctorList(allRes.data?.data || []);
     } catch (err) {
-      console.error("API Error:", err);
-      toast.error(`Fetch failed: ${err.response?.data?.message || err.message || 'Server connection error'}`);
-      setCategories([]); // Set empty array on error
+      toast.error("Failed to fetch doctors");
+    } finally {
+      setDoctorLoading(false);
     }
-    setLoading(false);
   };
 
+  /* =========================
+     INITIAL LOAD
+  ========================== */
   useEffect(() => {
-    fetchItems(1);
+    fetchItems();
+    fetchAllDoctors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // search
-  const handleSearch = async () => {
-    if (!searchName.trim()) return fetchItems(1);
-    setLoading(true);
-    try {
-      const res = await axiosInstance.get(`/dripcategory?search=${searchName}`);
-      setCategories(res.data.data || []);
-      setTotalPages(1);
-      setPage(1);
-    } catch (err) {
-      toast.error("Search failed");
-    }
-    setLoading(false);
-  };
+  /* =========================
+     CLICK OUTSIDE CLOSE
+  ========================== */
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (doctorRef.current && !doctorRef.current.contains(e.target)) {
+        setShowDoctorDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const clearSearch = () => {
-    setSearchName("");
-    fetchItems(1);
-  };
+  /* =========================
+     FILTERED DOCTORS
+  ========================== */
+  const filteredDoctors = doctorSearch
+    ? doctorList.filter((d) =>
+        d.Doctor?.toLowerCase().includes(doctorSearch.toLowerCase())
+      )
+    : doctorList;
 
-  // drawer
+  /* =========================
+     DRAWER OPENERS
+  ========================== */
   const openDrawerAdd = () => {
     setFormData({
       Category: "",
+      DoctorName: "",
+      PhoneNo: "",
+      DrIPCategoryId: " ",
+      DoctorId: " ",
     });
-    setModalType("add");
+    setDoctorSearch("");
     setEditingItem(null);
+    setModalType("add");
     setShowDrawer(true);
   };
 
   const openDrawerEdit = (item) => {
     setFormData({
-      Category: item.Category || "",
+      Category: item.Category,
+      DoctorName: item.DoctorName,
+      PhoneNo: item.PhoneNo,
+      DrIPCategoryId: item.DrIPCategoryId,
+      DoctorId: " ",
     });
+    setDoctorSearch(item.DoctorName || "");
     setEditingItem(item);
     setModalType("edit");
     setShowDrawer(true);
@@ -94,53 +129,52 @@ const DrIPCategory = () => {
 
   const openDrawerView = (item) => {
     setFormData({
-      Category: item.Category || "",
+      Category: item.Category,
+      DoctorName: item.DoctorName,
+      PhoneNo: item.PhoneNo,
+      DrIPCategoryId: item.DrIPCategoryId,
+      DoctorId: " ",
     });
-    setEditingItem(item);
+    setDoctorSearch(item.DoctorName || "");
     setModalType("view");
     setShowDrawer(true);
   };
 
-  // save
+  /* =========================
+     SUBMIT
+  ========================== */
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const payload = {
-      ...formData,
-    };
-
     try {
       if (modalType === "edit") {
-        await axiosInstance.put(`/dripcategory/${editingItem.id}`, payload);
-        toast.success("Updated successfully");
+        await axiosInstance.put(
+          `/dripcategory/${editingItem.DrIPCategoryId}`,
+          formData
+        );
+        toast.success("Updated successfully!");
       } else {
-        await axiosInstance.post(`/dripcategory`, payload);
-        toast.success("Created successfully");
+        await axiosInstance.post("/dripcategory", formData);
+        toast.success("Created successfully!");
       }
       setShowDrawer(false);
-      fetchItems(page);
-    } catch (err) {
-      toast.error("Failed to save");
+      fetchItems();
+    } catch {
+      toast.error("Save failed!");
     }
   };
 
-  // delete
+  /* =========================
+     DELETE
+  ========================== */
   const confirmDelete = async () => {
     try {
       await axiosInstance.delete(`/dripcategory/${deleteId}`);
-      toast.success("Deleted");
-      setDeleteId(null);
+      toast.success("Deleted!");
       setShowConfirm(false);
-      fetchItems(1);
-    } catch (err) {
-      toast.error("Delete failed");
+      fetchItems();
+    } catch {
+      toast.error("Failed to delete!");
     }
-  };
-
-  // pagination
-  const goToPage = (p) => {
-    if (p < 1 || p > totalPages) return;
-    fetchItems(p);
   };
 
   return (
@@ -149,35 +183,14 @@ const DrIPCategory = () => {
 
       <div className="panel">
         <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>🏥 Dr.IP Category</h5>
-
-          <div className="d-flex gap-2">
-            <input
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="Category name..."
-              value={searchName}
-              onChange={(e) => setSearchName(e.target.value)}
-              style={{ width: 200 }}
-            />
-
-            <button className="btn btn-sm btn-info" onClick={handleSearch}>
-              <i className="fa fa-search"></i>
-            </button>
-
-            <button className="btn btn-sm btn-secondary" onClick={clearSearch}>
-              Clear
-            </button>
-
-            <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
-              <i className="fa-light fa-plus"></i> Add
-            </button>
-          </div>
+          <h5>🏥 Drip Category</h5>
+          <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
+            <i className="fa-light fa-plus"></i> Add Doctor
+          </button>
         </div>
 
-        {/* TABLE */}
         <div className="panel-body">
-          {loading ? (
+          {itemLoading || doctorLoading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary"></div>
             </div>
@@ -191,47 +204,43 @@ const DrIPCategory = () => {
                     <th>Category</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  {categories.length === 0 ? (
+                  {items.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="text-center p-4">
-                        No data
+                        No data found
                       </td>
                     </tr>
                   ) : (
-                    categories.map((item, index) => (
-                      <tr key={item.id || index}>
+                    items.map((item, index) => (
+                      <tr key={item.DrIPCategoryId}>
                         <td>
                           <div className="d-flex gap-2">
                             <button
                               className="btn btn-sm btn-outline-info"
                               onClick={() => openDrawerView(item)}
                             >
-                              <i className="fa fa-eye"></i>
+                              <i className="fa-light fa-eye"></i>
                             </button>
-
                             <button
                               className="btn btn-sm btn-outline-primary"
                               onClick={() => openDrawerEdit(item)}
                             >
-                              <i className="fa fa-pen"></i>
+                              <i className="fa-light fa-pen-to-square"></i>
                             </button>
-
                             <button
                               className="btn btn-sm btn-outline-danger"
                               onClick={() => {
-                                setDeleteId(item.id);
+                                setDeleteId(item.DrIPCategoryId);
                                 setShowConfirm(true);
                               }}
                             >
-                              <i className="fa fa-trash"></i>
+                              <i className="fa-light fa-trash-can"></i>
                             </button>
                           </div>
                         </td>
-
-                        <td>{(page - 1) * limit + index + 1}</td>
-                        <td>{item.Category || "—"}</td>
+                        <td>{index + 1}</td>
+                        <td>{item.Category}</td>
                       </tr>
                     ))
                   )}
@@ -242,70 +251,126 @@ const DrIPCategory = () => {
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="d-flex justify-content-center mt-3">
-        <ul className="pagination pagination-sm">
-          <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => goToPage(page - 1)}>
-              Prev
-            </button>
-          </li>
-
-          <li className="page-item disabled">
-            <button className="page-link">{page}/{totalPages}</button>
-          </li>
-
-          <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => goToPage(page + 1)}>
-              Next
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      {/* Drawer */}
+      {/* ================= RIGHT SIDEBAR ================= */}
       {showDrawer && (
         <>
           <div
             className="modal-backdrop fade show"
             onClick={() => setShowDrawer(false)}
-          ></div>
+            style={{ zIndex: 9997 }}
+          />
 
           <div
             className="profile-right-sidebar active"
             style={{
-              zIndex: 9999,
-              width: "100%",
+              zIndex: 9998,
               maxWidth: "420px",
-              right: showDrawer ? "0" : "-100%",
+              width: "100%",
+              right: "0",
               top: "70px",
               height: "calc(100vh - 70px)",
             }}
           >
-            <button className="right-bar-close" onClick={() => setShowDrawer(false)}>
+            <button
+              className="right-bar-close"
+              onClick={() => setShowDrawer(false)}
+            >
               <i className="fa-light fa-angle-right"></i>
             </button>
 
-            <div className="top-panel">
-              <div className="dropdown-txt" style={{ background: "#0a1735", color: "#fff", padding: 10 }}>
+            <div className="top-panel h-100">
+              <div className="dropdown-txt p-2">
                 {modalType === "add"
-                  ? "Add Dr.IP Category"
+                  ? "➕ Add Doctor"
                   : modalType === "edit"
-                  ? "Edit Dr.IP Category"
-                  : "View Dr.IP Category"}
+                  ? "✏️ Edit Doctor"
+                  : "👁️ View Doctor"}
               </div>
 
               <OverlayScrollbarsComponent style={{ height: "calc(100% - 70px)" }}>
                 <div className="p-3">
                   <form onSubmit={handleSubmit}>
+                    {/* Category */}
                     <div className="mb-3">
-                      <label className="form-label">Category Name *</label>
+                      <label className="form-label">Category *</label>
                       <input
-                        type="text"
                         className="form-control"
                         value={formData.Category}
                         onChange={(e) =>
-                          setFormData((p) => ({ ...p, Category: e.target.value }))
+                          setFormData((p) => ({
+                            ...p,
+                            Category: e.target.value,
+                          }))
+                        }
+                        disabled={modalType === "view"}
+                        required
+                      />
+                    </div>
+
+                    {/* Doctor Search Dropdown */}
+                    <div className="mb-3 position-relative" ref={doctorRef}>
+                      <label className="form-label">Doctor Name *</label>
+                      <input
+                        className="form-control"
+                        placeholder="Search doctor..."
+                        value={doctorSearch}
+                        onFocus={() => setShowDoctorDropdown(true)}
+                        onChange={(e) => {
+                          setDoctorSearch(e.target.value);
+                          setShowDoctorDropdown(true);
+                        }}
+                        disabled={modalType === "view"}
+                      />
+
+                      {showDoctorDropdown && (
+                        <div
+                          className="border rounded bg-black position-absolute w-100 mt-1"
+                          style={{
+                              
+                            maxHeight: "200px",
+                            overflowY: "auto",
+                            zIndex: 9999,
+                          }}
+                        >
+                          {filteredDoctors.length === 0 ? (
+                            <div className="px-2 py-1 text-muted">
+                              No doctor found
+                            </div>
+                          ) : (
+                            filteredDoctors.slice(0, 100).map((d) => (
+                              <div
+                                key={d.DoctorId}
+                                className="px-2 py-1 dropdown-item"
+                                style={{ cursor: "pointer" }}
+                                onClick={() => {
+                                  setFormData((p) => ({
+                                    ...p,
+                                    DoctorName: d.Doctor,
+                                  }));
+                                  setDoctorSearch(d.Doctor);
+                                  setShowDoctorDropdown(false);
+                                }}
+                              >
+                                {d.Doctor}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Phone */}
+                    <div className="mb-3">
+                      <label className="form-label">Phone *</label>
+                      <input
+                      type="number"
+                        className="form-control"
+                        value={formData.PhoneNo}
+                        onChange={(e) =>
+                          setFormData((p) => ({
+                            ...p,
+                            PhoneNo: e.target.value,
+                          }))
                         }
                         disabled={modalType === "view"}
                         required
@@ -320,7 +385,6 @@ const DrIPCategory = () => {
                       >
                         Cancel
                       </button>
-
                       {modalType !== "view" && (
                         <button type="submit" className="btn btn-primary w-50">
                           Save
@@ -380,10 +444,8 @@ const DrIPCategory = () => {
           </div>
         </div>
       )}
-
-      <Footer />
     </div>
   );
 };
 
-export default DrIPCategory;
+export default DrIpCategory;

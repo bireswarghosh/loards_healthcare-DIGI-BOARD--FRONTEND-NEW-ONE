@@ -220,6 +220,8 @@ import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 
 // !  deb dia  mas
+import MoneyReceipt from "./templates/DiagnosisMaster/MoneyReceipt.jsx";
+
 import TestReportSeq from "./templates/DiagnosisMaster/TestReportSeq.jsx";
 import ActiveDoctors from "./templates/DiagnosisMaster/ActiveDoctors.jsx";
 import Saluation from "./templates/DiagnosisMaster/Saluation.jsx";
@@ -510,6 +512,7 @@ function App() {
  <Route path="/department" element={<DepartmentSubdepartment/>}/>
  <Route path="/doctor" element={<DoctorManagement/>}/>
 <Route path="/doctor-wise-appointments" element={<DoctorWiseAppointments />} />
+<Route path="/MoneyReceipt" element={<ProtectedRoute><MoneyReceipt/></ProtectedRoute>}/>
       {/* sou dia  mas */}
 
 
