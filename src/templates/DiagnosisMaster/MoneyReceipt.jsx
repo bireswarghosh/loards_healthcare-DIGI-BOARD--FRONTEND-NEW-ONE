@@ -17,6 +17,10 @@ const [formData, setFormData] = useState({});
   // data
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  const [users, setUsers] = useState([]);
 
   // drawer
   const [showDrawer, setShowDrawer] = useState(false);
@@ -47,7 +51,34 @@ const [formData, setFormData] = useState({});
 
   useEffect(() => {
     fetchReceipts(page);
+    fetchPatients();
+    fetchUsers();
   }, [page, startDate, endDate,  searchTerm]);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await axiosInstance.get('/auth/users');
+      if (res.data.success) {
+        setUsers(res.data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    }
+  };
+
+  const fetchPatients = async (search = '') => {
+    try {
+      const url = search 
+        ? `/case01?search=${encodeURIComponent(search)}&limit=50`
+        : '/case01?limit=20';
+      const res = await axiosInstance.get(url);
+      if (res.data.success) {
+        setPatients(res.data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch patients:', err);
+    }
+  };
 
   const fetchReceipts = async (pageNo = 1) => {
     try {
@@ -142,6 +173,27 @@ const fetchReceiptByNo = async (receiptNo) => {
   const openDrawer = async (receipt, type) => {
   setModalType(type);
 
+  if (type === 'add') {
+    setFormData({
+      ReceiptDate: new Date().toISOString().slice(0, 10),
+      ReffId: '',
+      BillAmount: 0,
+      Amount: 0,
+      BalanceAmt: 0,
+      DiscAmt: 0,
+      Desc: 0,
+      TDS: 0,
+      AdjAmt: 0,
+      MRType: 'C',
+      BankName: '',
+      ChequeNo: '',
+      Narration: '',
+    });
+    setPatientSearch('');
+    setShowDrawer(true);
+    return;
+  }
+
 //   setFormData({
 //     ReceiptId: receipt.ReceiptId,
  
@@ -195,17 +247,79 @@ const fetchReceiptByNo = async (receiptNo) => {
 // handle save------
 const handleSave = async () => {
   try {
-   await axiosInstance.post("/money-receipt01", {
-        ...formData,
-        // UserId: 1,
-      });
-toast.success(" created successfully");
-    // close drawer & reload list
+    if (modalType === "add") {
+      const payload = {
+        ReffId: formData.ReffId,
+        ReceiptDate: formData.ReceiptDate || new Date().toISOString().slice(0, 10),
+        BillAmount: formData.BillAmount || 0,
+        Desc: formData.Desc || 0,
+        DiscAmt: formData.DiscAmt || 0,
+        Amount: formData.Amount || 0,
+        CBalAmt: formData.CBalAmt || 0,
+        BalanceAmt: formData.BalanceAmt || 0,
+        Remarks: formData.Remarks || '',
+        UserId: formData.UserId || 1,
+        TypeofReceipt: formData.TypeofReceipt || 1,
+        DiscOtherId: formData.DiscOtherId || 1,
+        DiscChk: formData.DiscChk || 'Y',
+        HeadId: formData.HeadId || 'HEAD001',
+        ReffType: formData.ReffType || 'C',
+        MRType: formData.MRType || 'C',
+        BankName: formData.BankName || '',
+        ChequeNo: formData.ChequeNo || '',
+        AgentDiscId: formData.AgentDiscId || 1,
+        TDS: formData.TDS || 0,
+        AdjAmt: formData.AdjAmt || 0,
+        CompName: formData.CompName || '',
+        Narration: formData.Narration || '',
+        ReceiptTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+      };
+      await axiosInstance.post('/money-receipt01', payload);
+      toast.success('Created successfully');
+    } else if (modalType === "edit" && formData.ReceiptId) {
+      // Update existing receipt
+      const payload = {
+        ReceiptNo: formData.ReceiptNo,
+        ReffId: formData.ReffId,
+        ReceiptDate: formData.ReceiptDate,
+        BillAmount: formData.BillAmount,
+        Desc: formData.Desc,
+        DiscAmt: formData.DiscAmt,
+        Amount: formData.Amount,
+        CBalAmt: formData.CBalAmt,
+        BalanceAmt: formData.BalanceAmt,
+        Remarks: formData.Remarks,
+        UserId: formData.UserId,
+        TypeofReceipt: formData.TypeofReceipt,
+        DiscOtherId: formData.DiscOtherId,
+        DiscChk: formData.DiscChk,
+        HeadId: formData.HeadId,
+        ReffType: formData.ReffType,
+        MRType: formData.MRType,
+        BankName: formData.BankName,
+        ChequeNo: formData.ChequeNo,
+        AgentDiscId: formData.AgentDiscId,
+        TDS: formData.TDS,
+        AdjAmt: formData.AdjAmt,
+        CompName: formData.CompName,
+        Narration: formData.Narration,
+        ReceiptTime: formData.ReceiptTime,
+      };
+      
+      console.log('Update payload:', payload);
+      
+      await axiosInstance.put(
+        `/money-receipt01/${encodeURIComponent(formData.ReceiptId)}`,
+        payload
+      );
+      toast.success("Updated successfully");
+    }
+    
     setShowDrawer(false);
     fetchReceipts(page);
-
   } catch (err) {
-    console.error(err);
+    console.error('Save error:', err);
+    console.error('Error response:', err?.response?.data);
     toast.error(
       err?.response?.data?.message || "Save failed"
     );
@@ -257,6 +371,31 @@ const handleChange = (e) => {
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      fetchReceipts(1);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(
+        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(searchTerm.trim())}&page=1&limit=${limit}`
+      );
+      
+      if (response.data.success) {
+        setReceipts(response.data.data || []);
+        setTotalPages(response.data.pagination?.totalPages || 1);
+        setPage(1);
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+      toast.error('Search failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const goToPage = (p) => {
     if (p < 1 || p > totalPages) return;
     setPage(p);
@@ -270,6 +409,9 @@ const handleChange = (e) => {
         {/* Header */}
         <div className="panel-header d-flex justify-content-between align-items-center">
           <h5>Sample Receipt</h5>
+          <button className="btn btn-sm btn-primary" onClick={() => openDrawer(null, 'add')}>
+            <i className="fa fa-plus me-2"></i>Add Receipt
+          </button>
         </div>
 
         <div className="panel-body">
@@ -327,9 +469,11 @@ const handleChange = (e) => {
                   placeholder="Search receipt..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSearch();
+                  }}
                 />
-             
-                <button className="btn btn-sm btn-info" onClick={() => fetchReceipts(1)}>
+                <button className="btn btn-sm btn-info" onClick={handleSearch}>
                   <i className="fa fa-search"></i>
                 </button>
                 
@@ -475,6 +619,8 @@ const handleChange = (e) => {
         >
           {modalType === "view"
             ? "👁️ View Sample Receipt"
+            : modalType === "add"
+            ? "➕ Add Sample Receipt"
             : "✏️ Edit Sample Receipt"}
         </div>
 
@@ -589,15 +735,34 @@ value={formData.ReceiptNo}
 
     <div className="col-md-2">
       <label className="form-label">Case No</label>
-      <input
-        type="text"
-        className="form-control form-control-sm"
-        name="ReffId"
-
-        value={formData.ReffId }
-        onChange={handleChange}
-        disabled={modalType === "view"}
-      />
+      {modalType === 'add' ? (
+        <div className="input-group input-group-sm">
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            name="ReffId"
+            value={formData.ReffId || ''}
+            readOnly
+            placeholder="Select patient"
+          />
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-primary"
+            onClick={() => setShowPatientModal(true)}
+          >
+            <i className="fa fa-search"></i>
+          </button>
+        </div>
+      ) : (
+        <input
+          type="text"
+          className="form-control form-control-sm"
+          name="ReffId"
+          value={formData.ReffId}
+          onChange={handleChange}
+          disabled={modalType === "view"}
+        />
+      )}
     </div>
     <div className="col-md-2">
     <label className="form-label">Case Date</label>
@@ -657,16 +822,20 @@ value={formData.ReceiptNo}
   <div className="row g-2 mb-1">
     <div className="col-md-2">
       <label className="form-label">Received By</label>
-      <input
-        type="text"
+      <select
         className="form-control form-control-sm"
-        name="ReceivedBy"
-
-        value={formData.ReceivedBy}
-          disabled={modalType === "view"}
-                   onChange={handleChange}
-
-      />
+        name="UserId"
+        value={formData.UserId || ''}
+        onChange={handleChange}
+        disabled={modalType === "view"}
+      >
+        <option value="">Select User</option>
+        {users.map((u) => (
+          <option key={u.UserId} value={u.UserId}>
+            {u.UserName}
+          </option>
+        ))}
+      </select>
     </div>
     <div className="col-md-3">
       <label className="form-label">Current User</label>
@@ -858,6 +1027,83 @@ value={formData.ReceiptNo}
   </>
 )}
 
+      {/* Patient Search Modal */}
+      {showPatientModal && (
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 10000 }}></div>
+          <div className="modal d-block" style={{ zIndex: 10001 }}>
+            <div className="modal-dialog modal-dialog-centered modal-lg">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Select Patient</h5>
+                  <button className="btn-close" onClick={() => setShowPatientModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <input
+                    type="text"
+                    className="form-control form-control-sm mb-3"
+                    placeholder="Search by Case ID or Patient Name..."
+                    value={patientSearch}
+                    onChange={(e) => {
+                      setPatientSearch(e.target.value);
+                      fetchPatients(e.target.value);
+                    }}
+                  />
+                  <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <table className="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <th>Case ID</th>
+                          <th>Patient Name</th>
+                          <th>Age</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {patients.length === 0 ? (
+                          <tr>
+                            <td colSpan="4" className="text-center">No patients found</td>
+                          </tr>
+                        ) : (
+                          patients.map((p) => (
+                            <tr key={p.CaseId}>
+                              <td>{p.CaseId}</td>
+                              <td>{p.PatientName}</td>
+                              <td>{p.Age}</td>
+                              <td>
+                                <button
+                                  className="btn btn-sm btn-primary"
+                                  onClick={() => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      ReffId: p.CaseId,
+                                      BillAmount: p.GrossAmt || 0,
+                                      BalanceAmt: p.GrossAmt || 0,
+                                      Amount: p.GrossAmt || 0,
+                                      PatientName: p.PatientName || '',
+                                      Age: p.Age || '',
+                                      Sex: p.Sex || '',
+                                      CaseDate: p.CaseDate?.slice(0, 10) || '',
+                                    }));
+                                    setShowPatientModal(false);
+                                    setPatientSearch('');
+                                  }}
+                                >
+                                  Select
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
    {/* Confirm Delete Modal */}
       {showConfirm && <div className="modal-backdrop fade show" style={{ zIndex: 99999 }}></div>}

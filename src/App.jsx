@@ -524,7 +524,7 @@ function App() {
 
  <Route path="/DiagnosticParameterSetup" element={<DiagnosticParameterSetup/>}/>
  <Route path="/DrIPCategory" element={<ProtectedRoute><DrIPCategory/></ProtectedRoute>}/>
-
+  
  <Route path="/EditTestRate" element={<EditTestRate />} />
 
 <Route path="/PackageMaster" element={<PackageMaster/>}/>
