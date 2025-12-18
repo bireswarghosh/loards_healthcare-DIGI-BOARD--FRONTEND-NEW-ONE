@@ -123,6 +123,8 @@ import RoomNoMaster from "./templates/OUTDOOR MASTER/RoomNoMaster.jsx"
 import ServiceMaster from "./templates/OUTDOOR MASTER/ServiceMaster.jsx"
 import OutdoorOtherChargeMaster from "./templates/OUTDOOR MASTER/OutdoorOtherChargeMaster.jsx"
 import OutdoorParameterSetup from "./templates/OUTDOOR MASTER/OutdoorParameterSetup.jsx"
+import MedicinMaster from "./templates/OUTDOOR MASTER/MedicinMaster.jsx"
+import CashPaymentHead from "./templates/OUTDOOR MASTER/CashPaymentHead.jsx"
 import CategoryMaster from "./templates/DiagnosisMaster/CategoryMaster.jsx"
 
 
@@ -152,6 +154,9 @@ import OTItemMaster from "./components/indoor-master/OTItemMaster.jsx";
 import CashlessMaster from "./components/indoor-master/CashlessMaster.jsx";
 import ConsentMaster from "./components/indoor-master/ConsentMaster.jsx";
 import BillPrintHeadMaster from "./components/indoor-master/BillPrintHeadMaster.jsx";
+
+
+
 
 
 
@@ -361,6 +366,8 @@ function App() {
  <Route path="/ServiceMaster" element={<ProtectedRoute><ServiceMaster/></ProtectedRoute>}/>
  <Route path="/OutdoorOtherChargeMaster" element={<ProtectedRoute><OutdoorOtherChargeMaster/></ProtectedRoute>}/>
  <Route path="/OutdoorParameterSetup" element={<ProtectedRoute><OutdoorParameterSetup/></ProtectedRoute>}/>
+ <Route path="/MedicinMaster" element={<ProtectedRoute><MedicinMaster/></ProtectedRoute>}/>
+ <Route path="/CashPaymentHead" element={<ProtectedRoute><CashPaymentHead/></ProtectedRoute>}/>
  <Route path="/CategoryMaster" element={<ProtectedRoute><CategoryMaster/></ProtectedRoute>}/>
  <Route path="/CulMedHdMaster" element={<ProtectedRoute><CulMedHdMaster/></ProtectedRoute>}/>
  <Route path="/GodownMaster" element={<ProtectedRoute><GodownMaster/></ProtectedRoute>}/>

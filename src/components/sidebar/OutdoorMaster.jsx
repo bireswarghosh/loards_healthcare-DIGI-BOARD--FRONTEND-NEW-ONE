@@ -25,32 +25,42 @@ const OutdoorMaster = () => {
 
         <li className="sidebar-dropdown-item">
           <NavLink to="/OutdoorParameterSetup" className="sidebar-link">
-            Outdoor Parameter Setup
+            Parameter Setup
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
           <NavLink to="/ServiceMaster" className="sidebar-link">
-            Service Master
+            SERVICE
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/OutdoorOtherChargeMaster" className="sidebar-link">
-            Outdoor Other Charge Master
+          <NavLink to="/ServiceOtherCharge" className="sidebar-link">
+            SERVICE OTHERCHARGE
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/OTMaster" className="sidebar-link">
+            OT Master
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/OTType" className="sidebar-link">
+            OT Type
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/OTSlotMaster" className="sidebar-link">
+            O.T. Slot Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
           <NavLink to="/RoomNoMaster" className="sidebar-link">
-            Room No Master
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/VisitTypeGrpMaster" className="sidebar-link">
-            Visit Type Group Master
+            Room Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
           <NavLink to="/ChiefMaster" className="sidebar-link">
-            Chief Master
+            Chief Complant
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
@@ -60,27 +70,27 @@ const OutdoorMaster = () => {
         </li>
         <li className="sidebar-dropdown-item">
           <NavLink to="/PastHistoryMaster" className="sidebar-link">
-            Past History Master
+            Past History
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
           <NavLink to="/DoseMaster" className="sidebar-link">
-            Dose Master
+            Dose
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
           <NavLink to="/AdviceMaster" className="sidebar-link">
-            Advice Master
+            Advise
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/VisitourMaster" className="sidebar-link">
-            Visitor Master
+          <NavLink to="/VisitHourMaster" className="sidebar-link">
+            Visit Hour Master
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/VisittypegrpMaster" className="sidebar-link">
-            Visit Type Group Master
+          <NavLink to="/VisitTypeGrpMaster" className="sidebar-link">
+            VISIT TYPE GRP MASTER
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
@@ -89,8 +99,33 @@ const OutdoorMaster = () => {
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/CompanymstMaster" className="sidebar-link">
-            Company Master
+          <NavLink to="/ReferalMaster" className="sidebar-link">
+            Referal Master
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/DoctorSetup" className="sidebar-link">
+            Doctor Set Up
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/StaffMaster" className="sidebar-link">
+            Staff Master
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/MedicinMaster" className="sidebar-link">
+            Medicin Master
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/CashPaymentHead" className="sidebar-link">
+            Cash Payment Head
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/OutdoorOtherChargeMaster" className="sidebar-link">
+            Outdoor Other Charges Master
           </NavLink>
         </li>
       </ul>
