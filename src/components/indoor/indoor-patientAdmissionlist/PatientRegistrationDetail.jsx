@@ -20,6 +20,13 @@ const PatientRegistrationDetail = () => {
   const [totalBedPages, setTotalBedPages] = useState(1);
   const [drawerBeds, setDrawerBeds] = useState([]);
 
+  const [opdPerPage] = useState(20);
+  const [showOPDDrawer, setShowOPDDrawer] = useState(false);
+  const [opdSearchQuery, setOPDSearchQuery] = useState("");
+  const [currentOPDPage, setCurrentOPDPage] = useState(1);
+  const [totalOPDPages, setTotalOPDPages] = useState(1);
+  const [drawerOPDs, setDrawerOPDs] = useState([]);
+
   const [doctors, setDoctors] = useState([]);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -309,6 +316,62 @@ const PatientRegistrationDetail = () => {
       }
     } catch (error) {
       console.error("Error fetching drawer beds:", error);
+    }
+  };
+
+  const fetchDrawerOPDs = async (page = 1, search = "") => {
+    try {
+      setLoading(true);
+      let url = `/patient-visits?page=${page}&limit=${opdPerPage}`;
+      if (search.trim()) {
+        url += `&search=${encodeURIComponent(search.trim())}`;
+      }
+      const response = await axiosInstance.get(url);
+      if (response.data.success) {
+        setDrawerOPDs(response.data.data || []);
+        setTotalOPDPages(response.data.pagination?.totalPages || 1);
+      }
+    } catch (error) {
+      console.error("Error fetching OPD visits:", error);
+      alert("Failed to load OPD visits. Please try again.");
+      setDrawerOPDs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOPDPatientData = async (registrationId) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/patient-visits/registration?registrationId=${registrationId}`);
+      
+      if (response.data.success && response.data.data && response.data.data.length > 0) {
+        const patientData = response.data.data[0];
+        
+        setFormData((prev) => ({
+          ...prev,
+          OPDId: registrationId,
+          PatientName: patientData.PatientName || "",
+          Add1: patientData.PatientAdd1 || "",
+          Add2: patientData.PatientAdd2 || "",
+          Add3: patientData.PatientAdd3 || "",
+          Age: patientData.Age || 0,
+          AgeD: patientData.AgeD || 0,
+          AgeN: patientData.AgeN || 0,
+          Sex: patientData.Sex || "M",
+          PhoneNo: patientData.PhoneNo || "",
+          MStatus: patientData.MStatus || "U",
+          GurdianName: patientData.GurdianName || "",
+          AreaId: patientData.AreaId || "",
+          ReligionId: patientData.ReligionId || "",
+          Weight: patientData.PatientWeight || patientData.Weight || "0",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching OPD patient data:", error);
+      alert("Failed to load patient data.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -901,13 +964,21 @@ const PatientRegistrationDetail = () => {
 
               <div className="col-md-2">
                 <label className="form-label small">O.P.D. Id</label>
-
                 <input
                   type="text"
                   className="form-control form-control-sm"
                   value={formData.OPDId}
-                  onChange={handleInputChange}
+                  onClick={async () => {
+                    if (mode !== "view" && formData.OPD === "Y") {
+                      setShowOPDDrawer(true);
+                      setCurrentOPDPage(1);
+                      setOPDSearchQuery("");
+                      await fetchDrawerOPDs(1, "");
+                    }
+                  }}
                   disabled={mode === "view" || formData.OPD === "N"}
+                  readOnly
+                  style={{ cursor: mode === "view" || formData.OPD === "N" ? "default" : "pointer" }}
                 />
               </div>
               <div className="col-md-2">
@@ -2327,6 +2398,144 @@ const PatientRegistrationDetail = () => {
                   </ul>
                 </nav>
               )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showOPDDrawer && (
+        <>
+          <div
+            className="modal-backdrop fade show"
+            onClick={() => setShowOPDDrawer(false)}
+            style={{ zIndex: 9998 }}
+          ></div>
+          <div
+            className="profile-right-sidebar active"
+            style={{
+              zIndex: 9999,
+              width: "100%",
+              maxWidth: "700px",
+              right: 0,
+              top: "70px",
+              height: "calc(100vh - 70px)",
+            }}
+          >
+            <button className="right-bar-close" onClick={() => setShowOPDDrawer(false)}>
+              <i className="fa-light fa-angle-right"></i>
+            </button>
+            <div className="top-panel" style={{ height: "100%" }}>
+              <div className="dropdown-txt" style={{ backgroundColor: "#0a1735", color: "white", position: "sticky", top: 0, zIndex: 10 }}>
+                OPD Visit Selection
+              </div>
+              <div style={{ height: "calc(100% - 70px)", overflowY: "auto" }} className="p-3">
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search by Registration ID or Patient Name..."
+                    value={opdSearchQuery}
+                    onChange={(e) => {
+                      setOPDSearchQuery(e.target.value);
+                      setCurrentOPDPage(1);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        fetchDrawerOPDs(1, opdSearchQuery);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="mb-4 border rounded-3 p-3 shadow-sm">
+                  <div className="table-responsive" style={{ maxHeight: "500px", overflowY: "auto" }}>
+                    <table className="table table-hover table-sm">
+                      <thead className="table-light" style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                        <tr>
+                          <th>Select</th>
+                          <th>Registration ID</th>
+                          <th>Patient Name</th>
+                          <th>Visit Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {drawerOPDs.map((visit, i) => (
+                          <tr key={i}>
+                            <td>
+                              <input
+                                className="form-check-input"
+                                type="radio"
+                                name="opdSelection"
+                                checked={formData.OPDId === visit.RegistrationId}
+                                onChange={async () => {
+                                  await fetchOPDPatientData(visit.RegistrationId);
+                                  setShowOPDDrawer(false);
+                                }}
+                              />
+                            </td>
+                            <td>{visit.RegistrationId}</td>
+                            <td>{visit.PatientName}</td>
+                            <td>{visit.VisitDate ? new Date(visit.VisitDate).toLocaleDateString() : "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {totalOPDPages > 1 && (
+                  <nav className="mt-3">
+                    <ul className="pagination pagination-sm justify-content-center">
+                      <li className={`page-item ${currentOPDPage === 1 ? "disabled" : ""}`}>
+                        <button
+                          className="page-link"
+                          onClick={() => {
+                            const newPage = currentOPDPage - 1;
+                            setCurrentOPDPage(newPage);
+                            fetchDrawerOPDs(newPage, opdSearchQuery);
+                          }}
+                          disabled={currentOPDPage === 1}
+                        >
+                          ← Prev
+                        </button>
+                      </li>
+                      {(() => {
+                        const maxVisible = 5;
+                        let startPage = Math.max(1, currentOPDPage - 2);
+                        let endPage = Math.min(totalOPDPages, startPage + maxVisible - 1);
+
+                        const pages = [];
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <li key={i} className={`page-item ${currentOPDPage === i ? "active" : ""}`}>
+                              <button className="page-link" onClick={() => {
+                                setCurrentOPDPage(i);
+                                fetchDrawerOPDs(i, opdSearchQuery);
+                              }}>
+                                {i}
+                              </button>
+                            </li>
+                          );
+                        }
+                        return pages;
+                      })()}
+                      <li className={`page-item ${currentOPDPage === totalOPDPages ? "disabled" : ""}`}>
+                        <button
+                          className="page-link"
+                          onClick={() => {
+                            const newPage = currentOPDPage + 1;
+                            setCurrentOPDPage(newPage);
+                            fetchDrawerOPDs(newPage, opdSearchQuery);
+                          }}
+                          disabled={currentOPDPage === totalOPDPages}
+                        >
+                          Next →
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                )}
               </div>
             </div>
           </div>
