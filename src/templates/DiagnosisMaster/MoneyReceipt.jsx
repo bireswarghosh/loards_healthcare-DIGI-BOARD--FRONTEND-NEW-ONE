@@ -194,6 +194,21 @@ const fetchReceiptByNo = async (receiptNo) => {
     return;
   }
 
+  if (type === 'refund') {
+    setFormData({
+      ReceiptDate: new Date().toISOString().slice(0, 10),
+      ReffId: '',
+      RefundAmount: 0,
+      MRType: 'C',
+      BankName: '',
+      ChequeNo: '',
+      Narration: 'Refund Money Receipt',
+    });
+    setPatientSearch('');
+    setShowDrawer(true);
+    return;
+  }
+
 //   setFormData({
 //     ReceiptId: receipt.ReceiptId,
  
@@ -247,7 +262,36 @@ const fetchReceiptByNo = async (receiptNo) => {
 // handle save------
 const handleSave = async () => {
   try {
-    if (modalType === "add") {
+    if (modalType === "refund") {
+      const payload = {
+        ReffId: formData.ReffId,
+        ReceiptDate: formData.ReceiptDate || new Date().toISOString().slice(0, 10),
+        BillAmount: 0,
+        Desc: 0,
+        DiscAmt: 0,
+        Amount: -(Math.abs(formData.RefundAmount || 0)),
+        CBalAmt: 0,
+        BalanceAmt: 0,
+        Remarks: 'Refund Money Receipt',
+        UserId: formData.UserId || 1,
+        TypeofReceipt: 1,
+        DiscOtherId: 1,
+        DiscChk: 'Y',
+        HeadId: 'HEAD001',
+        ReffType: 'C',
+        MRType: formData.MRType || 'C',
+        BankName: formData.BankName || '',
+        ChequeNo: formData.ChequeNo || '',
+        AgentDiscId: 1,
+        TDS: 0,
+        AdjAmt: 0,
+        CompName: '',
+        Narration: formData.Narration || 'Refund Money Receipt',
+        ReceiptTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+      };
+      await axiosInstance.post('/money-receipt01', payload);
+      toast.success('Refund created successfully');
+    } else if (modalType === "add") {
       const payload = {
         ReffId: formData.ReffId,
         ReceiptDate: formData.ReceiptDate || new Date().toISOString().slice(0, 10),
@@ -409,9 +453,14 @@ const handleChange = (e) => {
         {/* Header */}
         <div className="panel-header d-flex justify-content-between align-items-center">
           <h5>Sample Receipt</h5>
-          <button className="btn btn-sm btn-primary" onClick={() => openDrawer(null, 'add')}>
-            <i className="fa fa-plus me-2"></i>Add Receipt
-          </button>
+          <div className="d-flex gap-2">
+            <button className="btn btn-sm btn-primary" onClick={() => openDrawer(null, 'add')}>
+              <i className="fa fa-plus me-2"></i>Add Receipt
+            </button>
+            <button className="btn btn-sm btn-danger" onClick={() => openDrawer(null, 'refund')}>
+              <i className="fa fa-undo me-2"></i>Refund
+            </button>
+          </div>
         </div>
 
         <div className="panel-body">
@@ -621,6 +670,8 @@ const handleChange = (e) => {
             ? "👁️ View Sample Receipt"
             : modalType === "add"
             ? "➕ Add Sample Receipt"
+            : modalType === "refund"
+            ? "💸 Refund"
             : "✏️ Edit Sample Receipt"}
         </div>
 
@@ -735,7 +786,7 @@ value={formData.ReceiptNo}
 
     <div className="col-md-2">
       <label className="form-label">Case No</label>
-      {modalType === 'add' ? (
+      {(modalType === 'add' || modalType === 'refund') ? (
         <div className="input-group input-group-sm">
           <input
             type="text"
@@ -853,6 +904,20 @@ value={formData.ReceiptNo}
 
 
   {/* Amount Section */}
+   {modalType === 'refund' ? (
+     <div className="row g-2 mb-2">
+       <div className="col-md-12">
+         <label className="form-label">Refund Amount</label>
+         <input
+           type="number"
+           className="form-control form-control-sm text-end"
+           name="RefundAmount"
+           value={formData.RefundAmount || 0}
+           onChange={handleChange}
+         />
+       </div>
+     </div>
+   ) : (
    <div className="row g-2 mb-2">
 
  <div className="col-md-1">
@@ -945,6 +1010,7 @@ value={formData.ReceiptNo}
   </div>
 
    </div>
+   )}
 
   
   {/* Payment */}

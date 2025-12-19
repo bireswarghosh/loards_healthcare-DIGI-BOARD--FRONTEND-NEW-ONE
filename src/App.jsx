@@ -221,6 +221,7 @@ import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 // !  deb dia  mas
 import MoneyReceipt from "./templates/DiagnosisMaster/MoneyReceipt.jsx";
+import Refund from "./templates/DiagnosisMaster/Refund.jsx";
 
 import TestReportSeq from "./templates/DiagnosisMaster/TestReportSeq.jsx";
 import ActiveDoctors from "./templates/DiagnosisMaster/ActiveDoctors.jsx";
@@ -513,6 +514,7 @@ function App() {
  <Route path="/doctor" element={<DoctorManagement/>}/>
 <Route path="/doctor-wise-appointments" element={<DoctorWiseAppointments />} />
 <Route path="/MoneyReceipt" element={<ProtectedRoute><MoneyReceipt/></ProtectedRoute>}/>
+<Route path="/Refund" element={<ProtectedRoute><Refund/></ProtectedRoute>}/>
       {/* sou dia  mas */}
 
 
