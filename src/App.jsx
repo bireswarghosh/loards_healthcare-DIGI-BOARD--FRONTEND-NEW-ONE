@@ -256,6 +256,32 @@ import EditTestRate from "./templates/DiagnosisMaster/EditTestRate.jsx";
 import PackageMaster from "./templates/DiagnosisMaster/PackageMaster.jsx";
 import Formula from "./templates/DiagnosisMaster/Formula.jsx";
 
+// !  sir  given
+
+import DiagBooking from "./DiagBooking"
+import TestReportingSequence from "./TestReportingSequence"
+import TestPropertyGroup from "./TestPropertyGroup"
+import AgentBusiness from "./AgentBusiness"
+import AgentForm from "./AgentForm"
+import DoctorBusiness from "./DoctorBusiness"
+import BookingListView from "./DiagBookingList"
+import DiagBookingList from "./DiagBookingList"
+import CompanyTestRateSetup from "./CompanyTestRateSetup"
+import DueOnAccount from "./DueOnAccount"
+import ItemMaster from "./ItemMaster"
+import LaboratoryQuery from "./LaboratoryQuery"
+import OpeningBalanceItem from "./OpeningBalanceItem"
+import PathologistSignatory from "./PathologistSignatory"
+import RadiologyRequisition from "./RadiologyRequisition"
+import RadiologyRequisitionDetail from "./RadiologyRequisitionDetail"
+import SubDepartment from "./SubDepartment"
+// import SpecialProperty from "./SpecialProperty"
+import SampleCollection from "./SampleCollection"
+import SampleCollectionDetails from "./SampleCollectionDetails"
+import ReceptionReporting from "./ReceptionReporting"
+
+
+
 
 
 
@@ -536,7 +562,64 @@ function App() {
   <Route path="/*" element={<ComingSoon />} />
 
 
- <Route path="/DoctorVisit " element={< DoctorVisit/>} />
+ {/* <Route path="/DoctorVisit " element={< DoctorVisit/>} /> */}
+
+
+
+
+
+
+
+
+
+
+{/* //!   sir  given  */}
+
+          <Route path="/DoctorVisit" element={<DoctorVisit/>}/>
+          <Route path="/DiagBooking" element={<DiagBooking/>}/>
+          <Route path="/TestReportingSequence" element={<TestReportingSequence/>}/>
+          <Route path="/TestPropertyGroup" element={<TestPropertyGroup/>}/>
+          <Route path="/AgentBusiness" element={<AgentBusiness/>}/>     
+          <Route path="/AgentForm" element={<AgentForm/>}/>     
+          <Route path="/DoctorBusiness" element={<DoctorBusiness/>}/>    
+           <Route path="/DiagBookingList" element={<DiagBookingList/>}/> 
+
+           
+              
+ <Route path="/CompanyTestRateSetup" element={<CompanyTestRateSetup/>}/>    
+ <Route path="/DueOnAccount" element={<DueOnAccount/>}/>   
+<Route path="/ItemMaster" element={<ItemMaster/>}/>   
+<Route path="/LaboratoryQuery" element={<LaboratoryQuery/>}/>  
+<Route path="/OpeningBalanceItem" element={<OpeningBalanceItem/>}/>  
+{/* <Route path="/SpecialProperty" element={<SpecialProperty/>}/>   */}
+ 
+<Route path="/SampleCollection" element={<SampleCollection/>}/>  
+<Route path="/SampleCollectionDetails" element={<SampleCollectionDetails/>}/>  
+
+<Route path="/PathologistSignatory" element={<PathologistSignatory/>}/>  
+<Route path="/RadiologyRequisition" element={<RadiologyRequisition/>}/>  
+<Route path="/RadiologyRequisitionDetail" element={<RadiologyRequisitionDetail/>}/>  
+
+<Route path="/SubDepartment" element={<SubDepartment/>}/>  
+
+<Route path="/ReceptionReporting" element={<ReceptionReporting/>}/>  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
         </Route>

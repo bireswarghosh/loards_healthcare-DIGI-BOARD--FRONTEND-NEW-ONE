@@ -53,8 +53,8 @@ Diagnosis
 
 
 <li className="sidebar-dropdown-item">
-          <NavLink to="/lab_query" className="sidebar-link">
-            Lab Query
+          <NavLink to="/LaboratoryQuery" className="sidebar-link">
+     Laboratory Query
           </NavLink>
         </li>
 
@@ -71,7 +71,7 @@ Diagnosis
 
 
 <li className="sidebar-dropdown-item">
-          <NavLink to="/lab_query" className="sidebar-link">
+          <NavLink to="/DiagBooking" className="sidebar-link">
             Booking
           </NavLink>
         </li>
@@ -89,7 +89,7 @@ Diagnosis
 
 
 <li className="sidebar-dropdown-item">
-          <NavLink to="/lab_query" className="sidebar-link">
+          <NavLink to="/SampleCollection" className="sidebar-link">
             Sample Collection
           </NavLink>
         </li>
@@ -120,7 +120,7 @@ Diagnosis
 
 
 <li className="sidebar-dropdown-item">
-          <NavLink to="/lab_query" className="sidebar-link">
+          <NavLink to="/RadiologyRequisition" className="sidebar-link">
             Readiology Requiaition
           </NavLink>
         </li>
