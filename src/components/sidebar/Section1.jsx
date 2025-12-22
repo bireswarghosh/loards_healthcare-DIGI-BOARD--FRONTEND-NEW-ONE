@@ -39,7 +39,7 @@ Diagnosis
 
 
    <li className="sidebar-dropdown-item">
-          <NavLink to="/cas" className="sidebar-link">
+          <NavLink to="/CaseList" className="sidebar-link">
             Case Entry 
           </NavLink>
         </li>

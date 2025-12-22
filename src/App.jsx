@@ -63,6 +63,8 @@ import Emr from "./pages/bireswar_pages/outdoor/Emr/Emr.jsx";
 import VisitEntry from "./pages/bireswar_pages/outdoor/Visit_Entry/VisitEntry.jsx";
 import DrRectVisitDetail from "./pages/bireswar_pages/outdoor/Dr_Rect_Visit_Detail/DrRectVisitDetail.jsx";
 import OtherCharges from "./pages/bireswar_pages/outdoor/Other_Charges/OtherCharges.jsx";
+import OtherChargesIPD from "./pages/bireswar_pages/outdoor/Other_Charges/OtherChargesIPD.jsx";
+import CaseList from "./pages/bireswar_pages/outdoor/Other_Charges/CaseList.jsx";
 import DateWiseRegistrationCharge from "./pages/bireswar_pages/outdoor/DateWiseRegistrationCharge/DateWiseRegistrationCharge.jsx";
 import PatientHistory from "./pages/bireswar_pages/outdoor/PatientHistory/PatientHistory.jsx";
 import IVFBIODATAMASTER from "./pages/bireswar_pages/outdoor/IVF/IVFBIODATAMASTER.jsx";
@@ -279,6 +281,7 @@ import SubDepartment from "./SubDepartment"
 import SampleCollection from "./SampleCollection"
 import SampleCollectionDetails from "./SampleCollectionDetails"
 import ReceptionReporting from "./ReceptionReporting"
+import CaseEntryForm from "./pages/bireswar_pages/outdoor/Other_Charges/CaseEntryForm.jsx";
 
 
 
@@ -355,6 +358,15 @@ function App() {
           <Route path="/sampleReceipts" element={<ProtectedRoute><SampleReceipt /></ProtectedRoute>} />
 <Route path="/initialFormData" element={<InitialFormData />} />
 <Route path="/initialFormData/:id" element={<InitialFormData />} />
+
+ <Route path="/other-charges" element={<ProtectedRoute><OtherChargesIPD /></ProtectedRoute>} />
+
+<Route path="/CaseList" element={<CaseList />} />
+
+<Route path="/CaseEntry" element={<CaseEntryForm />} />
+<Route path="/CaseEntry/:id/:Modex" element={<CaseEntryForm />} />
+
+
 
           <Route path="/othercharges" element={<ProtectedRoute><OtherCharges /></ProtectedRoute>} />
           <Route path="/OTBillingList" element={<ProtectedRoute><OTBillingList /></ProtectedRoute>} />
