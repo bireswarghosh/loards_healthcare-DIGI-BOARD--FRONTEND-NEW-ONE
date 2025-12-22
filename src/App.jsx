@@ -516,7 +516,7 @@ function App() {
 <Route path="/doctor-wise-appointments" element={<DoctorWiseAppointments />} />
 <Route path="/MoneyReceipt" element={<ProtectedRoute><MoneyReceipt/></ProtectedRoute>}/>
 <Route path="/Refund" element={<ProtectedRoute><Refund/></ProtectedRoute>}/>
- <Route path="/OtherzzCharges" element={<ProtectedRoute><OtherChargesss/></ProtectedRoute>}/>
+ <Route path="/Opd_Other_Charges" element={<ProtectedRoute><OtherChargesss/></ProtectedRoute>}/>
 
       {/* sou dia  mas */}
 
