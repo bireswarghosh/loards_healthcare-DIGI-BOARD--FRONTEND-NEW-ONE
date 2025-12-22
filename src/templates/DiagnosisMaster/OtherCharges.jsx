@@ -504,11 +504,11 @@ const goToPage = (p) => {
   >
     {showSearch ? "Hide Search" : "Show Search"}
   </button>
-   <button className="btn btn-sm btn-primary" 
+   {/* <button className="btn btn-sm btn-primary" 
    onClick={openDrawerAdd}
    >
               <i className="fa-light fa-plus"></i> Add
-            </button>
+            </button> */}
 </div>
 
 {showSearch && (
