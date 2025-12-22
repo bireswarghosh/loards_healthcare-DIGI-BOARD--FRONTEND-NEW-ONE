@@ -220,6 +220,7 @@ import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 
 // !  deb dia  mas
+import OtherChargesss from "./templates/DiagnosisMaster/OtherCharges.jsx";
 import MoneyReceipt from "./templates/DiagnosisMaster/MoneyReceipt.jsx";
 import Refund from "./templates/DiagnosisMaster/Refund.jsx";
 
@@ -515,6 +516,8 @@ function App() {
 <Route path="/doctor-wise-appointments" element={<DoctorWiseAppointments />} />
 <Route path="/MoneyReceipt" element={<ProtectedRoute><MoneyReceipt/></ProtectedRoute>}/>
 <Route path="/Refund" element={<ProtectedRoute><Refund/></ProtectedRoute>}/>
+ <Route path="/OtherzzCharges" element={<ProtectedRoute><OtherChargesss/></ProtectedRoute>}/>
+
       {/* sou dia  mas */}
 
 
@@ -531,6 +534,10 @@ function App() {
 
 <Route path="/PackageMaster" element={<PackageMaster/>}/>
   <Route path="/*" element={<ComingSoon />} />
+
+
+ <Route path="/DoctorVisit " element={< DoctorVisit/>} />
+
     
         </Route>
         <Route path="/login" element={<Login3 />} />

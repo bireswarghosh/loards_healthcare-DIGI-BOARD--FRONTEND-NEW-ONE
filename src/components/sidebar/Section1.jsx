@@ -19,7 +19,7 @@ const Section1 = () => {
         className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`}
         onClick={toggleMainSection1Dropdown}
       >
-Section 1
+diagnosis
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.section1 ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
 
