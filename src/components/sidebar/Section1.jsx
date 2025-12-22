@@ -19,27 +19,43 @@ const Section1 = () => {
         className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`}
         onClick={toggleMainSection1Dropdown}
       >
-diagnosis
+Diagnosis
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.section1 ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
 
-     <li className="sidebar-dropdown-item">
+     {/* <li className="sidebar-dropdown-item">
           <NavLink to="/section1-item1" className="sidebar-link">
             <span className="nav-icon">
               <i className="fa-light fa-circle"></i>
             </span>{" "}
             <span className="sidebar-txt">Item 1</span>
           </NavLink>
-        </li>
+        </li> */}
 
-     <li className="sidebar-dropdown-item">
-          <NavLink to="/section1-item2" className="sidebar-link">
-            <span className="nav-icon">
-              <i className="fa-light fa-circle"></i>
-            </span>{" "}
-            <span className="sidebar-txt">Item 2</span>
+
+
+
+
+
+
+   <li className="sidebar-dropdown-item">
+          <NavLink to="/cas" className="sidebar-link">
+            Cash Entry 
           </NavLink>
         </li>
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/moneyreceipt" className="sidebar-link">
+            Money Receipt
+          </NavLink>
+        </li>
+
+
+
+
+
+
+    
 
       </ul>
     </li>
