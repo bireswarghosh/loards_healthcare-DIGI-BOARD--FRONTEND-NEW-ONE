@@ -40,7 +40,7 @@ Diagnosis
 
    <li className="sidebar-dropdown-item">
           <NavLink to="/cas" className="sidebar-link">
-            Cash Entry 
+            Case Entry 
           </NavLink>
         </li>
 
@@ -49,6 +49,83 @@ Diagnosis
             Money Receipt
           </NavLink>
         </li>
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+            Lab Query
+          </NavLink>
+        </li>
+
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+            Download
+          </NavLink>
+        </li>
+
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+            Booking
+          </NavLink>
+        </li>
+
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+            OPD
+          </NavLink>
+        </li>
+
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+            Sample Collection
+          </NavLink>
+        </li>
+
+
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+            Add Ins
+          </NavLink>
+        </li>
+
+
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+          Pos
+          </NavLink>
+        </li>
+
+
+
+
+
+
+<li className="sidebar-dropdown-item">
+          <NavLink to="/lab_query" className="sidebar-link">
+            Readiology Requiaition
+          </NavLink>
+        </li>
+
+
 
 
 

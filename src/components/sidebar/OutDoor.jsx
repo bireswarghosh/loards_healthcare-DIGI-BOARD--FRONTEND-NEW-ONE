@@ -69,7 +69,7 @@ const OutDoor = () => {
 
         {/* other charge */}
         <li className="sidebar-dropdown-item">
-          <NavLink to="/other_charges" className="sidebar-link">
+          <NavLink to="/OtherzzCharges" className="sidebar-link">
             <span className="nav-icon">
               <i className="fa-light fa-user-headset"></i>
             </span>{" "}
