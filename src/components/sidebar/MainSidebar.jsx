@@ -91,12 +91,12 @@ const MainSidebar = () => {
             <Indoor />
           <IndoorMaster/>
 
-
+ <Section1/>
             <DiagnosisMaster/>
             <BookingApp/>
             <Doctor/>
             <Marketing/>
-          <Section1/>
+         
             {/*   <Section2/>
             <Section3/>
             <Section4/>
@@ -129,12 +129,12 @@ const MainSidebar = () => {
 
           <IndoorMaster/>
 
-
+     <Section1/>
           <DiagnosisMaster/>
             <BookingApp/>
             <Doctor/>
             <Marketing/>
-             <Section1/>
+        
           {/*  <Section2/>
             <Section3/>
             <Section4/>
