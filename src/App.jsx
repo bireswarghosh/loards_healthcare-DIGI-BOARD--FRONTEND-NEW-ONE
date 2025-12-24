@@ -95,7 +95,7 @@ import OTBillingList from "./components/indoor/PatientAdmissionDetail/OTBillingL
 import OTBillingDetail from "./components/indoor/OTBillingDetail.jsx";
 import OTNoteProcedure from "./components/indoor/OTNoteProcedure.jsx";
 import DoctorVisit from "./components/indoor/DoctorVisit.jsx";
-import BedTransfer from "./components/indoor/BedTransfer.jsx";
+
 import Estimate from "./components/indoor/Estimate.jsx";
 import DischargeAndAdvice_Details from "./components/indoor/DischargeAndAdvise_details.jsx";
 import DischargeAndAdvise from "./components/indoor/DischargeAndAdvise.jsx";
@@ -282,6 +282,8 @@ import SampleCollection from "./SampleCollection"
 import SampleCollectionDetails from "./SampleCollectionDetails"
 import ReceptionReporting from "./ReceptionReporting"
 import CaseEntryForm from "./pages/bireswar_pages/outdoor/Other_Charges/CaseEntryForm.jsx";
+import BedTransfer from "./components/indoor/BedTransfer.jsx";
+import BedTransferList from "./components/indoor/BedTransferList.jsx";
 
 
 
@@ -373,7 +375,7 @@ function App() {
           <Route path="/OTBillingDetail" element={<ProtectedRoute><OTBillingDetail /></ProtectedRoute>} />
           <Route path="/OTNoteProcedure" element={<ProtectedRoute><OTNoteProcedure /></ProtectedRoute>} />
           <Route path="/DoctorVisit" element={<ProtectedRoute><DoctorVisit /></ProtectedRoute>} />
-          <Route path="/BedTransfer" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
+         
           <Route path="/Estimate" element={<ProtectedRoute><Estimate /></ProtectedRoute>} />
           <Route path="/DischargeAndAdvise"element={<ProtectedRoute><DischargeAndAdvice_Details /></ProtectedRoute>}/>
           <Route path="/DischargeAndAdvise_details" element={<ProtectedRoute><DischargeAndAdvise /></ProtectedRoute>}/>
@@ -383,6 +385,15 @@ function App() {
           <Route path="/FinalBillingDetail" element={<ProtectedRoute><FinalBillingDetail/></ProtectedRoute>} />
           <Route path="/FinalBillingList" element={<ProtectedRoute><FinalBillingList/></ProtectedRoute>} />
           <Route path="/PatientEnquiryDetail" element={<ProtectedRoute><PatientEnquiryDetail/></ProtectedRoute>} />
+
+
+
+<Route path="/BedTransfer" element={<ProtectedRoute><BedTransferList /></ProtectedRoute>} />
+          <Route path="/Bed-Transfer" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
+          <Route path="/Bed-Transfer/:id/:mode" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
+
+
+
           {/* indoor route end---------------------------------  */}
 
 
