@@ -134,7 +134,21 @@ const CaseList = () => {
                     <i className="fa-light fa-pen-to-square"></i>
                   </button>
 
-                  <button className="btn btn-sm text-danger" title="Delete">
+                  <button 
+                    className="btn btn-sm text-danger" 
+                    title="Delete"
+                    onClick={async () => {
+                      if (window.confirm(`Delete case ${data.CaseNo}?`)) {
+                        try {
+                          await axiosInstance.delete(`/case01/${encodeURIComponent(data.CaseId)}`);
+                          alert('Case deleted successfully!');
+                          fetchVisits("", "", "", "", paginationModel.page, paginationModel.pageSize);
+                        } catch (error) {
+                          alert('Failed to delete: ' + (error.response?.data?.message || error.message));
+                        }
+                      }
+                    }}
+                  >
                     <i className="fa-light fa-trash"></i>
                   </button>
                 </div>

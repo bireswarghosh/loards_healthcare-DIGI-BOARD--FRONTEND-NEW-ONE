@@ -7,12 +7,11 @@ import axiosInstance from "../../../../axiosInstance";
 
 const CaseEntryForm = () => {
   const { id, Modex } = useParams();
-  const orgId = decodeURIComponent(id);
+  const orgId = id ? decodeURIComponent(id) : "undefined";
 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  // const [mode, setMode] = useState("create"); // 'view', 'edit', 'create'
-  const [mode, setMode] = useState(Modex);
+  const [mode, setMode] = useState(Modex || "create");
 
   const [companyYN, setCompanyYN] = useState("N");
   const [bookingYN, setBookingYN] = useState("N");
@@ -25,9 +24,9 @@ const CaseEntryForm = () => {
 
   // form data state
   const [formData, setFormData] = useState({
-    PatientS: "",
-    CaseTime: "",
-    CaseDate: "",
+    PatientS: "1",
+    CaseTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+    CaseDate: new Date().toISOString().slice(0, 10),
     CaseP: "",
     CaseNo: "",
     CaseS: "",
@@ -40,7 +39,7 @@ const CaseEntryForm = () => {
     Phone: "",
     Email: "",
     Age: "",
-    AgeType: "",
+    AgeType: "Y",
     Sex: "",
     AgentId: "",
     DoctorId: "",
@@ -49,22 +48,22 @@ const CaseEntryForm = () => {
     DeliveryDate: "",
     OnDelivery: "",
     AfterDelivery: "",
-    Total: "",
+    Total: "0",
     ServiceChg: "",
     Desc: "",
     DescAmt: "",
-    Amount: "",
-    GrossAmt: "",
+    Amount: "0",
+    GrossAmt: "0",
     CTestAmt: "",
-    Balance: "",
-    PaymentType: "",
+    Balance: "0",
+    PaymentType: "C",
     CollectorId: "",
     CompanyId: "",
     ReportDate: "",
     PathologistId: "",
     LabId: "",
     BillId: "",
-    Advance: "",
+    Advance: "0",
     Clearing: "",
     ClearingDate: "",
     Remarks: "",
@@ -74,7 +73,7 @@ const CaseEntryForm = () => {
     PathologistId1: "",
     PathologistId2: "",
     PathologistId3: "",
-    AdmitionYN: "",
+    AdmitionYN: "N",
     AdmitionId: "",
     SlipNo: "",
     BankName: "",
@@ -118,7 +117,7 @@ const CaseEntryForm = () => {
     WFPathologistId3: "",
     reportdone: "",
     DueBillPrint: "",
-    PrintYN: "",
+    PrintYN: "0",
   });
 
   // thess states are only for searching of IPD (admission)
@@ -131,6 +130,13 @@ const CaseEntryForm = () => {
   const [isSearchingOPD, setIsSearchingOPD] = useState(false);
   const [selectedTestOPD, setSelectedTestOPD] = useState("");
 
+  // Test management states
+  const [tests, setTests] = useState([]);
+  const [testMasterData, setTestMasterData] = useState([]);
+  const [selectedTestMaster, setSelectedTestMaster] = useState(null);
+  const [testSearchResults, setTestSearchResults] = useState([]);
+  const [isSearchingTest, setIsSearchingTest] = useState(false);
+
   // this function is only for searching the IPD (Admission)
   const searchTests = async (searchTerm) => {
     if (!searchTerm || searchTerm.length < 2) {
@@ -138,6 +144,7 @@ const CaseEntryForm = () => {
       return;
     }
     setIsSearching(true);
+    
     try {
       const res = await axiosInstance.get(
         `/admissions?page=1&limit=20&search=${encodeURIComponent(searchTerm)}`
@@ -329,41 +336,382 @@ const CaseEntryForm = () => {
   const fetchCollector = async () => {
     try {
       const data = await axiosInstance.get("/collector");
-      // console.log("hi:", data);
       if (data.data.success) {
         const arr = data.data.data;
         const newArr = [{ CollectorId: 0, Collector: "--select--" }, ...arr];
         setCollectorData(newArr);
-        // console.log("hi: ", doctorData);
       }
     } catch (error) {
-      console.log("error fetching doctor:", error);
+      console.log("error fetching collector:", error);
     }
   };
 
+  // Fetch test master data
+  const fetchTestMaster = async () => {
+    try {
+      const res = await axiosInstance.get("/tests/search/advanced?page=1&limit=50");
+      if (res.data.success) {
+        setTestMasterData(res.data.data || []);
+      }
+    } catch (error) {
+      console.log("Error fetching test master:", error);
+    }
+  };
+
+  // Search tests
+  const searchTestMaster = async (searchTerm) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setTestSearchResults([]);
+      return;
+    }
+    setIsSearchingTest(true);
+    try {
+      const res = await axiosInstance.get(
+        `/tests/search/advanced?test=${encodeURIComponent(searchTerm)}&page=1&limit=50`
+      );
+      setTestSearchResults(res.data.data || []);
+    } catch (err) {
+      console.error("Test search error:", err);
+      setTestSearchResults([]);
+    } finally {
+      setIsSearchingTest(false);
+    }
+  };
+
+  // Add test to list
+  const handleAddTest = () => {
+    if (!selectedTestMaster) {
+      alert("Please select a test");
+      return;
+    }
+
+    const newTest = {
+      id: Date.now(),
+      TestId: selectedTestMaster.TestId,
+      TestName: selectedTestMaster.Test, // API returns 'Test' field
+      Rate: selectedTestMaster.Rate || 0,
+      NetRate: selectedTestMaster.Rate || 0,
+      DeliveryDate: new Date().toISOString().slice(0, 10),
+      DeliveryTime: "07:00 PM",
+      Profile: "N",
+      ComYN: "Y",
+    };
+
+    setTests([...tests, newTest]);
+    setSelectedTestMaster(null);
+    calculateTotal([...tests, newTest]);
+  };
+
+  // Remove test from list
+  const handleRemoveTest = (id) => {
+    const updatedTests = tests.filter((t) => t.id !== id);
+    setTests(updatedTests);
+    calculateTotal(updatedTests);
+  };
+
+  // Calculate total amount
+  const calculateTotal = (testList) => {
+    const total = testList.reduce((sum, test) => sum + parseFloat(test.NetRate || 0), 0);
+    setFormData((prev) => ({
+      ...prev,
+      Total: total,
+      Amount: total,
+      GrossAmt: total,
+      Balance: total - parseFloat(prev.Advance || 0),
+    }));
+  };
+
+  // Fetch tests for existing case
+  const fetchCaseTests = async (caseId) => {
+    try {
+      const res = await axiosInstance.get(`/case-bill-dtl/case/${caseId}`);
+      if (res.data.success) {
+        const testsData = await Promise.all(
+          res.data.data.map(async (t, index) => {
+            // Fetch test name from test master
+            let testName = "Unknown Test";
+            if (t.TestId) {
+              try {
+                const testRes = await axiosInstance.get(`/tests/${t.TestId}`);
+                if (testRes.data.success) {
+                  testName = testRes.data.data.Test;
+                }
+              } catch (err) {
+                console.log("Error fetching test name:", err);
+              }
+            }
+            return {
+              id: index,
+              ...t,
+              TestName: testName,
+            };
+          })
+        );
+        setTests(testsData);
+      }
+    } catch (error) {
+      console.log("Error fetching case tests:", error);
+    }
+  };
+
+  // Handle Save (CREATE or UPDATE)
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      
+      if (mode === "create" || !orgId) {
+        // CREATE new case with tests
+        if (tests.length === 0) {
+          alert("Please add at least one test");
+          setLoading(false);
+          return;
+        }
+
+        // Step 1: Create Case
+        const caseRes = await axiosInstance.post("/case01", formData);
+        if (caseRes.data.success) {
+          const newCaseId = caseRes.data.data.CaseId;
+          
+          // Step 2: Create Billing Details
+          for (const test of tests) {
+            await axiosInstance.post("/case-bill-dtl", {
+              CaseId: newCaseId,
+              TestId: test.TestId || null,
+              Rate: test.Rate || null,
+              Remarks: null,
+              DeliveryDate: test.DeliveryDate || null,
+              DeliveryTime: test.DeliveryTime || null,
+              ReportDate: null,
+              PathologistId: null,
+              ValueEntry: null,
+              Delivery: null,
+              DeliveryDt: null,
+              CancelTast: null,
+              Profile: test.Profile || null,
+              SlNo: null,
+              NetRate: test.NetRate || null,
+              ComYN: test.ComYN || null,
+              CaseBillDtlId: null,
+            });
+
+            // Step 3: Create Test Details
+            await axiosInstance.post("/case-dtl-01", {
+              CaseId: newCaseId,
+              TestId: test.TestId || null,
+              Rate: test.Rate || null,
+              Remarks: null,
+              DeliveryDate: test.DeliveryDate || null,
+              DeliveryTime: test.DeliveryTime || null,
+              ReportDate: null,
+              PathologistId: null,
+              ValueEntry: null,
+              Delivery: null,
+              DeliveryDt: null,
+              CancelTast: null,
+              LabId: null,
+              Profile: null,
+              SlNo: null,
+              PrintUser: null,
+              LISData: null,
+              CollDate: null,
+              CollTime: null,
+              PPBarCode: null,
+              Approve: null,
+              ApprovedPathologist: null,
+              ApproveDate: null,
+              ProfileID: null,
+              LabRcptDate: null,
+              LabRcptTime: null,
+              ReportTime: null,
+              LabSlNo: null,
+              Checked: null,
+              Printed: null,
+              reported: null,
+              ComYN: test.ComYN || null,
+              CaseDtlId: null,
+            });
+          }
+
+          alert(`Case created successfully! Case ID: ${newCaseId}`);
+          navigate("/CaseList");
+        }
+      } else if (mode === "edit" && orgId) {
+        // UPDATE existing case
+        const res = await axiosInstance.put(`/case01/${orgId}`, formData);
+        if (res.data.success) {
+          alert("Case updated successfully!");
+          setMode("view");
+          fetchData();
+        }
+      }
+    } catch (error) {
+      console.error("Error saving case:", error);
+      alert("Failed to save case: " + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Delete
+  const handleDelete = async () => {
+    if (!orgId) {
+      alert("No case to delete");
+      return;
+    }
+    
+    if (window.confirm("Are you sure you want to delete this case?")) {
+      try {
+        setLoading(true);
+        const res = await axiosInstance.delete(`/case01/${orgId}`);
+        if (res.data.success) {
+          alert("Case deleted successfully!");
+          navigate("/CaseList");
+        }
+      } catch (error) {
+        console.error("Error deleting case:", error);
+        alert("Failed to delete case: " + (error.response?.data?.message || error.message));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Handle New
+  const handleNew = () => {
+    setMode("create");
+    setTests([]);
+    setFormData({
+      PatientS: "1",
+      CaseTime: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      CaseDate: new Date().toISOString().slice(0, 10),
+      CaseP: "",
+      CaseNo: "",
+      CaseS: "",
+      PatientP: "",
+      PatientId: "",
+      PatientName: "",
+      Add1: "",
+      Add2: "",
+      Add3: "",
+      Phone: "",
+      Email: "",
+      Age: "",
+      AgeType: "Y",
+      Sex: "",
+      AgentId: "",
+      DoctorId: "",
+      BookingId: "",
+      UserId: "",
+      DeliveryDate: "",
+      OnDelivery: "",
+      AfterDelivery: "",
+      Total: "0",
+      ServiceChg: "",
+      Desc: "",
+      DescAmt: "",
+      Amount: "0",
+      GrossAmt: "0",
+      CTestAmt: "",
+      Balance: "0",
+      PaymentType: "C",
+      CollectorId: "",
+      CompanyId: "",
+      ReportDate: "",
+      PathologistId: "",
+      LabId: "",
+      BillId: "",
+      Advance: "0",
+      Clearing: "",
+      ClearingDate: "",
+      Remarks: "",
+      CancelTest: "",
+      CancelDate: "",
+      CancelR: "",
+      PathologistId1: "",
+      PathologistId2: "",
+      PathologistId3: "",
+      AdmitionYN: "N",
+      AdmitionId: "",
+      SlipNo: "",
+      BankName: "",
+      ChequeNo: "",
+      Narration: "",
+      Referance: "",
+      DispCode: "",
+      EmpCode: "",
+      SubCompanyId: "",
+      AreaId: "",
+      AdmDate: "",
+      NrHome: "",
+      RelsDate: "",
+      EmpName: "",
+      PPr: "",
+      MonthId: "",
+      OutSideSmple: "",
+      IP: "",
+      PatientDisc: "",
+      ApprovNo: "",
+      ValueEntryBy: "",
+      CN: "",
+      OPDYN: "N",
+      OPDID: "",
+      CardNo: "",
+      FName: "",
+      CHM: "",
+      CHF: "",
+      req: "0",
+      AddPort: "",
+      MobileNo: "",
+      CollDt: "",
+      CollTime: "",
+      AgeD: "",
+      AgeTypeD: "",
+      Area: "",
+      Collector: "",
+      CollectorDate: "",
+      WFPathologistId1: "",
+      WFPathologistId2: "",
+      WFPathologistId3: "",
+      reportdone: "",
+      DueBillPrint: "",
+      PrintYN: "0",
+    });
+    setSelectedTest("");
+    setSelectedTestOPD("");
+    setCompanyYN("N");
+    setBookingYN("N");
+  };
+
   const footerActions = [
-    { label: "New", variant: "primary", onClick: () => setMode("create") },
-    { label: "Edit", variant: "primary", onClick: () => setMode("edit") },
+    { label: "New", variant: "primary", onClick: handleNew },
+    { label: "Edit", variant: "primary", onClick: () => setMode("edit"), disabled: mode !== "view" || !orgId || orgId === "undefined" },
     {
       label: "Save",
-      variant: "primary",
-      onClick: () => console.log("Saving...", formData),
+      variant: "success",
+      onClick: handleSave,
+      disabled: mode === "view" || loading
     },
-    { label: "Delete", variant: "primary" },
-    { label: "Undo", variant: "primary" },
-    { label: "Bill", variant: "primary" },
-    { label: "Com Bill", variant: "primary" },
-    { label: "Dep Print", variant: "primary" },
-    { label: "Exit", variant: "primary", onClick: () => navigate(-1) },
+    { label: "Delete", variant: "danger", onClick: handleDelete, disabled: !orgId || orgId === "undefined" || loading },
+    { label: "Undo", variant: "warning", onClick: fetchData, disabled: !orgId || orgId === "undefined" },
+    { label: "Bill", variant: "info" },
+    { label: "Com Bill", variant: "info" },
+    { label: "Dep Print", variant: "info" },
+    { label: "Exit", variant: "secondary", onClick: () => navigate(-1) },
   ];
 
   useEffect(() => {
-    fetchData();
     fetchCompany();
     fetchBooking();
     fetchOPD();
     fetchDoctor();
     fetchCollector();
+    fetchTestMaster();
+    
+    // Fetch data and tests only if valid orgId exists
+    if (orgId && orgId !== "undefined") {
+      fetchData();
+      fetchCaseTests(orgId);
+    }
   }, []);
 
   // this is for IPD
@@ -377,6 +725,18 @@ const CaseEntryForm = () => {
       console.log("IPD changed", selectedTest);
     }
   }, [selectedTest]);
+
+  // this is for OPD
+  useEffect(() => {
+    const id = selectedTestOPD?.value;
+    if (id) {
+      setFormData((prev) => ({
+        ...prev,
+        PatientId: id,
+      }));
+      console.log("OPD changed", selectedTestOPD);
+    }
+  }, [selectedTestOPD]);
 
   return (
     <div
@@ -1060,20 +1420,36 @@ const CaseEntryForm = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {Array.from({ length: 20 }).map((_, i) => (
-                        <tr key={i}>
-                          <td>N</td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
+                      {tests.length > 0 ? (
+                        tests.map((test, i) => (
+                          <tr key={test.id}>
+                            <td>{i + 1}</td>
+                            <td>{test.TestName}</td>
+                            <td>{test.Rate}</td>
+                            <td>{test.DeliveryDate}</td>
+                            <td>{test.DeliveryTime}</td>
+                            <td>0.00</td>
+                            <td>{test.NetRate}</td>
+                            <td>N</td>
+                            <td>Test</td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-danger"
+                                onClick={() => handleRemoveTest(test.id)}
+                                disabled={mode === "view"}
+                              >
+                                ×
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="10" className="text-center text-muted">
+                            No tests added. Click "Test Master" to add tests.
+                          </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1083,9 +1459,46 @@ const CaseEntryForm = () => {
                   className="col-md-5 p-2 border-start"
                   style={{ height: "100%", overflowY: "auto" }}
                 >
-                  <button className="btn btn-sm btn-success small mb-2">
-                    Test Master
-                  </button>
+                  <div className="mb-2">
+                    <Select
+                      value={selectedTestMaster}
+                      onChange={setSelectedTestMaster}
+                      onInputChange={(inputValue) => {
+                        searchTestMaster(inputValue);
+                      }}
+                      options={testSearchResults.map((item) => ({
+                        value: item.TestId,
+                        label: `${item.Test} - ₹${item.Rate}`,
+                        ...item,
+                      }))}
+                      placeholder="Search test..."
+                      isSearchable
+                      isClearable
+                      isLoading={isSearchingTest}
+                      isDisabled={mode === "view"}
+                      noOptionsMessage={({ inputValue }) =>
+                        inputValue.length < 2
+                          ? "Type at least 2 characters"
+                          : "No test found"
+                      }
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          minHeight: "32px",
+                          fontSize: "14px",
+                        }),
+                      }}
+                    />
+                    <button
+                      className="btn btn-sm btn-success w-100 mt-1"
+                      onClick={handleAddTest}
+                      disabled={mode === "view" || !selectedTestMaster}
+                    >
+                      Add Test
+                    </button>
+                  </div>
 
                   <div className="d-flex justify-content-between align-items-center mb-2 small">
                     <span>Total</span>
@@ -1369,13 +1782,14 @@ const CaseEntryForm = () => {
               key={i}
               className={`btn btn-sm btn-${btn.variant} px-3`}
               onClick={btn.onClick}
+              disabled={btn.disabled || loading}
               style={{
                 fontSize: "11px",
                 textTransform: "uppercase",
                 fontWeight: "600",
               }}
             >
-              {btn.label}
+              {loading && btn.label === "Save" ? "Saving..." : btn.label}
             </button>
           ))}
           <div className="ms-auto d-flex gap-1">
