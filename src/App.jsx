@@ -281,7 +281,7 @@ import SubDepartment from "./SubDepartment"
 import SampleCollection from "./SampleCollection"
 import SampleCollectionDetails from "./SampleCollectionDetails"
 import ReceptionReporting from "./ReceptionReporting"
-import CaseEntryForm from "./pages/bireswar_pages/outdoor/Other_Charges/CaseEntryForm.jsx";
+import CaseEntryForm from "./pages/bireswar_pages/outdoor/Other_Charges/CaseEntry.jsx";
 import BedTransfer from "./components/indoor/BedTransfer.jsx";
 import BedTransferList from "./components/indoor/BedTransferList.jsx";
 
@@ -544,6 +544,7 @@ function App() {
 
 
 {/* deb  dia mass */}
+<Route path="/DoctorVisit" element={<ProtectedRoute><DoctorVisit/></ProtectedRoute>}/>
 <Route path="/TestReportSeq" element={<ProtectedRoute><TestReportSeq/></ProtectedRoute>}/>
 <Route path="/Formula" element={<Formula />} />
 <Route path="/TypeOfService" element={<ProtectedRoute><TypeOfService/></ProtectedRoute>}/>
