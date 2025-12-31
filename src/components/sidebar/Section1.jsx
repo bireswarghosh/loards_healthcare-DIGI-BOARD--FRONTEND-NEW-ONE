@@ -71,7 +71,7 @@ Diagnosis
 
 
 <li className="sidebar-dropdown-item">
-          <NavLink to="/DiagBooking" className="sidebar-link">
+          <NavLink to="/DiagBookingList" className="sidebar-link">
             Booking
           </NavLink>
         </li>

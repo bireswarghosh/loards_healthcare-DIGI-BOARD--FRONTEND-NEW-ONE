@@ -260,14 +260,14 @@ import Formula from "./templates/DiagnosisMaster/Formula.jsx";
 
 // !  sir  given
 
-import DiagBooking from "./DiagBooking"
+// import DiagBooking from "./DiagBooking"
 import TestReportingSequence from "./TestReportingSequence"
 import TestPropertyGroup from "./TestPropertyGroup"
 import AgentBusiness from "./AgentBusiness"
 import AgentForm from "./AgentForm"
 import DoctorBusiness from "./DoctorBusiness"
-import BookingListView from "./DiagBookingList"
-import DiagBookingList from "./DiagBookingList"
+// import BookingListView from "./DiagBookingList"
+// import DiagBookingList from "./DiagBookingList"
 import CompanyTestRateSetup from "./CompanyTestRateSetup"
 import DueOnAccount from "./DueOnAccount"
 import ItemMaster from "./ItemMaster"
@@ -284,9 +284,11 @@ import ReceptionReporting from "./ReceptionReporting"
 import CaseEntryForm from "./pages/bireswar_pages/outdoor/Other_Charges/CaseEntry.jsx";
 import BedTransfer from "./components/indoor/BedTransfer.jsx";
 import BedTransferList from "./components/indoor/BedTransferList.jsx";
+// soumo  import for diag booking
 
-
-
+import DiagBookingList from "././components/DiagnosisBooking/DiagBookingList.jsx";
+import DiagBooking from "././components/DiagnosisBooking/DiagBooking.jsx";
+import DiagBookingAdd from "././components/DiagnosisBooking/DiagBookingAdd.jsx";
 
 
 
@@ -402,6 +404,23 @@ function App() {
 
 
 {/* master */}
+
+
+{/* dia booking start */}
+
+          <Route path="/DiagBookingList" element={<DiagBookingList/>} />
+
+          <Route path="/DiagBooking" element={<DiagBooking />} />
+          <Route path="/DiagBooking/:id/:mode" element={<DiagBooking />} />
+          <Route path="/DiagBooking/:mode" element={<DiagBookingAdd/>} />
+
+          {/* dia booking end */}
+
+
+
+
+
+
 
 
 
@@ -600,13 +619,13 @@ function App() {
 {/* //!   sir  given  */}
 
           <Route path="/DoctorVisit" element={<DoctorVisit/>}/>
-          <Route path="/DiagBooking" element={<DiagBooking/>}/>
+          {/* <Route path="/DiagBooking" element={<DiagBooking/>}/> */}
           <Route path="/TestReportingSequence" element={<TestReportingSequence/>}/>
           <Route path="/TestPropertyGroup" element={<TestPropertyGroup/>}/>
           <Route path="/AgentBusiness" element={<AgentBusiness/>}/>     
           <Route path="/AgentForm" element={<AgentForm/>}/>     
           <Route path="/DoctorBusiness" element={<DoctorBusiness/>}/>    
-           <Route path="/DiagBookingList" element={<DiagBookingList/>}/> 
+           {/* <Route path="/DiagBookingList" element={<DiagBookingList/>}/>  */}
 
            
               
