@@ -553,14 +553,14 @@ const Emr = () => {
                 <table className="table table-bordered table-striped mb-0 align-middle">
                   <thead className="">
                     <tr>
-                      <th style={{ width: "50px" }} className="text-center">
+                      <th className="text-center">
                         #
                       </th>
                       <th>Medicine Name</th>
-                      <th style={{ width: "10%" }}>Dose</th>
-                      <th style={{ width: "10%" }}>Days</th>
-                      <th style={{ width: "10%" }}>Unit</th>
-                      <th style={{ width: "80px" }} className="text-center">
+                      <th >Dose</th>
+                      <th >Days</th>
+                      <th >Unit</th>
+                      <th  className="text-center">
                         Action
                       </th>
                     </tr>
