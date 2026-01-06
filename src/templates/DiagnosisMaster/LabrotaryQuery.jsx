@@ -74,7 +74,7 @@ const LaboratoryQuery = () => {
             return {
               ...t,
               Test: nameRes?.data?.data?.Test || t.TestId,
-              DescFormat: nameRes?.data?.data?.DescFormat ,
+              DescFormat: nameRes?.data?.data?.DescFormat,
             };
           } catch {
             return { ...t, Test: t.TestId };
@@ -618,10 +618,10 @@ const LaboratoryQuery = () => {
                               fetchPropertyList(test.TestId);
                               fetchPropertyValues(formData.CaseId, test.TestId);
                               // setShowTestModal(true); // ✅ modal open
-                              if (test.DescFormat === 0) {
+                              if (test.DescFormat === 1) {
                                 setTestDrawerType("descriptive");
                               }
-                              if (test.DescFormat === 1) {
+                              if (test.DescFormat === 0) {
                                 setTestDrawerType("general");
                               }
                               if (test.DescFormat === 2) {
@@ -636,14 +636,15 @@ const LaboratoryQuery = () => {
 
                                     if (res.data.success) {
                                       const bloodFormatData = res.data.data;
-                                     if(bloodFormatData.length==0){
-                                        navigate('/BloodReport/Add')
-                                     }
-                                     else{
-                                         navigate(
-                                  `/BloodReport/${encodeURIComponent(id)}/edit`,
-                                );
-                                     }
+                                      if (bloodFormatData.length == 0) {
+                                        navigate("/BloodReport/Add");
+                                      } else {
+                                        navigate(
+                                          `/BloodReport/${encodeURIComponent(
+                                            id,
+                                          )}/edit`,
+                                        );
+                                      }
                                     }
                                   } catch (error) {
                                     console.log(
@@ -653,7 +654,7 @@ const LaboratoryQuery = () => {
                                   }
                                 };
 
-                               fetchBloodFormatByCaseId()
+                                fetchBloodFormatByCaseId();
                               }
 
                               setShowTestDrawer(true);

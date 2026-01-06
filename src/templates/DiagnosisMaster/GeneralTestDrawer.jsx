@@ -371,8 +371,8 @@ await axiosInstance.post(
               propertyList.map((prop, index) => (
                 <tr key={index}>
                   <td>{prop.TestProperty}</td>
-                  <td className="fw-bold text-primary">
-                    <input
+                  <td >
+                    <input className="form-control form-control-sm"
                       type="text"
                       value={propertyValueMap[prop.TestPropertyId]?.value ?? ""}
                       onChange={(e) =>
