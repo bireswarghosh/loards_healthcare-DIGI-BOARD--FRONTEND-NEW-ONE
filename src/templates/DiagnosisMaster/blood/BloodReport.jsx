@@ -240,8 +240,8 @@ console.log("id huu: ",finalId)
       if (res.data.success) {
         console.log("Data: ", res.data.data[0]);
 
-        const caseId = "000003/25-26"; // I use it for testing bcz this id has data 
-        // const caseId = finalId // here id is case no.
+        // const caseId = "000003/25-26"; // I use it for testing bcz this id has data 
+        const caseId = finalId // here id is case no.
 
         setFormData(res.data.data[0]);
         setData(res.data.data[0]);

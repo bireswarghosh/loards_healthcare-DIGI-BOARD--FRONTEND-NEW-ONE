@@ -621,10 +621,10 @@ const LaboratoryQuery = () => {
                               if (test.DescFormat === 0) {
                                 setTestDrawerType("descriptive");
                               }
-                              if (test.DescFormat === 2) {
+                              if (test.DescFormat === 1) {
                                 setTestDrawerType("general");
                               }
-                              if (test.DescFormat === 1) {
+                              if (test.DescFormat === 2) {
                                 const id = formData?.CaseId;
                                 console.log(" hello id", id);
 
