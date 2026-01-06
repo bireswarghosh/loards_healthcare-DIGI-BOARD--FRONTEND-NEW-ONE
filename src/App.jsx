@@ -271,7 +271,6 @@ import DoctorBusiness from "./DoctorBusiness"
 import CompanyTestRateSetup from "./CompanyTestRateSetup"
 import DueOnAccount from "./DueOnAccount"
 import ItemMaster from "./ItemMaster"
-import LaboratoryQuery from "./LaboratoryQuery"
 import OpeningBalanceItem from "./OpeningBalanceItem"
 import PathologistSignatory from "./PathologistSignatory"
 import RadiologyRequisition from "./RadiologyRequisition"
@@ -284,11 +283,18 @@ import ReceptionReporting from "./ReceptionReporting"
 import CaseEntryForm from "./pages/bireswar_pages/outdoor/Other_Charges/CaseEntry.jsx";
 import BedTransfer from "./components/indoor/BedTransfer.jsx";
 import BedTransferList from "./components/indoor/BedTransferList.jsx";
+import CaseTestData from "./pages/bireswar_pages/outdoor/CaseTestData/CaseTestData.jsx";
 // soumo  import for diag booking
 
 import DiagBookingList from "././components/DiagnosisBooking/DiagBookingList.jsx";
 import DiagBooking from "././components/DiagnosisBooking/DiagBooking.jsx";
 import DiagBookingAdd from "././components/DiagnosisBooking/DiagBookingAdd.jsx";
+
+import LaboratoryQuery from "./templates/DiagnosisMaster/LabrotaryQuery.jsx";
+
+import BloodReport from "./templates/DiagnosisMaster/blood/BloodReport.jsx";
+import BloodReportAdd from "./templates/DiagnosisMaster/blood/BloodReportAdd.jsx";
+
 
 
 
@@ -369,6 +375,7 @@ function App() {
 
 <Route path="/CaseEntry" element={<CaseEntryForm />} />
 <Route path="/CaseEntry/:id/:Modex" element={<CaseEntryForm />} />
+<Route path="/case-test-data" element={<ProtectedRoute><CaseTestData /></ProtectedRoute>} />
 
 
 
@@ -563,6 +570,12 @@ function App() {
 
 
 {/* deb  dia mass */}
+
+<Route path="/LaboratoryQuery" element={<ProtectedRoute><LaboratoryQuery/></ProtectedRoute>}/>
+
+
+
+
 <Route path="/DoctorVisit" element={<ProtectedRoute><DoctorVisit/></ProtectedRoute>}/>
 <Route path="/TestReportSeq" element={<ProtectedRoute><TestReportSeq/></ProtectedRoute>}/>
 <Route path="/Formula" element={<Formula />} />
@@ -588,6 +601,36 @@ function App() {
  <Route path="/Opd_Other_Charges" element={<ProtectedRoute><OtherChargesss/></ProtectedRoute>}/>
 
       {/* sou dia  mas */}
+
+{/* blood report format start */}
+          <Route
+            path="/BloodReport"
+            element={ 
+              <ProtectedRoute>
+                <BloodReport />
+              </ProtectedRoute>
+            }
+          />  
+          <Route
+            path="/BloodReport/Add"
+            element={ 
+              <ProtectedRoute>
+                <BloodReportAdd />
+              </ProtectedRoute>
+            }
+          />  
+          <Route
+            path="/BloodReport/:id/:mode"
+            element={ 
+              <ProtectedRoute>
+                <BloodReport />
+              </ProtectedRoute>
+            }
+          />  
+
+{/* blood report format end */}
+
+
 
 
 <Route path="/RemarksMaster" element={<ProtectedRoute><RemarksMaster/></ProtectedRoute>}/>
