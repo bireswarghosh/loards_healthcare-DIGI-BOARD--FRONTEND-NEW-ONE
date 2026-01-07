@@ -266,6 +266,8 @@ console.log("id huu: ",finalId)
     }
   };
 
+  
+
   const fetchPathologist = async () => {
     try {
       const res = await axiosInstance.get("/pathologist?page=1&limit=100");

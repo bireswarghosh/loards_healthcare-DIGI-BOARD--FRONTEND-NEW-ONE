@@ -124,7 +124,7 @@ const LaboratoryQuery = () => {
   const fetchLabList = async () => {
     try {
       const res = await axiosInstance.get(`/lab?page=1&limit=200`);
-      setLabList = res?.data?.data || [];
+      setLabList ( res?.data?.data || []);
     } catch (error) {
       console.log(error);
     }
