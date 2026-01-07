@@ -4,6 +4,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
+import JsBarcode from "jsbarcode";
+
 
 
 
@@ -16,6 +18,20 @@ const GeneralTestDrawer = ({
   fetchPropertyList,
   fetchPropertyValues,
 }) => {
+  //  CANVAS CREATE
+  const canvas = document.createElement("canvas");
+
+  //  BARCODE GENERATE 
+  JsBarcode(canvas, formData2?.CaseNo || "", {
+    format: "CODE128",
+    width: 2,
+    height: 40,
+    displayValue: false,
+  });
+
+  // 🔥 CANVAS → IMAGE
+  const barcodeImg = canvas.toDataURL("image/png");
+
   const saveProperty = async (prop) => {
     const pv = propertyValueMap[prop.TestPropertyId];
     if (!pv) return;
@@ -36,9 +52,7 @@ const GeneralTestDrawer = ({
         //   `/testproval/${formData2.TestId}/${prop.TestPropertyId}/${formData2.CaseId}`,
         //   payload
         // );
-await axiosInstance.post(
-          `/testproval`,
-          payload)
+        await axiosInstance.post(`/testproval`, payload);
         toast.success("Property saved successfully ");
       }
     } catch (err) {
@@ -46,7 +60,6 @@ await axiosInstance.post(
       toast.error("Failed to save property ");
     }
   };
-
 
   const saveAllProperties = async () => {
     if (!propertyList.length) return;
@@ -71,7 +84,6 @@ await axiosInstance.post(
           payload
         );
       });
-     
 
       // 🔥 null remove + parallel save
       await Promise.all(requests.filter(Boolean));
@@ -100,10 +112,7 @@ await axiosInstance.post(
           Alart: pv.alert,
         };
 
-        return axiosInstance.post(
-          `/testproval`,
-          payload
-        );
+        return axiosInstance.post(`/testproval`, payload);
       });
 
       // 🔥 null remove + parallel save
@@ -129,6 +138,7 @@ await axiosInstance.post(
     doc.setFillColor(230, 230, 230);
     doc.rect(L, y, 60, 14, "F");
     doc.setTextColor(0, 0, 0);
+
     doc.text(formData2?.CaseNo || "", L + 4, y + 10);
 
     /* ================= RIGHT AGE / SEX ================= */
@@ -148,6 +158,7 @@ await axiosInstance.post(
     doc.text("Case No.", labelX, baseY + 5);
     doc.text(":", colonX, baseY + 5);
     doc.text(formData2?.CaseNo || "", valueX, baseY + 5);
+    doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
 
     doc.text("Referred By", labelX, baseY + 10);
     doc.text(":", colonX, baseY + 10);
@@ -208,7 +219,7 @@ await axiosInstance.post(
           pv?.value ?? "",
           prop.Uom || "",
           // pv?.lis ?? "-",
-          `${prop.ComMin?? ""} - ${prop.ComMax ?? ""}`,
+          `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`,
         ];
       }),
 
@@ -371,8 +382,9 @@ await axiosInstance.post(
               propertyList.map((prop, index) => (
                 <tr key={index}>
                   <td>{prop.TestProperty}</td>
-                  <td >
-                    <input className="form-control form-control-sm"
+                  <td>
+                    <input
+                      className="form-control form-control-sm"
                       type="text"
                       value={propertyValueMap[prop.TestPropertyId]?.value ?? ""}
                       onChange={(e) =>
@@ -421,11 +433,9 @@ await axiosInstance.post(
         >
           Print
         </button>
-      
+
         <div className="d-flex justify-content-end mb-2">
-          
           <div className="d-flex gap-2 mt-4">
-            
             <button
               type="submit"
               className="btn btn-primary "
