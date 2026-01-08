@@ -210,8 +210,28 @@ const VisitList = () => {
   };
 
   // Original handler logic - PRESERVED
-  const generatePDF = (patient) => {
-    const doc = new jsPDF();
+  const generatePDF = async (patient) => {
+    try {
+      // Fetch billing details for the patient visit
+      const response = await axiosInstance.get(
+        `/patient-visits/${patient.PVisitId}`
+      );
+
+      if (!response.data?.success) {
+        alert('Failed to fetch billing details');
+        return;
+      }
+
+      const billingData = response.data.data;
+      const regCh = parseFloat(billingData.RegCh || 0);
+      const svrCh = parseFloat(billingData.ServiceCh || 0);
+      const rate = parseFloat(billingData.Rate || 0);
+      const profDiscPer = parseFloat(billingData.discp || 0);
+      const profDiscAmt = parseFloat(billingData.Discount || 0);
+      const svrDisc = parseFloat(billingData.SrvChDisc || 0);
+      const totalPaid = parseFloat(billingData.RecAmt || 0);
+
+      const doc = new jsPDF();
 
     // Red logo box with white text
     doc.setFillColor(220, 53, 69);
@@ -352,21 +372,34 @@ const VisitList = () => {
     let currentY = servicesY + 12;
     doc.setFont("helvetica", "normal");
 
+    // Registration Charge (if exists)
+    if (regCh > 0) {
+      doc.rect(15, currentY, 180, 12);
+      doc.line(150, currentY, 150, currentY + 12);
+      doc.text("Registration Charge", 17, currentY + 8);
+      doc.text(regCh.toFixed(2), 185, currentY + 8, { align: "right" });
+      currentY += 12;
+    }
+
     // Service Charge
-    doc.rect(15, currentY, 180, 12);
-    doc.line(150, currentY, 150, currentY + 12);
-    doc.text("Service Charge", 17, currentY + 8);
-    doc.text("100.00", 185, currentY + 8, { align: "right" });
-    currentY += 12;
+    if (svrCh > 0) {
+      doc.rect(15, currentY, 180, 12);
+      doc.line(150, currentY, 150, currentY + 12);
+      doc.text("Service Charge", 17, currentY + 8);
+      doc.text(svrCh.toFixed(2), 185, currentY + 8, { align: "right" });
+      currentY += 12;
+    }
 
     // Professional Charge
-    doc.rect(15, currentY, 180, 12);
-    doc.line(150, currentY, 150, currentY + 12);
-    doc.text("CONSULTATION - Professional Charge", 17, currentY + 8);
-    doc.text("500.00", 185, currentY + 8, { align: "right" });
-    currentY += 12;
+    if (rate > 0) {
+      doc.rect(15, currentY, 180, 12);
+      doc.line(150, currentY, 150, currentY + 12);
+      doc.text("CONSULTATION - Professional Charge", 17, currentY + 8);
+      doc.text(rate.toFixed(2), 185, currentY + 8, { align: "right" });
+      currentY += 12;
+    }
 
-    // Thank you message
+    // Thank you message (no amount shown here)
     doc.rect(15, currentY, 180, 18);
     doc.line(150, currentY, 150, currentY + 18);
     doc.text(
@@ -374,28 +407,101 @@ const VisitList = () => {
       17,
       currentY + 12
     );
-    doc.text("600.00", 185, currentY + 12, { align: "right" });
     currentY += 18;
+
+    // Discount row (if applicable)
+    const totalDiscount = profDiscAmt + svrDisc;
+    if (totalDiscount > 0) {
+      doc.rect(15, currentY, 180, 12);
+      doc.line(150, currentY, 150, currentY + 12);
+      doc.text(
+        `Less Discount${profDiscPer > 0 ? ` (${profDiscPer}%)` : ''}`,
+        17,
+        currentY + 8
+      );
+      doc.text(totalDiscount.toFixed(2), 185, currentY + 8, { align: "right" });
+      currentY += 12;
+    }
+
+    // Convert amount to words
+    const numberToWords = (num) => {
+      const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+      const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+      const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+      
+      if (num === 0) return 'zero';
+      
+      const convertHundreds = (n) => {
+        let str = '';
+        if (n >= 100) {
+          str += ones[Math.floor(n / 100)] + ' hundred ';
+          n %= 100;
+        }
+        if (n >= 20) {
+          str += tens[Math.floor(n / 10)] + ' ';
+          n %= 10;
+        } else if (n >= 10) {
+          str += teens[n - 10] + ' ';
+          return str;
+        }
+        if (n > 0) str += ones[n] + ' ';
+        return str;
+      };
+      
+      let rupees = Math.floor(num);
+      const paise = Math.round((num - rupees) * 100);
+      
+      let result = '';
+      if (rupees >= 10000000) {
+        result += convertHundreds(Math.floor(rupees / 10000000)) + 'crore ';
+        rupees %= 10000000;
+      }
+      if (rupees >= 100000) {
+        result += convertHundreds(Math.floor(rupees / 100000)) + 'lakh ';
+        rupees %= 100000;
+      }
+      if (rupees >= 1000) {
+        result += convertHundreds(Math.floor(rupees / 1000)) + 'thousand ';
+        rupees %= 1000;
+      }
+      if (rupees > 0) {
+        result += convertHundreds(rupees);
+      }
+      
+      result = result.trim();
+      if (paise > 0) {
+        result += ' & ' + convertHundreds(paise) + 'paise';
+      } else {
+        result += ' & zero paise';
+      }
+      
+      return result + ' only';
+    };
 
     // Total amount in words
     doc.rect(15, currentY, 180, 18);
     doc.line(150, currentY, 150, currentY + 18);
     doc.setFont("helvetica", "bold");
-    doc.text("PAID : Rupees six hundred & zero paise only", 17, currentY + 12);
-    doc.text("600.00", 185, currentY + 12, { align: "right" });
+    const amountInWords = numberToWords(totalPaid);
+    doc.text(`PAID : Rupees ${amountInWords}`, 17, currentY + 12);
+    doc.text(totalPaid.toFixed(2), 185, currentY + 12, { align: "right" });
     currentY += 18;
 
     // Footer signature
     doc.setFont("helvetica", "normal");
     doc.text("Received By : SANJAY ST.", 17, currentY + 15);
 
-    // Save PDF with patient name
-    const fileName = `MoneyReceipt_${patient.PatientName.replace(
-      /\s+/g,
-      "_"
-    )}_${patient.RegistrationId.replace("/", "-")}.pdf`;
-    doc.save(fileName);
-    alert("Professional Money Receipt PDF generated successfully!");
+      // Save PDF with patient name
+      const fileName = `MoneyReceipt_${patient.PatientName.replace(
+        /\s+/g,
+        "_"
+      )}_${patient.RegistrationId.replace("/", "-")}.pdf`;
+      doc.save(fileName);
+      alert("Professional Money Receipt PDF generated successfully!");
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF: ' + error.message);
+    }
   };
 
   // Original handler logic - PRESERVED
