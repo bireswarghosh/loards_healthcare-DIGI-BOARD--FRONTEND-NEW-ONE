@@ -5,9 +5,7 @@ import autoTable from "jspdf-autotable";
 import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
 import JsBarcode from "jsbarcode";
-
-
-
+import { useMemo } from "react";
 
 const GeneralTestDrawer = ({
   formData2,
@@ -18,19 +16,17 @@ const GeneralTestDrawer = ({
   fetchPropertyList,
   fetchPropertyValues,
 }) => {
-  //  CANVAS CREATE
-  const canvas = document.createElement("canvas");
-
-  //  BARCODE GENERATE 
-  JsBarcode(canvas, formData2?.CaseNo || "", {
-    format: "CODE128",
-    width: 2,
-    height: 40,
-    displayValue: false,
-  });
-
-  // 🔥 CANVAS → IMAGE
-  const barcodeImg = canvas.toDataURL("image/png");
+  const barcodeImg = useMemo(() => {
+    if (!formData2.CaseNo) return "";
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, formData2.CaseNo, {
+      format: "CODE128",
+      width: 2,
+      height: 40,
+      displayValue: true,
+    });
+    return canvas.toDataURL("image/png");
+  }, [formData2?.CaseNo]);
 
   const saveProperty = async (prop) => {
     const pv = propertyValueMap[prop.TestPropertyId];
@@ -284,9 +280,7 @@ const GeneralTestDrawer = ({
         </div>
 
         <div className="col-md-3 ms-auto text-end">
-          <div className="border px-2 py-1 fw-bold text-center">
-            {formData2?.CaseNo}
-          </div>
+          {barcodeImg && <img src={barcodeImg} alt="barcode" />}
         </div>
       </div>
 

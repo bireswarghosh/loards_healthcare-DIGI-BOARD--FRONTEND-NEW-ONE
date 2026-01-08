@@ -50,15 +50,86 @@ export default function ApiSelect({
   const selectedOption =
     options.find(opt => opt.value === value) || null;
 
+const customStyles = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: "31px",
+    height: "31px",
+    fontSize: "0.875rem",
+    backgroundColor: "primary",
+    borderColor: state.isFocused ? "#86b7fe" : "#ced4da",
+    boxShadow: state.isFocused ? "0 0 0 .2rem rgba(13,110,253,.25)" : "none",
+    "&:hover": {
+      borderColor: "#86b7fe",
+    },
+  }),
+
+  /* 🔥 DROPDOWN MENU */
+  menu: (base) => ({
+    ...base,
+    backgroundColor: "primary", // black dropdown
+    color: "#fff",
+    zIndex: 9999,
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+
+  menuList: (base) => ({
+    ...base,
+    padding: 0,
+    zIndex: 9999,
+  }),
+
+  /* 🔥 EACH OPTION */
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? "#0d6efd" // selected = bootstrap blue
+      : state.isFocused
+      ? "#212529" // hover = dark gray
+      : "#000", // normal = black
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "0.875rem",
+  }),
+
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 8px",
+  }),
+
+  indicatorsContainer: (base) => ({
+    ...base,
+    height: "31px",
+  }),
+
+  dropdownIndicator: (base) => ({
+    ...base,
+    padding: "2px",
+  }),
+
+  clearIndicator: (base) => ({
+    ...base,
+    padding: "2px",
+  }),
+};
+
+
   return (
-    <Select className="form-control form-control-sm"
+    <Select
+      className="form-control form-control-sm"
       options={options}
       value={selectedOption}
-      onChange={opt => onChange(opt ? opt.value : null)}
+      onChange={(opt) => onChange(opt ? opt.value : null)}
       placeholder={placeholder}
       isSearchable
       isClearable
       isLoading={loading}
+      menuPortalTarget={document.body}
+      menuPosition="fixed"
+      styles={customStyles}
     />
   );
 }

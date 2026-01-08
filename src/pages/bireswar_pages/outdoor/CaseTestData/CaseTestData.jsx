@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import axiosInstance from '../../../../axiosInstance';
+import jsPDF from 'jspdf';
 
 const CaseTestData = () => {
   const [formData, setFormData] = useState({
@@ -114,6 +115,37 @@ const CaseTestData = () => {
     setEditMode(false);
     setEditId(null);
     setShowForm(false);
+  };
+
+  const handlePrintPDF = (record) => {
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1, h2, h3 { color: #333; }
+            table { border-collapse: collapse; width: 100%; }
+            table td, table th { border: 1px solid #ddd; padding: 8px; }
+          </style>
+        </head>
+        <body>
+          <h2 style="text-align: center;">Case Test Data Report</h2>
+          <p><strong>Case ID:</strong> ${record.case_id}</p>vg> ${record.test_id}</p>
+          <p><strong>Date:</strong> ${new Date(record.created_at).toLocaleDateString()}</p>
+          <hr/>
+          <div>${record.html_content || 'No content'}</div>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   return (
@@ -248,6 +280,13 @@ const CaseTestData = () => {
                           </td>
                           <td>{new Date(record.created_at).toLocaleDateString()}</td>
                           <td>
+                            <button
+                              className="btn btn-sm btn-info me-2"
+                              onClick={() => handlePrintPDF(record)}
+                              title="Print PDF"
+                            >
+                              🖨️ Print
+                            </button>
                             <button
                               className="btn btn-sm btn-warning me-2"
                               onClick={() => handleEdit(record)}

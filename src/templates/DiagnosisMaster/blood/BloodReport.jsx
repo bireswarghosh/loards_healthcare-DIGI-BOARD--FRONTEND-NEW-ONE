@@ -266,8 +266,6 @@ console.log("id huu: ",finalId)
     }
   };
 
-  
-
   const fetchPathologist = async () => {
     try {
       const res = await axiosInstance.get("/pathologist?page=1&limit=100");
@@ -1861,7 +1859,7 @@ console.log("id huu: ",finalId)
                 onClick={() => {
                   console.log("bfore pdf form: ", formData);
                   console.log("before pdf: ", data);
-                  handlePrint(data);
+                  handlePrint(data,formData.Remarks);
                 }}
               >
                 Print

@@ -4,6 +4,9 @@ import { tr } from "date-fns/locale";
 import ApiSelect from "./ApiSelect";
 import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
+import { useMemo, useState } from "react";
+import JsBarcode from "jsbarcode";
+import CaseTestDataModal from "./CaseTestDataModal";
 
 const DescriptiveTestDrawer = ({
   formData2,
@@ -14,7 +17,21 @@ const DescriptiveTestDrawer = ({
   fetchPropertyList,
   fetchPropertyValues,
 }) => {
-  console.log("Descriptive tests =>", tests);
+  // faltu kaj=========================================
+  const [showCaseTestModal, setShowCaseTestModal] = useState(false);
+  const [activeTest, setActiveTest] = useState(null);
+  // ==============================================
+  const barcodeImg = useMemo(() => {
+    if (!formData2.CaseNo) return "";
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, formData2.CaseNo, {
+      format: "CODE128",
+      width: 2,
+      height: 40,
+      displayValue: true,
+    });
+    return canvas.toDataURL("image/png");
+  }, [formData2?.CaseNo]);
   const saveProperty = async (prop) => {
     const pv = propertyValueMap[prop.TestPropertyId];
     if (!pv) return;
@@ -37,8 +54,6 @@ const DescriptiveTestDrawer = ({
         // );
         await axiosInstance.post(`/testproval`, payload);
         toast.success("Property saved successfully ");
-
-        
       }
     } catch (err) {
       console.error("Save failed", err);
@@ -111,6 +126,7 @@ const DescriptiveTestDrawer = ({
     }
   };
   // =============================
+
   // ====================================
   return (
     <>
@@ -144,9 +160,7 @@ const DescriptiveTestDrawer = ({
         </div>
 
         <div className="col-md-3 ms-auto text-end">
-          <div className="border px-2 py-1 fw-bold text-center">
-            {formData2?.CaseNo}
-          </div>
+          {barcodeImg && <img src={barcodeImg} alt="barcode" />}
         </div>
       </div>
 
@@ -206,7 +220,6 @@ const DescriptiveTestDrawer = ({
               tests.map((test, index) => (
                 <tr key={index}>
                   <td>{test.Test}</td>
-
                   <td>
                     <ApiSelect
                       api="https://lords-backend.onrender.com/api/v1/pathologist"
@@ -216,7 +229,6 @@ const DescriptiveTestDrawer = ({
                       value={test?.PathologistId}
                     />
                   </td>
-
                   <td>
                     <input
                       type="date"
@@ -225,15 +237,22 @@ const DescriptiveTestDrawer = ({
                       readOnly
                     />
                   </td>
-
-                  <td></td>
+                  <td>
+                    <button
+                      onClick={() => {
+                        setActiveTest(test);
+                        setShowCaseTestModal(true);
+                      }}
+                      className="btn btn-success "
+                      type="button"
+                    >
+                      Details
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
-
-            <tr>
-              <td colSpan={4} style={{ height: 150 }}></td>
-            </tr>
+            
           </tbody>
         </table>
       </div>
@@ -349,6 +368,15 @@ const DescriptiveTestDrawer = ({
           </button> */}
         </div>
       </div>
+      {/* ================= CASE TEST DATA MODAL ================= */}
+      <CaseTestDataModal
+        open={showCaseTestModal}
+        onClose={() => setShowCaseTestModal(false)}
+        caseId={formData2.CaseId}
+        testId={activeTest?.TestId}
+        PatientName={formData2.PatientName}
+        formData2={formData2}
+      />
     </>
   );
 };
