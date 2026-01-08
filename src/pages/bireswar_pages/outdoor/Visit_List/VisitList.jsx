@@ -399,16 +399,6 @@ const VisitList = () => {
       currentY += 12;
     }
 
-    // Thank you message (no amount shown here)
-    doc.rect(15, currentY, 180, 18);
-    doc.line(150, currentY, 150, currentY + 18);
-    doc.text(
-      `Received With Thanks For CONSULTATION Charges From ${patient.PatientName}.`,
-      17,
-      currentY + 12
-    );
-    currentY += 18;
-
     // Discount row (if applicable)
     const totalDiscount = profDiscAmt + svrDisc;
     if (totalDiscount > 0) {
