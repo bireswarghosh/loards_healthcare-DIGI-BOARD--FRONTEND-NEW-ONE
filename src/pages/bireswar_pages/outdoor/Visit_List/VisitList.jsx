@@ -403,6 +403,7 @@ const VisitList = () => {
     const totalDiscount = profDiscAmt + svrDisc;
     if (totalDiscount > 0) {
       doc.rect(15, currentY, 180, 12);
+      
       doc.line(150, currentY, 150, currentY + 12);
       doc.text(
         `Less Discount${profDiscPer > 0 ? ` (${profDiscPer}%)` : ''}`,

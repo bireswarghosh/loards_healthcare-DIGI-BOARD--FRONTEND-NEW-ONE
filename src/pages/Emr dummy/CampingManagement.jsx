@@ -19,6 +19,12 @@ const CampingManagement = () => {
   const [campingPage, setCampingPage] = useState(1);
   const [campingTotalPages, setCampingTotalPages] = useState(1);
   
+  const [doctors, setDoctors] = useState([]);
+  const [campingDoctors, setCampingDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [doctorType, setDoctorType] = useState('hospital');
+  const [externalDoctor, setExternalDoctor] = useState({ name: '', speciality: '', hospital: '' });
+  
   const [leads, setLeads] = useState([]);
   const [leadsSearch, setLeadsSearch] = useState("");
   const [leadsPage, setLeadsPage] = useState(1);
@@ -89,8 +95,10 @@ const CampingManagement = () => {
 
   const handleAddNew = () => {
     resetForm();
-    setSelectedItem(null);
+    const tempItem = { camping_id: 'temp_' + Date.now() };
+    setSelectedItem(tempItem);
     setModalType('add');
+    setCampingDoctors([]);
     setShowModal(true);
   };
 
@@ -107,6 +115,7 @@ const CampingManagement = () => {
         participants_count: item.participants_count,
         remarks: item.remarks || ''
       });
+      fetchCampingDoctors(item.camping_id);
     } else {
       setFormData({
         ...formData,
@@ -139,6 +148,7 @@ const CampingManagement = () => {
         participants_count: item.participants_count,
         remarks: item.remarks || ''
       });
+      fetchCampingDoctors(item.camping_id);
     } else {
       setFormData({
         ...formData,
@@ -186,8 +196,24 @@ const CampingManagement = () => {
         const response = await axiosInstance.post(endpoint, formData);
         
         if (response.data.success) {
+          const newCampingId = response.data.data?.camping_id || response.data.data?.id;
+          
+          if (activeTab === 'camping' && campingDoctors.length > 0 && newCampingId) {
+            for (const doc of campingDoctors) {
+              await axiosInstance.post('/camping-doctors', {
+                camping_id: newCampingId,
+                doctor_id: doc.doctor_id || null,
+                doctor_name: doc.DoctorName,
+                speciality: doc.Speciality,
+                hospital: doc.hospital || null,
+                is_external: doc.is_external || false
+              });
+            }
+          }
+          
           activeTab === 'camping' ? fetchCampings() : fetchLeads();
           setShowModal(false);
+          setCampingDoctors([]);
         }
       }
     } catch (error) {
@@ -234,6 +260,115 @@ const CampingManagement = () => {
     }
   }, [campingPage, campingSearch]);
 
+  const fetchDoctors = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/doctormaster?page=1&limit=1000');
+      if (response.data.success) {
+        setDoctors(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+    }
+  }, []);
+
+  const fetchCampingDoctors = async (campingId) => {
+    try {
+      console.log('Fetching doctors for camping:', campingId);
+      const response = await axiosInstance.get(`/camping-doctors/${campingId}`);
+      console.log('Doctors response:', response.data);
+      if (response.data.success) {
+        setCampingDoctors(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching camping doctors:', error);
+    }
+  };
+
+  const handleAddDoctor = async () => {
+    if (!selectedDoctor) return;
+    const doctor = doctors.find(d => d.DoctorId == selectedDoctor);
+    
+    if (modalType === 'add') {
+      setCampingDoctors([...campingDoctors, {
+        id: 'temp_' + Date.now(),
+        doctor_id: selectedDoctor,
+        DoctorName: doctor.Doctor || doctor.DoctorName,
+        Speciality: doctor.Speciality || 'N/A',
+        is_external: false
+      }]);
+      setSelectedDoctor("");
+    } else {
+      if (!selectedItem?.camping_id) return;
+      try {
+        const response = await axiosInstance.post('/camping-doctors', {
+          camping_id: selectedItem.camping_id,
+          doctor_id: selectedDoctor,
+          doctor_name: doctor.Doctor || doctor.DoctorName,
+          speciality: doctor.Speciality || 'N/A',
+          is_external: false
+        });
+        if (response.data.success) {
+          fetchCampingDoctors(selectedItem.camping_id);
+          setSelectedDoctor("");
+        }
+      } catch (error) {
+        console.error('Error adding doctor:', error);
+        setError('Failed to add doctor');
+      }
+    }
+  };
+
+  const handleRemoveDoctor = async (id) => {
+    if (modalType === 'add') {
+      setCampingDoctors(campingDoctors.filter(cd => cd.id !== id));
+    } else {
+      try {
+        const response = await axiosInstance.delete(`/camping-doctors/${id}`);
+        if (response.data.success) {
+          fetchCampingDoctors(selectedItem.camping_id);
+        }
+      } catch (error) {
+        console.error('Error removing doctor:', error);
+        setError('Failed to remove doctor');
+      }
+    }
+  };
+
+  const handleAddExternalDoctor = async () => {
+    if (!externalDoctor.name) return;
+    
+    if (modalType === 'add') {
+      setCampingDoctors([...campingDoctors, {
+        id: 'temp_' + Date.now(),
+        doctor_id: null,
+        DoctorName: externalDoctor.name,
+        Speciality: externalDoctor.speciality,
+        hospital: externalDoctor.hospital,
+        is_external: true
+      }]);
+      setExternalDoctor({ name: '', speciality: '', hospital: '' });
+    } else {
+      if (!selectedItem?.camping_id) return;
+      try {
+        const response = await axiosInstance.post('/camping-doctors', {
+          camping_id: selectedItem.camping_id,
+          doctor_id: null,
+          doctor_name: externalDoctor.name,
+          speciality: externalDoctor.speciality,
+          hospital: externalDoctor.hospital,
+          is_external: true
+        });
+        if (response.data.success) {
+          fetchCampingDoctors(selectedItem.camping_id);
+          setExternalDoctor({ name: '', speciality: '', hospital: '' });
+        }
+      } catch (error) {
+        console.error('Error adding external doctor:', error);
+        setError('Failed to add external doctor');
+      }
+    }
+  };
+
   const fetchLeads = useCallback(async () => {
     try {
       setLoading(true);
@@ -258,6 +393,10 @@ const CampingManagement = () => {
   }, [leadsPage, leadsSearch, selectedCamping]);
 
   useEffect(() => {
+    fetchDoctors();
+  }, [fetchDoctors]);
+
+  useEffect(() => {
     if (activeTab === 'camping') {
       fetchCampings();
     } else {
@@ -266,6 +405,7 @@ const CampingManagement = () => {
   }, [activeTab, fetchCampings, fetchLeads]);
 
   const renderCampingForm = () => (
+    <>
     <div className="row ">
       <div className="col-md-6 mb-3">
         <label className="form-label">🏕️ Camping Name *</label>
@@ -300,6 +440,73 @@ const CampingManagement = () => {
         <textarea className="form-control" rows="3" value={formData.remarks} onChange={(e) => handleInputChange('remarks', e.target.value)} disabled={modalType === 'view'} />
       </div>
     </div>
+    {(modalType === 'add' || modalType === 'edit' || modalType === 'view') && selectedItem && (
+      <div className="mt-4">
+        <h6 className="mb-3">👨‍⚕️ Doctors</h6>
+        <div className="mb-3">
+          <label className="form-label">Select Doctor Type</label>
+          <div className="btn-group w-100 mb-3" role="group">
+            <button type="button" className={`btn ${doctorType === 'hospital' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setDoctorType('hospital')}>🏥 Hospital Doctor</button>
+            <button type="button" className={`btn ${doctorType === 'external' ? 'btn-primary' : 'btn-outline-primary'}`} onClick={() => setDoctorType('external')}>👤 External Doctor</button>
+          </div>
+        </div>
+        {modalType !== 'view' && doctorType === 'hospital' && (
+        <div className="mb-3">
+          <div className="input-group">
+            <select className="form-control" value={selectedDoctor} onChange={(e) => setSelectedDoctor(e.target.value)} disabled={modalType === 'view'}>
+              <option value="">Select Doctor</option>
+              {doctors.map(doc => (
+                <option key={doc.DoctorId} value={doc.DoctorId}>{doc.Doctor || doc.DoctorName} - {doc.Speciality || 'N/A'}</option>
+              ))}
+            </select>
+            {modalType !== 'view' && (
+              <button type="button" className="btn btn-primary" onClick={handleAddDoctor} disabled={!selectedDoctor}>
+                <i className="fa-light fa-plus"></i> Add
+              </button>
+            )}
+          </div>
+        </div>
+        )}
+        {modalType !== 'view' && doctorType === 'external' && (
+        <div className="card mb-3 p-3">
+          <label className="form-label fw-bold">Add External Doctor</label>
+          <div className="row">
+            <div className="col-md-6 mb-2"><input type="text" className="form-control" placeholder="Doctor Name *" value={externalDoctor.name} onChange={(e) => setExternalDoctor({...externalDoctor, name: e.target.value})} /></div>
+            <div className="col-md-6 mb-2"><input type="text" className="form-control" placeholder="Speciality" value={externalDoctor.speciality} onChange={(e) => setExternalDoctor({...externalDoctor, speciality: e.target.value})} /></div>
+            <div className="col-12 mb-2"><input type="text" className="form-control" placeholder="Hospital Name" value={externalDoctor.hospital} onChange={(e) => setExternalDoctor({...externalDoctor, hospital: e.target.value})} /></div>
+            <div className="col-12"><button type="button" className="btn btn-success w-100" onClick={handleAddExternalDoctor} disabled={!externalDoctor.name}><i className="fa-light fa-check"></i> Add External Doctor</button></div>
+          </div>
+        </div>
+        )}
+        <div className="list-group mt-3">
+          <div className="list-group-item bg-secondary text-white"><strong>Added Doctors ({campingDoctors.length})</strong></div>
+          {campingDoctors.map(cd => (
+            <div key={cd.id} className="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{cd.DoctorName}</strong>
+                {cd.is_external ? (
+                  <span className="badge bg-warning text-dark ms-2">External</span>
+                ) : (
+                  <span className="badge bg-success ms-2">Hospital</span>
+                )}
+                <br />
+                <small className="text-muted">{cd.Speciality || 'N/A'}</small>
+                {cd.hospital && <><br /><small className="text-info">🏥 {cd.hospital}</small></>}
+              </div>
+              {modalType !== 'view' && (
+                <button type="button" className="btn btn-sm btn-danger" onClick={() => handleRemoveDoctor(cd.id)}>
+                  <i className="fa-light fa-trash"></i>
+                </button>
+              )}
+            </div>
+          ))}
+          {campingDoctors.length === 0 && (
+            <div className="text-center text-muted py-3">No doctors added yet</div>
+          )}
+        </div>
+      </div>
+    )}
+    </>
   );
 
   const renderLeadsForm = () => (
