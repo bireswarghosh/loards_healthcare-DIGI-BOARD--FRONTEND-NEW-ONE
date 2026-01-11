@@ -746,7 +746,7 @@ const CampingManagement = () => {
       {showModal && (
         <>
           <div className="modal-backdrop fade show" onClick={() => setShowModal(false)} style={{ zIndex: 9998 }}></div>
-          <div className={`profile-right-sidebar ${showModal ? 'active' : ''}`} style={{ zIndex: 9999, width: '100%', maxWidth: '500px', right: showModal ? '0' : '-100%', top: '70px', height: 'calc(100vh - 70px)' }}>
+          <div className={`profile-right-sidebar ${showModal ? 'active' : ''}`} style={{ zIndex: 9999, width: '100%', maxWidth: '800px', right: showModal ? '0' : '-100%', top: '70px', height: 'calc(100vh - 70px)' }}>
             <button className="right-bar-close" onClick={() => setShowModal(false)}>
               <i className="fa-light fa-angle-right"></i>
             </button>
