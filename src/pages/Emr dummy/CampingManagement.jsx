@@ -30,6 +30,8 @@ const CampingManagement = () => {
   const [leadsPage, setLeadsPage] = useState(1);
   const [leadsTotalPages, setLeadsTotalPages] = useState(1);
   const [selectedCamping, setSelectedCamping] = useState("");
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printCampingId, setPrintCampingId] = useState("");
   
   const [formData, setFormData] = useState({
     camping_name: '',
@@ -392,6 +394,124 @@ const CampingManagement = () => {
     }
   }, [leadsPage, leadsSearch, selectedCamping]);
 
+  const handlePrintLeads = async () => {
+    if (!printCampingId) {
+      alert('Please select a camping');
+      return;
+    }
+    try {
+      const campingResponse = await axiosInstance.get(`/camping/${printCampingId}`);
+      const leadsResponse = await axiosInstance.get(`/camping-leads?camping_id=${printCampingId}&limit=1000`);
+      const doctorsResponse = await axiosInstance.get(`/camping-doctors/${printCampingId}`);
+      
+      const camping = campingResponse.data.data;
+      const allLeads = leadsResponse.data.data;
+      const campingDocs = doctorsResponse.data.data || [];
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Camping Leads Report - ${camping.camping_name}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #333; padding-bottom: 20px; }
+              .header h1 { margin: 0; color: #2c3e50; }
+              .camping-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+              .info-row { display: flex; margin-bottom: 10px; }
+              .info-label { font-weight: bold; width: 150px; color: #555; }
+              .doctors-section { margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 8px; }
+              .doctor-item { padding: 8px; margin: 5px 0; background: white; border-left: 4px solid #2196f3; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
+              td { padding: 10px; border-bottom: 1px solid #ddd; }
+              tr:hover { background: #f5f5f5; }
+              .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+              .badge-high { background: #4caf50; color: white; }
+              .badge-medium { background: #ff9800; color: white; }
+              .badge-low { background: #9e9e9e; color: white; }
+              .footer { margin-top: 30px; text-align: center; color: #777; font-size: 12px; }
+              @media print { .no-print { display: none; } }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>🏥 Lords Healthcare - Camping Report</h1>
+              <p style="color: #666; margin-top: 10px;">Generated on ${new Date().toLocaleString()}</p>
+            </div>
+            
+            <div class="camping-info">
+              <h2 style="margin-top: 0; color: #2c3e50;">🏯 ${camping.camping_name}</h2>
+              <div class="info-row"><span class="info-label">📍 Location:</span><span>${camping.location}</span></div>
+              <div class="info-row"><span class="info-label">📅 Start Date:</span><span>${new Date(camping.start_date).toLocaleDateString()}</span></div>
+              <div class="info-row"><span class="info-label">📅 End Date:</span><span>${new Date(camping.end_date).toLocaleDateString()}</span></div>
+              <div class="info-row"><span class="info-label">👤 Organizer:</span><span>${camping.organizer_name}</span></div>
+              <div class="info-row"><span class="info-label">📞 Contact:</span><span>${camping.contact_details}</span></div>
+              <div class="info-row"><span class="info-label">👥 Participants:</span><span>${camping.participants_count || 0}</span></div>
+              ${camping.remarks ? `<div class="info-row"><span class="info-label">📝 Remarks:</span><span>${camping.remarks}</span></div>` : ''}
+            </div>
+            
+            ${campingDocs.length > 0 ? `
+              <div class="doctors-section">
+                <h3 style="margin-top: 0; color: #1976d2;">👨‍⚕️ Doctors (${campingDocs.length})</h3>
+                ${campingDocs.map(doc => `
+                  <div class="doctor-item">
+                    <strong>${doc.DoctorName}</strong> ${doc.is_external ? '<span class="badge" style="background: #ff9800;">External</span>' : '<span class="badge" style="background: #4caf50;">Hospital</span>'}
+                    <br><small style="color: #666;">📋 ${doc.Speciality || 'N/A'}</small>
+                    ${doc.hospital ? `<br><small style="color: #2196f3;">🏥 ${doc.hospital}</small>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            
+            <h3 style="color: #2c3e50; margin-top: 30px;">👥 Lead Management (${allLeads.length} Leads)</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Lead Name</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Age</th>
+                  <th>Interest Level</th>
+                  <th>Source</th>
+                  <th>Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${allLeads.map((lead, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td><strong>${lead.lead_name}</strong></td>
+                    <td>${lead.phone}</td>
+                    <td>${lead.email || 'N/A'}</td>
+                    <td>${lead.age || 'N/A'}</td>
+                    <td><span class="badge badge-${lead.interest_level.toLowerCase()}">${lead.interest_level}</span></td>
+                    <td>${lead.source}</td>
+                    <td>${lead.address || 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <div class="footer">
+              <p><strong>Lords Healthcare</strong> | Camping Management System</p>
+              <p>This is a computer-generated report</p>
+            </div>
+            
+            <button class="no-print" onclick="window.print()" style="position: fixed; top: 20px; right: 20px; padding: 10px 20px; background: #2196f3; color: white; border: none; border-radius: 5px; cursor: pointer;">🖨️ Print</button>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      setShowPrintModal(false);
+      setPrintCampingId("");
+    } catch (error) {
+      console.error('Error generating print:', error);
+      alert('Failed to generate report');
+    }
+  };
+
   useEffect(() => {
     fetchDoctors();
   }, [fetchDoctors]);
@@ -683,6 +803,11 @@ const CampingManagement = () => {
                 <button className="btn btn-sm btn-primary" onClick={handleAddNew}>
                   <i className="fa-light fa-plus"></i> Add New
                 </button>
+                {activeTab === 'leads' && (
+                  <button className="btn btn-sm btn-success" onClick={() => setShowPrintModal(true)}>
+                    <i className="fa-light fa-print"></i> Print Report
+                  </button>
+                )}
               </div>
             </div>
 
@@ -777,6 +902,37 @@ const CampingManagement = () => {
       )}
 
       <Footer/>
+      
+      {showPrintModal && (
+        <>
+          <div className="modal-backdrop fade show" onClick={() => setShowPrintModal(false)} style={{ zIndex: 9998 }}></div>
+          <div className="modal fade show" style={{ display: 'block', zIndex: 9999 }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">🖨️ Print Camping Leads Report</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowPrintModal(false)}></button>
+                </div>
+                <div className="modal-body">
+                  <label className="form-label">Select Camping</label>
+                  <select className="form-control" value={printCampingId} onChange={(e) => setPrintCampingId(e.target.value)}>
+                    <option value="">-- Select Camping --</option>
+                    {campings.map(camping => (
+                      <option key={camping.camping_id} value={camping.camping_id}>{camping.camping_name} - {camping.location}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowPrintModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-success" onClick={handlePrintLeads} disabled={!printCampingId}>
+                    <i className="fa-light fa-print"></i> Generate Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
