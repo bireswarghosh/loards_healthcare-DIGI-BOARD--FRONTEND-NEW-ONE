@@ -8,6 +8,8 @@ const NursingBookingList = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [nursingBookings, setNursingBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [formData, setFormData] = useState({
     nursing_package_id: "",
@@ -80,7 +82,12 @@ const NursingBookingList = () => {
   const fetchNursingBookings = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/nursing-bookings");
+      let url = "/nursing-bookings";
+      const params = [];
+      if (fromDate) params.push(`fromDate=${fromDate}`);
+      if (toDate) params.push(`toDate=${toDate}`);
+      if (params.length > 0) url += `?${params.join("&")}`;
+      const response = await axiosInstance.get(url);
       if (response.data.success) {
         setNursingBookings(response.data.bookings || response.data.data || []);
       }
@@ -260,12 +267,22 @@ const NursingBookingList = () => {
             <div className="panel">
               <div className="panel-header">
                 <h5>👩‍⚕️ Nursing Booking Management</h5>
-                <div className="btn-box">
-                  {/* Changed button style */}
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={handleAddNew}
-                  >
+                <div className="d-flex gap-2 align-items-center mt-3">
+                  <div>
+                    <label className="form-label mb-1">From Date</label>
+                    <input type="date" className="form-control form-control-sm" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="form-label mb-1">To Date</label>
+                    <input type="date" className="form-control form-control-sm" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                  </div>
+                  <button className="btn btn-primary btn-sm" style={{marginTop: "28px"}} onClick={fetchNursingBookings}>
+                    <i className="fa-light fa-search"></i> Search
+                  </button>
+                  <button className="btn btn-secondary btn-sm" style={{marginTop: "28px"}} onClick={() => { setFromDate(""); setToDate(""); fetchNursingBookings(); }}>
+                    Clear
+                  </button>
+                  <button className="btn btn-sm btn-primary ms-auto" style={{marginTop: "28px"}} onClick={handleAddNew}>
                     <i className="fa-light fa-plus"></i> NEW BOOKING
                   </button>
                 </div>

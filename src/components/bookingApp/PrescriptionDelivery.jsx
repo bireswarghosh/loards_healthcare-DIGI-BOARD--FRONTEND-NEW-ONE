@@ -12,6 +12,8 @@ const PrescriptionDelivery = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [patientPage, setPatientPage] = useState(1);
   const [patientPagination, setPatientPagination] = useState(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [formData, setFormData] = useState({
     patient_id: "",
@@ -36,7 +38,12 @@ const PrescriptionDelivery = () => {
   const fetchDeliveries = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/prescription-delivery");
+      let url = "/prescription-delivery";
+      const params = [];
+      if (fromDate) params.push(`fromDate=${fromDate}`);
+      if (toDate) params.push(`toDate=${toDate}`);
+      if (params.length > 0) url += `?${params.join("&")}`;
+      const response = await axiosInstance.get(url);
       if (response.data.success) {
         setDeliveries(response.data.deliveries || []);
       }
@@ -174,11 +181,27 @@ const PrescriptionDelivery = () => {
     <>
       <div className="main-content">
         <div className="panel">
-          <div className="panel-header d-flex justify-content-between align-items-center">
+          <div className="panel-header">
             <h5>💊 Prescription Delivery</h5>
-            <button className="btn btn-sm btn-primary" onClick={openAddDrawer}>
-              <i className="fa-light fa-plus"></i> Add Delivery
-            </button>
+            <div className="d-flex gap-2 align-items-center mt-3">
+              <div>
+                <label className="form-label mb-1">From Date</label>
+                <input type="date" className="form-control form-control-sm" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              </div>
+              <div>
+                <label className="form-label mb-1">To Date</label>
+                <input type="date" className="form-control form-control-sm" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              </div>
+              <button className="btn btn-primary btn-sm" style={{marginTop: "28px"}} onClick={fetchDeliveries}>
+                <i className="fa-light fa-search"></i> Search
+              </button>
+              <button className="btn btn-secondary btn-sm" style={{marginTop: "28px"}} onClick={() => { setFromDate(""); setToDate(""); fetchDeliveries(); }}>
+                Clear
+              </button>
+              <button className="btn btn-sm btn-primary ms-auto" style={{marginTop: "28px"}} onClick={openAddDrawer}>
+                <i className="fa-light fa-plus"></i> Add Delivery
+              </button>
+            </div>
           </div>
 
           <div className="panel-body">

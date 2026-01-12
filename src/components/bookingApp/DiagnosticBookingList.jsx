@@ -5,6 +5,8 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 const DiagnosticBookingList = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mode, setMode] = useState("add"); 
@@ -71,7 +73,12 @@ const DiagnosticBookingList = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/diagnostic/bookings");
+      let url = "/diagnostic/bookings";
+      const params = [];
+      if (fromDate) params.push(`fromDate=${fromDate}`);
+      if (toDate) params.push(`toDate=${toDate}`);
+      if (params.length > 0) url += `?${params.join("&")}`;
+      const response = await axiosInstance.get(url);
       setBookings(response.data.data || []);
     } catch {
       setBookings([]);
@@ -191,11 +198,27 @@ const DiagnosticBookingList = () => {
     <>
       <div className="main-content">
         <div className="panel">
-          <div className="panel-header d-flex justify-content-between align-items-center">
+          <div className="panel-header">
             <h5>🧪 Diagnostic Bookings</h5>
-            <button className="btn btn-sm btn-primary" onClick={openAddDrawer}>
-              <i className="fa-light fa-plus"></i> Add New
-            </button>
+            <div className="d-flex gap-2 align-items-center mt-3">
+              <div>
+                <label className="form-label mb-1">From Date</label>
+                <input type="date" className="form-control form-control-sm" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              </div>
+              <div>
+                <label className="form-label mb-1">To Date</label>
+                <input type="date" className="form-control form-control-sm" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              </div>
+              <button className="btn btn-primary btn-sm" style={{marginTop: "28px"}} onClick={fetchBookings}>
+                <i className="fa-light fa-search"></i> Search
+              </button>
+              <button className="btn btn-secondary btn-sm" style={{marginTop: "28px"}} onClick={() => { setFromDate(""); setToDate(""); fetchBookings(); }}>
+                Clear
+              </button>
+              <button className="btn btn-sm btn-primary ms-auto" style={{marginTop: "28px"}} onClick={openAddDrawer}>
+                <i className="fa-light fa-plus"></i> Add New
+              </button>
+            </div>
           </div>
 
           <div className="panel-body">

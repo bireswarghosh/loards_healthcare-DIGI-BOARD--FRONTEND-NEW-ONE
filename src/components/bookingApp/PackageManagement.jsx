@@ -8,6 +8,8 @@ const PackageManagement = () => {
   const [purchases, setPurchases] = useState([]);
   const [statistics, setStatistics] = useState({});
   const [loading, setLoading] = useState(true);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [activeTab, setActiveTab] = useState("packages");
 
@@ -63,7 +65,12 @@ const PackageManagement = () => {
 
   const fetchPurchases = async () => {
     try {
-      const response = await axiosInstance.get("/admin/packages/purchases");
+      let url = "/admin/packages/purchases";
+      const params = [];
+      if (fromDate) params.push(`fromDate=${fromDate}`);
+      if (toDate) params.push(`toDate=${toDate}`);
+      if (params.length > 0) url += `?${params.join("&")}`;
+      const response = await axiosInstance.get(url);
       if (response.data.success) {
         setPurchases(response.data.purchases || []);
       }
@@ -250,22 +257,42 @@ const PackageManagement = () => {
 
             {/* Tabs + Table Card */}
             <div className="panel">
-              <div className="panel-header d-flex justify-content-between align-items-center">
-                <div className="nav nav-pills">
-                  <button className={`nav-link me-2 ${activeTab === "packages" ? "active" : ""}`} onClick={() => setActiveTab("packages")}>
-                    <i className="fas fa-box me-1"></i> Packages
-                  </button>
-                  <button className={`nav-link ${activeTab === "purchases" ? "active" : ""}`} onClick={() => setActiveTab("purchases")}>
-                    <i className="fas fa-shopping-cart me-1"></i> Purchases
-                  </button>
-                </div>
-
-                <div>
-                  {activeTab === "packages" && (
-                    <button className="btn btn-sm btn-primary" onClick={openAddDrawer}>
-                      <i className="fa-light fa-plus"></i> Add New Package
+              <div className="panel-header">
+                <div className="d-flex justify-content-between align-items-start w-100">
+                  <div className="nav nav-pills">
+                    <button className={`nav-link me-2 ${activeTab === "packages" ? "active" : ""}`} onClick={() => setActiveTab("packages")}>
+                      <i className="fas fa-box me-1"></i> Packages
                     </button>
-                  )}
+                    <button className={`nav-link ${activeTab === "purchases" ? "active" : ""}`} onClick={() => setActiveTab("purchases")}>
+                      <i className="fas fa-shopping-cart me-1"></i> Purchases
+                    </button>
+                  </div>
+
+                  <div className="d-flex gap-2 align-items-center">
+                    {activeTab === "purchases" && (
+                      <>
+                        <div>
+                          <label className="form-label mb-1">From Date</label>
+                          <input type="date" className="form-control form-control-sm" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="form-label mb-1">To Date</label>
+                          <input type="date" className="form-control form-control-sm" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                        </div>
+                        <button className="btn btn-primary btn-sm" style={{marginTop: "28px"}} onClick={fetchPurchases}>
+                          <i className="fa-light fa-search"></i> Search
+                        </button>
+                        <button className="btn btn-secondary btn-sm" style={{marginTop: "28px"}} onClick={() => { setFromDate(""); setToDate(""); fetchPurchases(); }}>
+                          Clear
+                        </button>
+                      </>
+                    )}
+                    {activeTab === "packages" && (
+                      <button className="btn btn-sm btn-primary" style={{marginTop: activeTab === "purchases" ? "28px" : "0"}} onClick={openAddDrawer}>
+                        <i className="fa-light fa-plus"></i> Add New Package
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 

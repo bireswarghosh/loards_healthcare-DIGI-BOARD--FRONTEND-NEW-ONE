@@ -417,10 +417,13 @@ const CampingManagement = () => {
               body { font-family: Arial, sans-serif; padding: 20px; }
               .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #333; padding-bottom: 20px; }
               .header h1 { margin: 0; color: #2c3e50; }
-              .camping-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+              .camping-info { background: #f8f9fa; padding: 20px; border-radius: 8px; }
+              .content-wrapper { display: flex; gap: 20px; margin-bottom: 30px; }
+              .left-section { flex: 1; }
+              .right-section { flex: 1; }
               .info-row { display: flex; margin-bottom: 10px; }
               .info-label { font-weight: bold; width: 150px; color: #555; }
-              .doctors-section { margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 8px; }
+              .doctors-section { padding: 20px; background: #e3f2fd; border-radius: 8px; }
               .doctor-item { padding: 8px; margin: 5px 0; background: white; border-left: 4px solid #2196f3; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; }
               th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
@@ -440,8 +443,11 @@ const CampingManagement = () => {
               <p style="color: #666; margin-top: 10px;">Generated on ${new Date().toLocaleString()}</p>
             </div>
             
-            <div class="camping-info">
-              <h2 style="margin-top: 0; color: #2c3e50;">🏯 ${camping.camping_name}</h2>
+            <div class="content-wrapper">
+              <div class="left-section">
+                <div class="camping-info">
+                  <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ddd; padding-bottom: 10px;">🏯 Camping Details</h2>
+              <div class="info-row"><span class="info-label">🏯 Name:</span><span><strong>${camping.camping_name}</strong></span></div>
               <div class="info-row"><span class="info-label">📍 Location:</span><span>${camping.location}</span></div>
               <div class="info-row"><span class="info-label">📅 Start Date:</span><span>${new Date(camping.start_date).toLocaleDateString()}</span></div>
               <div class="info-row"><span class="info-label">📅 End Date:</span><span>${new Date(camping.end_date).toLocaleDateString()}</span></div>
@@ -449,20 +455,25 @@ const CampingManagement = () => {
               <div class="info-row"><span class="info-label">📞 Contact:</span><span>${camping.contact_details}</span></div>
               <div class="info-row"><span class="info-label">👥 Participants:</span><span>${camping.participants_count || 0}</span></div>
               ${camping.remarks ? `<div class="info-row"><span class="info-label">📝 Remarks:</span><span>${camping.remarks}</span></div>` : ''}
+                </div>
+              </div>
+              
+              <div class="right-section">
+                <div class="doctors-section">
+                  <h2 style="margin-top: 0; color: #1976d2; border-bottom: 2px solid #90caf9; padding-bottom: 10px;">👨⚕️ Doctors (${campingDocs.length})</h2>
+                  ${campingDocs.length > 0 ? campingDocs.map((doc, idx) => `
+                    <div class="doctor-item" style="padding: 10px; margin: 8px 0; background: white; border-left: 4px solid #2196f3; border-radius: 4px;">
+                      <strong style="font-size: 16px;">${idx + 1}. ${doc.DoctorName}</strong>
+                      ${doc.is_external ? '<span class="badge" style="background: #ff9800; margin-left: 8px;">External</span>' : '<span class="badge" style="background: #4caf50; margin-left: 8px;">Hospital</span>'}
+                      <div style="margin-top: 5px; color: #666;">📋 ${doc.Speciality || 'N/A'}</div>
+                      ${doc.hospital ? `<div style="margin-top: 3px; color: #2196f3;">🏥 ${doc.hospital}</div>` : ''}
+                    </div>
+                  `).join('') : '<p style="text-align: center; color: #999; padding: 20px;">No doctors assigned</p>'}
+                </div>
+              </div>
             </div>
             
-            ${campingDocs.length > 0 ? `
-              <div class="doctors-section">
-                <h3 style="margin-top: 0; color: #1976d2;">👨‍⚕️ Doctors (${campingDocs.length})</h3>
-                ${campingDocs.map(doc => `
-                  <div class="doctor-item">
-                    <strong>${doc.DoctorName}</strong> ${doc.is_external ? '<span class="badge" style="background: #ff9800;">External</span>' : '<span class="badge" style="background: #4caf50;">Hospital</span>'}
-                    <br><small style="color: #666;">📋 ${doc.Speciality || 'N/A'}</small>
-                    ${doc.hospital ? `<br><small style="color: #2196f3;">🏥 ${doc.hospital}</small>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            ` : ''}
+            
             
             <h3 style="color: #2c3e50; margin-top: 30px;">👥 Lead Management (${allLeads.length} Leads)</h3>
             <table>

@@ -12,6 +12,8 @@ const PickupRequestList = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const dropdownRef = useRef(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const [formData, setFormData] = useState({
     ambulance_id: "",
@@ -42,7 +44,12 @@ const PickupRequestList = () => {
   const fetchPickupRequests = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get("/pickup");
+      let url = "/pickup";
+      const params = [];
+      if (fromDate) params.push(`fromDate=${fromDate}`);
+      if (toDate) params.push(`toDate=${toDate}`);
+      if (params.length > 0) url += `?${params.join("&")}`;
+      const response = await axiosInstance.get(url);
       if (response.data.success) {
         setPickupRequests(response.data.pickupRequests.map((r) => ({ ...r, showDropdown: false })));
       }
@@ -167,11 +174,27 @@ const PickupRequestList = () => {
   return (
     <div className="main-content">
       <div className="panel">
-        <div className="panel-header d-flex justify-content-between align-items-center">
+        <div className="panel-header">
           <h5>🚑 Pickup Requests</h5>
-          <button className="btn btn-primary btn-sm" onClick={handleAddNew}>
-            <i className="fa-light fa-plus"></i> New
-          </button>
+          <div className="d-flex gap-2 align-items-center mt-3">
+            <div>
+              <label className="form-label mb-1">From Date</label>
+              <input type="date" className="form-control form-control-sm" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="form-label mb-1">To Date</label>
+              <input type="date" className="form-control form-control-sm" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            </div>
+            <button className="btn btn-primary btn-sm" style={{marginTop: "28px"}} onClick={fetchPickupRequests}>
+              <i className="fa-light fa-search"></i> Search
+            </button>
+            <button className="btn btn-secondary btn-sm" style={{marginTop: "28px"}} onClick={() => { setFromDate(""); setToDate(""); fetchPickupRequests(); }}>
+              Clear
+            </button>
+            <button className="btn btn-primary btn-sm ms-auto" style={{marginTop: "28px"}} onClick={handleAddNew}>
+              <i className="fa-light fa-plus"></i> New
+            </button>
+          </div>
         </div>
 
         <div className="panel-body">
