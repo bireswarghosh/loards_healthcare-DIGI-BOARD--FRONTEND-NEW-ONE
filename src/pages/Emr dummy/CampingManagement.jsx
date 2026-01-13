@@ -480,7 +480,7 @@ const CampingManagement = () => {
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>Lead Name</th>
+                  <th>Patient Name</th>
                   <th>Phone</th>
                   <th>Email</th>
                   <th>Age</th>
@@ -652,7 +652,7 @@ const CampingManagement = () => {
         </select>
       </div>
       <div className="col-md-6 mb-3">
-        <label className="form-label">👤 Lead Name *</label>
+        <label className="form-label">👤 Patient Name *</label>
         <input type="text" className="form-control" value={formData.lead_name} onChange={(e) => handleInputChange('lead_name', e.target.value)} disabled={modalType === 'view'} required />
       </div>
       <div className="col-md-6 mb-3">
@@ -707,7 +707,7 @@ const CampingManagement = () => {
             <th>Action</th>
             {activeTab === 'camping' ? (
               <>
-                <th>ID</th>
+                <th>SL No.</th>
                 <th>Camping Name</th>
                 <th>Location</th>
                 <th>Start Date</th>
@@ -718,11 +718,12 @@ const CampingManagement = () => {
               </>
             ) : (
               <>
-                <th>ID</th>
+                <th>SL No.</th>
                 <th>Camping</th>
-                <th>Lead Name</th>
+                <th>Patient Name</th>
                 <th>Phone</th>
                 <th>Email</th>
+                <th>Age</th>
                 <th>Interest</th>
                 <th>Source</th>
                 <th>Date</th>
@@ -755,7 +756,7 @@ const CampingManagement = () => {
               </td>
               {activeTab === 'camping' ? (
                 <>
-                  <td>{data.camping_id}</td>
+                  <td>{index + 1}</td>
                   <td>{data.camping_name}</td>
                   <td>{data.location}</td>
                   <td>{new Date(data.start_date).toLocaleDateString()}</td>
@@ -766,11 +767,12 @@ const CampingManagement = () => {
                 </>
               ) : (
                 <>
-                  <td>{data.lead_id}</td>
+                  <td>{index + 1}</td>
                   <td>{data.camping_name}</td>
                   <td>{data.lead_name}</td>
                   <td>{data.phone}</td>
                   <td>{data.email || 'N/A'}</td>
+                  <td>{data.age || 'N/A'}</td>
                   <td>
                     <span className={`badge ${data.interest_level === 'High' ? 'bg-success' : data.interest_level === 'Medium' ? 'bg-warning' : 'bg-secondary'}`}>
                       {data.interest_level}
