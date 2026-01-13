@@ -105,6 +105,8 @@ const DoctorManagement = () => {
   const [doctorRates, setDoctorRates] = useState([]);
   const [visitTypes, setVisitTypes] = useState([]);
 
+  const [areas, setAreas] = useState([]);
+
   // Fetch doctors on component mount
   useEffect(() => {
     fetchDoctors();
@@ -112,10 +114,20 @@ const DoctorManagement = () => {
     fetchVisitTypes();
   }, []);
 
+  const fetchArea = async () => {
+    try {
+      const res = await axiosInstance.get("/area?page=1&limit=540");
+      res.data.success ? setAreas(res.data.data) : setAreas([]);
+    } catch (error) {
+      console.log("Error fetching areas: ", error);
+    }
+  };
+
   // Fetch doctors from API
   const fetchDoctors = async (page = 1) => {
     try {
       setLoading(true);
+      fetchArea();
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get("/doctormaster", {
         headers: { Authorization: `Bearer ${token}` },
@@ -788,23 +800,20 @@ const DoctorManagement = () => {
   return (
     <>
       <Container fluid className="py-4">
-        {error && (
+        {error &&
           // <Alert variant="danger" className="animate__animated animate__fadeIn">
           //   {error}
           // </Alert>
-          toast.error(error)
+          toast.error(error)}
 
-        )}
-
-        {success && (
+        {success &&
           // <Alert
           //   variant="success"
           //   className="animate__animated animate__fadeIn"
           // >
           //   {success}
           // </Alert>
-          toast.success(success)
-        )}
+          toast.success(success)}
 
         <Card className="shadow-lg border-0 rounded-4 overflow-hidden">
           <Card.Header className="bg-gradient-primary text-white p-4">
@@ -909,7 +918,7 @@ const DoctorManagement = () => {
                           <tbody>
                             {doctorList.map((doctor) => (
                               <tr key={doctor.DoctorId}>
-<td>
+                                <td>
                                   <div className="d-flex gap-2">
                                     <Button
                                       variant="outline-primary"
@@ -992,7 +1001,6 @@ const DoctorManagement = () => {
                                       : "Inactive"}
                                   </Button>
                                 </td>
-                                
                               </tr>
                             ))}
                           </tbody>
@@ -1046,8 +1054,6 @@ const DoctorManagement = () => {
         </Card>
       </Container>
 
-     
-
       {/* Doctor Form Modal */}
       <Modal
         show={showModal}
@@ -1062,9 +1068,10 @@ const DoctorManagement = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            {error && toast.error(error)
-            
-            // <Alert variant="danger">{error}</Alert>
+            {
+              error && toast.error(error)
+
+              // <Alert variant="danger">{error}</Alert>
             }
 
             <Tabs defaultActiveKey="basic" className="mb-4">
@@ -1417,13 +1424,26 @@ const DoctorManagement = () => {
                   <Col md={6}>
                     <Form.Group>
                       <Form.Label>Area Code</Form.Label>
-                      <Form.Control
+                      {/* <Form.Control
                         type="number"
                         name="areacode"
                         value={formData.areacode}
                         onChange={handleChange}
                         placeholder="Enter area code"
-                      />
+                      /> */}
+                      <select
+                        className="form-conrol form-control-sm"
+                        name="areacode"
+                        value={formData.areacode}
+                        onChange={handleChange}
+                      >
+                        <option value={0}>---</option>
+                        {areas.map((area, i) => (
+                          <option key={i} value={area.AreaId}>
+                            {area.Area}
+                          </option>
+                        ))}
+                      </select>
                     </Form.Group>
                   </Col>
 

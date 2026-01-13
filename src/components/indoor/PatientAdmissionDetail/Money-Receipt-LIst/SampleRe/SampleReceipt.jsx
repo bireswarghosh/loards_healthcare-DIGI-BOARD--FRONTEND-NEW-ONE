@@ -80,8 +80,11 @@ const SampleReceipt = () => {
       {/* Panel Header */}
       <div className="panel-header">
         <div className="panel-title fw-bold">Money Receipt</div>
-
         <div className="d-flex gap-2">
+<button className="btn btn-success" onClick={() => {
+ navigate('/initialFormData') 
+}
+}>Add</button>
           <button className="btn btn-sm btn-primary">List</button>
           <button className="btn btn-sm btn-outline-light">Detail</button>
         </div>
@@ -158,14 +161,14 @@ const SampleReceipt = () => {
             </div>
           </div>
 
-          <div className="col-md-6 text-end">
+          {/* <div className="col-md-6 text-end">
             <img
               src={`https://barcode.tec-it.com/barcode.ashx?data=${barcodeData}&code=Code128`}
               alt="barcode"
               height="45"
             />
             <div className="fw-bold mt-1">{barcodeData}</div>
-          </div>
+          </div> */}
         </div>
 
         {/* Table */}

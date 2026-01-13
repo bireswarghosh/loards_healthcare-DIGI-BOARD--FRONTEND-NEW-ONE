@@ -201,6 +201,18 @@ const IndoorMaster = () => {
             <span className="sidebar-txt">Profile Master</span>
           </NavLink>
         </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/DiseaseMaster" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-user"></i></span>
+            <span className="sidebar-txt">Disease Master</span>
+          </NavLink>
+        </li>
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/CashPaymentHeadMaster" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-user"></i></span>
+            <span className="sidebar-txt">Cash Payment Headmaster</span>
+          </NavLink>
+        </li>
 
         {/* ---------------- MENU END ---------------- */}
       </ul>

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Barcode from "react-barcode";
+// import Barcode from "react-barcode";
 import axiosInstance from "../../../../../axiosInstance";
+import QRCode from "react-qr-code";
+import AsyncApiSelect from "./AsyncApiSelect";
 
 function InitialFormData() {
   const { id } = useParams();
@@ -16,36 +18,122 @@ function InitialFormData() {
     return "create";
   });
   const [loading, setLoading] = useState(false);
+  const [area, setArea] = useState({});
+
+  const [admId, setAdmId] = useState("");
+  const [patient, setPatient] = useState({});
 
   // State for form fields
+  // const [receiptData, setReceiptData] = useState({
+  //   MoneyreeciptId: "",
+  //   MoneyreeciptNo: "",
+  //   RefferenceId: "",
+  //   ReceiptType: 0,
+  //   ReceiptDate: new Date().toISOString().split("T")[0],
+  //   PaymentType: "Old Data Not Found",
+  //   Amount: "Old Data Not Found",
+  //   Bank: "Old Data Not Found",
+  //   Cheque: "Old Data Not Found",
+  //   ChqDate: "Old Data Not Found",
+  //   ClearDate: "Old Data Not Found",
+  //   Narration: "Old Data Not Found",
+  //   UserId: 37,
+  //   SlipNo: "Old Data Not Found",
+  //   TDS: "Old Data Not Found",
+  //   PaidBy: "Old Data Not Found",
+  //   Remarks: "Old Data Not Found",
+  //   ReceiptTime: "",
+  //   PrintDate: "",
+  //   admission: null,
+  // });
+
   const [receiptData, setReceiptData] = useState({
     MoneyreeciptId: "",
     MoneyreeciptNo: "",
     RefferenceId: "",
     ReceiptType: 0,
     ReceiptDate: new Date().toISOString().split("T")[0],
-    PaymentType: "Old Data Not Found",
-    Amount: "Old Data Not Found",
-    Bank: "Old Data Not Found",
-    Cheque: "Old Data Not Found",
-    ChqDate: "Old Data Not Found",
-    ClearDate: "Old Data Not Found",
-    Narration: "Old Data Not Found",
+    PaymentType: "",
+    Amount: "",
+    Bank: "",
+    Cheque: "",
+    ChqDate: "",
+    ClearDate: "",
+    Narration: "",
     UserId: 37,
-    SlipNo: "Old Data Not Found",
-    TDS: "Old Data Not Found",
-    PaidBy: "Old Data Not Found",
-    Remarks: "Old Data Not Found",
+    SlipNo: "",
+    TDS: "",
+    PaidBy: "",
+    Remarks: "",
     ReceiptTime: "",
     PrintDate: "",
     admission: null,
   });
 
+  const fetchAdmData = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/admissions/${id}`);
+      console.log(res.data.data.admission);
+      const {
+        AdmitionId,
+        AdmitionNo,
+        PatientName,
+        PhoneNo,
+        Age,
+        Sex,
+        MStatus,
+        Add1,
+        Add2Add3,
+        GurdianName,
+        ReligionId,
+        AreaId,
+        ...rest
+      } = res.data.data.admission;
+      setReceiptData((prev) => ({
+        ...prev,
+        admission: {
+          AdmitionId,
+          AdmitionNo,
+          PatientName,
+          PhoneNo,
+          Age,
+          Sex,
+          MStatus,
+          Add1,
+          Add2Add3,
+          GurdianName,
+          ReligionId,
+          AreaId,
+        },
+      }));
+
+      console.log("Area id: ", res.data.data.admission?.AreaId);
+
+      if (res.data.data.admission?.AreaId) {
+        const res1 = await axiosInstance.get(
+          `/area/${res.data.data.admission?.AreaId}`
+        );
+        console.log("Fetched area: ", res1.data.data);
+        res1.data.success ? setArea(res1.data.data) : setArea({});
+      }
+    } catch (error) {
+      console.log("error fetching adm data", error);
+    }
+  };
+
   useEffect(() => {
+    console.log("mode: ", mode);
     if (id) {
       fetchReceipt();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (admId) {
+      fetchAdmData(admId);
+      console.log("I am changed: ", admId);
+    }
+  }, [admId]);
 
   const fetchReceipt = async () => {
     try {
@@ -54,6 +142,7 @@ function InitialFormData() {
       const response = await axiosInstance.get(`/moneyreceipt/${decodedId}`);
       if (response.data.success) {
         const apiData = response.data.data;
+        console.log(apiData.admission?.AreaId);
         setReceiptData({
           ...apiData,
           ReceiptDate: apiData.ReceiptDate
@@ -68,6 +157,12 @@ function InitialFormData() {
             : "",
           ReceiptTime: apiData.ReceiptTime || "",
         });
+        if (apiData.admission?.AreaId) {
+          const res = await axiosInstance.get(
+            `/area/${apiData.admission?.AreaId}`
+          );
+          res.data.success ? setArea(res.data.data) : setArea({});
+        }
       }
     } catch (error) {
       console.error("Error fetching receipt:", error);
@@ -75,6 +170,7 @@ function InitialFormData() {
       setLoading(false);
     }
   };
+
 
   const handleSubmit = async () => {
     try {
@@ -150,12 +246,17 @@ function InitialFormData() {
             <h5 className="fw-bold text-info mb-3">Money Receipt Detail</h5>
             <div className="row g-3 mb-4">
               {/* Receipt Info Column (Left) */}
-              <div className="col-lg-9">
+              <div className="col-lg-8">
                 <div className="p-3 border rounded shadow-sm ">
                   <div className="row g-3">
                     {/* Replacing FormInput for Receipt No */}
                     <div className="col-md-3">
-                      <label htmlFor="MoneyreeciptNo" className="form-label small">Receipt No</label>
+                      <label
+                        htmlFor="MoneyreeciptNo"
+                        className="form-label small"
+                      >
+                        Receipt No
+                      </label>
                       <input
                         type="text"
                         className="form-control form-control-sm"
@@ -168,7 +269,9 @@ function InitialFormData() {
                     </div>
                     {/* Replacing FormInput for ReceiptDate */}
                     <div className="col-md-3">
-                      <label htmlFor="ReceiptDate" className="form-label small">Date</label>
+                      <label htmlFor="ReceiptDate" className="form-label small">
+                        Date
+                      </label>
                       <input
                         type="date"
                         className="form-control form-control-sm"
@@ -181,7 +284,9 @@ function InitialFormData() {
                     </div>
                     {/* Replacing FormInput for ReceiptTime */}
                     <div className="col-md-3">
-                      <label htmlFor="ReceiptTime" className="form-label small">Time</label>
+                      <label htmlFor="ReceiptTime" className="form-label small">
+                        Time
+                      </label>
                       <input
                         type="time"
                         className="form-control form-control-sm"
@@ -194,7 +299,9 @@ function InitialFormData() {
                     </div>
                     {/* Replacing FormInput for Amount */}
                     <div className="col-md-3">
-                      <label htmlFor="Amount" className="form-label small">Amount</label>
+                      <label htmlFor="Amount" className="form-label small">
+                        Amount
+                      </label>
                       <input
                         type="number"
                         className="form-control form-control-sm"
@@ -226,7 +333,9 @@ function InitialFormData() {
                     </div>
                     {/* Replacing FormInput for SlipNo */}
                     <div className="col-md-3">
-                      <label htmlFor="SlipNo" className="form-label small">Slip No.</label>
+                      <label htmlFor="SlipNo" className="form-label small">
+                        Slip No.
+                      </label>
                       <input
                         type="text"
                         className="form-control form-control-sm"
@@ -264,11 +373,13 @@ function InitialFormData() {
                       {receiptData.doctorCharges || "N/A"}
                     </span>
                   </div>
-                  <div className="text-center p-1 rounded bg-white border">
+                  <div className="text-center p-1 rounded border">
                     {(receiptData.MoneyreeciptNo ||
-                      receiptData.admission?.AdmitionNo) && (
-                      <div className="mb-2 text-center">
-                        <Barcode
+                      receiptData.admission?.AdmitionNo) &&
+                    mode !== "create" ? (
+                      <div className=" text-center">
+                        {/* {console.log(generateBarcodeData())} */}
+                        {/* <Barcode
                           value={generateBarcodeData()}
                           format="CODE128"
                           width={0.5}
@@ -276,8 +387,20 @@ function InitialFormData() {
                           displayValue={true}
                           fontSize={10}
                           margin={5}
+                        /> */}{" "}
+                        <QRCode
+                          size={256}
+                          style={{
+                            height: "auto",
+                            maxWidth: "30%",
+                            width: "30%",
+                          }}
+                          value={generateBarcodeData()}
+                          viewBox={`0 0 256 256`}
                         />
                       </div>
+                    ) : (
+                      <div>No QR code available.</div>
                     )}
                   </div>
                 </div>
@@ -288,119 +411,257 @@ function InitialFormData() {
 
             {/* Patient Detail Section */}
             <h5 className="fw-bold text-info mb-3">Patient Detail</h5>
-            <div className="row g-3 mb-4 p-3 border rounded shadow-sm">
-              <div className="col-md-3">
-                <label className="form-label small">Patient Name</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.PatientName || ""}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label small">Age</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.Age || ""}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label small">Sex</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.Sex || ""}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label small">Marital Status</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.MStatus || ""}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label small">Admission No</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.AdmitionNo || ""}
-                  readOnly
-                />
-              </div>
+            {/* {console.log(mode)} */}
+            {mode !== "create" ? (
+              <div className="row g-3 mb-4 p-3 border rounded shadow-sm">
+                <div className="col-md-3">
+                  <label className="form-label small">Patient Name</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.PatientName || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label small">Age</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Age || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label small">Sex</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Sex || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label small">Marital Status</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.MStatus || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Admission No</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.AdmitionNo || ""}
+                    readOnly
+                  />
+                </div>
 
-              {/* Address Fields */}
-              <div className="col-md-4">
-                <label className="form-label small">Address Line 1</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.Add1 || ""}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-4">
-                <label className="form-label small">Address Line 2</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.Add2 || ""}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-4">
-                <label className="form-label small">Address Line 3</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.Add3 || ""}
-                  readOnly
-                />
-              </div>
+                {/* Address Fields */}
+                <div className="col-md-4">
+                  <label className="form-label small">Address Line 1</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Add1 || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label small">Address Line 2</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Add2 || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label small">Address Line 3</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Add3 || ""}
+                    readOnly
+                  />
+                </div>
 
-              <div className="col-md-3">
-                <label className="form-label small">Area/P.S.</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.AreaId || ""}
-                  readOnly
-                />
+                <div className="col-md-3">
+                  <label className="form-label small">Area/P.S.</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={area?.Area || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Guardian</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.GurdianName || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Religion</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.ReligionId || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Phone No</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.PhoneNo || ""}
+                    readOnly
+                  />
+                </div>
               </div>
-              <div className="col-md-3">
-                <label className="form-label small">Guardian</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.GurdianName || ""}
-                  readOnly
-                />
+            ) : (
+              <div className="row g-3 mb-4 p-3 border rounded shadow-sm">
+                <div className="col-md-3">
+                  <label className="form-label small">Patient Name 1</label>
+                  {/* <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.PatientName}
+                  /> */}
+
+                  <AsyncApiSelect
+                    api={`https://lords-backend.onrender.com/api/v1/admission/search`}
+                    value={admId}
+                    onChange={(value) => {
+                      setAdmId(value.value);
+                      // console.log(value.value)
+                    }}
+                    labelKey="PatientName"
+                    valueKey="AdmitionId"
+                    searchKey="q"
+                  />
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label small">Age</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Age || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label small">Sex</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Sex || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label small">Marital Status</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.MStatus || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Admission No</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.AdmitionNo || ""}
+                    readOnly
+                  />
+                </div>
+
+                {/* Address Fields */}
+                <div className="col-md-4">
+                  <label className="form-label small">Address Line 1</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Add1 || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label small">Address Line 2</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Add2 || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label small">Address Line 3</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.Add3 || ""}
+                    readOnly
+                  />
+                </div>
+
+                {/* <div className="col-md-3">
+                  <label className="form-label small">Area/P.S.</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.AreaId || ""}
+                    readOnly
+                  />
+                </div> */}
+
+                <div className="col-md-3">
+                  <label className="form-label small">Area/P.S.</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={area?.Area || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Guardian</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.GurdianName || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Religion</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.ReligionId || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Phone No</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={receiptData.admission?.PhoneNo || ""}
+                    readOnly
+                  />
+                </div>
               </div>
-              <div className="col-md-3">
-                <label className="form-label small">Religion</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.ReligionId || ""}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label small">Phone No</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  value={receiptData.admission?.PhoneNo || ""}
-                  readOnly
-                />
-              </div>
-            </div>
+            )}
 
             <hr className="my-4" />
 
@@ -413,7 +674,9 @@ function InitialFormData() {
                   <div className="row g-3">
                     {/* Replacing FormInput for Amount (again) */}
                     <div className="col-md-3">
-                      <label htmlFor="Amount" className="form-label small">Amount</label>
+                      <label htmlFor="Amount" className="form-label small">
+                        Amount
+                      </label>
                       <input
                         type="text"
                         className="form-control form-control-sm"
@@ -425,7 +688,9 @@ function InitialFormData() {
                     </div>
                     {/* Replacing FormInput for TDS */}
                     <div className="col-md-3">
-                      <label htmlFor="TDS" className="form-label small">TDS</label>
+                      <label htmlFor="TDS" className="form-label small">
+                        TDS
+                      </label>
                       <input
                         type="text"
                         className="form-control form-control-sm"
@@ -452,7 +717,9 @@ function InitialFormData() {
                     </div>
                     {/* Replacing FormInput for PaidBy */}
                     <div className="col-md-3">
-                      <label htmlFor="PaidBy" className="form-label small">Paid By</label>
+                      <label htmlFor="PaidBy" className="form-label small">
+                        Paid By
+                      </label>
                       <input
                         type="text"
                         className="form-control form-control-sm"
@@ -510,8 +777,12 @@ function InitialFormData() {
                   <div className="row g-3">
                     <div className="col-md-6">
                       {/* Replacing FormInput for Bank */}
-                      <div className="col-md-12 p-0"> {/* Adjusted column for inline replacement */}
-                        <label htmlFor="Bank" className="form-label small">Bank Name</label>
+                      <div className="col-md-12 p-0">
+                        {" "}
+                        {/* Adjusted column for inline replacement */}
+                        <label htmlFor="Bank" className="form-label small">
+                          Bank Name
+                        </label>
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -525,7 +796,9 @@ function InitialFormData() {
                     <div className="col-md-6">
                       {/* Replacing FormInput for ChqDate (Cheque Received Date) */}
                       <div className="col-md-12 p-0">
-                        <label htmlFor="ChqDate" className="form-label small">Chq Rct Dt</label>
+                        <label htmlFor="ChqDate" className="form-label small">
+                          Chq Rct Dt
+                        </label>
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -539,7 +812,9 @@ function InitialFormData() {
                     <div className="col-md-6">
                       {/* Replacing FormInput for Cheque */}
                       <div className="col-md-12 p-0">
-                        <label htmlFor="Cheque" className="form-label small">Cheque / CARD</label>
+                        <label htmlFor="Cheque" className="form-label small">
+                          Cheque / CARD
+                        </label>
                         <input
                           type="text"
                           className="form-control form-control-sm"
@@ -550,12 +825,13 @@ function InitialFormData() {
                         />
                       </div>
                     </div>
-                    
-                    
+
                     <div className="col-md-6">
                       {/* Replacing FormInput for ClearDate (Cheque Date) */}
                       <div className="col-md-12 p-0">
-                        <label htmlFor="ClearDate" className="form-label small">Chq Date</label>
+                        <label htmlFor="ClearDate" className="form-label small">
+                          Chq Date
+                        </label>
                         <input
                           type="text"
                           className="form-control form-control-sm"

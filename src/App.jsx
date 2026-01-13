@@ -295,6 +295,9 @@ import LaboratoryQuery from "./templates/DiagnosisMaster/LabrotaryQuery.jsx";
 import BloodReport from "./templates/DiagnosisMaster/blood/BloodReport.jsx";
 import BloodReportAdd from "./templates/DiagnosisMaster/blood/BloodReportAdd.jsx";
 
+import LeagcyPos from "./templates/DiagnosisMaster/LegacyPOS.jsx"
+import CashPaymentHeadMaster from "./pages/bireswar_pages/IndoorMaster/CashPaymentHeadMaster.jsx";
+import DiseaseMaster from "./pages/bireswar_pages/IndoorMaster/DiseaseMaster.jsx";
 
 
 
@@ -352,7 +355,12 @@ function App() {
           <Route path="/IVFBiodataMaster" element={<ProtectedRoute><IVFBIODATAMASTER /></ProtectedRoute>} />
           <Route path="/dpackage-master" element={<ProtectedRoute><DPackageMaster /></ProtectedRoute>} />
 
-          {/* newly added routes end here */}
+
+<Route path="/legacy_pos" element={<LeagcyPos/>}/>
+<Route path="/CashPaymentHeadMaster" element={<CashPaymentHeadMaster />}/>      
+
+<Route path="/DiseaseMaster" element={<DiseaseMaster />} />
+    {/* newly added routes end here */}
 
 
 {/* indoor route start---------------------------------  */}

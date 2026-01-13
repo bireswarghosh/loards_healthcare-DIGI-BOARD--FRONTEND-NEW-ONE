@@ -109,7 +109,7 @@ Diagnosis
 
 
 <li className="sidebar-dropdown-item">
-          <NavLink to="/lab_query" className="sidebar-link">
+          <NavLink to="/legacy_pos" className="sidebar-link">
           Pos
           </NavLink>
         </li>
