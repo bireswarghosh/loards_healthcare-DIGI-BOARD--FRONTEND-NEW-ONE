@@ -38,9 +38,26 @@ const Emr = () => {
     { id: 1, medicine: "", dose: "", days: "", unit: "" },
   ]);
 
+  const [pastHistoryMap, setPastHistoryMap] = useState([]);
+
+  const [showDropDown, setShowDropDown] = useState(false);
+
   useEffect(() => {
     loadPatients();
+    fetchPastHistory();
   }, []);
+
+  const fetchPastHistory = async () => {
+    try {
+      const res = await axiosInstance.get("/past-histories");
+      console.log(res.data.data);
+      res.data.success
+        ? setPastHistoryMap(res.data.data)
+        : setPastHistoryMap([]);
+    } catch (error) {
+      console.log("error fetching past history: ", error);
+    }
+  };
 
   const loadPatients = async (page = 1) => {
     try {
@@ -440,7 +457,10 @@ const Emr = () => {
         <h6 className="mb-0 text-primary fw-bold">{title}</h6>
         <button
           className="btn btn-sm btn-success"
-          onClick={() => addRow(rows, setRows)}
+          onClick={() => {
+            addRow(rows, setRows);
+            setShowDropDown(true);
+          }}
         >
           <i className="bi bi-plus"></i> Add Row
         </button>
@@ -464,21 +484,92 @@ const Emr = () => {
                 <tr key={row.id}>
                   <td className="text-center align-middle">{index + 1}</td>
                   <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm border-0 bg-transparent"
-                      value={row.value}
-                      placeholder={placeholder}
-                      onChange={(e) =>
-                        handleRowChange(
-                          row.id,
-                          "value",
-                          e.target.value,
-                          rows,
-                          setRows
-                        )
-                      }
-                    />
+                    {placeholder !== "Enter past history details..." ? (
+                      <input
+                        type="text"
+                        className="form-control form-control-sm border-0 bg-transparent"
+                        value={row.value}
+                        placeholder={placeholder}
+                        onChange={(e) =>
+                          handleRowChange(
+                            row.id,
+                            "value",
+                            e.target.value,
+                            rows,
+                            setRows
+                          )
+                        }
+                      />
+                    ) : row.value ? (
+                      <input
+                        type="text"
+                        className="form-control form-control-sm border-0 bg-transparent"
+                        value={row.value}
+                        placeholder={placeholder}
+                        onChange={(e) => {
+                          if (e.target.value === "") {
+                            handleRowChange(
+                              row.id,
+                              "value",
+                              " ",
+                              rows,
+                              setRows
+                            );
+                            return;
+                          }
+                          handleRowChange(
+                            row.id,
+                            "value",
+                            e.target.value,
+                            rows,
+                            setRows
+                          );
+                        }}
+                      />
+                    ) : (
+                      <>
+                        {/* {console.log("hi",pastHistoryMap)} */}
+                        {showDropDown && (
+                          <select
+                            className="form-control form-control-sm border-0 bg-transparent"
+                            value={row.value}
+                            onChange={(e) => {
+                              // console.log("val: ",e.target.value)
+                              if (
+                                e.target.value === "Write your own past history"
+                              ) {
+                                setShowDropDown(false);
+                                handleRowChange(
+                                  row.id,
+                                  "value",
+                                  " ",
+                                  rows,
+                                  setRows
+                                );
+                                return;
+                              }
+                              handleRowChange(
+                                row.id,
+                                "value",
+                                e.target.value,
+                                rows,
+                                setRows
+                              );
+                            }}
+                          >
+                            <option value="">---</option>
+                            {pastHistoryMap.map((hist, i) => (
+                              <option key={i} value={hist.pasthistory}>
+                                {hist.pasthistory}
+                              </option>
+                            ))}
+                            <option value="Write your own past history">
+                              Write your own past history
+                            </option>
+                          </select>
+                        )}
+                      </>
+                    )}
                   </td>
                   <td className="text-center">
                     <button
@@ -553,20 +644,16 @@ const Emr = () => {
                 <table className="table table-bordered table-striped mb-0 align-middle">
                   <thead className="">
                     <tr>
-                      <th className="text-center">
-                        #
-                      </th>
+                      <th className="text-center">#</th>
                       <th>Medicine Name</th>
-                      <th >Dose</th>
-                      <th >Days</th>
-                      <th >Unit</th>
-                      <th  className="text-center">
-                        Action
-                      </th>
+                      <th>Dose</th>
+                      <th>Days</th>
+                      <th>Unit</th>
+                      <th className="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {console.log("Medicine rows: ",medicineRows)}
+                    {console.log("Medicine rows: ", medicineRows)}
                     {medicineRows.map((row, index) => (
                       <tr key={row.id}>
                         <td className="text-center">{index + 1}</td>

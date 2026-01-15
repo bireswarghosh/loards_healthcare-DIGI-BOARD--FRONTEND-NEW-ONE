@@ -120,6 +120,8 @@ const BloodReportAdd = () => {
 
   const [users, setUsers] = useState([]);
 
+  const [remarksSuggest, setRemarksSuggest] = useState([])
+  
   const onChangeFormData = (e) => {
     const field = e.target.name;
     const value = e.target.value;
@@ -212,10 +214,23 @@ const BloodReportAdd = () => {
     }
   };
 
+
+  const fetchRemarkShuggestions = async ()=>{
+    try {
+      const res = await axiosInstance.get('/remarks?page=1&limit=100')
+      // console.log("fetched remarks: ",res.data)
+      res.data.success? setRemarksSuggest(res.data.data): setRemarksSuggest([])
+    } catch (error) {
+      console.log("error fetching remarks: ",error)
+    }
+  }
+
   useEffect(() => {
     // fetchBloodFormat();
     fetchPathologist();
     fetchUsers();
+        fetchRemarkShuggestions()
+
   }, []);
 
   // useEffect(() => {
@@ -1680,13 +1695,27 @@ const BloodReportAdd = () => {
 
               <div className="group-border" style={{ flex: 1 }}>
                 <span className="group-label">Remarks</span>
-                <textarea
+                {
+                  formData.Remarks? <textarea
                   className="w-full"
                   rows={3}
                   name="Remarks"
                   value={formData.Remarks}
                   onChange={onChangeFormData}
-                ></textarea>
+                ></textarea>:
+                <select 
+                  className="w-full"
+onChange={
+  (e)=>{
+setFormData(prev=>({...prev, Remarks: e.target.value}))
+  }
+}                >
+<option value={""}>---</option>
+                  {remarksSuggest.map((remarks,i)=>(
+                    <option value={remarks.Remarks} key={i}>{remarks.Remarks}</option>
+                  ))}
+                </select>
+                }
               </div>
             </div>
           </div>
