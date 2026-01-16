@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../../../../axiosInstance";
 import QRCode from "react-qr-code";
 import AsyncApiSelect from "./AsyncApiSelect";
+import {toast} from 'react-toastify'
 
 function InitialFormData() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ function InitialFormData() {
   const [admId, setAdmId] = useState("");
   const [patient, setPatient] = useState({});
 
+  const [religion,setReligion]= useState({})
   // State for form fields
   // const [receiptData, setReceiptData] = useState({
   //   MoneyreeciptId: "",
@@ -57,8 +59,8 @@ function InitialFormData() {
     Amount: "",
     Bank: "",
     Cheque: "",
-    ChqDate: "",
-    ClearDate: "",
+    ChqDate: new Date().toISOString().split("T")[0],
+    ClearDate: new Date().toISOString().split("T")[0],
     Narration: "",
     UserId: 37,
     SlipNo: "",
@@ -91,6 +93,7 @@ function InitialFormData() {
       } = res.data.data.admission;
       setReceiptData((prev) => ({
         ...prev,
+        RefferenceId:AdmitionId,
         admission: {
           AdmitionId,
           AdmitionNo,
@@ -116,13 +119,25 @@ function InitialFormData() {
         console.log("Fetched area: ", res1.data.data);
         res1.data.success ? setArea(res1.data.data) : setArea({});
       }
+
+      if(res.data.data.admission?.ReligionId){
+ const res2 = await axiosInstance.get(
+          `/religion/${res.data.data.admission?.ReligionId}`
+        );
+        // console.log("religion data: ",res2.data.data)
+        // console.log("Fetched area: ", res1.data.data);
+        res2.data.success ? setReligion(res2.data.data) : setReligion({"ReligionId": 0,
+"Religion": "N/A"});
+      }
     } catch (error) {
+      setReligion({"ReligionId": "",
+"Religion": "NA"})
       console.log("error fetching adm data", error);
     }
   };
 
   useEffect(() => {
-    console.log("mode: ", mode);
+    // console.log("mode: ", mode);
     if (id) {
       fetchReceipt();
     }
@@ -163,9 +178,19 @@ function InitialFormData() {
           );
           res.data.success ? setArea(res.data.data) : setArea({});
         }
+
+        if(apiData.admission?.ReligionId){
+ const res2 = await axiosInstance.get(
+          `/religion/${apiData.admission?.ReligionId}`
+        );
+        // console.log("religion data: ",res2.data.data)
+        // console.log("Fetched area: ", res1.data.data);
+        res2.data.success ? setReligion(res2.data.data) : setReligion({"ReligionId": "",
+"Religion": "NA"});
+      }
       }
     } catch (error) {
-      console.error("Error fetching receipt:", error);
+      // console.error("Error fetching receipt:", error);
     } finally {
       setLoading(false);
     }
@@ -175,23 +200,51 @@ function InitialFormData() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
+const {admission,MoneyreeciptId,
+MoneyreeciptNo, ...rest}=receiptData
+
+// console.log("data: ",rest)
+
+
+  const newData = {
+    ...rest,
+    ChqDate:(() => {
+      const d = new Date(rest.ChqDate);
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().slice(0, 10);
+    })(),
+    ClearDate:(() => {
+      const d = new Date(rest.ClearDate);
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().slice(0, 10);
+    })(),
+    ReceiptDate: (() => {
+      const d = new Date(rest.ReceiptDate);
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().slice(0, 10);
+    })()
+  };
+
+// console.log("newData: ",newData);
+
       const response =
         mode === "create"
-          ? await axiosInstance.post("/moneyreceipt", receiptData)
+          ? await axiosInstance.post("/moneyreceipt", rest)
           : await axiosInstance.put(
               `/moneyreceipt/${decodeURIComponent(id)}`,
-              receiptData
+              newData
             );
 
       if (response.data.success) {
-        alert(
+        
+        toast.success(
           `Receipt ${mode === "create" ? "created" : "updated"} successfully!`
         );
         navigate("/sampleReceipts");
       }
     } catch (error) {
       console.error("Error saving receipt:", error);
-      alert("Error saving receipt");
+      toast.error("Error saving receipt");
     } finally {
       setLoading(false);
     }
@@ -277,7 +330,13 @@ function InitialFormData() {
                         className="form-control form-control-sm"
                         id="ReceiptDate"
                         name="ReceiptDate"
-                        value={receiptData.ReceiptDate}
+                        value={ mode!=='create'
+        ? (() => {
+            const d = new Date(receiptData.ReceiptDate);
+            d.setDate(d.getDate() + 1);
+            return d.toISOString().slice(0, 10);
+          })()
+        : receiptData.ReceiptDate}
                         onChange={handleChange}
                         disabled={mode === "view"}
                       />
@@ -347,13 +406,14 @@ function InitialFormData() {
                       />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label small">Reference ID</label>
+                      <label className="form-label small">Booking No</label>
                       <input
                         type="text"
                         className="form-control form-control-sm"
                         id="RefferenceId"
                         name="RefferenceId"
-                        value={receiptData.RefferenceId}
+                        readOnly
+                        value={receiptData.RefferenceId?`A-${receiptData.RefferenceId}`:null}
                         onChange={handleChange}
                         disabled={mode === "view"}
                       />
@@ -512,7 +572,8 @@ function InitialFormData() {
                   <input
                     type="text"
                     className="form-control form-control-sm"
-                    value={receiptData.admission?.ReligionId || ""}
+                    value={religion.Religion || "N/A"}
+                    // value={receiptData.admission?.ReligionId || ""}
                     readOnly
                   />
                 </div>
@@ -529,7 +590,7 @@ function InitialFormData() {
             ) : (
               <div className="row g-3 mb-4 p-3 border rounded shadow-sm">
                 <div className="col-md-3">
-                  <label className="form-label small">Patient Name 1</label>
+                  <label className="form-label small">Patient Name</label>
                   {/* <input
                     type="text"
                     className="form-control form-control-sm"
@@ -647,7 +708,8 @@ function InitialFormData() {
                   <input
                     type="text"
                     className="form-control form-control-sm"
-                    value={receiptData.admission?.ReligionId || ""}
+                    // value={receiptData.admission?.ReligionId || ""}
+                    value={religion.Religion || "N/A"}
                     readOnly
                   />
                 </div>
@@ -731,14 +793,30 @@ function InitialFormData() {
                     </div>
                     <div className="col-md-12">
                       <label className="form-label small">Remarks</label>
-                      <input
+                      {/* <input
                         type="text"
                         className="form-control form-control-sm"
                         id="Remarks"
                         name="Remarks"
                         value={receiptData.Remarks}
                         onChange={handleChange}
-                      />
+                      /> */}
+
+                      <select
+                      className="form-control form-control-sm"
+                        id="Remarks"
+                        name="Remarks"
+                        value={receiptData.Remarks}
+                        onChange={handleChange}
+                      >
+                        <option value={""}>---</option>
+                        <option value={"Advance"}>Advance</option>
+                        <option value={"Part Payment"}>Part Payment</option>
+                        <option value={"Final Payment"}>Final Payment</option>
+                        <option value={"Refund"}>Refund</option>
+                        <option value={"Booking"}>Booking</option>
+                        <option value={"OT Payment"}>OT Payment</option>
+                      </select>
                     </div>
                     <div className="col-md-12">
                       <label className="form-label small">Narration</label>
@@ -751,7 +829,7 @@ function InitialFormData() {
                         onChange={handleChange}
                       />
                     </div>
-                    <div className="col-md-12">
+                    {/* <div className="col-md-12">
                       <label className="form-label small text-danger">
                         Remarks (DB value not found - what value should be
                         here?)
@@ -765,7 +843,7 @@ function InitialFormData() {
                         onChange={handleChange}
                         placeholder="This seems to be a duplicate/placeholder field."
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -800,11 +878,18 @@ function InitialFormData() {
                           Chq Rct Dt
                         </label>
                         <input
-                          type="text"
+                          type="date"
                           className="form-control form-control-sm"
                           id="ChqDate"
                           name="ChqDate"
-                          value={receiptData.ChqDate}
+                          // value={receiptData.ChqDate}
+                           value={ mode!=='create'
+        ? (() => {
+            const d = new Date(receiptData.ChqDate);
+            d.setDate(d.getDate() + 1);
+            return d.toISOString().slice(0, 10);
+          })()
+        : receiptData.ChqDate}
                           onChange={handleChange}
                         />
                       </div>
@@ -833,11 +918,19 @@ function InitialFormData() {
                           Chq Date
                         </label>
                         <input
-                          type="text"
+                          type="date"
                           className="form-control form-control-sm"
                           id="ClearDate"
                           name="ClearDate"
-                          value={receiptData.ClearDate}
+                          // value={receiptData.ClearDate}
+
+                           value={ mode!=='create'
+        ? (() => {
+            const d = new Date(receiptData.ClearDate);
+            d.setDate(d.getDate() + 1);
+            return d.toISOString().slice(0, 10);
+          })()
+        : receiptData.ClearDate}
                           onChange={handleChange}
                         />
                       </div>

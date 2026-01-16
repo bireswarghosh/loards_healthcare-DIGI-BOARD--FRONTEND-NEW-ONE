@@ -14,8 +14,8 @@ const SampleReceipt = () => {
     pages: 0,
   });
 
-  const [dateFrom, setDateFrom] = useState("2025-02-22");
-  const [dateTo, setDateTo] = useState("2025-02-22");
+  const [dateFrom, setDateFrom] = useState(new Date(Date.now()).toISOString().slice(0, 10));
+  const [dateTo, setDateTo] = useState(new Date(Date.now()).toISOString().slice(0, 10));
   const [allReceipt, setAllReceipt] = useState(true);
   const [refund, setRefund] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
