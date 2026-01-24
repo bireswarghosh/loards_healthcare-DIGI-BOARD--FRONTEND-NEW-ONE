@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axiosInstance from '../axiosInstance';
 
 const AuthContext = createContext();
 
@@ -14,6 +15,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [permissions, setPermissions] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -23,9 +25,24 @@ export const AuthProvider = ({ children }) => {
     if (token && userId) {
       setIsAuthenticated(true);
       setUser({ userId, username });
+      fetchPermissions(userId);
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
+
+  const fetchPermissions = async (userId) => {
+    try {
+      const response = await axiosInstance.get(`/auth/users/${userId}/permissions`);
+      if (response.data.success) {
+        setPermissions(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching permissions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = (token, userId, username) => {
     localStorage.setItem('token', token);
@@ -33,6 +50,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('username', username);
     setIsAuthenticated(true);
     setUser({ userId, username });
+    fetchPermissions(userId);
   };
 
   const logout = () => {
@@ -41,11 +59,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('username');
     setIsAuthenticated(false);
     setUser(null);
+    setPermissions(null);
   };
 
   const value = {
     isAuthenticated,
     user,
+    permissions,
     login,
     logout,
     loading

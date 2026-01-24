@@ -1,11 +1,7 @@
-
-
-
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { DigiContext } from '../../context/DigiContext';
 import { useAuth } from '../../context/AuthContext';
-import axiosInstance from '../../axiosInstance';
 
 const OutDoor = () => {
   const {
@@ -15,32 +11,16 @@ const OutDoor = () => {
     dropdownOpen,
     mainOutdoorRef
   } = useContext(DigiContext);
+  const { permissions, user } = useAuth();
   const { isMainDropdownOpen } = outdoorState;
-  const { user } = useAuth();
-  const [permissions, setPermissions] = useState(null);
-  const username = user?.username || localStorage.getItem('username');
 
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      if (user?.userId) {
-        try {
-          const response = await axiosInstance.get(`/auth/users/${user.userId}/permissions`);
-          if (response.data.success) {
-            setPermissions(response.data.data);
-          }
-        } catch (err) {
-          console.log('No permissions');
-        }
-      }
-    };
-    fetchPermissions();
-  }, [user]);
-
-  const canView = (section) => {
-    if (username === 'lords') return true;
-    if (!permissions) return true;
-    return permissions[section] !== false;
-  };
+  // Check if user is super admin
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+  
+  // Hide entire section if no outdoor permission and not super admin
+  if (!isSuperAdmin && !permissions?.outdoor) {
+    return null;
+  }
 
   return (
     <li className="sidebar-item" ref={layoutPosition.horizontal ? mainOutdoorRef : null}>
@@ -53,7 +33,8 @@ const OutDoor = () => {
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.outdoor ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
 
-        {canView('outdoor_visitEntry') && (
+        {/* Visit Entry */}
+        {(isSuperAdmin || permissions?.outdoor_visitEntry !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/visit_entry" className="sidebar-link">
               <span className="nav-icon">
@@ -64,7 +45,8 @@ const OutDoor = () => {
           </li>
         )}
 
-        {canView('outdoor_visitList') && (
+        {/* Visit List */}
+        {(isSuperAdmin || permissions?.outdoor_visitList !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/table-data" className="sidebar-link">
               <span className="nav-icon">
@@ -75,7 +57,8 @@ const OutDoor = () => {
           </li>
         )}
 
-        {canView('outdoor_drRectVisit') && (
+        {/* Dr Rect Visit Detail */}
+        {(isSuperAdmin || permissions?.outdoor_drRectVisit !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/dr-rect-visit-detail" className="sidebar-link">
               <span className="nav-icon">
@@ -86,7 +69,8 @@ const OutDoor = () => {
           </li>
         )}
 
-        {canView('outdoor_emr') && (
+        {/* EMR */}
+        {(isSuperAdmin || permissions?.outdoor_emr !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/emr" className="sidebar-link">
               <span className="nav-icon">
@@ -97,7 +81,8 @@ const OutDoor = () => {
           </li>
         )}
 
-        {canView('outdoor_otherCharge') && (
+        {/* Other Charge */}
+        {(isSuperAdmin || permissions?.outdoor_otherCharge !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/Opd_Other_Charges" className="sidebar-link">
               <span className="nav-icon">
@@ -108,7 +93,8 @@ const OutDoor = () => {
           </li>
         )}
 
-        {canView('outdoor_ivfBiodata') && (
+        {/* IVF Biodata */}
+        {(isSuperAdmin || permissions?.outdoor_ivfBiodata !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="IVFBiodataMaster" className="sidebar-link">
               <span className="nav-icon">

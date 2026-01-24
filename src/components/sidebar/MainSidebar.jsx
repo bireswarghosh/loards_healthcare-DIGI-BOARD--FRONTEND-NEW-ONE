@@ -98,6 +98,10 @@ const MainSidebar = () => {
             <Doctor/>
             <Marketing/>
             <AiPart />
+
+
+            {/* setting */}
+            <Section2/>
             <li className="help-center">
               <h3>Help Center</h3>
               <p>We're an award-winning, forward thinking</p>
@@ -120,6 +124,9 @@ const MainSidebar = () => {
             <Doctor/>
             <Marketing/>
             <AiPart />
+
+{/* setting */}
+            <Section2/>
             <li className="help-center">
               <h3>Help Center</h3>
               <p>We're an award-winning, forward thinking</p>

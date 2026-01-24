@@ -1,10 +1,7 @@
-
-
-
 import React, { useContext} from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { DigiContext } from '../../context/DigiContext';
-
+import { useAuth } from '../../context/AuthContext';
 
 const Marketing = () => {
   const {
@@ -14,7 +11,14 @@ const Marketing = () => {
     dropdownOpen,
     mainMarketingRef
   } = useContext(DigiContext);
+  const { permissions, user } = useAuth();
   const { isMainDropdownOpen } = marketingState;
+
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+  
+  if (!isSuperAdmin && !permissions?.marketing) {
+    return null;
+  }
 
   return (
     <li className="sidebar-item" ref={layoutPosition.horizontal ? mainMarketingRef : null}>
@@ -30,26 +34,27 @@ Marketing
 
 
 
-     <li className="sidebar-dropdown-item">
-          <NavLink to="/patient-actions" className="sidebar-link">
-            <span className="nav-icon">
-              <i className="fa-light fa-user-headset"></i>
-            </span>{" "}
-            <span className="sidebar-txt">Daily Manager Activity</span>
-          </NavLink>
-        </li>
+        {(isSuperAdmin || permissions?.marketing_dailyActivity !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/patient-actions" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-user-headset"></i>
+              </span>{" "}
+              <span className="sidebar-txt">Daily Manager Activity</span>
+            </NavLink>
+          </li>
+        )}
 
-
-
-
-     <li className="sidebar-dropdown-item">
-          <NavLink to="/CampingManagement" className="sidebar-link">
-            <span className="nav-icon">
-              <i className="fa-light fa-user-headset"></i>
-            </span>{" "}
-            <span className="sidebar-txt">Camping Management</span>
-          </NavLink>
-        </li>
+        {(isSuperAdmin || permissions?.marketing_campingManagement !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/CampingManagement" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-user-headset"></i>
+              </span>{" "}
+              <span className="sidebar-txt">Camping Management</span>
+            </NavLink>
+          </li>
+        )}
 
 
  

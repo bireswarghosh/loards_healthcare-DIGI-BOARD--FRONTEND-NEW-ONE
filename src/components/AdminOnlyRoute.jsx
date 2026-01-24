@@ -3,8 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const AdminOnlyRoute = ({ children }) => {
-  const { isAuthenticated, loading, user } = useAuth();
-  const username = user?.username || localStorage.getItem('username');
+  const { isAuthenticated, loading, permissions, user } = useAuth();
 
   if (loading) {
     return (
@@ -20,7 +19,11 @@ const AdminOnlyRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (username !== 'lords') {
+  // Check if user is super admin
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+  
+  // Allow access if super admin or has userManagement permission
+  if (!isSuperAdmin && !permissions?.userManagement) {
     return <Navigate to="/" replace />;
   }
 

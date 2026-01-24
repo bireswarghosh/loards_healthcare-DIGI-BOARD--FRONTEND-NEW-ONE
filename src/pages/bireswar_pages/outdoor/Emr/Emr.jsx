@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../../../axiosInstance";
+import { toast } from "react-toastify";
 
 const Emr = () => {
   const [patients, setPatients] = useState([]);
@@ -40,7 +41,7 @@ const Emr = () => {
 
   const [pastHistoryMap, setPastHistoryMap] = useState([]);
 
-  const [showDropDown, setShowDropDown] = useState(false);
+  const [showDropDown, setShowDropDown] = useState(true);
 
   useEffect(() => {
     loadPatients();
@@ -118,7 +119,7 @@ const Emr = () => {
 
     try {
       const response = await axiosInstance.get(
-        `/emr/${patient.RegistrationId}`
+        `/emr/${patient.RegistrationId}`,
       );
       const emrData = response.data.data;
 
@@ -145,7 +146,7 @@ const Emr = () => {
             value: item.pasthistory || "",
             slno: item.SlNo,
             isExisting: true,
-          }))
+          })),
         );
       }
 
@@ -156,7 +157,7 @@ const Emr = () => {
             value: item.diagonisis || "",
             slno: item.SlNo,
             isExisting: true,
-          }))
+          })),
         );
       }
 
@@ -167,7 +168,7 @@ const Emr = () => {
             value: item.Invest || "",
             slno: item.SlNo,
             isExisting: true,
-          }))
+          })),
         );
       }
 
@@ -178,7 +179,7 @@ const Emr = () => {
             value: item.chief || "",
             slno: item.SlNo,
             isExisting: true,
-          }))
+          })),
         );
       }
 
@@ -189,7 +190,7 @@ const Emr = () => {
             value: item.Medicine || "",
             slno: item.SlNo,
             isExisting: true,
-          }))
+          })),
         );
       }
 
@@ -203,7 +204,7 @@ const Emr = () => {
             unit: item.dunit || "",
             slno: item.SlNo,
             isExisting: true,
-          }))
+          })),
         );
       }
     } catch (error) {
@@ -219,22 +220,22 @@ const Emr = () => {
 
     try {
       const newPastHistory = pastHistoryRows.filter(
-        (row) => row.value.trim() && !row.isExisting
+        (row) => row.value.trim() && !row.isExisting,
       );
       const newDiagnosis = diagnosisRows.filter(
-        (row) => row.value.trim() && !row.isExisting
+        (row) => row.value.trim() && !row.isExisting,
       );
       const newInvestigations = investigationRows.filter(
-        (row) => row.value.trim() && !row.isExisting
+        (row) => row.value.trim() && !row.isExisting,
       );
       const newComplaints = complaintRows.filter(
-        (row) => row.value.trim() && !row.isExisting
+        (row) => row.value.trim() && !row.isExisting,
       );
       const newAdvice = adviceRows.filter(
-        (row) => row.value.trim() && !row.isExisting
+        (row) => row.value.trim() && !row.isExisting,
       );
       const newMedicine = medicineRows.filter(
-        (row) => row.medicine.trim() && !row.isExisting
+        (row) => row.medicine.trim() && !row.isExisting,
       );
 
       const totalNewRecords =
@@ -246,95 +247,141 @@ const Emr = () => {
         newMedicine.length;
 
       if (totalNewRecords === 0) {
-        alert("No new data to save!");
+        toast.error("No new data to save!");
+        // alert("No new data to save!");
         return;
       }
 
-      const confirmSave = window.confirm(
-        `Save ${totalNewRecords} new EMR records for patient ${selectedPatient.patientregistration?.PatientName}?`
-      );
-      if (!confirmSave) return;
+      // const confirmSave = window.confirm(
+      //   `Save ${totalNewRecords} new EMR records for patient ${selectedPatient.patientregistration?.PatientName}?`
+      // );
+      // if (!confirmSave) return;
 
-      const savePromises = [];
+      // const savePromises = [];
 
-      newPastHistory.forEach((row) => {
-        savePromises.push(
-          axiosInstance.post(`/emr/past-history`, {
-            RegistrationId: selectedPatient.RegistrationId,
-            VisitId: selectedPatient.PVisitId,
-            pasthistory: row.value,
-            admissionid: null,
-          })
-        );
-      });
+      console.log("id: ", selectedPatient.RegistrationId);
 
-      newDiagnosis.forEach((row) => {
-        savePromises.push(
-          axiosInstance.post(`/emr/diagnosis`, {
-            RegistrationId: selectedPatient.RegistrationId,
-            VisitId: selectedPatient.PVisitId,
-            diagonisis: row.value,
-            admissionid: null,
-          })
-        );
-      });
+      const finalPastHistory = newPastHistory.map((item) => ({
+        pasthistory: item.value,
+      }));
+      const finalDiagnosis = newDiagnosis.map((item) => ({
+        diagonisis: item.value,
+      }));
+      const finalInvestigations = newInvestigations.map((item) => ({
+        Invest: item.value,
+      }));
+      const finalComplaints = newComplaints.map((item) => ({
+        chief: item.value,
+      }));
+      const finalAdvice = newAdvice.map((item) => ({ Medicine: item.value }));
+      const finalMedicine = newMedicine.map((item) => ({
+        advmed: item.medicine,
+        dose: item.dose,
+        nodays: item.days,
+        dunit: item.unit,
+      }));
 
-      newInvestigations.forEach((row) => {
-        savePromises.push(
-          axiosInstance.post(`/emr/investigations`, {
-            RegistrationId: selectedPatient.RegistrationId,
-            VisitId: selectedPatient.PVisitId,
-            Invest: row.value,
-            admissionid: null,
-          })
-        );
-      });
+      // console.log("past history: ", finalPastHistory);
+      // console.log("diagnosis: ", finalDiagnosis);
+      // console.log("investigation: ", finalInvestigations);
+      // console.log("complaints: ", finalComplaints);
+      // console.log("advice: ", finalAdvice);
+      // console.log("medicine: ", finalMedicine);
 
-      newComplaints.forEach((row) => {
-        savePromises.push(
-          axiosInstance.post(`/emr/complaints`, {
-            RegistrationId: selectedPatient.RegistrationId,
-            VisitId: selectedPatient.PVisitId,
-            chief: row.value,
-            admissionid: null,
-          })
-        );
-      });
+      
+      
+       await axiosInstance.post("/emr/bulk", {
+         RegistrationId: selectedPatient.RegistrationId,
+         VisitId: "",
+         admissionid: null,
+         pastHistory: finalPastHistory,
+         diagnosis: finalDiagnosis,
+         medicine:finalAdvice,
+         complaints: finalComplaints,
+         investigations: finalInvestigations,
+         adviceMedicine: finalMedicine,
+       });
 
-      newAdvice.forEach((row) => {
-        savePromises.push(
-          axiosInstance.post(`/emr/medicine`, {
-            RegistrationId: selectedPatient.RegistrationId,
-            VisitId: selectedPatient.PVisitId,
-            Medicine: row.value,
-            admissionid: null,
-          })
-        );
-      });
+      
+      // newPastHistory.forEach((row) => {
+      //   savePromises.push(
+      //     axiosInstance.post(`/emr/past-history`, {
+      //       RegistrationId: selectedPatient.RegistrationId,
+      //       VisitId: selectedPatient.PVisitId,
+      //       pasthistory: row.value,
+      //       admissionid: null,
+      //     })
+      //   );
+      // });
 
-      newMedicine.forEach((row) => {
-        savePromises.push(
-          axiosInstance.post(`/emr/advice-medicine`, {
-            RegistrationId: selectedPatient.RegistrationId,
-            VisitId: selectedPatient.PVisitId,
-            advmed: row.medicine,
-            dose: row.dose,
-            nodays: row.days,
-            dunit: row.unit,
-            admissionid: null,
-          })
-        );
-      });
+      // newDiagnosis.forEach((row) => {
+      //   savePromises.push(
+      //     axiosInstance.post(`/emr/diagnosis`, {
+      //       RegistrationId: selectedPatient.RegistrationId,
+      //       VisitId: selectedPatient.PVisitId,
+      //       diagonisis: row.value,
+      //       admissionid: null,
+      //     })
+      //   );
+      // });
 
-      await Promise.all(savePromises);
+      // newInvestigations.forEach((row) => {
+      //   savePromises.push(
+      //     axiosInstance.post(`/emr/investigations`, {
+      //       RegistrationId: selectedPatient.RegistrationId,
+      //       VisitId: selectedPatient.PVisitId,
+      //       Invest: row.value,
+      //       admissionid: null,
+      //     })
+      //   );
+      // });
 
-      alert(`✅ Successfully saved ${totalNewRecords} EMR records!`);
+      // newComplaints.forEach((row) => {
+      //   savePromises.push(
+      //     axiosInstance.post(`/emr/complaints`, {
+      //       RegistrationId: selectedPatient.RegistrationId,
+      //       VisitId: selectedPatient.PVisitId,
+      //       chief: row.value,
+      //       admissionid: null,
+      //     })
+      //   );
+      // });
+
+      // newAdvice.forEach((row) => {
+      //   savePromises.push(
+      //     axiosInstance.post(`/emr/medicine`, {
+      //       RegistrationId: selectedPatient.RegistrationId,
+      //       VisitId: selectedPatient.PVisitId,
+      //       Medicine: row.value,
+      //       admissionid: null,
+      //     })
+      //   );
+      // });
+
+      // newMedicine.forEach((row) => {
+      //   savePromises.push(
+      //     axiosInstance.post(`/emr/advice-medicine`, {
+      //       RegistrationId: selectedPatient.RegistrationId,
+      //       VisitId: selectedPatient.PVisitId,
+      //       advmed: row.medicine,
+      //       dose: row.dose,
+      //       nodays: row.days,
+      //       dunit: row.unit,
+      //       admissionid: null,
+      //     })
+      //   );
+      // });
+
+      // await Promise.all(savePromises);
+
+      // alert(`✅ Successfully saved ${totalNewRecords} EMR records!`);
       await loadEmrData(selectedPatient);
+      toast.success(`Successfully saved ${totalNewRecords} EMR records!`);
     } catch (error) {
       console.error("Error saving EMR data:", error);
       alert(
         "❌ Error saving EMR data: " +
-          (error.response?.data?.message || error.message)
+          (error.response?.data?.message || error.message),
       );
     }
   };
@@ -442,7 +489,7 @@ const Emr = () => {
   const handleRowChange = (id, field, value, rows, setRows) => {
     const row = rows.find((r) => r.id === id);
     const updatedRows = rows.map((row) =>
-      row.id === id ? { ...row, [field]: value } : row
+      row.id === id ? { ...row, [field]: value } : row,
     );
     setRows(updatedRows);
     if (row && row.isExisting) {
@@ -496,7 +543,7 @@ const Emr = () => {
                             "value",
                             e.target.value,
                             rows,
-                            setRows
+                            setRows,
                           )
                         }
                       />
@@ -513,7 +560,7 @@ const Emr = () => {
                               "value",
                               " ",
                               rows,
-                              setRows
+                              setRows,
                             );
                             return;
                           }
@@ -522,7 +569,7 @@ const Emr = () => {
                             "value",
                             e.target.value,
                             rows,
-                            setRows
+                            setRows,
                           );
                         }}
                       />
@@ -544,7 +591,7 @@ const Emr = () => {
                                   "value",
                                   " ",
                                   rows,
-                                  setRows
+                                  setRows,
                                 );
                                 return;
                               }
@@ -553,7 +600,7 @@ const Emr = () => {
                                 "value",
                                 e.target.value,
                                 rows,
-                                setRows
+                                setRows,
                               );
                             }}
                           >
@@ -595,35 +642,35 @@ const Emr = () => {
           "Past History",
           pastHistoryRows,
           setPastHistoryRows,
-          "Enter past history details..."
+          "Enter past history details...",
         );
       case "complaints":
         return renderSingleValueTable(
           "Chief Complaints",
           complaintRows,
           setComplaintRows,
-          "Enter complaint details..."
+          "Enter complaint details...",
         );
       case "diagnosis":
         return renderSingleValueTable(
           "Diagnosis",
           diagnosisRows,
           setDiagnosisRows,
-          "Enter diagnosis..."
+          "Enter diagnosis...",
         );
       case "investigations":
         return renderSingleValueTable(
           "Investigations",
           investigationRows,
           setInvestigationRows,
-          "Enter investigation..."
+          "Enter investigation...",
         );
       case "advice":
         return renderSingleValueTable(
           "Medical Advice",
           adviceRows,
           setAdviceRows,
-          "Enter advice..."
+          "Enter advice...",
         );
       case "medicine":
         return (
@@ -669,7 +716,7 @@ const Emr = () => {
                                 "medicine",
                                 e.target.value,
                                 medicineRows,
-                                setMedicineRows
+                                setMedicineRows,
                               )
                             }
                           />
@@ -686,7 +733,7 @@ const Emr = () => {
                                 "dose",
                                 e.target.value,
                                 medicineRows,
-                                setMedicineRows
+                                setMedicineRows,
                               )
                             }
                           />
@@ -703,7 +750,7 @@ const Emr = () => {
                                 "days",
                                 e.target.value,
                                 medicineRows,
-                                setMedicineRows
+                                setMedicineRows,
                               )
                             }
                           />
@@ -720,7 +767,7 @@ const Emr = () => {
                                 "unit",
                                 e.target.value,
                                 medicineRows,
-                                setMedicineRows
+                                setMedicineRows,
                               )
                             }
                           />
@@ -823,7 +870,7 @@ const Emr = () => {
                         type="text"
                         className="form-control form-control-sm"
                         value={new Date(
-                          selectedPatient.PVisitDate
+                          selectedPatient.PVisitDate,
                         ).toLocaleDateString()}
                         readOnly
                       />
@@ -1103,7 +1150,7 @@ const Emr = () => {
                     to{" "}
                     {Math.min(
                       pagination.currentPage * pagination.itemsPerPage,
-                      pagination.totalItems
+                      pagination.totalItems,
                     )}{" "}
                     of {pagination.totalItems} entries
                   </div>
