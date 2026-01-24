@@ -1,5 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
+import AdminOnlyRoute from "./components/AdminOnlyRoute";
+import PermissionRoute from "./components/PermissionRoute";
 import Dashboard from "./pages/Dashboard";
 import CrmDashboard from "./pages/CrmDashboard";
 import HrmDashboard from "./pages/HrmDashboard";
@@ -55,6 +58,8 @@ import ComingSoon2 from "./pages/ComingSoon2";
 import PricingTable from "./pages/PricingTable";
 import PricingTable2 from "./pages/PricingTable2";
 import UnderConstruction from "./pages/UnderConstruction";
+import UserManagement from "./pages/UserManagement";
+import AccessControl from "./pages/AccessControl";
 
 import Emr from "./pages/bireswar_pages/outdoor/Emr/Emr.jsx";
 
@@ -298,6 +303,35 @@ import BloodReportAdd from "./templates/DiagnosisMaster/blood/BloodReportAdd.jsx
 import LeagcyPos from "./templates/DiagnosisMaster/LegacyPOS.jsx"
 import CashPaymentHeadMaster from "./pages/bireswar_pages/IndoorMaster/CashPaymentHeadMaster.jsx";
 import DiseaseMaster from "./pages/bireswar_pages/IndoorMaster/DiseaseMaster.jsx";
+import Discharge from "./templates/Discharge.jsx";
+import DischargeLayout from "./templates/DischargeLayout.jsx";
+import DischargeDetails from "./templates/DischargeDetails.jsx";
+import DischargePrint from "./templates/DischargePrint.jsx";
+
+
+
+
+
+
+
+
+// !  ai  
+import AiChat from "./pages/AiChat";
+import AiChatDoctor from "./pages/AiChatDoctor";
+import AiSettings from "./pages/AiSettings";
+import AiPrescription from "./pages/AiPrescription";
+import AiMedicalImaging from "./pages/AiMedicalImaging";
+import AiTreatmentPlan from "./pages/AiTreatmentPlan";
+import AiAppointmentHistory from "./pages/AiAppointmentHistory";
+import AiDrugInteraction from "./pages/AiDrugInteraction";
+import AiHealthAnalytics from "./pages/AiHealthAnalytics";
+import AiScribe from "./pages/AiScribe";
+import UserAiBookings from "./pages/UserAiBookings";
+import AiChatOld from "./pages/AiChatOld";
+
+
+
+
 
 
 
@@ -340,20 +374,24 @@ function App() {
           <Route path="/charts" element={<Charts />} />
           <Route path="/icon" element={<Icon />} />
           <Route path="/map" element={<Map />} />
-          <Route path="/emr" element={<ProtectedRoute><Emr /></ProtectedRoute>} />
+          <Route path="/user-management" element={<AdminOnlyRoute><UserManagement /></AdminOnlyRoute>} />
+          <Route path="/access-control" element={<AdminOnlyRoute><AccessControl /></AdminOnlyRoute>} />
 
        
 
           {/* newly added routes */}
-          <Route path="/visit_entry" element={<ProtectedRoute><VisitEntry /></ProtectedRoute>} />
-          <Route path="/table-data" element={<ProtectedRoute><VisitList /></ProtectedRoute>} />
-          <Route path="/dr-rect-visit-detail" element={<ProtectedRoute><DrRectVisitDetail /></ProtectedRoute>} />
-          <Route path="/other_charges" element={<ProtectedRoute><OtherCharges /></ProtectedRoute>} />
-          <Route path="/date-wise-registration-charge" element={<ProtectedRoute><DateWiseRegistrationCharge /></ProtectedRoute>} />
-          <Route path="/patient-history" element={<ProtectedRoute><PatientHistory /></ProtectedRoute>} />
-          <Route path="/others-bill-register" element={<ProtectedRoute><OthersBillRegister /></ProtectedRoute>} />
-          <Route path="/IVFBiodataMaster" element={<ProtectedRoute><IVFBIODATAMASTER /></ProtectedRoute>} />
-          <Route path="/dpackage-master" element={<ProtectedRoute><DPackageMaster /></ProtectedRoute>} />
+          <Route path="/visit_entry" element={<PermissionRoute section="outdoor_visitEntry"><VisitEntry /></PermissionRoute>} />
+          <Route path="/table-data" element={<PermissionRoute section="outdoor_visitList"><VisitList /></PermissionRoute>} />
+          <Route path="/dr-rect-visit-detail" element={<PermissionRoute section="outdoor_drRectVisit"><DrRectVisitDetail /></PermissionRoute>} />
+          <Route path="/emr" element={<PermissionRoute section="outdoor_emr"><Emr /></PermissionRoute>} />
+          <Route path="/Opd_Other_Charges" element={<PermissionRoute section="outdoor_otherCharge"><OtherChargesss /></PermissionRoute>} />
+          <Route path="/IVFBiodataMaster" element={<PermissionRoute section="outdoor_ivfBiodata"><IVFBIODATAMASTER /></PermissionRoute>} />
+          <Route path="/other_charges" element={<PermissionRoute section="outdoor"><OtherCharges /></PermissionRoute>} />
+          <Route path="/date-wise-registration-charge" element={<PermissionRoute section="outdoor"><DateWiseRegistrationCharge /></PermissionRoute>} />
+          <Route path="/patient-history" element={<PermissionRoute section="outdoor"><PatientHistory /></PermissionRoute>} />
+          <Route path="/others-bill-register" element={<PermissionRoute section="outdoor"><OthersBillRegister /></PermissionRoute>} />
+          <Route path="/IVFBiodataMaster" element={<PermissionRoute section="outdoor"><IVFBIODATAMASTER /></PermissionRoute>} />
+          <Route path="/dpackage-master" element={<PermissionRoute section="outdoor"><DPackageMaster /></PermissionRoute>} />
 
 
 <Route path="/legacy_pos" element={<LeagcyPos/>}/>
@@ -438,7 +476,15 @@ function App() {
 
 
 
-
+<Route path="/discharge" element={<DischargeLayout/>}>
+<Route index element={ <Discharge/>}/>
+<Route path="add" element={<DischargeDetails mode="add"/> } />
+<Route path=":id" element={<DischargeDetails mode="view"/>}/>
+<Route path=":id/edit" element={<DischargeDetails mode="edit"/>}/>
+{/* <Route path=":id/advice" element={<DischargeNewAdvice/>}/> */}
+<Route path="/discharge/:id/print" element={<DischargePrint />}/>
+<Route path=":id/mrd" element={<DischargeMrd/>}/>
+</Route>
  <Route path="/AdviceMaster" element={<ProtectedRoute><AdviceMaster/></ProtectedRoute>}/>
  <Route path="/ChiefMaster" element={<ProtectedRoute><ChiefMaster/></ProtectedRoute>}/>
  <Route path="/CompanymstMaster" element={<ProtectedRoute><CompanymstMaster/></ProtectedRoute>}/>
@@ -701,10 +747,25 @@ function App() {
 
 
 
+{/* ai */}
 
-
-
-
+ <Route path="/" element={<AiChat />} />
+          <Route
+            path="/aiAppointmentHistory"
+            element={<AiAppointmentHistory />}
+          />
+          <Route path="/userAiBookings" element={<UserAiBookings />} />
+          <Route path="/aiUserChat" element={<AiChat />} />
+          <Route path="/aiDoctorChat" element={<AiChatDoctor />} />
+          <Route path="/aiChatOld" element={<AiChatOld />} />
+          <Route path="/aiSettings" element={<AiSettings />} />
+          <Route path="/aiPrescription" element={<AiPrescription />} />
+          <Route path="/aiMedicalImaging" element={<AiMedicalImaging />} />
+          <Route path="/aiTreatmentPlan" element={<AiTreatmentPlan />} />
+          <Route path="/aiDrugInteraction" element={<AiDrugInteraction />} />
+          <Route path="/aiHealthAnalytics" element={<AiHealthAnalytics />} />
+          <Route path="/aiScribe" element={<AiScribe />} />
+{/* ai */}
 
 
 

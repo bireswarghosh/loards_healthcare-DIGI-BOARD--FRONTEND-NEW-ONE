@@ -5,16 +5,13 @@ import { useNavigate } from "react-router-dom";
 import Footer from "../../../../components/footer/Footer";
 import axiosInstance from "../../../../axiosInstance";
 
-
 const OtherCharges = () => {
   const navigate = useNavigate();
   const isBelowLg = false;
 
-
   const [charges, setCharges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
 
   // Pagination & Search for the main list
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,7 +19,6 @@ const OtherCharges = () => {
   const [search1, setSearch1] = useState("");
   const [search2, setSearch2] = useState("");
   const [date, setDate] = useState("");
-
 
   // Fetch data from API
   const fetchCharges = async (page = currentPage) => {
@@ -36,13 +32,11 @@ const OtherCharges = () => {
         url = `/admissions?page=${page}&limit=20&date=${date}`;
       }
 
-
       const response = await axiosInstance.get(url);
-
 
       if (response.data.success) {
         setCharges(
-          response.data.data.map((item) => ({ ...item, showDropdown: false }))
+          response.data.data.map((item) => ({ ...item, showDropdown: false })),
         );
         console.log("data: ", response.data.data);
         setTotalPages(response.data.pagination.totalPages);
@@ -51,13 +45,12 @@ const OtherCharges = () => {
     } catch (err) {
       setError(
         "Failed to fetch records: " +
-          (err.response?.data?.message || err.message)
+          (err.response?.data?.message || err.message),
       );
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleViewCharges = (admission) => {
     navigate("/other-charges", {
@@ -68,11 +61,9 @@ const OtherCharges = () => {
     });
   };
 
-
   useEffect(() => {
     fetchCharges(currentPage);
   }, [currentPage, search1, search2, date]);
-
 
   const renderTable = () => {
     return (
@@ -101,7 +92,7 @@ const OtherCharges = () => {
               <tr key={index}>
                 <td>
                   <ul className="d-flex gap-2">
-                    <li>
+                    {/* <li>
                       <a
                         href="#"
                         className="dropdown-item"
@@ -115,9 +106,9 @@ const OtherCharges = () => {
                           <i className="fa-light fa-eye"></i>
                         </span>
                       </a>
-                    </li>
+                    </li> */}
                     <li>
-                      <a
+                      {/* <a
                         href="#"
                         className="dropdown-item"
                         onClick={(e) => {
@@ -127,11 +118,22 @@ const OtherCharges = () => {
                         }}
                       >
                         <span className="dropdown-icon">
-                          <i className="fa-light fa-pen-to-square"></i>
+                         <i className="fa-solid fa-plus"></i> Add
                         </span>
-                      </a>
+                      </a> */}
+
+                      <button
+                        className="btn btn-sm btn-outline-info"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          console.log("hello : ", charge);
+                          handleViewCharges(charge);
+                        }}
+                      >
+                        <i className="fa-solid fa-plus"></i>
+                      </button>
                     </li>
-                    <li>
+                    {/* <li>
                       <a
                         href="#"
                         className="dropdown-item"
@@ -143,7 +145,7 @@ const OtherCharges = () => {
                           <i className="fa-light fa-trash-can"></i>
                         </span>
                       </a>
-                    </li>
+                    </li> */}
                   </ul>
                 </td>
                 <td>{index + 1}</td>
@@ -173,40 +175,33 @@ const OtherCharges = () => {
     );
   };
 
-
   // ==========================================================
   // FIXED: Simplified Pagination Logic (like VisitList's structural requirements)
   // ==========================================================
 
-
   const renderPagination = () => {
     if (totalPages <= 1) return null;
-
 
     // Logic to determine which pages to display in the pagination bar
     const maxPages = 5; // Max page links to display (e.g., 1 2 [3] 4 5)
     let startPage = Math.max(1, currentPage - Math.floor(maxPages / 2));
     let endPage = Math.min(totalPages, startPage + maxPages - 1);
 
-
     // Adjust startPage if we're near the end
     if (endPage - startPage + 1 < maxPages) {
       startPage = Math.max(1, endPage - maxPages + 1);
     }
-
 
     const pageNumbers = [];
     for (let i = startPage; i <= endPage; i++) {
       pageNumbers.push(i);
     }
 
-
     const goToPage = (page) => {
       if (page < 1 || page > totalPages || page === currentPage) return;
       setCurrentPage(page);
       fetchCharges(page);
     };
-
 
     return (
       <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap">
@@ -226,7 +221,6 @@ const OtherCharges = () => {
               </button>
             </li>
 
-
             {/* Page Numbers */}
             {pageNumbers.map((pageNumber) => (
               <li
@@ -243,7 +237,6 @@ const OtherCharges = () => {
                 </button>
               </li>
             ))}
-
 
             {/* Next */}
             <li
@@ -265,11 +258,9 @@ const OtherCharges = () => {
     );
   };
 
-
   // ==========================================================
   // END: FIXED Pagination Logic
   // ==========================================================
-
 
   return (
     <div className="main-content">
@@ -288,7 +279,6 @@ const OtherCharges = () => {
               ></button>
             </div>
           )}
-
 
           <div className="panel">
             <div className="panel-header">
@@ -331,7 +321,6 @@ const OtherCharges = () => {
               </div> */}
             </div>
 
-
             <div className="panel-body">
               {loading ? (
                 <div className="text-center py-5">
@@ -356,11 +345,9 @@ const OtherCharges = () => {
         </div>
       </div>
 
-
       <Footer />
     </div>
   );
 };
-
 
 export default OtherCharges;

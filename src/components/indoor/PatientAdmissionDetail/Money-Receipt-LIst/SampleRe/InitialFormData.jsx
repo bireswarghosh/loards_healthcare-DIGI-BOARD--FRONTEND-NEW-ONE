@@ -425,14 +425,14 @@ MoneyreeciptNo, ...rest}=receiptData
               {/* Barcode/Doctor Charges Column (Right) */}
               <div className="col-lg-4 d-flex flex-column">
                 <div className="p-3 border rounded shadow-sm flex-grow-1">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
+                  {/* <div className="d-flex justify-content-between align-items-center mb-2">
                     <label className="form-label small fw-bold mb-0">
                       Doctor Charges:
                     </label>
                     <span className="fw-bold text-success">
                       {receiptData.doctorCharges || "N/A"}
                     </span>
-                  </div>
+                  </div> */}
                   <div className="text-center p-1 rounded border">
                     {(receiptData.MoneyreeciptNo ||
                       receiptData.admission?.AdmitionNo) &&

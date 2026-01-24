@@ -826,6 +826,13 @@ const VisitList = () => {
                   >
                     <i className="fa-light fa-trash-arrow-up"></i> Clear
                   </button>
+                  <button
+                    className="btn btn-sm btn-success flex-shrink-0"
+                    onClick={() => {
+                   navigate('/visit_entry')
+                    }}
+                  >+ Add
+                  </button>
                 </div>
               </div>
 

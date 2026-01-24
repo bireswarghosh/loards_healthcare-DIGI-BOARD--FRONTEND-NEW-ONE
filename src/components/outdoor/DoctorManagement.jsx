@@ -156,6 +156,7 @@ const DoctorManagement = () => {
         const statuses = {};
         (response.data.data || []).forEach((doctor) => {
           statuses[doctor.DoctorId] = doctor.Status || "off";
+        
         });
         setDoctorStatuses(statuses);
       }

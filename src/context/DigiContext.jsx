@@ -220,6 +220,7 @@ const DigiContextProvider = ({ children }) => {
     section8: false,
     section9: false,
     section10: false,
+    ai: false,
   });
 
   const handleDropdownClick = (dropdown) => {
@@ -1462,6 +1463,36 @@ const DigiContextProvider = ({ children }) => {
   const section9 = createSectionState(9);
   const section10 = createSectionState(10);
 
+  // AI Part
+  const initialAiState = { isMainDropdownOpen: false };
+  const [aiState, setAiState] = useState(
+    localStorage.getItem("aiState") ? JSON.parse(localStorage.getItem("aiState")) : initialAiState
+  );
+  useEffect(() => { localStorage.setItem("aiState", JSON.stringify(aiState)); }, [aiState]);
+  const toggleAiDropdown = () => {
+    setAiState((prevState) => ({ ...prevState, isMainDropdownOpen: !prevState.isMainDropdownOpen }));
+    handleDropdownClick("ai");
+  };
+  const mainAiRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mainAiRef.current && !mainAiRef.current.contains(event.target)) {
+        setDropdownOpen((prev) => ({ ...prev, ai: false }));
+      }
+    };
+    if (dropdownOpen.ai) { document.addEventListener("mousedown", handleClickOutside); }
+    return () => { document.removeEventListener("mousedown", handleClickOutside); };
+  }, [dropdownOpen.ai]);
+
+  // AI Settings
+  const [aiSettings, setAiSettings] = useState({
+    apiKey: "",
+    model: "gpt-4o-mini",
+    maxTokens: 2000,
+    systemPrompt: "You are a helpful medical AI assistant."
+  });
+
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -2616,6 +2647,11 @@ const DigiContextProvider = ({ children }) => {
         section10State: section10.state,
         toggleMainSection10Dropdown: section10.toggle,
         mainSection10Ref: section10.ref,
+        aiState,
+        toggleAiDropdown,
+        mainAiRef,
+        aiSettings,
+        setAiSettings,
       }}
     >
       {children}

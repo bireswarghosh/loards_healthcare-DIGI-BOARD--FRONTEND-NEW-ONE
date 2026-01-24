@@ -34,8 +34,9 @@ const Login3 = () => {
       if (response.data && response.data.message === "Login successful") {
         const token = btoa(`${username}:${Date.now()}`);
         const userId = response.data.userId;
+        const userName = response.data.username || username;
         
-        login(token, userId);
+        login(token, userId, userName);
         navigate("/");
       }
       setLoading(false);

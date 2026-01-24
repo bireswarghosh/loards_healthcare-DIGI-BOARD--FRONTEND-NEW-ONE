@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { DigiContext } from '../../context/DigiContext';
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-react';
 import DashboardPart from './DashboardPart';
 import AppsPart from './AppsPart';
 import PagesPart from './PagesPart';
@@ -25,6 +25,8 @@ import Section7 from './Section7';
 import Section8 from './Section8';
 import Section9 from './Section9';
 import Section10 from './Section10';
+import AiPart from './AiPart';
+
 const MainSidebar = () => {
   const {
     isExpanded,
@@ -38,36 +40,43 @@ const MainSidebar = () => {
     isSmallScreen,
   } = useContext(DigiContext);
 
-  const shouldUseOverlayScrollbars = isExpanded || !isNavExpanded.isSmall || layoutPosition.horizontal || (!layoutPosition.twoColumn && isExpanded) || !layoutPosition.flush;
+  const shouldUseOverlayScrollbars =
+    isExpanded ||
+    !isNavExpanded.isSmall ||
+    layoutPosition.horizontal ||
+    (!layoutPosition.twoColumn && isExpanded) ||
+    !layoutPosition.flush;
 
   return (
     <div
-      className={`main-sidebar 
+      className={`main-sidebar
       ${
-        isNavExpanded.isSmall && !isExpanded ? 'collapsed' : isExpanded && isNavExpanded.reset ? 'collapsed' : ''
-      } ${
-        isNavExpanded.reset && isExpanded ? 'reset' : ''
-      } ${
-        layoutPosition.horizontal? 'open-sub horizontal-menu': ''
+        isNavExpanded.isSmall && !isExpanded
+          ? "collapsed"
+          : isExpanded && isNavExpanded.reset
+          ? "collapsed"
+          : ""
+      } ${isNavExpanded.reset && isExpanded ? "reset" : ""} ${
+        layoutPosition.horizontal ? "open-sub horizontal-menu" : ""
       } ${
         isSidebarOpen && !layoutPosition.twoColumn
-          ? 'sidebar-mini'
-          : 'vertical-menu'
+          ? "sidebar-mini"
+          : "vertical-menu"
       }
       ${
         !isSidebarOpen && layoutPosition.twoColumn && isSmallScreen
-          ? 'sub-menu-collapsed'
-          : ''
+          ? "sub-menu-collapsed"
+          : ""
       }
-        ${
-        layoutPosition.twoColumn  ? 'two-column-menu collapsed':''
+        ${layoutPosition.twoColumn ? "two-column-menu collapsed" : ""} ${
+        layoutPosition.twoColumn && isExpanded && !isSmallScreen
+          ? "sub-menu-collapsed"
+          : ""
       } ${
-        layoutPosition.twoColumn && isExpanded && !isSmallScreen ? 'sub-menu-collapsed':''
-      } ${
-        isNavExpanded.hoverOpen && isNavExpanded.hover ? 'sidebar-hover hoverable':''
-      } ${
-        layoutPosition.flush? 'flush-menu':''
-      } 
+        isNavExpanded.hoverOpen && isNavExpanded.hover
+          ? "sidebar-hover hoverable"
+          : ""
+      } ${layoutPosition.flush ? "flush-menu" : ""}
       `}
       style={sidebarBackgroundImageStyle}
       ref={ref}
@@ -78,35 +87,17 @@ const MainSidebar = () => {
         {shouldUseOverlayScrollbars ? (
           <OverlayScrollbarsComponent className="sidebar-menu">
             <DashboardPart />
-           
             <OutDoor />
-            
-<OutdoorMaster/>
-<OutdoorReport/>
-
-
-
-
-
+            <OutdoorMaster/>
+            <OutdoorReport/>
             <Indoor />
-          <IndoorMaster/>
-
- <Section1/>
+            <IndoorMaster/>
+            <Section1/>
             <DiagnosisMaster/>
             <BookingApp/>
             <Doctor/>
             <Marketing/>
-         
-            {/*   <Section2/>
-            <Section3/>
-            <Section4/>
-            <Section5/>
-            <Section6/>
-            <Section7/>
-            <Section8/>
-            <Section9/>
-            <Section10/> */}
-
+            <AiPart />
             <li className="help-center">
               <h3>Help Center</h3>
               <p>We're an award-winning, forward thinking</p>
@@ -118,33 +109,17 @@ const MainSidebar = () => {
         ) : (
           <>
             <DashboardPart />
-           
-
             <OutDoor />
-            
-<OutdoorMaster/>
-<OutdoorReport/>
-                  <Indoor />
-
-
-          <IndoorMaster/>
-
-     <Section1/>
-          <DiagnosisMaster/>
+            <OutdoorMaster/>
+            <OutdoorReport/>
+            <Indoor />
+            <IndoorMaster/>
+            <Section1/>
+            <DiagnosisMaster/>
             <BookingApp/>
             <Doctor/>
             <Marketing/>
-        
-          {/*  <Section2/>
-            <Section3/>
-            <Section4/>
-            <Section5/>
-            <Section6/>
-            <Section7/>
-            <Section8/>
-            <Section9/>
-            <Section10/> */}
-
+            <AiPart />
             <li className="help-center">
               <h3>Help Center</h3>
               <p>We're an award-winning, forward thinking</p>

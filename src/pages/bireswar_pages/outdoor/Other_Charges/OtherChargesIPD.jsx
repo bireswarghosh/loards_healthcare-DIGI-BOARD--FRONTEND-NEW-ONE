@@ -3,10 +3,9 @@ import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import { Modal, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
-
+import axiosInstance from "../../../../axiosInstance";
 
 const API_BASE_URL = "https://lords-backend.onrender.com/api/v1";
-
 
 const OtherCharges = () => {
   const location = useLocation();
@@ -18,7 +17,7 @@ const OtherCharges = () => {
   const [searchBy, setSearchBy] = useState("name");
   const [searchValue, setSearchValue] = useState("");
   const [admissionId, setAdmissionId] = useState(
-    location.state?.admissionId || "000436/17-18"
+    location.state?.admissionId || "000436/17-18",
   );
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [newCharge, setNewCharge] = useState({
@@ -36,21 +35,88 @@ const OtherCharges = () => {
   const [chargeSearch, setChargeSearch] = useState("");
   const [filteredCharges, setFilteredCharges] = useState([]);
 
-
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-
   const [delId, setDelId] = useState("");
 
+  const [bedName, setBedName] = useState("");
+
+  const [company, setCompany] = useState([]);
+
+  const [selOtherCharges, setSelOtherCharges] = useState({
+    Qty: "",
+    Rate: "",
+    Amount: "",
+    Remarks: "",
+    Package: "",
+  });
+  
+  const handleChange = (e,i) => {
+    const {name, value}= e.target
+
+   let data = otherCharges[i]
+ 
+   data[name]=value
+ 
+   setSelOtherCharges({
+     Qty:data.Qty,
+    Rate: data.Rate,
+    Amount:data.Amount,
+    Remarks: data.Remarks,
+    Package: data.Package,
+   })
+
+
+   setOtherCharges(prev=>([...prev]))
+  
+  }
+  
+const handleSave = async (id) => {
+  try {
+    const res = axiosInstance.put(`/admissions/${admissionId}/charges/${id}`,selOtherCharges)
+    fetchOtherCharges();
+    toast.success("Updated successfully")
+
+  } catch (error) {
+    console.log("error updating: ",error)
+  }
+}
+
+
+
+  const fetchCompany = async () => {
+    try {
+      const res = await axiosInstance.get(`/cashless`);
+
+      res.data.success ? setCompany(res.data.data) : null;
+    } catch (error) {
+      console.log("error cashless: ", error);
+    }
+  };
+
+  const fetchBed = async (id) => {
+    try {
+      console.log("HD");
+      const res = await axiosInstance.get(`/bedMaster/${id}`);
+
+      res.data.success ? setBedName(res.data.data.Bed) : setBedName("");
+    } catch (error) {
+      console.log("error fetching bed by id: ", error);
+    }
+  };
 
   useEffect(() => {
     // If coming from AdmissionList, use the passed data
     if (location.state?.selectedAdmission) {
+      console.log("adm data: ", location.state.selectedAdmission);
       setAdmissionData(location.state.selectedAdmission);
       setAdmissionId(location.state.selectedAdmission.AdmitionId);
+      if (location.state.selectedAdmission.BedId) {
+        console.log("babu");
+        fetchBed(location.state.selectedAdmission.BedId);
+      }
     }
-
 
     if (admissionId) {
       if (!location.state?.selectedAdmission) {
@@ -59,19 +125,18 @@ const OtherCharges = () => {
       fetchOtherCharges();
     }
     fetchMasterCharges();
+    fetchCompany();
   }, [admissionId, location.state]);
-
 
   useEffect(() => {
     const filtered = masterCharges.filter(
       (charge) =>
         charge.OtherCharges.toLowerCase().includes(
-          chargeSearch.toLowerCase()
-        ) || charge.OtherChargesId.toString().includes(chargeSearch)
+          chargeSearch.toLowerCase(),
+        ) || charge.OtherChargesId.toString().includes(chargeSearch),
     );
     setFilteredCharges(filtered);
   }, [masterCharges, chargeSearch]);
-
 
   const fetchMasterCharges = async () => {
     try {
@@ -84,12 +149,11 @@ const OtherCharges = () => {
     }
   };
 
-
   const fetchAdmissionData = async () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${API_BASE_URL}/admissions/${admissionId}`
+        `${API_BASE_URL}/admissions/${admissionId}`,
       );
       if (response.data.success) {
         setAdmissionData(response.data.data.admission);
@@ -101,11 +165,10 @@ const OtherCharges = () => {
     }
   };
 
-
   const fetchOtherCharges = async () => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/admission-charges/${admissionId}`
+        `${API_BASE_URL}/admission-charges/${admissionId}`,
       );
       if (response.data.success) {
         setOtherCharges(response.data.data);
@@ -115,18 +178,15 @@ const OtherCharges = () => {
     }
   };
 
-
   const handleFind = async () => {
     if (!searchValue) return;
     try {
       setLoading(true);
       let url = `${API_BASE_URL}/admissions/search/${searchValue}`;
 
-
       // Add search type parameter
       const params = new URLSearchParams();
       params.append("searchBy", searchBy);
-
 
       const response = await axios.get(`${url}?${params}`);
       if (response.data.success && response.data.data.length > 0) {
@@ -134,14 +194,13 @@ const OtherCharges = () => {
         let sortedResults = [...response.data.data];
         if (searchBy === "orderName") {
           sortedResults.sort((a, b) =>
-            a.PatientName.localeCompare(b.PatientName)
+            a.PatientName.localeCompare(b.PatientName),
           );
         } else if (searchBy === "orderDate") {
           sortedResults.sort(
-            (a, b) => new Date(b.AdmitionDate) - new Date(a.AdmitionDate)
+            (a, b) => new Date(b.AdmitionDate) - new Date(a.AdmitionDate),
           );
         }
-
 
         setSearchResults(sortedResults);
         setShowSearchResults(true);
@@ -158,18 +217,16 @@ const OtherCharges = () => {
     }
   };
 
-
   const selectPatient = async (admission) => {
     setAdmissionId(admission.AdmitionId);
     setAdmissionData(admission);
     setShowSearchResults(false);
     setSearchValue("");
 
-
     // Fetch charges for selected patient
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/admission-charges/${admission.AdmitionId}`
+        `${API_BASE_URL}/admission-charges/${admission.AdmitionId}`,
       );
       if (response.data.success) {
         setOtherCharges(response.data.data);
@@ -178,7 +235,6 @@ const OtherCharges = () => {
       console.error("Error fetching charges for selected patient:", error);
     }
   };
-
 
   const selectMasterCharge = (charge) => {
     setSelectedCharge(charge);
@@ -189,22 +245,20 @@ const OtherCharges = () => {
     });
   };
 
-
   const toggleChargeSelection = (charge) => {
     const isSelected = selectedCharges.find(
-      (c) => c.OtherChargesId === charge.OtherChargesId
+      (c) => c.OtherChargesId === charge.OtherChargesId,
     );
     if (isSelected) {
       setSelectedCharges(
         selectedCharges.filter(
-          (c) => c.OtherChargesId !== charge.OtherChargesId
-        )
+          (c) => c.OtherChargesId !== charge.OtherChargesId,
+        ),
       );
     } else {
       setSelectedCharges([...selectedCharges, charge]);
     }
   };
-
 
   const selectAllCharges = () => {
     if (selectedCharges.length === filteredCharges.length) {
@@ -213,7 +267,6 @@ const OtherCharges = () => {
       setSelectedCharges([...filteredCharges]);
     }
   };
-
 
   const addMultipleCharges = async () => {
     try {
@@ -229,7 +282,7 @@ const OtherCharges = () => {
         };
         await axios.post(
           `${API_BASE_URL}/admissions/${admissionId}/charges`,
-          chargeData
+          chargeData,
         );
       }
       fetchOtherCharges();
@@ -244,7 +297,6 @@ const OtherCharges = () => {
     }
   };
 
-
   const addNewCharge = async () => {
     try {
       const chargeData = {
@@ -253,7 +305,7 @@ const OtherCharges = () => {
       };
       await axios.post(
         `${API_BASE_URL}/admissions/${admissionId}/charges`,
-        chargeData
+        chargeData,
       );
       fetchOtherCharges();
       setNewCharge({
@@ -274,10 +326,8 @@ const OtherCharges = () => {
     }
   };
 
-
   //   const deleteCharge = async (chargeId) => {
   //     // if (!window.confirm("Are you sure you want to delete this charge?")) return;
-
 
   //     setShowConfirm(true);
   //     if (confirmDelete) {
@@ -287,11 +337,10 @@ const OtherCharges = () => {
   //     }
   //   };
 
-
   const deleteChargeById = async (chargeId) => {
     try {
       await axios.delete(
-        `${API_BASE_URL}/admissions/${admissionId}/charges/${chargeId}`
+        `${API_BASE_URL}/admissions/${admissionId}/charges/${chargeId}`,
       );
       fetchOtherCharges();
       setShowConfirm(false);
@@ -305,18 +354,15 @@ const OtherCharges = () => {
     }
   };
 
-
   const calculateTotals = () => {
     const total = otherCharges.reduce(
       (sum, charge) => sum + (charge.Amount || 0),
-      0
+      0,
     );
     return { total, sgst: 0, cgst: 0 };
   };
 
-
   const totals = calculateTotals();
-
 
   return (
     <>
@@ -335,7 +381,7 @@ const OtherCharges = () => {
               </div>
               <div className="col-md-3">
                 <label>Patient's Name</label>
-                <input
+                {/* <input
                   className="form-control"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
@@ -344,6 +390,16 @@ const OtherCharges = () => {
                       ? "Enter patient name"
                       : "Enter admission no"
                   }
+                /> */}
+                <input
+                  className="form-control"
+                  value={admissionData?.PatientName}
+                  // onChange={(e) => setSearchValue(e.target.value)}
+                  // placeholder={
+                  //   searchBy === "name"
+                  //     ? "Enter patient name"
+                  //     : "Enter admission no"
+                  // }
                 />
               </div>
               <div className="col-md-2">
@@ -358,11 +414,11 @@ const OtherCharges = () => {
                 <label>Bed No</label>
                 <input
                   className="form-control"
-                  value={admissionData?.BedId || ""}
+                  value={bedName || ""}
                   readOnly
                 />
               </div>
-              <div className="col-md-3">
+              {/* <div className="col-md-3">
                 <button
                   className="btn btn-primary mt-4"
                   onClick={handleFind}
@@ -370,12 +426,11 @@ const OtherCharges = () => {
                 >
                   {loading ? "Finding..." : "Find"}
                 </button>
-              </div>
+              </div> */}
             </div>
 
-
             {/* Search Options */}
-            <div className="row mb-3">
+            {/* <div className="row mb-3">
               <div className="col-md-12 d-flex gap-4">
                 <div className="form-check">
                   <input
@@ -422,8 +477,7 @@ const OtherCharges = () => {
                   <label className="form-check-label">Order By Date</label>
                 </div>
               </div>
-            </div>
-
+            </div> */}
 
             {/* Search Results Modal */}
             {showSearchResults && (
@@ -480,44 +534,21 @@ const OtherCharges = () => {
               </div>
             )}
 
-
             {/* Patient Info */}
             {admissionData && (
               <div className="border rounded p-3  mb-4">
                 <h6 className="fw-bold text-primary mb-3">Patient Detail</h6>
-                <div className="row g-3">
-                  <div className="col-md-4">
-                    <label>Address</label>
-                    <input
-                      className="form-control"
-                      value={admissionData.Add1 || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label>Area</label>
-                    <input
-                      className="form-control"
-                      value={admissionData.Add2 || ""}
-                      readOnly
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label>Phone</label>
-                    <input
-                      className="form-control"
-                      value={admissionData.PhoneNo || ""}
-                      readOnly
-                    />
-                  </div>
+
+                <div className="row g-5 mb-3">
                   <div className="col-md-6">
-                    <label>Guardian</label>
-                    <input
+                    <label>Address</label>
+                    <textarea
                       className="form-control"
-                      value={admissionData.GurdianName || ""}
+                      value={`${admissionData.Add1 || ""}\n${admissionData.Add2 || ""}\n${admissionData.Add3 || ""}`}
                       readOnly
                     />
                   </div>
+
                   <div className="col-md-2">
                     <label>Age</label>
                     <input
@@ -534,41 +565,92 @@ const OtherCharges = () => {
                       readOnly
                     />
                   </div>
-                  <div className="col-md-2">
-                    <label>Relation</label>
+                </div>
+
+                <div className="row g-5 mb-3">
+                  <div className="col-md-4">
+                    <label>Phone</label>
                     <input
                       className="form-control"
-                      value={admissionData.Relation || ""}
+                      value={admissionData.PhoneNo || ""}
                       readOnly
                     />
                   </div>
-                  <div className="col-md-2">
+
+                  <div className="col-md-3">
+                    <label>Marital Status[U/M]</label>
+                    <input
+                      className="form-control"
+                      value={admissionData.MStatus || ""}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="col-md-3">
                     <label>Admission Date</label>
                     <input
-                      type="date"
+                      type="text"
                       className="form-control"
-                      value={admissionData.AdmitionDate?.split(" ")[0] || ""}
+                      value={
+                        admissionData.AdmitionDate?.split("T")[0]
+                          .split("-")
+                          .reverse()
+                          .join("/") || ""
+                      }
                       readOnly
                     />
                   </div>
+                </div>
+
+                <div className="row g-5 mb-3">
+                  <div className="col-md-5">
+                    <label>Remarks</label>
+                    <input
+                      className="form-control"
+                      value={admissionData.Remarks || ""}
+                      readOnly
+                    />
+                  </div>
+
                   <div className="col-md-2">
                     <label>Company</label>
-                    <input
+                    {/* <input
                       className="form-control"
                       value={admissionData.CompanyId || ""}
                       readOnly
-                    />
-                  </div>
-                  <div className="col-md-2">
-                    <label>Department</label>
+                    /> */}
                     <input
                       className="form-control"
-                      value={admissionData.DepartmentId || ""}
+                      value={
+                        company.find(
+                          (item) => item.CashlessId == admissionData.CompanyId,
+                        )?.Cashless || ""
+                      }
                       readOnly
                     />
                   </div>
                   <div className="col-md-2">
-                    <label>Status</label>
+                    <label>Cash Less</label>
+                    {/* <input
+                      className="form-control"
+                      value={admissionData.CashLessId || ""}
+                      readOnly
+                    /> */}
+                    <input
+                      className="form-control"
+                      value={
+                        company.find(
+                          (item) => item.CashlessId == admissionData.CashLessId,
+                        )?.Cashless || ""
+                      }
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="col-md-2">
+                    <label>
+                      Package (Need to ask Lords what is the purpose of it)
+                    </label>
                     <input
                       className="form-control"
                       value={admissionData.Status || ""}
@@ -578,7 +660,6 @@ const OtherCharges = () => {
                 </div>
               </div>
             )}
-
 
             {/* Add Button */}
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -596,7 +677,6 @@ const OtherCharges = () => {
               </div>
             </div>
 
-
             {/* Existing Patient Charges */}
             <div className="border rounded p-3  mb-4">
               <h6 className="fw-bold text-warning mb-3">
@@ -604,51 +684,112 @@ const OtherCharges = () => {
               </h6>
               <div
                 className="table-responsive"
-                style={{ maxHeight: "300px", overflowY: "auto" }}
+                style={{
+                  maxHeight: "300px",
+                  overflowY: "auto",
+                  overflowX: "auto",
+                }}
               >
                 <table className="table table-sm table-hover">
                   <thead className=" ">
                     <tr>
+                      <th>Action</th>
                       <th>Charge Name</th>
-                      <th>Rate</th>
+                      <th>Rate(₹)</th>
                       <th>Unit</th>
                       <th>Qty</th>
                       <th>Amount</th>
+                      <th>Remarks</th>
+                      <th>Package</th>
                       <th>Date</th>
-                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {otherCharges.length > 0 ? (
                       otherCharges.map((charge, i) => {
                         const masterCharge = masterCharges.find(
-                          (mc) => mc.OtherChargesId === charge.OtherChargesId
+                          (mc) => mc.OtherChargesId === charge.OtherChargesId,
                         );
                         {
                           console.log("hi: ", masterCharge);
                         }
                         return (
                           <tr key={i}>
+                            <td className="d-flex">
+                              <button
+                                className="btn btn-sm btn-outline-info me-1"
+                                onClick={() => {
+                                  handleSave(charge.Id)
+                                }}
+                              >
+                                <i className="fa-solid fa-pen"></i>
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => {
+                                  setShowConfirm(true);
+                                  setDelId(charge.Id);
+                                }}
+                              >
+                                <i className="fa-solid fa-trash"></i>{" "}
+                              </button>
+                            </td>
                             <td>
                               {masterCharge?.OtherCharges ||
                                 `Charge ID: ${charge.OtherChargesId}`}
                             </td>
-                            <td>₹{charge.Rate}</td>
-                            <td>{masterCharge?.Unit || "-"}</td>
-                            <td>{charge.Qty}</td>
-                            <td>₹{charge.Amount}</td>
-                            <td>{charge.EDate?.split("T")[0]}</td>
                             <td>
-                              <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => {
-                                  setShowConfirm(true);
-                                  setDelId(charge.OtherChargesId);
-                                }}
-                              >
-                                Delete
-                              </button>
+                              <input
+                                type="number"
+                                className="form-control form-control-sm"
+                                value={charge.Rate}
+                                name="Rate"
+                                onChange={(e) => {
+                                 handleChange(e,i)
+                                }
+                                }
+                                // placeholder={charge.Rate}
+                              />
                             </td>
+                            <td>{masterCharge?.Unit || "-"}</td>
+                            <td>
+                              <input
+                                type="number"
+                                className="form-control form-control-sm"
+                                value={charge.Qty}
+                                name="Qty"
+                                onChange={(e) => {
+                                 handleChange(e,i)
+                                }
+                                }
+                              />
+                            </td>
+                            <td>₹{Number(charge.Rate) * Number(charge.Qty)}</td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                value={charge.Remarks}
+                                name="Remarks"
+                                onChange={(e) => {
+                                 handleChange(e,i)
+                                }
+                                }
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                value={charge.Package}
+                                name="Package"
+                                onChange={(e) => {
+                                 handleChange(e,i)
+                                }
+                                }
+                              />
+                            </td>
+                            <td>{charge.EDate?.split("T")[0]}</td>
                           </tr>
                         );
                       })
@@ -663,7 +804,6 @@ const OtherCharges = () => {
                 </table>
               </div>
             </div>
-
 
             {/* Totals */}
             <div className="row g-3 mb-4">
@@ -693,7 +833,6 @@ const OtherCharges = () => {
               </div>
             </div>
 
-
             {/* Action Buttons */}
             {/* <div className="d-flex gap-2">
               <button className="btn btn-primary" onClick={fetchOtherCharges}>
@@ -706,7 +845,6 @@ const OtherCharges = () => {
                 Print
               </button>
             </div> */}
-
 
             {/* Add Charge Modal */}
             <Modal
@@ -730,7 +868,6 @@ const OtherCharges = () => {
                   />
                 </div>
 
-
                 {/* Select All */}
                 <div className="mb-3">
                   <label className="form-check-label">
@@ -746,7 +883,6 @@ const OtherCharges = () => {
                     Select All ({filteredCharges.length} charges)
                   </label>
                 </div>
-
 
                 {/* Selected Charges Display */}
                 {selectedCharges.length > 0 && (
@@ -769,7 +905,6 @@ const OtherCharges = () => {
                   </div>
                 )}
 
-
                 <div
                   className="table-responsive"
                   style={{ maxHeight: "400px", overflowY: "auto" }}
@@ -788,7 +923,7 @@ const OtherCharges = () => {
                     <tbody>
                       {filteredCharges.map((charge, i) => {
                         const isSelected = selectedCharges.find(
-                          (c) => c.OtherChargesId === charge.OtherChargesId
+                          (c) => c.OtherChargesId === charge.OtherChargesId,
                         );
                         return (
                           <tr key={i}>
@@ -817,7 +952,6 @@ const OtherCharges = () => {
                     </tbody>
                   </table>
                 </div>
-
 
                 {selectedCharge && (
                   <div className="mt-4 border-top pt-3">
@@ -870,7 +1004,7 @@ const OtherCharges = () => {
                         <input
                           className="form-control"
                           value={`₹${(newCharge.Rate * newCharge.Qty).toFixed(
-                            2
+                            2,
                           )}`}
                           readOnly
                         />
@@ -915,7 +1049,6 @@ const OtherCharges = () => {
         </div>
       </div>
 
-
       {/* Confirm Delete Modal */}
       {showConfirm && (
         <div
@@ -954,14 +1087,12 @@ const OtherCharges = () => {
                 ></button>
               </div>
 
-
               <div className="modal-body text-center">
                 <p className="fs-6 mb-1">
                   Are you sure you want to delete this?
                 </p>
                 <p className="text-muted">This cannot be undone.</p>
               </div>
-
 
               <div className="modal-footer d-flex justify-content-center gap-3">
                 <button
@@ -972,7 +1103,6 @@ const OtherCharges = () => {
                 >
                   Cancel
                 </button>
-
 
                 <button
                   className="btn btn-danger px-4"

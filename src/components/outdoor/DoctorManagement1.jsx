@@ -633,7 +633,7 @@ const DoctorManagement = () => {
           setError("Failed to access camera. Please check permissions.");
           setShowCameraModal(false);
         });
-    }, 500);
+    }, 500);``
   };
 
   return (

@@ -13,8 +13,8 @@ const AdmissionList = () => {
   const [loading, setLoading] = useState(false);
   const [searchType, setSearchType] = useState('name');
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFrom, setDateFrom] = useState(new Date().toISOString().split('T')[0]);
-  const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 });
 
 
@@ -22,6 +22,52 @@ const AdmissionList = () => {
     fetchAdmissions();
   }, [pagination.page, searchQuery]);
 
+  useEffect(()=>{
+if(dateFrom && dateTo){
+fetchAdmissionsUsingDate()
+console.log("date from: ",dateFrom)
+console.log("date to: ",dateTo)
+return
+}
+    fetchAdmissions();
+
+  },[dateFrom, dateTo])
+
+const fetchAdmissionsUsingDate = async () => {
+    try {
+      setLoading(true);
+      let response;
+      
+     response = await axiosInstance.get(`/admission/filter?startDate=${dateFrom}&endDate=${dateTo}`);
+    
+      
+      if (response.status === 200 && response.data) {
+        if (response.data.success) {
+          setAdmissions(response.data.data || []);
+          if (response.data.pagination) {
+            // Update pagination state with total and pages from the API response
+            setPagination(prev => ({ ...prev, ...response.data.pagination }));
+          } else {
+             // Handle case where pagination info might be missing but success is true (e.g., search results)
+             setPagination(prev => ({ ...prev, pages: 1, total: response.data.data ? response.data.data.length : 0 }));
+          }
+        } else {
+          console.log('API returned success=false:', response.data.message);
+          setAdmissions([]);
+          setPagination(prev => ({ ...prev, pages: 0, total: 0 }));
+        }
+      } else {
+        console.log('Non-200 response or no data');
+        setAdmissions([]);
+        setPagination(prev => ({ ...prev, pages: 0, total: 0 }));
+      }
+    } catch (error) {
+      console.error('Error fetching admissions:', error);
+      setPagination(prev => ({ ...prev, pages: 0, total: 0 }));
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchAdmissions = async () => {
     try {
       setLoading(true);
@@ -183,24 +229,35 @@ const AdmissionList = () => {
                 </div>
 
                 {/* DATE FILTER */}
-                <div className="col-lg-6">
+                <div className="col-lg-5">
                   <div className="input-group input-group-sm">
-                    {/* <span className="input-group-text">From</span>
+                    <span className="input-group-text">From</span>
                     <input 
                       type="date" 
                       className="form-control" 
                       value={dateFrom} 
                       onChange={(e) => handleDateChange('from', e.target.value)} 
-                    /> */}
-                    {/* <span className="input-group-text">To</span>
+                    />
+                    <span className="input-group-text">To</span>
                     <input 
                       type="date" 
                       className="form-control" 
                       value={dateTo} 
                       onChange={(e) => handleDateChange('to', e.target.value)} 
-                    /> */}
+                    />
                   </div>
                 </div>
+<div className="col-lg-1">
+
+                <button
+                className='btn btn-primary'
+                onClick={()=>{
+                  setSearchQuery('')
+setDateFrom('')
+setDateTo('')
+                }}
+                >Clear</button>
+</div>
               </div>
             </div>
             

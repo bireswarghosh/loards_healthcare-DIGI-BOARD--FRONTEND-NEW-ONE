@@ -1,18 +1,37 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../../../axiosInstance";
 // Removed unused CSS import: import './OutdoorVisitDetail_Compact.css';
+import JsBarcode from "jsbarcode";
+
+const BarcodeGenerator = ({ value }) => {
+  const barcodeRef = useRef(null);
+
+  useEffect(() => {
+    if (value) {
+      JsBarcode(barcodeRef.current, value, {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 1.6,
+        height: 25,
+        displayValue: true,
+      });
+    }
+  }, [value]);
+
+  return (
+    <div className="p-2 ps-3 item-center">
+      <svg ref={barcodeRef}></svg>
+    </div>
+  );
+};
 
 const VisitEntry = () => {
-
   // for modal and multiple member in same phone number
-const [searchResults, setSearchResults] = useState([]);
-const [showModal, setShowModal] = useState(false);
-const [cashlessData, setCashlessData] = useState([]);
-const [companyData, setCompanyData] = useState([]);
-
-
-
+  const [searchResults, setSearchResults] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [cashlessData, setCashlessData] = useState([]);
+  const [companyData, setCompanyData] = useState([]);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,8 +58,6 @@ const [companyData, setCompanyData] = useState([]);
   const getInitialTime = () => new Date().toTimeString().slice(0, 5);
 
   const [formData, setFormData] = useState({
-
-    
     // Booking fields
     Booking: "N",
     RegistrationDate: new Date().toISOString().split("T")[0],
@@ -98,7 +115,7 @@ const [companyData, setCompanyData] = useState([]);
     narration: "",
     // Payment fields (mostly handled by paymentMethods state now)
     receiptAmount: "",
-    dueamt: '',
+    dueamt: "",
     receiptType: "CASH",
     paidamt: "",
     bankName: "",
@@ -116,33 +133,52 @@ const [companyData, setCompanyData] = useState([]);
     CompanyId: "",
   });
 
+  const [docDetail, setDocDetail] = useState({})
 
-
-
-useEffect(() => {
- const fetchCashLessAndCompany = async () => {
+const fetchDocById = async (id) => {
   try {
-    // Fetch Cashless data
-    const cashless = await axiosInstance.get("/cashless");
-    if(cashless.data.success){
-      setCashlessData(cashless.data.data.filter(item => item.Cashless));
-    }
+    if(id){
 
-    // Fetch Company data
-    const company = await axiosInstance.get("/acgenled?partyType=D");
-    if(company.data.success){
-      setCompanyData(company.data.data);
+
+      const res = await axiosInstance.get(`/doctormaster/${id}`)
+      res.data.success?setDocDetail(res.data.data):setDocDetail({})
+      console.log("doc de: ",res.data.data)
     }
   } catch (error) {
-    console.error("Error fetching data:", error);
+    console.log("Error fetching doc by id:",error)
   }
 }
+ 
 
-  fetchCashLessAndCompany();
-}, []);
+useEffect(() => {
+  fetchDocById(formData.doctorId)
+}, [formData.doctorId])
 
 
+  useEffect(() => {
+    const fetchCashLessAndCompany = async () => {
+      try {
+        // Fetch Cashless data
+        const cashless = await axiosInstance.get("/cashless");
+        if (cashless.data.success) {
+          setCashlessData(cashless.data.data.filter((item) => item.Cashless));
+        }
 
+        // Fetch Company data
+        const company = await axiosInstance.get("/acgenled?partyType=D");
+        if (company.data.success) {
+          setCompanyData(company.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchCashLessAndCompany();
+
+  }, []);
+
+  const [modex, setModex] = useState("add");
 
   // Fetch religions and departments on component mount
   useEffect(() => {
@@ -172,6 +208,12 @@ useEffect(() => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (formData.RegistrationId) {
+      setModex("not-add");
+    }
+  }, [formData.RegistrationId]);
+
   const loadPatientData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -180,9 +222,12 @@ useEffect(() => {
         data = patientData;
       } else if (id) {
         const token = localStorage.getItem("token");
-        const response = await axiosInstance.get('/admission/search?name=${name}&phone=${phone}', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axiosInstance.get(
+          "/admission/search?name=${name}&phone=${phone}",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         data = response.data.data;
       }
 
@@ -199,7 +244,7 @@ useEffect(() => {
                 `/doctormaster/${billData.DoctorId}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                }
+                },
               );
               if (doctorResponse.data && doctorResponse.data.success) {
                 doctorName = doctorResponse.data.data.Doctor;
@@ -215,7 +260,7 @@ useEffect(() => {
                 `/speciality/${billData.department}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                }
+                },
               );
               if (deptResponse.data && deptResponse.data.success) {
                 setDepartmentName(deptResponse.data.data.Speciality);
@@ -225,7 +270,7 @@ useEffect(() => {
                 `/doctormaster/department/${billData.department}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                }
+                },
               );
               if (doctorsResponse.data && doctorsResponse.data.success) {
                 setDoctors(doctorsResponse.data.data || []);
@@ -242,7 +287,9 @@ useEffect(() => {
 
         if (data.CashLessId) {
           try {
-            const cashlessRes = await axiosInstance.get(`/cashless/${data.CashLessId}`);
+            const cashlessRes = await axiosInstance.get(
+              `/cashless/${data.CashLessId}`,
+            );
             if (cashlessRes.data?.success) {
               cashlessName = cashlessRes.data.data.Cashless;
             }
@@ -254,7 +301,9 @@ useEffect(() => {
         if (data.CompanyId || data.m_CompanyId) {
           const companyId = data.CompanyId || data.m_CompanyId;
           try {
-            const companyRes = await axiosInstance.get(`/acgenled/${companyId}`);
+            const companyRes = await axiosInstance.get(
+              `/acgenled/${companyId}`,
+            );
             if (companyRes.data?.success) {
               companyName = companyRes.data.data.Desc;
             }
@@ -300,12 +349,14 @@ useEffect(() => {
           doctorId: data.DoctorId?.toString() || "",
           docName: data.DoctorName || doctorName,
 
-          
+          VisitTypeName: data.VisitTypeName,
+
           // Billing fields from PatientVisit
           VNo: data.VNo || "",
           OutBillDate: data.PVisitDate
             ? data.PVisitDate.split("T")[0]
             : new Date().toISOString().split("T")[0],
+          RegistrationDate: data.RegistrationDate.split("T")[0] || "",
           RegistrationTime: data.vTime || getInitialTime(),
           RegCh: data.RegCh?.toString() || "0.00",
           Rate: data.Rate?.toString() || "0.00",
@@ -327,14 +378,18 @@ useEffect(() => {
           Cashless: data.CashLess || "N",
           CashLessName: cashlessName,
           CashLessId: data.CashLessId || "",
-          CompanyYN: (data.CompanyId || data.m_CompanyId) ? "Y" : "N",
+          CompanyYN: data.CompanyId || data.m_CompanyId ? "Y" : "N",
           CompanyName: companyName,
           CompanyId: data.CompanyId || data.m_CompanyId || "",
         });
 
         // Load existing payment methods from patient visit data
-        if (data.paymentMethods && Array.isArray(data.paymentMethods) && data.paymentMethods.length > 0) {
-          const existingPayments = data.paymentMethods.map(pm => ({
+        if (
+          data.paymentMethods &&
+          Array.isArray(data.paymentMethods) &&
+          data.paymentMethods.length > 0
+        ) {
+          const existingPayments = data.paymentMethods.map((pm) => ({
             type: pm.type?.toString() || "0",
             amount: pm.amount?.toString() || "",
             upiApp: pm.upiApp || "",
@@ -423,7 +478,7 @@ useEffect(() => {
             const lastMonth = new Date(
               regDate.getFullYear(),
               regDate.getMonth(),
-              0
+              0,
             );
             days += lastMonth.getDate();
           }
@@ -501,7 +556,7 @@ useEffect(() => {
           `/doctormaster/department/${value}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         if (response.data && response.data.success) {
           setDoctors(response.data.data || []);
@@ -515,24 +570,19 @@ useEffect(() => {
     // Update doctor name when doctor is selected
     if (name === "doctorId" && value) {
       const selectedDoctor = doctors.find(
-        (doc) => doc.DoctorId.toString() === value
+        (doc) => doc.DoctorId.toString() === value,
       );
       if (selectedDoctor) {
         setFormData((prev) => ({ ...prev, docName: selectedDoctor.Doctor }));
       }
     }
 
-    // ------cashlesh----- 
-// CASHLESS LOGIC
+    // ------cashlesh-----
+    // CASHLESS LOGIC
 
+    // When user manually selects a cashless name
 
-// When user manually selects a cashless name
-
-
-// When user selects company
-
-
-
+    // When user selects company
   };
 
   const handleSubmit = async (e) => {
@@ -543,120 +593,129 @@ useEffect(() => {
       // Calculate total payment and due amount
       const totalPaidAmount = paymentMethods.reduce(
         (sum, p) => sum + parseFloat(p.amount || 0),
-        0
+        0,
       );
       const totalBillAmount = parseFloat(formData.billAmt || 0);
       const dueAmount = totalBillAmount - totalPaidAmount;
 
       // For billing information, use patient visit API
-   const visitData = {
-  RegistrationDate: formData.RegistrationDate,
-  RegistrationTime: formData.RegistrationTime,
-  PatientName: formData.PatientName,
-  Add1: formData.Add1,
-  Add2: formData.Add2,
-  Add3: formData.Add3,
+      const visitData = {
+        RegistrationDate: formData.RegistrationDate,
+        RegistrationTime: formData.RegistrationTime,
+        PatientName: formData.PatientName,
+        Add1: formData.Add1,
+        Add2: formData.Add2,
+        Add3: formData.Add3,
 
-  // AGE
-  Age: parseInt(formData.Age) || 0,
-  AgeType: "Y",
-  AgeD: parseInt(formData.AgeD) || 0,
-  AgeTypeD: "M",
-  AgeN: parseInt(formData.AgeN) || 0,
-  AgeTypeN: "D",
-  Dob: formData.dob,
+        // AGE
+        Age: parseInt(formData.Age) || 0,
+        AgeType: "Y",
+        AgeD: parseInt(formData.AgeD) || 0,
+        AgeTypeD: "M",
+        AgeN: parseInt(formData.AgeN) || 0,
+        AgeTypeN: "D",
+        Dob: formData.dob,
 
-  // BASIC INFO
-  Sex: formData.Sex,
-  MStatus: formData.MStatus,
-  PhoneNo: formData.PhoneNo,
-  AreaId: null, // if you have it add it
-  ReligionId: parseInt(formData.ReligionId) || null,
-  UserId: localStorage.getItem("userId") ?? 0,
-  EMailId: formData.email,
-  PPr: formData.PPr,
-  CareOf: formData.Relation,
-  GurdianName: formData.GurdianName,
+        // BASIC INFO
+        Sex: formData.Sex,
+        MStatus: formData.MStatus,
+        PhoneNo: formData.PhoneNo,
+        AreaId: null, // if you have it add it
+        ReligionId: parseInt(formData.ReligionId) || null,
+        UserId: localStorage.getItem("userId") ?? 0,
+        EMailId: formData.email,
+        PPr: formData.PPr,
+        CareOf: formData.Relation,
+        GurdianName: formData.GurdianName,
 
-  // VITALS
-  Height: parseInt(formData.Height) || 0,
-  Hight: parseInt(formData.Height) || 0, // backend spelling mistake
-  Weight: parseInt(formData.Weight) || 0,
-  BloodGroup: formData.BloodGroup,
-  bpmin: parseInt(formData.BpMin) || 0,
-  bpmax: parseInt(formData.BpMax) || 0,
-  BpMin: parseInt(formData.BpMin) || 0,
-  BpMax: parseInt(formData.BpMax) || 0,
-  Temperatare: null,
+        // VITALS
+        Height: parseInt(formData.Height) || 0,
+        Hight: parseInt(formData.Height) || 0, // backend spelling mistake
+        Weight: parseInt(formData.Weight) || 0,
+        BloodGroup: formData.BloodGroup,
+        bpmin: parseInt(formData.BpMin) || 0,
+        bpmax: parseInt(formData.BpMax) || 0,
+        BpMin: parseInt(formData.BpMin) || 0,
+        BpMax: parseInt(formData.BpMax) || 0,
+        Temperatare: null,
 
-  // VISIT
-  PVisitDate: formData.RegistrationDate,
-  vTime: formData.RegistrationTime,
-  BTime: formData.RegistrationTime,
-  BDate: formData.RegistrationDate,
-  BookingYN: formData.Booking,
-  VisitTypeId: 1,
-  Rate: parseFloat(formData.Rate) || 0,
-  Discount: parseFloat(formData.Discount) || 0,
-  TotAmount: parseFloat(formData.billAmt) || 0,
-  AdvAmt: 0,
-  ServiceCh: parseFloat(formData.svrCh) || 0,
-  SrvChDisc: parseFloat(formData.srvChDisc) || 0,
-  RegCh: Number(formData.RegCh),
-  NewRegYN: "Y",
+        // VISIT
+        PVisitDate: formData.RegistrationDate,
+        vTime: formData.RegistrationTime,
+        BTime: formData.RegistrationTime,
+        BDate: formData.RegistrationDate,
+        BookingYN: formData.Booking,
+        VisitTypeId: 1,
+        Rate: parseFloat(formData.Rate) || 0,
+        Discount: parseFloat(formData.Discount) || 0,
+        TotAmount: parseFloat(formData.billAmt) || 0,
+        AdvAmt: 0,
+        ServiceCh: parseFloat(formData.svrCh) || 0,
+        SrvChDisc: parseFloat(formData.srvChDisc) || 0,
+        RegCh: Number(formData.RegCh),
+        NewRegYN: "Y",
 
-  // QUEUE
-  QNo: formData.queueNo,
-  Quota: formData.quota ? 1 : 0,
+        // QUEUE
+        QNo: formData.queueNo,
+        Quota: formData.quota ? 1 : 0,
 
-  // DOCTOR
-  SpecialityId: parseInt(formData.DepartmentId),
-  DoctorId: parseInt(formData.doctorId),
+        // DOCTOR
+        SpecialityId: parseInt(formData.DepartmentId),
+        DoctorId: parseInt(formData.doctorId),
 
-  // REMARKS
-  Remarks: formData.narration,
-  Narration: formData.narration,
+        // REMARKS
+        Remarks: formData.narration,
+        Narration: formData.narration,
 
-  // PAYMENT - Multiple payment methods
-  paymentMethods: paymentMethods.map(pm => ({
-    type: pm.type,
-    amount: parseFloat(pm.amount) || 0,
-    upiApp: pm.upiApp || "",
-    utrNumber: pm.utrNumber || "",
-    bankName: pm.bankName || "",
-    chequeNumber: pm.chequeNumber || "",
-  })),
-  PaymentType: paymentMethods[0]?.type,
-  BANK: paymentMethods[0]?.bankName || paymentMethods[0]?.upiApp || "",
-  Cheque: paymentMethods[0]?.chequeNumber || paymentMethods[0]?.utrNumber || "",
-  RecAmt: totalPaidAmount,
-  DueAmt: dueAmount,
-  FinalRecAmt: totalPaidAmount,
+        // PAYMENT - Multiple payment methods
+        paymentMethods: paymentMethods.map((pm) => ({
+          type: pm.type,
+          amount: parseFloat(pm.amount) || 0,
+          upiApp: pm.upiApp || "",
+          utrNumber: pm.utrNumber || "",
+          bankName: pm.bankName || "",
+          chequeNumber: pm.chequeNumber || "",
+        })),
+        PaymentType: paymentMethods[0]?.type,
+        BANK: paymentMethods[0]?.bankName || paymentMethods[0]?.upiApp || "",
+        Cheque:
+          paymentMethods[0]?.chequeNumber || paymentMethods[0]?.utrNumber || "",
+        RecAmt: totalPaidAmount,
+        DueAmt: dueAmount,
+        FinalRecAmt: totalPaidAmount,
 
-  // CASHLESS & COMPANY
-  CashLess: formData.Cashless,
-  CashLessId: formData.Cashless === "Y" && formData.CashLessId ? parseInt(formData.CashLessId) : null,
-  CompanyId: formData.CompanyYN === "Y" && formData.CompanyId ? parseInt(formData.CompanyId) : null,
-  m_CompanyId: formData.CompanyYN === "Y" && formData.CompanyId ? parseInt(formData.CompanyId) : null,
+        // CASHLESS & COMPANY
+        CashLess: formData.Cashless,
+        CashLessId:
+          formData.Cashless === "Y" && formData.CashLessId
+            ? parseInt(formData.CashLessId)
+            : null,
+        CompanyId:
+          formData.CompanyYN === "Y" && formData.CompanyId
+            ? parseInt(formData.CompanyId)
+            : null,
+        m_CompanyId:
+          formData.CompanyYN === "Y" && formData.CompanyId
+            ? parseInt(formData.CompanyId)
+            : null,
 
-  // EXTRA FIELDS
-  REG: "Y",
-  Asst1YN: "N",
-  Asst1: 0,
-  Asst2YN: "N",
-  Asst2: 0,
-  Asst3YN: "N",
-  Asst3: 0,
-  CancelYN: null,
-  CancelDt: null,
-  ReferralId: 0,
-  Referalid: 0,
-  
-  admissionid: " ",
-  Admissionno: null,
-  Clearing: "N",
-};
+        // EXTRA FIELDS
+        REG: "Y",
+        Asst1YN: "N",
+        Asst1: 0,
+        Asst2YN: "N",
+        Asst2: 0,
+        Asst3YN: "N",
+        Asst3: 0,
+        CancelYN: null,
+        CancelDt: null,
+        ReferralId: 0,
+        Referalid: 0,
 
+        admissionid: " ",
+        Admissionno: null,
+        Clearing: "N",
+      };
 
       // if (!visitData.RegistrationId || !visitData.PVisitDate) {
       //   alert("Registration ID and Visit Date are required");
@@ -671,7 +730,7 @@ useEffect(() => {
 
         response = await axiosInstance.put(
           `/patient-visits/${visitId}`,
-          visitData
+          visitData,
         );
       } else {
         response = await axiosInstance.post("/patient-visits", visitData);
@@ -691,191 +750,312 @@ useEffect(() => {
     }
   };
 
+  const autoFillForm = async (data) => {
+    setFormData((prev) => ({
+      ...prev,
 
+      // BASIC DETAILS
+      RegistrationId: data.RegistrationId || "",
+      PatientName: data.PatientName || "",
+      PhoneNo: data.PhoneNo || "",
+      Sex: data.Sex || "",
+      MStatus: data.MStatus || "",
+      PPr: data.PPr || "",
+      GurdianName: data.GurdianName || "",
+      Relation: data.CareOf || "",
+      email: data.EMailId || "",
 
+      // ADDRESS
+      Add1: data.PatientAdd1 || "",
+      Add2: data.PatientAdd2 || "",
+      Add3: data.PatientAdd3 || "",
+      fullAddress:
+        `${data.PatientAdd1 || ""} ${data.PatientAdd2 || ""} ${data.PatientAdd3 || ""}`.trim(),
 
+      // AGE
+      Age: data.Age?.toString() || "",
+      AgeD: data.AgeD?.toString() || "",
+      AgeN: data.AgeN?.toString() || "",
+      dob: data.Dob ? data.Dob.split("T")[0] : "",
 
+      // RELIGION
+      ReligionId: data.ReligionId?.toString() || "",
 
+      // DOCTOR & DEPARTMENT
+      DepartmentId: data.SpecialityId?.toString() || "",
+      doctorId: data.DoctorId?.toString() || "",
+      docName: data.DoctorName || "",
 
-const autoFillForm = async (data) => {
-  setFormData((prev) => ({
-    ...prev,
+      // VITALS
+      Weight: data.Weight?.toString() || data.PatientWeight?.toString() || "",
+      Height: data.Hight?.toString() || data.Height?.toString() || "",
+      BpMin: data.bpmin?.toString() || data.BpMin?.toString() || "",
+      BpMax: data.bpmax?.toString() || data.BpMax?.toString() || "",
+      BloodGroup: data.BloodGroup || "",
 
-    // BASIC DETAILS
-    RegistrationId: data.RegistrationId || "",
-    PatientName: data.PatientName || "",
-    PhoneNo: data.PhoneNo || "",
-    Sex: data.Sex || "",
-    MStatus: data.MStatus || "",
-    PPr: data.PPr || "",
-    GurdianName: data.GurdianName || "",
-    Relation: data.CareOf || "",
-    email: data.EMailId || "",
+      VisitTypeName: data.VisitTypeName ? data.VisitTypeName : "",
 
-    // ADDRESS
-    Add1: data.PatientAdd1 || "",
-    Add2: data.PatientAdd2 || "",
-    Add3: data.PatientAdd3 || "",
-    fullAddress: `${data.PatientAdd1 || ""} ${data.PatientAdd2 || ""} ${data.PatientAdd3 || ""}`.trim(),
+      // VISIT DETAILS
+      RegistrationDate: data.RegistrationDate
+        ? data.RegistrationDate.split("T")[0]
+        : "",
+      RegistrationTime: data.RegistrationTime || "",
+      VNo: data.VNo || "",
+      OutBillDate: data.PVisitDate ? data.PVisitDate.split("T")[0] : "",
+      Rate: data.Rate?.toString() || "",
+      RegCh: data.RegCh?.toString() || "",
+      svrCh: data.ServiceCh?.toString() || "",
+      Discount: data.Discount?.toString() || "",
+      srvChDisc: data.SrvChDisc?.toString() || "",
+      billAmt: data.TotAmount?.toString() || "",
+      narration: data.Narration || data.Remarks || "",
+      queueNo: data.QNo || 0,
+    }));
 
-    // AGE
-    Age: data.Age?.toString() || "",
-    AgeD: data.AgeD?.toString() || "",
-    AgeN: data.AgeN?.toString() || "",
-    dob: data.Dob ? data.Dob.split("T")[0] : "",
+    // ⭐ Load doctors for that department
+    if (data.SpecialityId) {
+      const res = await axiosInstance.get(
+        `/doctormaster/department/${data.SpecialityId}`,
+      );
+      setDoctors(res.data.data || []);
+    }
+  };
 
-    // RELIGION
-    ReligionId: data.ReligionId?.toString() || "",
+  // search----------------------------------------------------------------------
+  const searchExistingPatient = async () => {
+    const name = formData.PatientName?.trim();
+    const phone = formData.PhoneNo?.trim();
 
-    // DOCTOR & DEPARTMENT
-    DepartmentId: data.SpecialityId?.toString() || "",
-    doctorId: data.DoctorId?.toString() || "",
-    docName: data.DoctorName || "",
-
-    // VITALS
-    Weight: data.Weight?.toString() || data.PatientWeight?.toString() || "",
-    Height: data.Hight?.toString() || data.Height?.toString() || "",
-    BpMin: data.bpmin?.toString() || data.BpMin?.toString() || "",
-    BpMax: data.bpmax?.toString() || data.BpMax?.toString() || "",
-    BloodGroup: data.BloodGroup || "",
-
-    // VISIT DETAILS
-    RegistrationDate: data.RegistrationDate
-      ? data.RegistrationDate.split("T")[0]
-      : "",
-    RegistrationTime: data.RegistrationTime || "",
-    VNo: data.VNo || "",
-    OutBillDate: data.PVisitDate ? data.PVisitDate.split("T")[0] : "",
-    Rate: data.Rate?.toString() || "",
-    RegCh: data.RegCh?.toString() || "",
-    svrCh: data.ServiceCh?.toString() || "",
-    Discount: data.Discount?.toString() || "",
-    srvChDisc: data.SrvChDisc?.toString() || "",
-    billAmt: data.TotAmount?.toString() || "",
-    narration: data.Narration || data.Remarks || "",
-    queueNo: data.QNo || 0,
-
-
-
-
-
-
-
-  }));
-
-  // ⭐ Load doctors for that department
-  if (data.SpecialityId) {
-    const res = await axiosInstance.get(
-      `/doctormaster/department/${data.SpecialityId}`
-    );
-    setDoctors(res.data.data || []);
-  }
-};
-
-
-
-
-// search---------------------------------------------------------------------- 
-const searchExistingPatient = async () => {
-  const name = formData.PatientName?.trim();
-  const phone = formData.PhoneNo?.trim();
-
-  if (!name && !phone) {
-    alert("Enter Name or Phone Number");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axiosInstance.get("/patient-visits/search", {
-      params: { name, phone },
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    console.log("SEARCH RESPONSE:", res.data);
-
-    // ✔ Extract the FIRST object from "data" array
-    const patient = res.data?.data?.[0];
-
-    if (!patient) {
-      alert("No matching patient found");
+    if (!name && !phone) {
+      alert("Enter Name or Phone Number");
       return;
     }
 
-    autoFillForm(patient);
+    try {
+      const token = localStorage.getItem("token");
 
-    // ⭐ Department & Doctor auto-load
-   const selectedDept = patient?.SpecialityId
-    ? String(patient.SpecialityId)
-    : null;
+      const res = await axiosInstance.get("/patient-visits/search", {
+        params: { name, phone },
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (selectedDept) {
-      setFormData(prev => ({ ...prev, DepartmentId: selectedDept }));
+      console.log("SEARCH RESPONSE:", res.data);
 
-      const resDept = await axiosInstance.get(
-        `/doctormaster/department/${selectedDept}`,
-        // {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // }
-      );
-console.log((resDept.data.data || []));
-      setDoctors(resDept.data.data || []);
+      // ✔ Extract the FIRST object from "data" array
+      const patient = res.data?.data?.[0];
+
+      if (!patient) {
+        alert("No matching patient found");
+        return;
+      }
+
+      autoFillForm(patient);
+
+      // ⭐ Department & Doctor auto-load
+      const selectedDept = patient?.SpecialityId
+        ? String(patient.SpecialityId)
+        : null;
+
+      if (selectedDept) {
+        setFormData((prev) => ({ ...prev, DepartmentId: selectedDept }));
+
+        const resDept = await axiosInstance.get(
+          `/doctormaster/department/${selectedDept}`,
+          // {
+          //   headers: { Authorization: `Bearer ${token}` },
+          // }
+        );
+        console.log(resDept.data.data || []);
+        setDoctors(resDept.data.data || []);
+      }
+    } catch (error) {
+      console.error("Search Error:", error);
+      alert("Error searching patient");
     }
+  };
 
-  } catch (error) {
-    console.error("Search Error:", error);
-    alert("Error searching patient");
-  }
-};
+  // bill calculation----------------------------------------
+  useEffect(() => {
+    const RegCh = parseFloat(formData.RegCh) || 0;
+    const Rate = parseFloat(formData.Rate) || 0;
+    const svrCh = parseFloat(formData.svrCh) || 0;
+    const Discount = parseFloat(formData.Discount) || 0;
+    const srvChDisc = parseFloat(formData.srvChDisc) || 0;
 
+    const total = RegCh + Rate + svrCh - Discount - srvChDisc;
 
-// bill calculation---------------------------------------- 
-useEffect(() => {
-  const RegCh = parseFloat(formData.RegCh) || 0;
-  const Rate = parseFloat(formData.Rate) || 0;
-  const svrCh = parseFloat(formData.svrCh) || 0;
-  const Discount = parseFloat(formData.Discount) || 0;
-  const srvChDisc = parseFloat(formData.srvChDisc) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      billAmt: total.toFixed(2),
+    }));
+  }, [
+    formData.RegCh,
+    formData.Rate,
+    formData.svrCh,
+    formData.Discount,
+    formData.srvChDisc,
+  ]); // ------------------------------------
+  // Due Amount Calculation Logic
+  // ------------------------------------
 
-  const total =
-    RegCh +
-    Rate +
-    svrCh -
-    Discount -
-    srvChDisc;
+  const DrPressPrint = ({
+    registrationNo,
+    visitDate,
+    patientName,
+    age,
+    sex,
+    address,
+    phone,
+    visitTime,
+    consultant,
+    doctorRegNo,
+    department,
+    qualification,
+    barcodeValue,
+  }) => {
+    const printWindow = window.open("", "", "width=900,height=650");
 
-  setFormData(prev => ({
-    ...prev,
-    billAmt: total.toFixed(2)
-  }));
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Prescription Print</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #000;
+          }
 
-}, [
-  formData.RegCh,
-  formData.Rate,
-  formData.svrCh,
-  formData.Discount,
-  formData.srvChDisc
-]);
+          .box {
+            border: 2px solid #000;
+            padding: 10px;
+          }
 
+          .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+          }
 
+          .col {
+            width: 48%;
+          }
 
+          .label {
+            font-weight: bold;
+          }
 
-  // ------------------------------------
-  // Due Amount Calculation Logic
-  // ------------------------------------
-  const totalPaid = paymentMethods.reduce(
-    (sum, p) => sum + parseFloat(p.amount || 0),
-    0
-  );
-  const billAmount = parseFloat(formData.billAmt || 0);
+          .prescription {
+            text-align: center;
+            font-weight: bold;
+            color: red;
+            margin-top: 30px;
+            font-size: 16px;
+          }
 
-  const calculatedDueAmount = billAmount - totalPaid;
-  const isDueAmountPositive = calculatedDueAmount > 0;
+          .barcode {
+            text-align: right;
+            margin-bottom: 5px;
+          }
 
+          @media print {
+            body {
+              margin: 0;
+            }
+          }
+        </style>
+      </head>
 
+      <body onload="window.print(); window.close();">
 
+        <div class="barcode">
+          <svg id="barcode"></svg>
+        </div>
 
+        <div class="box">
+          <div class="row">
+            <div class="col">
+              <span class="label">Registration No :</span> ${registrationNo || " "}
+            </div>
+            <div class="col" style="text-align:right">
+              <span class="label">Visit Date :</span> ${visitDate}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <span class="label">Patient Name :</span> ${patientName || " "}
+            </div>
+            <div class="col">
+              <span class="label">Age :</span> ${age || " "} Y &nbsp;&nbsp;
+              <span class="label">Sex :</span> ${sex || " "}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <span class="label">Address :</span> ${address || " "}
+            </div>
+            <div class="col">
+              <span class="label">Visit Time :</span> ${visitTime || " "}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <span class="label">Phone No :</span> ${phone || " "}
+            </div>
+            <div class="col">
+              <span class="label">Doctor Reg. No :</span> ${doctorRegNo || " "}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <span class="label">Consultant :</span> ${consultant || " "}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <span class="label">Department :</span> ${department || " "}
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <span class="label">Qualification :</span> ${qualification || " "}
+            </div>
+          </div>
+        </div>
+
+        <div class="prescription">PRESCRIPTION</div>
+
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+        <script>
+          JsBarcode("#barcode", "${barcodeValue || " "}", {
+            format: "CODE128",
+            width: 2,
+            height: 40,
+            displayValue: true
+          });
+        </script>
+
+      </body>
+    </html>
+  `);
+
+    printWindow.document.close();
+  };
+
+  const totalPaid = paymentMethods.reduce(
+    (sum, p) => sum + parseFloat(p.amount || 0),
+    0,
+  );
+  const billAmount = parseFloat(formData.billAmt || 0);
+
+  const calculatedDueAmount = billAmount - totalPaid;
+  const isDueAmountPositive = calculatedDueAmount > 0;
 
   return (
     <div>
@@ -892,7 +1072,9 @@ useEffect(() => {
               </h5>
               <button
                 className="btn btn-sm btn-outline-secondary"
-                onClick={() => navigate("/table-data", { state: { searchState } })}
+                onClick={() =>
+                  navigate("/table-data", { state: { searchState } })
+                }
               >
                 ← Back
               </button>
@@ -928,13 +1110,14 @@ useEffect(() => {
                   </div>
                   <div className="col-md-2">
                     <label className="form-label">Visit Date</label>
+                    {console.log("date visit: ", formData.RegistrationDate)}
                     <input
                       type="date"
                       name="RegistrationDate"
                       className="form-control"
                       value={formData.RegistrationDate || ""}
-                      onChange={handleChange}
-                    disabled={formData.Booking === "N"}
+                      // onChange={handleChange}
+                      disabled={formData.Booking === "N"}
                     />
                   </div>
                   <div className="col-md-2">
@@ -946,11 +1129,9 @@ useEffect(() => {
                       className="form-control"
                       value={formData.RegistrationTime}
                       onChange={handleChange}
-                                          disabled={formData.Booking === "N"}
-
+                      disabled={formData.Booking === "N"}
                     />
-                    {console.log(formData.RegistrationTime)
-                    }
+                    {/* {console.log(formData.RegistrationTime)} */}
                   </div>
                   <div className="col-md-2">
                     <label className="form-label">Quota</label>
@@ -997,11 +1178,7 @@ useEffect(() => {
                     </select>
                   </div>
 
-
-
-
-
- <div className="col-md-1">
+                  <div className="col-md-1">
                     <label className="form-label">Prefix</label>
                     <select
                       name="PPr"
@@ -1017,84 +1194,61 @@ useEffect(() => {
                     </select>
                   </div>
 
-
-
-
-
-
-
-
-
                   <div className="col-md-2">
+                    <label className="form-label">Patient Name</label>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    
-                    
-    <label className="form-label">Patient Name</label>
-    
-    <input
-      name="PatientName"
-      className="form-control"
-      value={formData.PatientName || ""}
-      onChange={handleChange}
-      style={{ textTransform: "uppercase" }}
-    />
-  </div>
-  <div className="col-md-2">
-    <label className="form-label">Phone Number</label>
-    <input
-      name="PhoneNo"
-      className="form-control"
-      maxLength="10"
-      value={formData.PhoneNo || ""}
-      onChange={handleChange}
-    />
-  </div>
-   {/* 🔥 Search Button — show ONLY if Existing Patient */}
-  {formData.OPD === "N" && (
-    <div className="col-md-2 d-flex align-items-end">
-      <button
-        type="button"
-        className="btn btn-sm btn-primary w-100"
-        onClick={searchExistingPatient}
-      >
-        🔍 Search
-      </button>
-    </div>
-  )}
-  <div className="col-md-2">
+                    <input
+                      name="PatientName"
+                      className="form-control"
+                      value={formData.PatientName || ""}
+                      onChange={handleChange}
+                      style={{ textTransform: "uppercase" }}
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Phone Number</label>
+                    <input
+                      name="PhoneNo"
+                      className="form-control"
+                      maxLength="10"
+                      value={formData.PhoneNo || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  {/* 🔥 Search Button — show ONLY if Existing Patient */}
+                  {formData.OPD === "N" && (
+                    <div className="col-md-2 d-flex align-items-end">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary w-100"
+                        onClick={searchExistingPatient}
+                      >
+                        🔍 Search
+                      </button>
+                    </div>
+                  )}
+                  <div className="col-md-2">
                     <label className="form-label">Registration No</label>
                     <input
                       className="form-control"
-                      value={formData.RegistrationId || "Auto-generated"}
+                      value={
+                        formData.RegistrationId
+                          ? `S-${formData.RegistrationId}`
+                          : ""
+                      }
                       readOnly
                     />
                   </div>
-                 <div className="row g-3">
-  
-
-  
-
- 
-</div>
-
-                
-                  
+                  <div className="col-md-3 ">
+                    {formData.RegistrationId ? (
+                      <div className="border border-primary">
+                        <BarcodeGenerator
+                          value={`S-${formData.RegistrationId}`}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="row g-3"></div>
                 </div>
 
                 {/* Patient Detail */}
@@ -1102,7 +1256,6 @@ useEffect(() => {
                   Patient Detail
                 </h6>
                 <div className="row g-3">
-                 
                   <div className="col-md-2">
                     <label className="form-label">Guardian Name</label>
                     <input
@@ -1121,14 +1274,14 @@ useEffect(() => {
                       value={formData.Relation}
                       onChange={handleChange}
                     >
-                     <option value="">Select</option>
+                      <option value="">Select</option>
                       <option value="HUSBANd">W/O</option>
-                      {formData.Sex !== "F" &&
-                      <option value="FATHER">S/O</option>}
-                     {formData.Sex !== "M" &&
-                      <option value="FATHER">D/O</option>}
-                      
-                      
+                      {formData.Sex !== "F" && (
+                        <option value="FATHER">S/O</option>
+                      )}
+                      {formData.Sex !== "M" && (
+                        <option value="FATHER">D/O</option>
+                      )}
                     </select>
                   </div>
                   <div className="col-md-1">
@@ -1156,7 +1309,6 @@ useEffect(() => {
                       <option value="">Select</option>
                       <option value="M">MARRIED</option>
                       <option value="U">UNMARRIED</option>
-                    
                     </select>
                   </div>
                   <div className="col-md-2">
@@ -1167,7 +1319,7 @@ useEffect(() => {
                       </small>
                     </div>
                   </div>
-{/* Address & Contact */}
+                  {/* Address & Contact */}
                   <div className="col-md-6">
                     <label className="form-label">Complete Address</label>
                     <input
@@ -1333,94 +1485,93 @@ useEffect(() => {
                       <option value="O-">O-</option>
                     </select>
                   </div>
-
-                  
                 </div>
 
+                {/* Cashless + Cashless Name + Company (Y/N) + Company Name */}
 
+                <div className="row g-3 mt-3">
+                  {/* Cashless Section */}
+                  <div className="col-md-2">
+                    <label className="form-label">Cashless (Y/N)</label>
+                    <select
+                      name="Cashless"
+                      className="form-control"
+                      value={formData.Cashless}
+                      onChange={handleChange}
+                    >
+                      <option value="N">N</option>
+                      <option value="Y">Y</option>
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Cashless Name</label>
+                    <select
+                      className="form-control"
+                      name="CashLessName"
+                      value={formData.CashLessId || ""}
+                      onChange={(e) => {
+                        const selectedCashless = cashlessData.find(
+                          (item) => item.CashlessId == e.target.value,
+                        );
+                        setFormData((prev) => ({
+                          ...prev,
+                          CashLessName: selectedCashless?.Cashless || "",
+                          CashLessId: e.target.value,
+                        }));
+                      }}
+                      disabled={formData.Cashless !== "Y"}
+                    >
+                      <option value="">Select Cashless</option>
+                      {cashlessData.map((item) => (
+                        <option key={item.CashlessId} value={item.CashlessId}>
+                          {item.Cashless}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
+                  {/* Company Section */}
+                  <div className="col-md-2">
+                    <label className="form-label">Company (Y/N)</label>
+                    <select
+                      name="CompanyYN"
+                      className="form-control"
+                      value={formData.CompanyYN}
+                      onChange={handleChange}
+                    >
+                      <option value="N">N</option>
+                      <option value="Y">Y</option>
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Company Name</label>
+                    <select
+                      className="form-control"
+                      name="CompanyName"
+                      value={formData.CompanyId || ""}
+                      onChange={(e) => {
+                        const selectedCompany = companyData.find(
+                          (item) => item.DescId == e.target.value,
+                        );
+                        setFormData((prev) => ({
+                          ...prev,
+                          CompanyName: selectedCompany?.Desc || "",
+                          CompanyId: e.target.value,
+                        }));
+                      }}
+                      disabled={formData.CompanyYN !== "Y"}
+                    >
+                      <option value="">Select Company</option>
+                      {companyData.map((item) => (
+                        <option key={item.DescId} value={item.DescId}>
+                          {item.Desc}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-{/* Cashless + Cashless Name + Company (Y/N) + Company Name */}
-
-  <div className="row g-3 mt-3">
-
-
-{/* Cashless Section */}
- <div className="col-md-2">
-      <label className="form-label">Cashless (Y/N)</label>
-       <select
-        name="Cashless"
-        className="form-control"
-        value={formData.Cashless}
-        onChange={handleChange}
-      >
-        <option value="N">N</option>
-        <option value="Y">Y</option>
-      </select>
-     </div>
-   <div className="col-md-4">
-      <label className="form-label">Cashless Name</label>
-     <select
-        className="form-control"
-        name="CashLessName"
-        value={formData.CashLessId || ""}
-        onChange={(e) => {
-          const selectedCashless = cashlessData.find(item => item.CashlessId == e.target.value);
-          setFormData(prev => ({
-            ...prev,
-            CashLessName: selectedCashless?.Cashless || "",
-            CashLessId: e.target.value
-          }));
-        }}
-        disabled={formData.Cashless !== "Y"}
-      >
-        <option value="">Select Cashless</option>
-        {cashlessData.map((item) => (
-          <option key={item.CashlessId} value={item.CashlessId}>{item.Cashless}</option>
-        ))}
-      </select>
-</div>
-
-{/* Company Section */}
-<div className="col-md-2">
-      <label className="form-label">Company (Y/N)</label>
-       <select
-        name="CompanyYN"
-        className="form-control"
-        value={formData.CompanyYN}
-        onChange={handleChange}
-      >
-        <option value="N">N</option>
-        <option value="Y">Y</option>
-      </select>
-     </div>
- <div className="col-md-4">
-      <label className="form-label">Company Name</label>
-     <select
-        className="form-control"
-        name="CompanyName"
-        value={formData.CompanyId || ""}
-        onChange={(e) => {
-          const selectedCompany = companyData.find(item => item.DescId == e.target.value);
-          setFormData(prev => ({
-            ...prev,
-            CompanyName: selectedCompany?.Desc || "",
-            CompanyId: e.target.value
-          }));
-        }}
-        disabled={formData.CompanyYN !== "Y"}
-      >
-        <option value="">Select Company</option>
-        {companyData.map((item) => (
-          <option key={item.DescId} value={item.DescId}>{item.Desc}</option>
-        ))}
-      </select>
-</div>
-
-
-
-    {/* Cashless Y/N */}
-    {/* <div className="col-md-2">
+                  {/* Cashless Y/N */}
+                  {/* <div className="col-md-2">
       <label className="form-label">Cashless (Y/N)</label>
       <select
         name="CashLess"
@@ -1434,8 +1585,8 @@ useEffect(() => {
       </select>
     </div> */}
 
-    {/* Cashless Name with Suggestion */}
-    {/* <div className="col-md-4">
+                  {/* Cashless Name with Suggestion */}
+                  {/* <div className="col-md-4">
       <label className="form-label">Cashless Name</label>
 
       <input
@@ -1455,8 +1606,8 @@ useEffect(() => {
       </datalist>
     </div> */}
 
-    {/* Company Y/N */}
-    {/* <div className="col-md-2">
+                  {/* Company Y/N */}
+                  {/* <div className="col-md-2">
       <label className="form-label">Company (Y/N)</label>
       <select
         name="CompanyYN"
@@ -1470,8 +1621,8 @@ useEffect(() => {
       </select>
     </div> */}
 
-    {/* Company Name with Suggestion */}
-    {/* <div className="col-md-4">
+                  {/* Company Name with Suggestion */}
+                  {/* <div className="col-md-4">
       <label className="form-label">Company Name</label>
 
       <input
@@ -1490,17 +1641,7 @@ useEffect(() => {
         ))}
       </datalist>
     </div> */}
-
-  </div>
-
-
-
-
-
-
-
-
-
+                </div>
 
                 {/* Doctor & Department */}
                 <h6 className="text-primary fw-bold border-bottom pb-1 mt-4 mb-3">
@@ -1513,11 +1654,12 @@ useEffect(() => {
                       <input
                         className="form-control"
                         value={
-      departmentName ||
-      departments.find(d => d.SpecialityId == formData.DepartmentId)?.Speciality ||
-      ""
-    }
-                        
+                          departmentName ||
+                          departments.find(
+                            (d) => d.SpecialityId == formData.DepartmentId,
+                          )?.Speciality ||
+                          ""
+                        }
                         readOnly
                       />
                     ) : (
@@ -1564,6 +1706,7 @@ useEffect(() => {
                     )}
                   </div>
                   <div className="col-md-4">
+                    {/* {console.log("Doctor name: ",formData.doctorId)} */}
                     <label className="form-label">Doctor Name</label>
                     <input
                       name="docName"
@@ -1736,7 +1879,7 @@ useEffect(() => {
                       className="form-control"
                       value={paymentMethods.reduce(
                         (sum, p) => sum + parseFloat(p.amount || 0),
-                        0
+                        0,
                       )}
                       readOnly
                     />
@@ -1746,23 +1889,22 @@ useEffect(() => {
                     <input
                       type="number"
                       className="form-control"
-                      value={
-                        calculatedDueAmount.toFixed(2)
-                      }
+                      value={calculatedDueAmount.toFixed(2)}
                       readOnly
                     />
                   </div>
                   <div className="col-md-3">
                     <label className="form-label d-block">&nbsp;</label>{" "}
                     {/* Placeholder label for alignment */}
-                    {isDueAmountPositive &&  <button
-                      type="button"
-                      className="btn btn-sm btn-success"
-                      onClick={addPaymentMethod}
-                    >
-                      + Add Payment
-                    </button> }
-                   
+                    {isDueAmountPositive && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-success"
+                        onClick={addPaymentMethod}
+                      >
+                        + Add Payment
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1809,7 +1951,7 @@ useEffect(() => {
                               updatePaymentMethod(
                                 index,
                                 "amount",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -1828,7 +1970,7 @@ useEffect(() => {
                                   updatePaymentMethod(
                                     index,
                                     "upiApp",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -1843,7 +1985,7 @@ useEffect(() => {
                                   updatePaymentMethod(
                                     index,
                                     "utrNumber",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -1862,7 +2004,7 @@ useEffect(() => {
                                   updatePaymentMethod(
                                     index,
                                     "bankName",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -1878,7 +2020,7 @@ useEffect(() => {
                                   updatePaymentMethod(
                                     index,
                                     "chequeNumber",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -1903,13 +2045,53 @@ useEffect(() => {
 
                 {/* Action Buttons */}
                 <div className="text-end mt-4">
-                  <button
-                    type="button"
-                    className="btn btn-secondary me-2"
-                    onClick={() => navigate("/table-data", { state: { searchState } })}
-                  >
-                    Cancel
-                  </button>
+                  {modex !== "add" && (
+                    <>
+                      {/* <button type="button" className="btn btn-warning me-2">
+                        Print
+                      </button> */}
+                      <button
+                        type="button"
+                        className="btn btn-warning me-2"
+                        onClick={() => {
+                          console.log("visit type: ", formData);
+                          let t;
+                          if (Number(formData.RegistrationTime.split(":")[0] )> 12) {
+                            t = `${Number(formData.RegistrationTime.split(":")[0] ) - 12}:${formData.RegistrationTime.split(":")[1]} PM`;
+                          } else {
+                            t = `${formData.RegistrationTime} AM`;
+                          }
+
+                          DrPressPrint({
+                            registrationNo: `S-${formData.RegistrationId}`,
+                            visitDate: formData.RegistrationDate,
+                            patientName: formData.PatientName,
+                            age: formData.Age,
+                            sex: formData.Sex,
+                            address: formData.fullAddress,
+                            phone: formData.PhoneNo,
+                            visitTime: t,
+                            consultant: formData.VisitTypeName,
+                            doctorRegNo: docDetail.RegistrationNo,
+                            department:
+                              departmentName ||
+                              departments.find(
+                                (d) => d.SpecialityId == formData.DepartmentId,
+                              )?.Speciality ||
+                              "",
+                            qualification: docDetail.Qualification,
+                            barcodeValue: "S-002106/23-24",
+                          });
+                        }}
+                      >
+                        Dr Press
+                      </button>
+                      {/* <button type="button" className="btn btn-warning me-2">
+                        Dr Press 2
+                      </button> */}
+                    </>
+                  )}
+
                   {mode !== "view" && (
                     <button
                       type="submit"
@@ -1919,10 +2101,19 @@ useEffect(() => {
                       {isSubmitting
                         ? "Processing..."
                         : mode === "edit"
-                        ? "Update"
-                        : "Save"}
+                          ? "Update"
+                          : "Save"}
                     </button>
                   )}
+                  <button
+                    type="button"
+                    className="btn btn-secondary ms-2"
+                    onClick={() =>
+                      navigate("/table-data", { state: { searchState } })
+                    }
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             )}
@@ -1934,3 +2125,5 @@ useEffect(() => {
 };
 
 export default VisitEntry;
+
+

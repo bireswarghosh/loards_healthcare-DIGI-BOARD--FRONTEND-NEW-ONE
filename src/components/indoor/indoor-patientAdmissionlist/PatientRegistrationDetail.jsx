@@ -60,6 +60,8 @@ const PatientAdmission = () => {
   const [packages, setPackages] = useState([]);
   const [fetchedState, setFetchedState] = useState([]);
 
+  const [selBed, setSelBed] = useState("")
+
   // Main Form Data
   const [formData, setFormData] = useState({
     AdmitionDate: new Date().toISOString().split("T")[0],
@@ -467,6 +469,16 @@ const PatientAdmission = () => {
       if (response.data.success) {
         const apiData = response.data.data;
         console.log("fetched data: ", apiData);
+
+        if(apiData.BedId){
+        const res = await axiosInstance.get(`/bedMaster/${apiData.BedId}`)
+        if(res.data.success){
+  console.log("selected bed: ",res.data.data.Bed)
+  setSelBed(res.data.data.Bed || "")
+}
+      }
+        setFormData(prev=>({...prev, BedId:apiData.BedId}))
+
         let calculatedDob = apiData.Dob ? apiData.Dob.substring(0, 10) : "";
         if (
           !calculatedDob &&
@@ -648,6 +660,367 @@ const PatientAdmission = () => {
       setLoading(false);
     }
   };
+
+
+const handlePrint = (data) => {
+    // 1. Open a new window
+    const printWindow = window.open("", "", "height=800,width=1000");
+
+    if (!printWindow) {
+      alert("Please allow popups to print the document.");
+      return;
+    }
+
+    // 2. Define the HTML content
+    const htmlContent = `<!DOCTYPE html>
+<html>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+   <head>
+      <title>Admission Form Print</title>
+      <style>
+         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+         body {
+         font-family: 'Roboto', sans-serif;
+         font-size: 11px;
+         margin: 0;
+         padding: 20px;
+         color: #000;
+         }
+         /* Utility Classes */
+         .text-center { text-align: center; }
+         .text-right { text-align: right; }
+         .font-bold { font-weight: 700; }
+         .text-red { color: red; }
+         .uppercase { text-transform: uppercase; }
+         .flex { display: flex; }
+         .justify-between { justify-content: space-between; }
+         .items-center { align-items: center; }
+         .w-full { width: 100%; }
+         .mt-2 { margin-top: 8px; }
+         .mb-1 { margin-bottom: 4px; }
+         /* Layout Structure */
+         .container {
+         width: 100%;
+         max-width: 900px;
+         margin: 0 auto;
+         }
+         /* Header */
+         .header-grid {
+         display: grid;
+         grid-template-columns: 1fr 3fr 1fr;
+         gap: 10px;
+         align-items: center;
+         margin-bottom: 10px;
+         }
+         .hospital-title { font-size: 24px; font-weight: bold; margin: 0; }
+         .hospital-details { font-size: 10px; line-height: 1.4; }
+         /* Barcode Placeholder */
+         .barcode-box {
+         text-align: center;
+         }
+         .barcode-lines {
+         display: inline-block;
+         height: 30px;
+         width: 150px;
+         background: repeating-linear-gradient(
+         to right,
+         black 0px, black 2px,
+         white 2px, white 4px
+         );
+         }
+         /* Form Sections */
+         .form-title {
+         text-align: center;
+         font-size: 16px;
+         font-weight: bold;
+         color: red;
+         margin: 10px 0;
+         text-decoration: uppercase;
+         }
+         .meta-row {
+         display: flex;
+         justify-content: space-between;
+         font-weight: bold;
+         margin-bottom: 5px;
+         font-size: 12px;
+         }
+         .section-box {
+         border: 1px solid #000;
+         padding: 5px 10px;
+         margin-bottom: 5px;
+         }
+         /* Grid for key-value pairs inside boxes */
+         .info-grid {
+         display: grid;
+         grid-template-columns: 100px 1fr 80px 1fr ;
+         gap: 5px 10px;
+         }
+         .info-grid-2 {
+         display: grid;
+         grid-template-columns: 100px 1fr;
+         gap: 5px 10px;
+         }
+         .label { font-weight: bold; }
+         /* Terms and Footer */
+         .terms-box {
+         border: 1px solid #000;
+         padding: 10px;
+         font-size: 10px;
+         line-height: 1.4;
+         margin-top: 5px;
+         }
+         .terms-list { margin: 5px 0 0 15px; padding: 0; }
+         .footer-box {
+         margin-top: 20px;
+       
+         padding-top: 5px;
+         }
+         .checkbox {
+         display: inline-block;
+         width: 12px;
+         height: 12px;
+         border: 1px solid #000;
+         margin-right: 5px;
+         vertical-align: middle;
+         position: relative;
+         }
+         /* Simulate checked state */
+         .checkbox.checked::after {
+         content: '✓';
+         position: absolute;
+         top: -4px;
+         left: 1px;
+         font-size: 12px;
+         font-weight: bold;
+         }
+         .signature-row {
+         display: flex;
+         justify-content: space-between;
+         margin-top: 40px;
+         align-items: flex-end;
+         }
+         .signature-line {
+         border-top: 1px solid #000;
+         width: 200px;
+         text-align: center;
+         padding-top: 2px;
+         }
+
+.logo-img {
+  height: 60px;     /* You can set any small size */
+  width: auto;
+}
+
+.logo-wrapper {
+  height: 60px;
+  display: inline-block;
+}
+
+
+
+         /* Print Specifics */
+         @media print {
+         @page { margin: 0.5cm; }
+         body { -webkit-print-color-adjust: exact; }
+         }
+      </style>
+   </head>
+   <body>
+      <div class="container">
+         <div class="header-grid">
+           
+             <div class="logo-wrapper">
+   <img 
+      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" 
+      alt="logo"
+      class="logo-img"
+   />
+</div>
+
+
+            
+            <div class="text-center">
+               <h1 class="hospital-title">${data.hospital.name}</h1>
+               <div class="hospital-details">
+                  ${data.hospital.address}<br>
+                  Phone No.: ${data.hospital.phone} HELPLINE - 7003378414, Toll Free No. 1800-309-0895<br>
+                  E-mail: ${data.hospital.email}, Website: ${data.hospital.website}
+               </div>
+            </div>
+            <div class="barcode-box">
+   <svg id="barcode"></svg>
+   <div style="font-size:10px;">${data.meta.barcodeValue}</div>
+</div>
+
+         </div>
+         <div class="form-title">ADMISSION FORM</div>
+         <div class="flex justify-between font-bold mb-1">
+            <span>UHID : ${data.meta.uhid}</span>
+         </div>
+         <div class="meta-row">
+            <span>ADMISSION NO. : <span class="text-red">${data.meta.admissionNo}</span></span>
+            <span>ADMISSION DATE : ${data.meta.admissionDate}</span>
+            <span>ADMISSION TIME : ${data.meta.admissionTime}</span>
+         </div>
+         <div class="section-box">
+            <div class="info-grid">
+
+               <span class="label">PATIENT NAME</span> <span>: ${data.patient.name}</span>
+               <span class="label">AGE</span> <span>: ${data.patient.age}</span>
+               <span class="label">ADDRESS</span> <span>: ${data.patient.address}</span>
+               <span class="label">GENDER</span> <span>: ${data.patient.gender}</span>
+               <span class="label">AREA</span> <span>: ${data.patient.area}</span>
+               <span class="label">RELIGION</span> <span>: ${data.patient.religion}</span>
+               <span class="label">OCCUPATION</span> <span>: ${data.patient.occupation}</span>
+               <span class="label">STATUS</span> <span>: ${data.patient.status}</span>
+               
+               <span class="label">PHONE NO.</span> <span>: ${data.patient.phone}</span>
+              
+               <span class="label">NATIONALITY</span> <span>: ${data.patient.nationality}</span>
+               
+            </div>
+         </div>
+         <div class="section-box">
+            <div class="info-grid">
+               <span class="label">W/O S/O D/O</span> <span>: ${data.relative.relatedToName}</span>
+               <span class="label">RELATION</span> <span>: ${data.relative.relation}</span>
+               <span class="label">RELATIVE NAME</span> <span>: ${data.relative.relativeName}</span>
+               <span class="label">PHONE NO.</span> <span>: ${data.relative.phone}</span>
+            </div>
+         </div>
+         <div class="section-box">
+            <div class="info-grid">
+               <span class="label">BED NO.</span> <span>: ${data.admissionDetails.bedNo}</span>
+               <span class="label">DEPARTMENT</span> <span>: ${data.admissionDetails.department}</span>
+            </div>
+            <div class="info-grid-2 mt-2">
+               <span class="label">UNDER CARE</span> <span>: ${data.admissionDetails.underCare}</span>
+            </div>
+         </div>
+         <div class="section-box">
+            <div class="info-grid">
+               <span class="label">TPA</span> <span>: ${data.insurance.tpa}</span>
+               <span class="label">COMPANY</span> <span>: ${data.insurance.company}</span>
+            </div>
+         </div>
+         <div class="terms-box">
+            <span style="margin:0; font-weight:bold;">I do hereby give my full consent to undertake treatment of above Patient by Medical Management, Surgical Management, Intensive Care at this Nursing Home.</span>
+            <br>I ..................................................................... in my full sense hereby authorize Dr. ......................................................... & Such Associates, Doctors, Consultants, Nurses & Paramedical staff of Hospital to conduct all necessary Investigation, Medical/Surgical/Procedure on me/my patient under General or religional anaesthesia as deemed suitable for the same.
+            <br>I agree to pay all the bills and when submitted by hospital authority for my/my patient's treatment , and clear all the dues of Nursing Home 
+            incurred for the treatment of the patient before discharge /DORB.
+            <br>I shall not hold the institution, it's staff and the doctors responsible for any unwanted consequences during the course of medical treatment 
+            and the surgery administration of anaesthesia/drug or investigation/treatment etc..
+            <br>I have been fully explained the consequences of the procedures and their risks.
+            <strong style="display:block; margin-top:10px;">GENERAL NORMS FOR PATIENT ADMISSION:</strong>
+            <ol class="terms-list">
+               <li>An ADVANCE PAYMENT should be made at the time of admission accordingly. <br> a) Rs. 10000/- For GENERAL WARD. <br> b) Rs. 12000/- For CABINS. <br> c) Rs. 15000/- For ICU.</li>
+               <li>A minimum of 80% to 85% amount of the surgery package must be paid before the operation.</li>
+               <li>Patient should NOT bear any cash, valuables, mobile phone etc. during his/her stay in the Nursing Home.</li>
+               <li>Only two persons are allowed during visiting hours, childrens are allowed only on Sunday evening.</li>
+               <li>No foods from outside are allowed without prior permission.</li>
+               <li>Patient availing cash less facility should submit  His/Her documents at the Insurance Desk.</li>
+               <li>Patient Party should enquire about there outstanding payment regularly  from the respective counters, so that maximum outstanding does  
+                  not exceeds Rs.10,000/
+               </li>
+               <li> Shifting from ICU to Ward depends on bed availiabilty.</li>
+               <li> PATIENT / PARTIES ID DOCUMENT IS MANDATARY . PLEASE PROVIDE US AT THE EARLIEST.</li>
+            </ol>
+         </div>
+         <div class="signature-row" style="margin-top:20px;">
+            <div>
+               <strong>Witness Signature with relation</strong><br>
+               Contact No :
+            </div>
+         </div>
+         <div class="footer-box">
+
+         <div style=" display: flex;
+  justify-content: space-between;">
+        <div class="text-red font-bold text-center mb-1" style="font-size:10px;">
+            Full charge on the day of the admission. No charge if the patient leaves before 11:30 am on the day of discharge.
+         </div> 
+         
+         <div class="flex justify-between items-center" style="margin-top:-15px;">
+            <div></div>
+            <div class="signature-line">Signature of Patient / Party</div>
+         </div>
+         
+         </div>
+
+            <div class="text-center font-bold text-blue-900" style="margin: 10px 0; color: darkblue; border-top: 1px solid #000;">FOR OFFICE USE</div>
+            <div class="flex justify-between font-bold" style="font-size:10px;">
+               <span>Date of Admission: ${data.meta.admissionDate}</span>
+               <span>Admission Time: ${data.meta.admissionTime}</span>
+               <span class="text-red">Admission No: ${data.meta.admissionNo}</span>
+               <span>Bed No: ${data.admissionDetails.bedNo}</span>
+            </div>
+            <div class="mt-2" style="font-size:10px;">
+               <strong>Under Care Doctor:</strong> ${data.admissionDetails.underCare}
+            </div>
+            <div class="flex mt-2" style="gap: 20px; align-items:center;">
+               <div class="text-red font-bold">VEGETARIAN :</div>
+               <div><span class="checkbox"></span> YES</div>
+               <div><span class="checkbox"></span> NO</div>
+               <div class="text-red font-bold ml-4">Insurance / TPA :</div>
+            </div>
+            <div class="flex mt-2" style="gap: 20px; align-items:center;">
+               <div class="text-red font-bold">Patient's History :</div>
+               <div><span class="checkbox"></span> Diabetic</div>
+               <div><span class="checkbox"></span> HTN</div>
+              
+               <div><span class="checkbox"></span> Asthma</div>
+               <div><span class="checkbox"></span> Cardiac</div>
+              
+            </div>
+            <div class="flex mt-2" style="gap: 20px; align-items:center;">
+               <div class="text-red font-bold">Allergies to Food and/or Drugs :</div>
+               <div><span class="checkbox "></span> Asprin/Ecosprin</div>
+               <div><span class="checkbox "></span> Clopitogril</div>
+              
+               <div><span class="checkbox"></span> Others</div>
+          
+              
+            </div>
+            <div class="signature-row" style="margin-top:20px;">
+               <div>Signature of the Front Office Executive : SANJAY ST.</div>
+               <div>_____________________________________________________________________</div>
+               <div class="text-right">DATE : ${data.meta.admissionDate}</div>
+            </div>
+         </div>
+      </div>
+      <script>
+window.onload = function () {
+   JsBarcode("#barcode", "${data.meta.barcodeValue}", {
+      format: "CODE128",
+      lineColor: "#000",
+      width: 1,
+      height: 25,
+      displayValue: false
+   });
+
+   // Print after barcode is ready
+   window.print();
+   window.close();
+};
+</script>
+
+   </body>
+</html>`;
+
+    // 3. Write content and print
+    printWindow.document.write(htmlContent);
+    printWindow.document.close(); // Necessary for some browsers to finish loading
+    printWindow.focus(); // Focus on the new window
+
+    // Wait slightly for styles to apply before printing
+    setTimeout(() => {
+      printWindow.print();
+      // Optional: printWindow.close(); // Auto-close after print
+    }, 250);
+  };
+
+
 
   // Styles from File B
   const inputStyle = {
@@ -1849,6 +2222,20 @@ const PatientAdmission = () => {
                     className="d-flex align-items-center"
                     style={{ minHeight: "16px" }}
                   >
+<div className="me-2">
+  <label >M Executive:</label>
+<select value={formData.MEXECUTIVE}
+name = "MEXECUTIVE"
+onChange={handleInputChange}
+disabled={mode === "view" }
+>
+  <option value={""}>---</option>
+  {mExecutives.map((d,i)=>(
+    <option key={d.MExecutiveId} value={d.MExecutiveId}>{d.MExecutive}</option>
+  ))}
+</select>
+</div>
+
                     <input
                       type="checkbox"
                       className="m-0"
@@ -2018,12 +2405,63 @@ const PatientAdmission = () => {
               >
                 Undo
               </button>
-              {/* <button
+              <button
                 className="btn btn-sm btn-primary"
                 style={{ fontSize: "0.75rem", height: "26px" }}
+                onClick={() => {
+                  handlePrint({
+                    meta: {
+                      admissionNo: formData.AdmitionNo,
+                      admissionDate: formData.AdmitionDate?.split("-").reverse().join("-"),
+                      admissionTime: new Date(`1970-01-01T${formData.AdmitionTime}`).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+                      uhid: "", // Empty in source
+                      barcodeValue: formData.AdmitionNo,
+                    },
+                    hospital: {
+                      name: "LORDS HEALTH CARE",
+                      address:
+                        "13/3, Circular 2nd Bye Lane, Kona Expressway, Nabanna (Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.",
+                      phone: "8272904444",
+                      email: "patientdesk@lordshealthcare.org",
+                      website: "www.lordshealthcare.org",
+                    },
+                    patient: {
+                      name: formData.PatientName,
+                      age: `${formData.Age} Y`,
+                      gender: formData.Sex === "M" ? "MALE" : formData.Sex === "F" ? "FEMALE" : "OTHER",
+                      address:[formData.Add1, formData.Add2, formData.Add3].filter(Boolean).join(", "),
+                      religion: religion.find(item=>item.ReligionId==formData.ReligionId)?.Religion || "",
+                      status: formData.MStatus === "U" ? "UNMARRIED" : "MARRIED",
+                      area: formData.Add3,
+                      phone: formData.PhoneNo,
+                      occupation: formData.Occupation,
+                      nationality: formData.Passport,
+                    },
+                    relative: {
+                      type: "", 
+                      relatedToName: formData.GurdianName,
+                      relativeName: formData.RelativeName,
+                      relation: formData.Relation,
+                      phone:formData.RelativePhoneNo,
+                    },
+                    admissionDetails: {
+                      bedNo: selBed || "",
+                      // department: "GENERAL-WARD-FEMALE",
+                      department: department.find(item=>item.DepartmentId==formData.DepartmentId)?.Department,
+                      // underCare: "Dr. SOMA KOLEY",
+                      underCare: `${doctors.find(item=>item.DoctorId===formData.UCDoctor1Id)?.Doctor}, ${doctors.find(item=>item.DoctorId===formData.UCDoctor2Id)?.Doctor}, ${doctors.find(item=>item.DoctorId===formData.UCDoctor3Id)?.Doctor}`,
+                    },
+                    insurance: {
+                      tpa: fetchedCompany.find(item=>item.CashlessId==formData.CashLessId)?.Cashless || "",
+                      company: fetchedCompany.find(item=>item.CashlessId==formData.CompanyId).Cashless|| "",
+                    },
+                    
+                  })
+                }
+                }
               >
                 Print
-              </button> */}
+              </button>
               {/* <button
                 className="btn btn-sm btn-primary"
                 onClick={() => navigate("/PatientRegistrationList")}

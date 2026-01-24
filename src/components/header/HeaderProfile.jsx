@@ -1,7 +1,6 @@
 import { useContext, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { DigiContext } from '../../context/DigiContext';
-import { useAuth } from '../../context/AuthContext';
 
 const HeaderProfile = () => {
     const {
@@ -9,14 +8,7 @@ const HeaderProfile = () => {
       handleProfileDropdownCheckboxChange, 
       handleProfileSidebarCheckboxChange
     } = useContext(DigiContext)
-    const { logout } = useAuth();
-    const navigate = useNavigate();
     const profileDropdownRef = useRef(null);
-
-    const handleLogout = () => {
-      logout();
-      navigate('/login');
-    };
 
     // Effect to add event listener when the component mounts
     useEffect(() => {
@@ -97,9 +89,9 @@ const HeaderProfile = () => {
               </Link>
             </li>
             <li>
-              <button className="dropdown-item" onClick={handleLogout}>
+              <Link className="dropdown-item" to="/login">
                 <span className="dropdown-icon"><i className="fa-regular fa-arrow-right-from-bracket"></i></span> Logout
-              </button>
+              </Link>
             </li>
           </ul>
         )}
