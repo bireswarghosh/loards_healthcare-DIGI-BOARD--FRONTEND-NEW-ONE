@@ -898,6 +898,156 @@ useEffect(() => {
   // Due Amount Calculation Logic
   // ------------------------------------
 
+  // const DrPressPrint = ({
+  //   registrationNo,
+  //   visitDate,
+  //   patientName,
+  //   age,
+  //   sex,
+  //   address,
+  //   phone,
+  //   visitTime,
+  //   consultant,
+  //   doctorRegNo,
+  //   department,
+  //   qualification,
+  //   barcodeValue,
+  // }) => {
+  //   const printWindow = window.open("", "", "width=900,height=650");
+
+  //   printWindow.document.write(`
+  //   <html>
+  //     <head>
+  //       <title>Prescription Print</title>
+  //       <style>
+  //         body {
+  //           font-family: Arial, sans-serif;
+  //           margin: 20px;
+  //           color: #000;
+  //         }
+
+  //         .box {
+  //           border: 2px solid #000;
+  //           padding: 10px;
+  //         }
+
+  //         .row {
+  //           display: flex;
+  //           justify-content: space-between;
+  //           margin-bottom: 5px;
+  //         }
+
+  //         .col {
+  //           width: 48%;
+  //         }
+
+  //         .label {
+  //           font-weight: bold;
+  //         }
+
+  //         .prescription {
+  //           text-align: center;
+  //           font-weight: bold;
+  //           color: red;
+  //           margin-top: 30px;
+  //           font-size: 16px;
+  //         }
+
+  //         .barcode {
+  //           text-align: right;
+  //           margin-bottom: 5px;
+  //         }
+
+  //         @media print {
+  //           body {
+  //             margin: 0;
+  //           }
+  //         }
+  //       </style>
+  //     </head>
+
+  //     <body onload="window.print(); window.close();">
+
+  //       <div class="barcode">
+  //         <svg id="barcode"></svg>
+  //       </div>
+
+  //       <div class="box">
+  //         <div class="row">
+  //           <div class="col">
+  //             <span class="label">Registration No :</span> ${registrationNo || " "}
+  //           </div>
+  //           <div class="col" style="text-align:right">
+  //             <span class="label">Visit Date :</span> ${visitDate}
+  //           </div>
+  //         </div>
+
+  //         <div class="row">
+  //           <div class="col">
+  //             <span class="label">Patient Name :</span> ${patientName || " "}
+  //           </div>
+  //           <div class="col">
+  //             <span class="label">Age :</span> ${age || " "} Y &nbsp;&nbsp;
+  //             <span class="label">Sex :</span> ${sex || " "}
+  //           </div>
+  //         </div>
+
+  //         <div class="row">
+  //           <div class="col">
+  //             <span class="label">Address :</span> ${address || " "}
+  //           </div>
+  //           <div class="col">
+  //             <span class="label">Visit Time :</span> ${visitTime || " "}
+  //           </div>
+  //         </div>
+
+  //         <div class="row">
+  //           <div class="col">
+  //             <span class="label">Phone No :</span> ${phone || " "}
+  //           </div>
+  //           <div class="col">
+  //             <span class="label">Doctor Reg. No :</span> ${doctorRegNo || " "}
+  //           </div>
+  //         </div>
+
+  //         <div class="row">
+  //           <div class="col">
+  //             <span class="label">Consultant :</span> ${consultant || " "}
+  //           </div>
+  //         </div>
+
+  //         <div class="row">
+  //           <div class="col">
+  //             <span class="label">Department :</span> ${department || " "}
+  //           </div>
+  //         </div>
+
+  //         <div class="row">
+  //           <div class="col">
+  //             <span class="label">Qualification :</span> ${qualification || " "}
+  //           </div>
+  //         </div>
+  //       </div>
+
+  //       <div class="prescription">PRESCRIPTION</div>
+
+  //       <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  //       <script>
+  //         JsBarcode("#barcode", "${barcodeValue || " "}", {
+  //           format: "CODE128",
+  //           width: 2,
+  //           height: 40,
+  //           displayValue: true
+  //         });
+  //       </script>
+
+  //     </body>
+  //   </html>
+  // `);
+
+  //   printWindow.document.close();
+  // };
+
   const DrPressPrint = ({
     registrationNo,
     visitDate,
@@ -912,8 +1062,18 @@ useEffect(() => {
     department,
     qualification,
     barcodeValue,
+    // New props extracted from the PDF Vitals section
+    pr,
+    rr,
+    bp,
+    temp,
+    height,
+    weight,
+    bmi,
+    nutritionalStatus,
+    drugAllergies,
   }) => {
-    const printWindow = window.open("", "", "width=900,height=650");
+    const printWindow = window.open("", "", "width=900,height=800");
 
     printWindow.document.write(`
     <html>
@@ -921,126 +1081,234 @@ useEffect(() => {
         <title>Prescription Print</title>
         <style>
           body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
             color: #000;
+            font-size: 12px;
           }
-
-          .box {
-            border: 2px solid #000;
-            padding: 10px;
+          
+          /* Header Styles */
+          .header {
+            text-align: center;
+            margin-bottom: 10px;
           }
-
-          .row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
+          .hospital-name {
+            font-size: 15px;
+            font-weight: 800;
+            
+            margin: 0;
+            letter-spacing: 1px;
           }
-
-          .col {
-            width: 48%;
+          .hospital-name1 {
+            font-size: 15px;
+            font-weight: 700;
+            
+            margin: 0;
+            letter-spacing: 1px;
           }
-
-          .label {
+          .address {
+            font-size: 11px;
+            margin: 2px 0;
+          }
+          .contact-info {
+            font-size: 10px;
+            margin-top: 2px;
             font-weight: bold;
           }
 
-          .prescription {
+          /* Patient Details Box */
+          .details-box {
+            border: 1px solid #000;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+          }
+          .details-box td {
+            padding: 5px 8px;
+            vertical-align: top;
+          }
+          .label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 90px;
+          }
+          
+          /* Vitals Section */
+          .vitals-container {
+           
+            padding: 5px 0;
+            margin-bottom: 20px;
+            
+            gap: 15px;
+            font-size: 11px;
+           
+          }
+          .vital-item span {
+            font-weight: normal;
+            margin-left: 2px;
+          }
+
+          /* Main Body */
+          .prescription-title {
             text-align: center;
             font-weight: bold;
             color: red;
-            margin-top: 30px;
             font-size: 16px;
+            text-decoration: underline;
+            margin: 10px 0 20px 0;
+          }
+          
+          .rx-area {
+            min-height: 400px;
+            width: 100%;
           }
 
-          .barcode {
+          /* Footer */
+          .footer {
+            margin-top: 20px;
             text-align: right;
-            margin-bottom: 5px;
+            padding-right: 20px;
           }
+          .doc-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 2px;
+          }
+          .doc-qual {
+            font-size: 11px;
+          }
+
+         .top-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .top-favicon img {
+            width: 80px; /* Controls the size of the image */
+            height: auto;
+        }
+
+        .top-barcode {
+            text-align: right;
+        }
 
           @media print {
-            body {
-              margin: 0;
-            }
+            body { margin: 0; padding: 10px; -webkit-print-color-adjust: exact; }
           }
         </style>
       </head>
 
       <body onload="window.print(); window.close();">
-
-        <div class="barcode">
-          <svg id="barcode"></svg>
+<div class="top-header-row">
+        <div class="top-favicon">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
         </div>
-
-        <div class="box">
-          <div class="row">
-            <div class="col">
-              <span class="label">Registration No :</span> ${registrationNo || " "}
-            </div>
-            <div class="col" style="text-align:right">
-              <span class="label">Visit Date :</span> ${visitDate}
-            </div>
+ <div class="header">
+          <div class="hospital-name">LORDS HEALTH CARE (Nurshing Home)</div>
+          <div class="hospital-name1">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="address">
+            13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+            (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
           </div>
-
-          <div class="row">
-            <div class="col">
-              <span class="label">Patient Name :</span> ${patientName || " "}
-            </div>
-            <div class="col">
-              <span class="label">Age :</span> ${age || " "} Y &nbsp;&nbsp;
-              <span class="label">Sex :</span> ${sex || " "}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <span class="label">Address :</span> ${address || " "}
-            </div>
-            <div class="col">
-              <span class="label">Visit Time :</span> ${visitTime || " "}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <span class="label">Phone No :</span> ${phone || " "}
-            </div>
-            <div class="col">
-              <span class="label">Doctor Reg. No :</span> ${doctorRegNo || " "}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <span class="label">Consultant :</span> ${consultant || " "}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <span class="label">Department :</span> ${department || " "}
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col">
-              <span class="label">Qualification :</span> ${qualification || " "}
-            </div>
+          <div class="contact-info">
+            E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
+            Phone No.: 8272904444 HELPLINE-7003378414. Toll Free No:-1800-309-0895
           </div>
         </div>
+        <div class="top-barcode">
+            <svg id="barcode"></svg>
+        </div>
+    </div>
 
-        <div class="prescription">PRESCRIPTION</div>
+       
+
+        <table class="details-box">
+          <tr>
+            <td width="50%">
+              <span class="label">Registration No</span>: ${registrationNo || ""}
+            </td>
+            <td width="50%">
+               <span class="label">Visit Date</span>: ${visitDate || ""}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Patient Name</span>: ${patientName || ""}
+            </td>
+             <td>
+              <span class="label">Visit Time</span>: ${visitTime || ""}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Age</span>: ${age || ""} Y &nbsp;&nbsp;&nbsp; <span class="label" style="min-width:auto">Sex</span>: ${sex || ""}
+            </td>
+            <td>
+              <span class="label">Phone No.</span>: ${phone || ""}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Address</span>: ${address || ""}
+            </td>
+            <td>
+              <span class="label">Doctor Reg. No.</span>: ${doctorRegNo || ""}
+            </td>
+          </tr>
+          <tr>
+             <td>
+              <span class="label">CONSULTANT</span>: ${consultant || ""}
+            </td>
+            <td>
+              <span class="label">Qualification</span>: ${qualification || ""}
+            </td>
+          </tr>
+          <tr>
+             <td colspan="2">
+              <span class="label">Department</span>: ${department || "PEDIATRIC MEDICINE"}
+            </td>
+          </tr>
+        </table>
+  <div class="prescription-title">PRESCRIPTION</div>
+        <div style="font-weight:bold; margin-bottom:2px;">Vitals</div>
+        <div class="vitals-container">
+           <div class="vital-item">PR: <span>${pr || ""}</span></div>
+           <div class="vital-item">RR: <span>${rr || ""}</span></div>
+           <div class="vital-item">BP: <span>${bp || ""}</span></div>
+           <div class="vital-item">Temp: <span>${temp || ""}</span></div>
+           <div class="vital-item">Height: <span>${height || ""}</span></div>
+           <div class="vital-item">Weight: <span>${weight || ""}</span></div>
+           <div class="vital-item">BMI: <span>${bmi || ""}</span></div>
+           <div class="vital-item">Nutritional Status: <span>Obese / Normal / Malnourished</span></div>
+           <div class="vital-item">Drug Allergies: <span>Yes / No</span></div>
+        </div>
+
+      
+
+        <div class="rx-area">
+           </div>
+
+        <div class="footer">
+          <div class="doc-name">${consultant || ""}</div>
+          <div class="doc-qual">${qualification || ""}</div>
+        </div>
 
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
         <script>
-          JsBarcode("#barcode", "${barcodeValue || " "}", {
-            format: "CODE128",
-            width: 2,
-            height: 40,
-            displayValue: true
-          });
+            try {
+                JsBarcode("#barcode", "${barcodeValue || registrationNo || "S-008791/25-26"}", {
+                    format: "CODE128",
+                    width: 1,
+                    height: 25,
+                    displayValue: true,
+                    fontSize: 10,
+                    margin: 0
+                });
+            } catch (e) { console.log(e); }
         </script>
-
       </body>
     </html>
   `);
@@ -2071,7 +2339,8 @@ useEffect(() => {
                             address: formData.fullAddress,
                             phone: formData.PhoneNo,
                             visitTime: t,
-                            consultant: formData.VisitTypeName,
+                            // consultant: formData.VisitTypeName,
+                            consultant: docDetail.Doctor,
                             doctorRegNo: docDetail.RegistrationNo,
                             department:
                               departmentName ||

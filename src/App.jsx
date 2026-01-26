@@ -328,6 +328,7 @@ import AiHealthAnalytics from "./pages/AiHealthAnalytics";
 import AiScribe from "./pages/AiScribe";
 import UserAiBookings from "./pages/UserAiBookings";
 import AiChatOld from "./pages/AiChatOld";
+import DateWiseAdmReg from "./pages/DateWiseAdmReg.jsx";
 
 
 
@@ -447,6 +448,15 @@ function App() {
           <Route path="/Bed-Transfer" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
           <Route path="/Bed-Transfer/:id/:mode" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
 
+
+<Route
+            path="/dateWiseAdmReg"
+            element={
+              <>
+                <DateWiseAdmReg />
+              </>
+            }
+          />
 
 
           {/* indoor route end---------------------------------  */}
