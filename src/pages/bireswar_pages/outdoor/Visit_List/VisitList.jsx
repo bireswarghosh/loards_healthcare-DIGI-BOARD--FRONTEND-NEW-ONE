@@ -638,7 +638,6 @@ const VisitList = () => {
     department,
     qualification,
     barcodeValue,
-    // New props extracted from the PDF Vitals section
     pr,
     rr,
     bp,
@@ -649,13 +648,17 @@ const VisitList = () => {
     nutritionalStatus,
     drugAllergies,
   }) => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const printDateTime = new Date().toLocaleString('en-IN');
     const printWindow = window.open("", "", "width=900,height=800");
 
 
     printWindow.document.write(`
+    <!DOCTYPE html>
     <html>
       <head>
-        <title>Prescription Print</title>
+        <meta charset="UTF-8">
+        <title></title>
         <style>
           body {
             font-family: Arial, Helvetica, sans-serif;
@@ -690,14 +693,15 @@ const VisitList = () => {
 
           /* Patient Details Box */
           .details-box {
-            border: 1px solid #000;
+            border: 2px solid #000;
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
           }
           .details-box td {
-            padding: 5px 8px;
-            vertical-align: top;
+            padding: 8px;
+            vertical-align: middle;
+            border: 1px solid #000;
           }
           .label {
             font-weight: bold;
@@ -754,38 +758,47 @@ const VisitList = () => {
 
 
          .top-header-row {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 80px 1fr 120px;
             align-items: center;
             margin-bottom: 10px;
+            gap: 10px;
         }
 
-
         .top-favicon img {
-            width: 80px; /* Controls the size of the image */
+            width: 80px;
             height: auto;
         }
 
-
         .top-barcode {
+            text-align: right;
+        }
+        
+        .print-meta {
+            position: fixed;
+            bottom: 10px;
+            right: 20px;
+            font-size: 9px;
+            color: #666;
             text-align: right;
         }
 
 
           @media print {
             body { margin: 0; padding: 10px; -webkit-print-color-adjust: exact; }
+            @page { margin: 10mm; }
           }
         </style>
       </head>
 
 
-      <body onload="window.print(); window.close();">
+      <body>
 <div class="top-header-row">
         <div class="top-favicon">
             <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
         </div>
  <div class="header">
-          <div class="hospital-name">LORDS HEALTH CARE (Nurshing Home)</div>
+          <div class="hospital-name">LORDS HEALTH CARE (Nursing Home)</div>
           <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
           <div class="address">
             13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
@@ -807,49 +820,42 @@ const VisitList = () => {
 
         <table class="details-box">
           <tr>
-            <td width="50%">
-              <span class="label">Registration No</span>: ${registrationNo || ""}
-            </td>
-            <td width="50%">
-               <span class="label">Visit Date</span>: ${visitDate || ""}
-            </td>
+            <td width="25%"><span class="label">Registration No</span></td>
+            <td width="25%">${registrationNo || ""}</td>
+            <td width="25%"><span class="label">Visit Date</span></td>
+            <td width="25%">${visitDate || ""}</td>
           </tr>
           <tr>
-            <td>
-              <span class="label">Patient Name</span>: ${patientName || ""}
-            </td>
-             <td>
-              <span class="label">Visit Time</span>: ${visitTime || ""}
-            </td>
+            <td><span class="label">Patient Name</span></td>
+            <td>${patientName || ""}</td>
+            <td><span class="label">Visit Time</span></td>
+            <td>${visitTime || ""}</td>
           </tr>
           <tr>
-            <td>
-              <span class="label">Age</span>: ${age || ""} Y &nbsp;&nbsp;&nbsp; <span class="label" style="min-width:auto">Sex</span>: ${sex || ""}
-            </td>
-            <td>
-              <span class="label">Phone No.</span>: ${phone || ""}
-            </td>
+            <td><span class="label">Age</span></td>
+            <td>${age || ""} Y</td>
+            <td><span class="label">Sex</span></td>
+            <td>${sex || ""}</td>
           </tr>
           <tr>
-            <td>
-              <span class="label">Address</span>: ${address || ""}
-            </td>
-            <td>
-              <span class="label">Doctor Reg. No.</span>: ${doctorRegNo || ""}
-            </td>
+            <td><span class="label">Phone No.</span></td>
+            <td>${phone || ""}</td>
+            <td><span class="label">Doctor Reg. No.</span></td>
+            <td>${doctorRegNo || ""}</td>
           </tr>
           <tr>
-             <td>
-              <span class="label">CONSULTANT</span>: ${consultant || ""}
-            </td>
-            <td>
-              <span class="label">Qualification</span>: ${qualification || ""}
-            </td>
+            <td><span class="label">Address</span></td>
+            <td colspan="3">${address || ""}</td>
           </tr>
           <tr>
-             <td colspan="2">
-              <span class="label">Department</span>: ${department || "PEDIATRIC MEDICINE"}
-            </td>
+            <td><span class="label">CONSULTANT</span></td>
+            <td>${consultant || ""}</td>
+            <td><span class="label">Qualification</span></td>
+            <td>${qualification || ""}</td>
+          </tr>
+          <tr>
+            <td><span class="label">Department</span></td>
+            <td colspan="3">${department || "PEDIATRIC MEDICINE"}</td>
           </tr>
         </table>
   <div class="prescription-title">PRESCRIPTION</div>
@@ -879,19 +885,31 @@ const VisitList = () => {
           <div class="doc-qual">${qualification || ""}</div>
         </div>
 
+        <div class="print-meta">
+          <div>Printed By: ${user.UserName || 'System'}</div>
+          <div>Print Date: ${printDateTime}</div>
+        </div>
 
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
         <script>
             try {
-                JsBarcode("#barcode", "${barcodeValue || registrationNo || "S-008791/25-26"}", {
+                const barcodeText = "${barcodeValue || registrationNo || "S-008791/25-26"}";
+                const cleanBarcode = barcodeText.replace('S-', '');
+                JsBarcode("#barcode", cleanBarcode, {
                     format: "CODE128",
-                    width: 1,
-                    height: 25,
+                    width: 1.5,
+                    height: 30,
                     displayValue: true,
-                    fontSize: 10,
-                    margin: 0
+                    fontSize: 9,
+                    margin: 2,
+                    textMargin: 0
                 });
             } catch (e) { console.log(e); }
+            
+            setTimeout(() => {
+                window.print();
+                setTimeout(() => window.close(), 100);
+            }, 500);
         </script>
       </body>
     </html>
