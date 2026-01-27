@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
-import AsyncApiSelect from "../../templates/DiagnosisMaster/AsyncApiSelect";
-import axiosInstance from "../../axiosInstance";
+
+
 import { useForm } from "react-hook-form";
-import ApiSelect from "../../templates/DiagnosisMaster/ApiSelect";
+
 import { toast } from "react-toastify";
-import useAxiosFetch from "../../templates/DiagnosisMaster/Fetch";
+import AsyncApiSelect from "./components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleRe/AsyncApiSelect";
+import axiosInstance from "./axiosInstance";
+import ApiSelect from "./templates/DiagnosisMaster/ApiSelect";
+import useAxiosFetch from "./templates/DiagnosisMaster/Fetch";
+
 
 
 

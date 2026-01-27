@@ -99,7 +99,7 @@ import OtherCharges_indoor from "./components/indoor/PatientAdmissionDetail/Othe
 import OTBillingList from "./components/indoor/PatientAdmissionDetail/OTBillingList.jsx";
 import OTBillingDetail from "./components/indoor/OTBillingDetail.jsx";
 import OTNoteProcedure from "./components/indoor/OTNoteProcedure.jsx";
-import DoctorVisit from "./components/indoor/DoctorVisit.jsx";
+// import DoctorVisit from "./components/indoor/DoctorVisit.jsx";
 
 import Estimate from "./components/indoor/Estimate.jsx";
 import DischargeAndAdvice_Details from "./components/indoor/DischargeAndAdvise_details.jsx";
@@ -330,6 +330,7 @@ import AiScribe from "./pages/AiScribe";
 import UserAiBookings from "./pages/UserAiBookings";
 import AiChatOld from "./pages/AiChatOld";
 import DateWiseAdmReg from "./pages/DateWiseAdmReg.jsx";
+import DoctorVisit from "./DoctorVisit.jsx";
 
 
 
@@ -431,7 +432,7 @@ function App() {
           <Route path="/OTBillingList" element={<ProtectedRoute><OTBillingList /></ProtectedRoute>} />
           <Route path="/OTBillingDetail" element={<ProtectedRoute><OTBillingDetail /></ProtectedRoute>} />
           <Route path="/OTNoteProcedure" element={<ProtectedRoute><OTNoteProcedure /></ProtectedRoute>} />
-          <Route path="/DoctorVisit" element={<ProtectedRoute><DoctorVisit /></ProtectedRoute>} />
+          <Route path="/DoctorVisit" element={<ProtectedRoute><DoctorVisit/></ProtectedRoute>} />
          
           <Route path="/Estimate" element={<ProtectedRoute><Estimate /></ProtectedRoute>} />
           <Route path="/DischargeAndAdvise"element={<ProtectedRoute><DischargeAndAdvice_Details /></ProtectedRoute>}/>
