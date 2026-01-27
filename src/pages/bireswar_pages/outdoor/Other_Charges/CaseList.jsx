@@ -185,6 +185,12 @@ const CaseList = () => {
               <div className="panel-header d-flex justify-content-between align-items-center">
                 <h5>🏥 Case List</h5>
                 <div className="btn-box d-flex flex-wrap gap-2">
+                  <button
+                    className="btn btn-sm btn-success"
+                    onClick={() => navigate('/CaseEntry')}
+                  >
+                    <i className="fa-light fa-plus me-2"></i> Add New Case
+                  </button>
                   <div id="tableSearch" className="d-flex gap-2">
                     <input
                       type="text"

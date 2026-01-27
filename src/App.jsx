@@ -227,6 +227,7 @@ import PatientActions from "./pages/Emr dummy/PatientActions.jsx";
 
 
 // !  deb dia  mas
+import OTBillingIpd from "./templates/OTBillingIpd.jsx";
 import OtherChargesss from "./templates/DiagnosisMaster/OtherCharges.jsx";
 import MoneyReceipt from "./templates/DiagnosisMaster/MoneyReceipt.jsx";
 import Refund from "./templates/DiagnosisMaster/Refund.jsx";
@@ -636,7 +637,7 @@ function App() {
 {/* deb  dia mass */}
 
 <Route path="/LaboratoryQuery" element={<ProtectedRoute><LaboratoryQuery/></ProtectedRoute>}/>
-
+<Route path="/OTBillingIpd" element={<ProtectedRoute><OTBillingIpd/></ProtectedRoute>}/>
 
 
 

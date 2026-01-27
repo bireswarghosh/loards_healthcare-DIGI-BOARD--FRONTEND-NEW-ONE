@@ -5,20 +5,29 @@ import jsPDF from "jspdf";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"; // From Emr.jsx
 import Footer from "../../../../components/footer/Footer";
 
+
 const VisitList = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null); // Added from Emr.jsx
 
+
   // Restore search state from navigation
   const savedSearchState = location.state?.searchState;
+
 
   // State from original Visit_list.jsx - ALL PRESERVED
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchPhone, setSearchPhone] = useState(savedSearchState?.searchPhone || "");
-  const [searchDate, setSearchDate] = useState(savedSearchState?.searchDate || "");
-  const [searchRegistrationId, setSearchRegistrationId] = useState(savedSearchState?.searchRegistrationId || "");
+  const [searchPhone, setSearchPhone] = useState(
+    savedSearchState?.searchPhone || "",
+  );
+  const [searchDate, setSearchDate] = useState(
+    savedSearchState?.searchDate || "",
+  );
+  const [searchRegistrationId, setSearchRegistrationId] = useState(
+    savedSearchState?.searchRegistrationId || "",
+  );
   const [paginationModel, setPaginationModel] = useState({
     page: savedSearchState?.page || 0,
     pageSize: 100,
@@ -29,6 +38,10 @@ const VisitList = () => {
   const [editForm, setEditForm] = useState({});
   const [showDropdownIndex, setShowDropdownIndex] = useState(null); // Added for Emr dropdown style
 
+
+  const [pvisitData, setPvisitData] = useState({});
+
+
   // Original fetchVisits logic - PRESERVED
   const fetchVisits = useCallback(
     async (
@@ -36,7 +49,7 @@ const VisitList = () => {
       date = "",
       registrationId = "",
       page = 1,
-      limit = 100
+      limit = 100,
     ) => {
       setLoading(true);
       try {
@@ -48,7 +61,9 @@ const VisitList = () => {
           ...(date && { fromDate: date, toDate: date }),
         });
 
+
         const response = await axiosInstance.get(`/patient-visits?${params}`);
+
 
         if (response.data?.success) {
           const data = response.data.data.map((item) => ({
@@ -61,8 +76,8 @@ const VisitList = () => {
               item.Sex === "M"
                 ? "Male"
                 : item.Sex === "F"
-                ? "Female"
-                : item.Sex,
+                  ? "Female"
+                  : item.Sex,
             Add1: item.PatientAdd1,
             RegDate: item.PVisitDate ? item.PVisitDate.split("T")[0] : "N/A",
             RegTime: item.vTime,
@@ -71,6 +86,7 @@ const VisitList = () => {
             TotAmount: item.TotAmount || 0,
             PVisitId: item.PVisitId,
           }));
+
 
           setVisits(data);
           setRowCount(response.data.pagination?.total || 0);
@@ -81,8 +97,9 @@ const VisitList = () => {
         setLoading(false);
       }
     },
-    []
+    [],
   );
+
 
   useEffect(() => {
     if (savedSearchState) {
@@ -91,12 +108,13 @@ const VisitList = () => {
         savedSearchState.searchDate,
         savedSearchState.searchRegistrationId,
         savedSearchState.page + 1,
-        paginationModel.pageSize
+        paginationModel.pageSize,
       );
     } else {
       fetchVisits("", "", "", 1, paginationModel.pageSize);
     }
   }, [fetchVisits]);
+
 
   // Original handler logic - PRESERVED
   const handleSearch = () => {
@@ -106,9 +124,10 @@ const VisitList = () => {
       searchDate,
       searchRegistrationId,
       1,
-      paginationModel.pageSize
+      paginationModel.pageSize,
     );
   };
+
 
   // Original handler logic - PRESERVED
   const handlePaginationChange = (newPage) => {
@@ -123,16 +142,18 @@ const VisitList = () => {
       searchDate,
       searchRegistrationId,
       newPage + 1,
-      paginationModel.pageSize
+      paginationModel.pageSize,
     );
   };
+
 
   // Original handler logic - PRESERVED
   const handleView = async (patient) => {
     try {
       const response = await axiosInstance.get(
-        `/patient-visits/${patient.PVisitId}`
+        `/patient-visits/${patient.PVisitId}`,
       );
+
 
       if (response.data?.success) {
         const fullData = response.data.data;
@@ -156,12 +177,14 @@ const VisitList = () => {
     }
   };
 
+
   // Original handler logic - PRESERVED
   const handleEdit = async (patient) => {
     try {
       const response = await axiosInstance.get(
-        `/patient-visits/${patient.PVisitId}`
+        `/patient-visits/${patient.PVisitId}`,
       );
+
 
       if (response.data?.success) {
         const fullData = response.data.data;
@@ -185,13 +208,15 @@ const VisitList = () => {
     }
   };
 
+
   // Original handler logic - PRESERVED
   const handleUpdatePatient = async () => {
     try {
       const response = await axiosInstance.put(
         `/patient-visits/${editDialog.patient.PVisitId}`,
-        editForm
+        editForm,
       );
+
 
       if (response.data?.success) {
         alert("Patient visit updated successfully!");
@@ -201,7 +226,7 @@ const VisitList = () => {
           searchDate,
           searchRegistrationId,
           paginationModel.page + 1,
-          paginationModel.pageSize
+          paginationModel.pageSize,
         );
       }
     } catch (error) {
@@ -209,18 +234,21 @@ const VisitList = () => {
     }
   };
 
+
   // Original handler logic - PRESERVED
   const generatePDF = async (patient) => {
     try {
       // Fetch billing details for the patient visit
       const response = await axiosInstance.get(
-        `/patient-visits/${patient.PVisitId}`
+        `/patient-visits/${patient.PVisitId}`,
       );
 
+
       if (!response.data?.success) {
-        alert('Failed to fetch billing details');
+        alert("Failed to fetch billing details");
         return;
       }
+
 
       const billingData = response.data.data;
       const regCh = parseFloat(billingData.RegCh || 0);
@@ -231,281 +259,352 @@ const VisitList = () => {
       const svrDisc = parseFloat(billingData.SrvChDisc || 0);
       const totalPaid = parseFloat(billingData.RecAmt || 0);
 
+
       const doc = new jsPDF();
 
-    // Red logo box with white text
-    doc.setFillColor(220, 53, 69);
-    doc.rect(15, 15, 30, 30, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("L", 22, 28);
-    doc.text("H", 22, 35);
-    doc.text("C", 22, 42);
 
-    // Main header
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text("LORDS HEALTH CARE", 105, 25, { align: "center" });
+      // Red logo box with white text
+      doc.setFillColor(220, 53, 69);
+      doc.rect(15, 15, 30, 30, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("L", 22, 28);
+      doc.text("H", 22, 35);
+      doc.text("C", 22, 42);
 
-    // Address details
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text("13/3, Circular 2nd Bye Lane, Kona Expressway,", 105, 32, {
-      align: "center",
-    });
-    doc.text(
-      "(Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.",
-      105,
-      37,
-      { align: "center" }
-    );
-    doc.text(
-      "Phone No.: 8272904444 HELPLINE - 7003378414,Toll Free No:-1800-309-0895",
-      105,
-      42,
-      { align: "center" }
-    );
-    doc.text(
-      "E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org",
-      105,
-      47,
-      { align: "center" }
-    );
 
-    // Barcode area
-    doc.setLineWidth(1);
-    doc.rect(165, 15, 30, 25);
-    // Vertical barcode lines
-    for (let i = 0; i < 20; i++) {
-      if (i % 2 === 0) doc.line(167 + i, 17, 167 + i, 38);
-    }
-    doc.setFontSize(8);
-    doc.text("S-" + patient.RegistrationId, 180, 44, { align: "center" });
+      // Main header
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.text("LORDS HEALTH CARE", 105, 25, { align: "center" });
 
-    // ADVANCE BOOKING title
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("ADVANCE BOOKING", 105, 60, { align: "center" });
 
-    // MONEY RECEIPT header with Serial No
-    doc.setFontSize(14);
-    doc.setTextColor(255, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.text("MONEY RECEIPT", 20, 75);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("helvetica", "bold");
-    doc.text("Serial No : 1", 150, 75);
-
-    // Main information table
-    const startY = 85;
-    doc.setLineWidth(0.5);
-    doc.setTextColor(0, 0, 0);
-
-    // Registration details box
-    doc.rect(15, startY, 180, 25);
-    doc.line(15, startY + 12, 195, startY + 12);
-    doc.line(100, startY, 100, startY + 25);
-    doc.line(140, startY, 140, startY + 25);
-
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Registration ID : S-${patient.RegistrationId}`, 17, startY + 8);
-    doc.text(`Registration Date : ${patient.RegDate}`, 17, startY + 20);
-    doc.text(
-      `Booking Time : ${patient.RegTime || "08:20 AM"}`,
-      17,
-      startY + 32
-    );
-
-    doc.text(`Visit ID :`, 102, startY + 8);
-    doc.text(`RRR00351`, 102, startY + 20);
-
-    doc.text(`Visit Date : ${patient.RegDate}`, 142, startY + 8);
-    doc.text(
-      `Visit Time : ${patient.RegTime || "8:20:00 AM"}`,
-      142,
-      startY + 20
-    );
-
-    // Patient information box - made taller to fit consultant info
-    const patientY = startY + 25;
-    doc.rect(15, patientY, 180, 55);
-    doc.line(15, patientY + 20, 195, patientY + 20);
-    doc.line(15, patientY + 40, 195, patientY + 40);
-    doc.line(140, patientY + 20, 140, patientY + 55);
-
-    doc.text(`Patient Name : ${patient.PatientName}`, 17, patientY + 12);
-    doc.text(
-      `Age : ${patient.Age || "57"} Y    Sex : ${patient.Sex || "Female"}`,
-      142,
-      patientY + 8
-    );
-    doc.text(`Phone No : ${patient.PhoneNo}`, 142, patientY + 16);
-
-    doc.text(`Address : ${patient.Add1 || "HOWRAH, ,"}`, 17, patientY + 32);
-    doc.text(`SERVER2    0    Cash    N`, 142, patientY + 32);
-
-    // Consultant and Department in separate row with proper spacing
-    doc.text(
-      `CONSULTANT : Dr. ${patient.DoctorName || "ABHRA MUKHOPADHYAY"}`,
-      17,
-      patientY + 52
-    );
-    doc.text(
-      `Department : ${patient.SpecialityName || "GENERAL MEDICINE"}`,
-      142,
-      patientY + 52
-    );
-
-    // Services table header - adjusted position
-    const servicesY = patientY + 55;
-    doc.rect(15, servicesY, 180, 12);
-    doc.line(150, servicesY, 150, servicesY + 12);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Particulars / Description", 17, servicesY + 8);
-    doc.text("Amount In Rs.", 152, servicesY + 8);
-
-    // Service items
-    let currentY = servicesY + 12;
-    doc.setFont("helvetica", "normal");
-
-    // Registration Charge (if exists)
-    if (regCh > 0) {
-      doc.rect(15, currentY, 180, 12);
-      doc.line(150, currentY, 150, currentY + 12);
-      doc.text("Registration Charge", 17, currentY + 8);
-      doc.text(regCh.toFixed(2), 185, currentY + 8, { align: "right" });
-      currentY += 12;
-    }
-
-    // Service Charge
-    if (svrCh > 0) {
-      doc.rect(15, currentY, 180, 12);
-      doc.line(150, currentY, 150, currentY + 12);
-      doc.text("Service Charge", 17, currentY + 8);
-      doc.text(svrCh.toFixed(2), 185, currentY + 8, { align: "right" });
-      currentY += 12;
-    }
-
-    // Professional Charge
-    if (rate > 0) {
-      doc.rect(15, currentY, 180, 12);
-      doc.line(150, currentY, 150, currentY + 12);
-      doc.text("CONSULTATION - Professional Charge", 17, currentY + 8);
-      doc.text(rate.toFixed(2), 185, currentY + 8, { align: "right" });
-      currentY += 12;
-    }
-
-    // Discount row (if applicable)
-    const totalDiscount = profDiscAmt + svrDisc;
-    if (totalDiscount > 0) {
-      doc.rect(15, currentY, 180, 12);
-      
-      doc.line(150, currentY, 150, currentY + 12);
+      // Address details
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text("13/3, Circular 2nd Bye Lane, Kona Expressway,", 105, 32, {
+        align: "center",
+      });
       doc.text(
-        `Less Discount${profDiscPer > 0 ? ` (${profDiscPer}%)` : ''}`,
-        17,
-        currentY + 8
+        "(Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.",
+        105,
+        37,
+        { align: "center" },
       );
-      doc.text(totalDiscount.toFixed(2), 185, currentY + 8, { align: "right" });
-      currentY += 12;
-    }
+      doc.text(
+        "Phone No.: 8272904444 HELPLINE - 7003378414,Toll Free No:-1800-309-0895",
+        105,
+        42,
+        { align: "center" },
+      );
+      doc.text(
+        "E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org",
+        105,
+        47,
+        { align: "center" },
+      );
 
-    // Convert amount to words
-    const numberToWords = (num) => {
-      const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
-      const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
-      const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
-      
-      if (num === 0) return 'zero';
-      
-      const convertHundreds = (n) => {
-        let str = '';
-        if (n >= 100) {
-          str += ones[Math.floor(n / 100)] + ' hundred ';
-          n %= 100;
-        }
-        if (n >= 20) {
-          str += tens[Math.floor(n / 10)] + ' ';
-          n %= 10;
-        } else if (n >= 10) {
-          str += teens[n - 10] + ' ';
+
+      // Barcode area
+      doc.setLineWidth(1);
+      doc.rect(165, 15, 30, 25);
+      // Vertical barcode lines
+      for (let i = 0; i < 20; i++) {
+        if (i % 2 === 0) doc.line(167 + i, 17, 167 + i, 38);
+      }
+      doc.setFontSize(8);
+      doc.text("S-" + patient.RegistrationId, 180, 44, { align: "center" });
+
+
+      // ADVANCE BOOKING title
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.text("ADVANCE BOOKING", 105, 60, { align: "center" });
+
+
+      // MONEY RECEIPT header with Serial No
+      doc.setFontSize(14);
+      doc.setTextColor(255, 0, 0);
+      doc.setFont("helvetica", "bold");
+      doc.text("MONEY RECEIPT", 20, 75);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("helvetica", "bold");
+      doc.text("Serial No : 1", 150, 75);
+
+
+      // Main information table
+      const startY = 85;
+      doc.setLineWidth(0.5);
+      doc.setTextColor(0, 0, 0);
+
+
+      // Registration details box
+      doc.rect(15, startY, 180, 25);
+      doc.line(15, startY + 12, 195, startY + 12);
+      doc.line(100, startY, 100, startY + 25);
+      doc.line(140, startY, 140, startY + 25);
+
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Registration ID : S-${patient.RegistrationId}`, 17, startY + 8);
+      doc.text(`Registration Date : ${patient.RegDate}`, 17, startY + 20);
+      doc.text(
+        `Booking Time : ${patient.RegTime || "08:20 AM"}`,
+        17,
+        startY + 32,
+      );
+
+
+      doc.text(`Visit ID :`, 102, startY + 8);
+      doc.text(`RRR00351`, 102, startY + 20);
+
+
+      doc.text(`Visit Date : ${patient.RegDate}`, 142, startY + 8);
+      doc.text(
+        `Visit Time : ${patient.RegTime || "8:20:00 AM"}`,
+        142,
+        startY + 20,
+      );
+
+
+      // Patient information box - made taller to fit consultant info
+      const patientY = startY + 25;
+      doc.rect(15, patientY, 180, 55);
+      doc.line(15, patientY + 20, 195, patientY + 20);
+      doc.line(15, patientY + 40, 195, patientY + 40);
+      doc.line(140, patientY + 20, 140, patientY + 55);
+
+
+      doc.text(`Patient Name : ${patient.PatientName}`, 17, patientY + 12);
+      doc.text(
+        `Age : ${patient.Age || "57"} Y    Sex : ${patient.Sex || "Female"}`,
+        142,
+        patientY + 8,
+      );
+      doc.text(`Phone No : ${patient.PhoneNo}`, 142, patientY + 16);
+
+
+      doc.text(`Address : ${patient.Add1 || "HOWRAH, ,"}`, 17, patientY + 32);
+      doc.text(`SERVER2    0    Cash    N`, 142, patientY + 32);
+
+
+      // Consultant and Department in separate row with proper spacing
+      doc.text(
+        `CONSULTANT : Dr. ${patient.DoctorName || "ABHRA MUKHOPADHYAY"}`,
+        17,
+        patientY + 52,
+      );
+      doc.text(
+        `Department : ${patient.SpecialityName || "GENERAL MEDICINE"}`,
+        142,
+        patientY + 52,
+      );
+
+
+      // Services table header - adjusted position
+      const servicesY = patientY + 55;
+      doc.rect(15, servicesY, 180, 12);
+      doc.line(150, servicesY, 150, servicesY + 12);
+
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Particulars / Description", 17, servicesY + 8);
+      doc.text("Amount In Rs.", 152, servicesY + 8);
+
+
+      // Service items
+      let currentY = servicesY + 12;
+      doc.setFont("helvetica", "normal");
+
+
+      // Registration Charge (if exists)
+      if (regCh > 0) {
+        doc.rect(15, currentY, 180, 12);
+        doc.line(150, currentY, 150, currentY + 12);
+        doc.text("Registration Charge", 17, currentY + 8);
+        doc.text(regCh.toFixed(2), 185, currentY + 8, { align: "right" });
+        currentY += 12;
+      }
+
+
+      // Service Charge
+      if (svrCh > 0) {
+        doc.rect(15, currentY, 180, 12);
+        doc.line(150, currentY, 150, currentY + 12);
+        doc.text("Service Charge", 17, currentY + 8);
+        doc.text(svrCh.toFixed(2), 185, currentY + 8, { align: "right" });
+        currentY += 12;
+      }
+
+
+      // Professional Charge
+      if (rate > 0) {
+        doc.rect(15, currentY, 180, 12);
+        doc.line(150, currentY, 150, currentY + 12);
+        doc.text("CONSULTATION - Professional Charge", 17, currentY + 8);
+        doc.text(rate.toFixed(2), 185, currentY + 8, { align: "right" });
+        currentY += 12;
+      }
+
+
+      // Discount row (if applicable)
+      const totalDiscount = profDiscAmt + svrDisc;
+      if (totalDiscount > 0) {
+        doc.rect(15, currentY, 180, 12);
+
+
+        doc.line(150, currentY, 150, currentY + 12);
+        doc.text(
+          `Less Discount${profDiscPer > 0 ? ` (${profDiscPer}%)` : ""}`,
+          17,
+          currentY + 8,
+        );
+        doc.text(totalDiscount.toFixed(2), 185, currentY + 8, {
+          align: "right",
+        });
+        currentY += 12;
+      }
+
+
+      // Convert amount to words
+      const numberToWords = (num) => {
+        const ones = [
+          "",
+          "one",
+          "two",
+          "three",
+          "four",
+          "five",
+          "six",
+          "seven",
+          "eight",
+          "nine",
+        ];
+        const tens = [
+          "",
+          "",
+          "twenty",
+          "thirty",
+          "forty",
+          "fifty",
+          "sixty",
+          "seventy",
+          "eighty",
+          "ninety",
+        ];
+        const teens = [
+          "ten",
+          "eleven",
+          "twelve",
+          "thirteen",
+          "fourteen",
+          "fifteen",
+          "sixteen",
+          "seventeen",
+          "eighteen",
+          "nineteen",
+        ];
+
+
+        if (num === 0) return "zero";
+
+
+        const convertHundreds = (n) => {
+          let str = "";
+          if (n >= 100) {
+            str += ones[Math.floor(n / 100)] + " hundred ";
+            n %= 100;
+          }
+          if (n >= 20) {
+            str += tens[Math.floor(n / 10)] + " ";
+            n %= 10;
+          } else if (n >= 10) {
+            str += teens[n - 10] + " ";
+            return str;
+          }
+          if (n > 0) str += ones[n] + " ";
           return str;
+        };
+
+
+        let rupees = Math.floor(num);
+        const paise = Math.round((num - rupees) * 100);
+
+
+        let result = "";
+        if (rupees >= 10000000) {
+          result += convertHundreds(Math.floor(rupees / 10000000)) + "crore ";
+          rupees %= 10000000;
         }
-        if (n > 0) str += ones[n] + ' ';
-        return str;
+        if (rupees >= 100000) {
+          result += convertHundreds(Math.floor(rupees / 100000)) + "lakh ";
+          rupees %= 100000;
+        }
+        if (rupees >= 1000) {
+          result += convertHundreds(Math.floor(rupees / 1000)) + "thousand ";
+          rupees %= 1000;
+        }
+        if (rupees > 0) {
+          result += convertHundreds(rupees);
+        }
+
+
+        result = result.trim();
+        if (paise > 0) {
+          result += " & " + convertHundreds(paise) + "paise";
+        } else {
+          result += " & zero paise";
+        }
+
+
+        return result + " only";
       };
-      
-      let rupees = Math.floor(num);
-      const paise = Math.round((num - rupees) * 100);
-      
-      let result = '';
-      if (rupees >= 10000000) {
-        result += convertHundreds(Math.floor(rupees / 10000000)) + 'crore ';
-        rupees %= 10000000;
-      }
-      if (rupees >= 100000) {
-        result += convertHundreds(Math.floor(rupees / 100000)) + 'lakh ';
-        rupees %= 100000;
-      }
-      if (rupees >= 1000) {
-        result += convertHundreds(Math.floor(rupees / 1000)) + 'thousand ';
-        rupees %= 1000;
-      }
-      if (rupees > 0) {
-        result += convertHundreds(rupees);
-      }
-      
-      result = result.trim();
-      if (paise > 0) {
-        result += ' & ' + convertHundreds(paise) + 'paise';
-      } else {
-        result += ' & zero paise';
-      }
-      
-      return result + ' only';
-    };
 
-    // Total amount in words
-    doc.rect(15, currentY, 180, 18);
-    doc.line(150, currentY, 150, currentY + 18);
-    doc.setFont("helvetica", "bold");
-    const amountInWords = numberToWords(totalPaid);
-    doc.text(`PAID : Rupees ${amountInWords}`, 17, currentY + 12);
-    doc.text(totalPaid.toFixed(2), 185, currentY + 12, { align: "right" });
-    currentY += 18;
 
-    // Footer signature
-    doc.setFont("helvetica", "normal");
-    doc.text("Received By : SANJAY ST.", 17, currentY + 15);
+      // Total amount in words
+      doc.rect(15, currentY, 180, 18);
+      doc.line(150, currentY, 150, currentY + 18);
+      doc.setFont("helvetica", "bold");
+      const amountInWords = numberToWords(totalPaid);
+      doc.text(`PAID : Rupees ${amountInWords}`, 17, currentY + 12);
+      doc.text(totalPaid.toFixed(2), 185, currentY + 12, { align: "right" });
+      currentY += 18;
+
+
+      // Footer signature
+      doc.setFont("helvetica", "normal");
+      doc.text("Received By : SANJAY ST.", 17, currentY + 15);
+
 
       // Save PDF with patient name
       const fileName = `MoneyReceipt_${patient.PatientName.replace(
         /\s+/g,
-        "_"
+        "_",
       )}_${patient.RegistrationId.replace("/", "-")}.pdf`;
       doc.save(fileName);
       alert("Professional Money Receipt PDF generated successfully!");
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF: ' + error.message);
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF: " + error.message);
     }
   };
+
 
   // Original handler logic - PRESERVED
   const handleDelete = async (patient) => {
     if (
       window.confirm(
-        `Are you sure you want to delete visit for ${patient.PatientName}?`
+        `Are you sure you want to delete visit for ${patient.PatientName}?`,
       )
     ) {
       try {
         const response = await axiosInstance.delete(
-          `/patient-visits/${patient.PVisitId}`
+          `/patient-visits/${patient.PVisitId}`,
         );
+
 
         if (response.data?.success) {
           alert("Patient visit deleted successfully!");
@@ -514,7 +613,7 @@ const VisitList = () => {
             searchDate,
             searchRegistrationId,
             paginationModel.page + 1,
-            paginationModel.pageSize
+            paginationModel.pageSize,
           );
         }
       } catch (error) {
@@ -523,11 +622,344 @@ const VisitList = () => {
     }
   };
 
+
+  // main function for pdf generation
+  const DrPressPrint = ({
+    registrationNo,
+    visitDate,
+    patientName,
+    age,
+    sex,
+    address,
+    phone,
+    visitTime,
+    consultant,
+    doctorRegNo,
+    department,
+    qualification,
+    barcodeValue,
+    // New props extracted from the PDF Vitals section
+    pr,
+    rr,
+    bp,
+    temp,
+    height,
+    weight,
+    bmi,
+    nutritionalStatus,
+    drugAllergies,
+  }) => {
+    const printWindow = window.open("", "", "width=900,height=800");
+
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Prescription Print</title>
+        <style>
+          body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            font-size: 12px;
+          }
+         
+          /* Header Styles */
+          .header {
+            text-align: center;
+            margin-bottom: 10px;
+          }
+          .hospital-name {
+            font-size: 15px;
+            font-weight: 800;
+           
+            margin: 0;
+            letter-spacing: 1px;
+          }
+          .address {
+            font-size: 11px;
+            margin: 2px 0;
+          }
+          .contact-info {
+            font-size: 10px;
+            margin-top: 2px;
+            font-weight: bold;
+          }
+
+
+          /* Patient Details Box */
+          .details-box {
+            border: 1px solid #000;
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+          }
+          .details-box td {
+            padding: 5px 8px;
+            vertical-align: top;
+          }
+          .label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 90px;
+          }
+         
+          /* Vitals Section */
+          .vitals-container {
+           
+            padding: 5px 0;
+            margin-bottom: 20px;
+           
+            gap: 15px;
+            font-size: 11px;
+           
+          }
+          .vital-item span {
+            font-weight: normal;
+            margin-left: 2px;
+          }
+
+
+          /* Main Body */
+          .prescription-title {
+            text-align: center;
+            font-weight: bold;
+            color: red;
+            font-size: 16px;
+            text-decoration: underline;
+            margin: 10px 0 20px 0;
+          }
+         
+          .rx-area {
+            min-height: 400px;
+            width: 100%;
+          }
+
+
+          /* Footer */
+          .footer {
+            margin-top: 20px;
+            text-align: right;
+            padding-right: 20px;
+          }
+          .doc-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 2px;
+          }
+          .doc-qual {
+            font-size: 11px;
+          }
+
+
+         .top-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+
+        .top-favicon img {
+            width: 80px; /* Controls the size of the image */
+            height: auto;
+        }
+
+
+        .top-barcode {
+            text-align: right;
+        }
+
+
+          @media print {
+            body { margin: 0; padding: 10px; -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+
+
+      <body onload="window.print(); window.close();">
+<div class="top-header-row">
+        <div class="top-favicon">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
+        </div>
+ <div class="header">
+          <div class="hospital-name">LORDS HEALTH CARE (Nurshing Home)</div>
+          <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="address">
+            13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+            (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
+          </div>
+          <div class="contact-info">
+            E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
+            Phone No.: 8272904444 HELPLINE-7003378414. Toll Free No:-1800-309-0895
+          </div>
+        </div>
+        <div class="top-barcode">
+            <svg id="barcode"></svg>
+        </div>
+    </div>
+
+
+       
+
+
+        <table class="details-box">
+          <tr>
+            <td width="50%">
+              <span class="label">Registration No</span>: ${registrationNo || ""}
+            </td>
+            <td width="50%">
+               <span class="label">Visit Date</span>: ${visitDate || ""}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Patient Name</span>: ${patientName || ""}
+            </td>
+             <td>
+              <span class="label">Visit Time</span>: ${visitTime || ""}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Age</span>: ${age || ""} Y &nbsp;&nbsp;&nbsp; <span class="label" style="min-width:auto">Sex</span>: ${sex || ""}
+            </td>
+            <td>
+              <span class="label">Phone No.</span>: ${phone || ""}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="label">Address</span>: ${address || ""}
+            </td>
+            <td>
+              <span class="label">Doctor Reg. No.</span>: ${doctorRegNo || ""}
+            </td>
+          </tr>
+          <tr>
+             <td>
+              <span class="label">CONSULTANT</span>: ${consultant || ""}
+            </td>
+            <td>
+              <span class="label">Qualification</span>: ${qualification || ""}
+            </td>
+          </tr>
+          <tr>
+             <td colspan="2">
+              <span class="label">Department</span>: ${department || "PEDIATRIC MEDICINE"}
+            </td>
+          </tr>
+        </table>
+  <div class="prescription-title">PRESCRIPTION</div>
+        <div style="font-weight:bold; margin-bottom:2px;">Vitals</div>
+        <div class="vitals-container">
+           <div class="vital-item">PR: <span>${pr || ""}</span></div>
+           <div class="vital-item">RR: <span>${rr || ""}</span></div>
+           <div class="vital-item">BP: <span>${bp || ""}</span></div>
+           <div class="vital-item">Temp: <span>${temp || ""}</span></div>
+           <div class="vital-item">Height: <span>${height || ""}</span></div>
+           <div class="vital-item">Weight: <span>${weight || ""}</span></div>
+           <div class="vital-item">BMI: <span>${bmi || ""}</span></div>
+           <div class="vital-item">Nutritional Status: <span>Obese / Normal / Malnourished</span></div>
+           <div class="vital-item">Drug Allergies: <span>Yes / No</span></div>
+        </div>
+
+
+     
+
+
+        <div class="rx-area">
+           </div>
+
+
+        <div class="footer">
+          <div class="doc-name">${consultant || ""}</div>
+          <div class="doc-qual">${qualification || ""}</div>
+        </div>
+
+
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+        <script>
+            try {
+                JsBarcode("#barcode", "${barcodeValue || registrationNo || "S-008791/25-26"}", {
+                    format: "CODE128",
+                    width: 1,
+                    height: 25,
+                    displayValue: true,
+                    fontSize: 10,
+                    margin: 0
+                });
+            } catch (e) { console.log(e); }
+        </script>
+      </body>
+    </html>
+  `);
+
+
+    printWindow.document.close();
+  };
+
+
+  // generate visit entry pdf
+  const generateVisitEntryPDF = async (data) => {
+    try {
+      console.log("data: ", data);
+
+
+      if (!data) {
+        console.log("id is not presenet");
+        return;
+      }
+
+
+      const res = await axiosInstance.get(`/patient-visits/${data}`);
+      res.data.success ? setPvisitData(res.data.data) : setPvisitData({});
+      console.log("pvisit data: ", res.data.data);
+      const fetchedData = res.data.data;
+
+
+      let t;
+      if (Number(fetchedData.RegistrationTime.split(":")[0]) > 12) {
+        t = `${Number(fetchedData.RegistrationTime.split(":")[0]) - 12}:${fetchedData.RegistrationTime.split(":")[1]} PM`;
+      } else {
+        t = `${fetchedData.RegistrationTime} AM`;
+      }
+
+
+      const doctor = await axiosInstance.get(`/doctor/${fetchedData.DoctorId}`);
+      console.log("Doctor data: ", doctor.data.data);
+      DrPressPrint({
+        registrationNo: `S-${fetchedData.RegistrationId}`,
+        visitDate: fetchedData.RegistrationDate?.split("T")[0],
+        patientName: fetchedData.PatientName,
+        age: fetchedData.Age,
+        sex: fetchedData.Sex,
+        address:
+          `${fetchedData?.PatientAdd1}, ${fetchedData?.PatientAdd2}, ${fetchedData?.PatientAdd3}` ||
+          " ",
+        phone: fetchedData.PhoneNo,
+        visitTime: t,
+        // consultant: formData.VisitTypeName,
+        consultant: fetchedData.DoctorName,
+        doctorRegNo: doctor.data.data?.RegistrationNo || "",
+        department: fetchedData.SpecialityName || "",
+        qualification: doctor.data.data?.Qualification || "",
+        barcodeValue: `S-${fetchedData.RegistrationId}`,
+      });
+    } catch (error) {
+      console.log("Error creating pdf: ", error);
+    }
+  };
+
+
   // Added from Emr.jsx to handle dropdown logic for the new table style
   const handleDropdownToggle = (event, index) => {
     event.stopPropagation();
     setShowDropdownIndex(index === showDropdownIndex ? null : index);
   };
+
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -538,6 +970,7 @@ const VisitList = () => {
     document.addEventListener("click", handleOutsideClick);
     return () => document.removeEventListener("click", handleOutsideClick);
   }, []);
+
 
   // JSX for the View/Edit dialog forms (to replace MUI Dialog)
   const renderForm = () => (
@@ -631,6 +1064,7 @@ const VisitList = () => {
     </form>
   );
 
+
   // Render the table to match Emr.jsx's style
   const renderTable = () => {
     return (
@@ -664,23 +1098,8 @@ const VisitList = () => {
                 </div>
               </td>
               <td>
-                <div
-                  className="digi-dropdown dropdown d-inline-block"
-                  ref={dropdownRef}
-                >
-                  <button
-                    className={`btn btn-sm btn-outline-primary ${
-                      showDropdownIndex === index ? "show" : ""
-                    }`}
-                    onClick={(event) => handleDropdownToggle(event, index)}
-                  >
-                    Action <i className="fa-regular fa-angle-down"></i>
-                  </button>
-                  <ul
-                    className={`digi-table-dropdown digi-dropdown-menu dropdown-menu dropdown-slim dropdown-menu-sm ${
-                      showDropdownIndex === index ? "show" : ""
-                    }`}
-                  >
+                <div>
+                  <ul className={`d-flex gap-2`}>
                     <li>
                       <a
                         href="#"
@@ -690,10 +1109,9 @@ const VisitList = () => {
                           handleView(data);
                         }}
                       >
-                        <span className="dropdown-icon">
+                        <button className="btn btn-sm btn-outline-info me-1">
                           <i className="fa-light fa-eye"></i>
-                        </span>{" "}
-                        View
+                        </button>
                       </a>
                     </li>
                     <li>
@@ -705,10 +1123,27 @@ const VisitList = () => {
                           handleEdit(data);
                         }}
                       >
-                        <span className="dropdown-icon">
+                        <button className="btn btn-sm btn-outline-primary me-1">
                           <i className="fa-light fa-pen-to-square"></i>
-                        </span>{" "}
-                        Edit
+                        </button>
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          generatePDF(data);
+                        }}
+                      >
+                        <button
+                          className="btn btn-sm btn-outline-success me-1"
+                          data-toggle="tooltip"
+                          data-placement="bottom"
+                          title="Money Receipt PDF"
+                        >
+                          <i className="fa-solid fa-indian-rupee-sign"></i>
+                        </button>{" "}
                       </a>
                     </li>
                     <li>
@@ -717,13 +1152,17 @@ const VisitList = () => {
                         className="dropdown-item"
                         onClick={(e) => {
                           e.preventDefault();
-                          generatePDF(data);
+                          generateVisitEntryPDF(data.PVisitId);
                         }}
                       >
-                        <span className="dropdown-icon">
+                        <button
+                          className="btn btn-sm btn-outline-warning"
+                          data-toggle="tooltip"
+                          data-placement="bottom"
+                          title="Dr Press PDF"
+                        >
                           <i className="fa-light fa-file-pdf"></i>
-                        </span>{" "}
-                        PDF Receipt
+                        </button>
                       </a>
                     </li>
                     <li>
@@ -735,10 +1174,9 @@ const VisitList = () => {
                           handleDelete(data);
                         }}
                       >
-                        <span className="dropdown-icon">
+                        <button className="btn btn-sm btn-outline-danger">
                           <i className="fa-light fa-trash-can"></i>
-                        </span>{" "}
-                        Delete
+                        </button>
                       </a>
                     </li>
                   </ul>
@@ -764,6 +1202,7 @@ const VisitList = () => {
       </table>
     );
   };
+
 
   return (
     <div>
@@ -803,6 +1242,7 @@ const VisitList = () => {
                     />
                   </div>
 
+
                   {/* Search Button */}
                   <button
                     className="btn btn-sm btn-primary flex-shrink-0"
@@ -829,12 +1269,14 @@ const VisitList = () => {
                   <button
                     className="btn btn-sm btn-success flex-shrink-0"
                     onClick={() => {
-                   navigate('/visit_entry')
+                      navigate("/visit_entry");
                     }}
-                  >+ Add
+                  >
+                    + Add
                   </button>
                 </div>
               </div>
+
 
               <div className="panel-body">
                 {loading ? (
@@ -850,6 +1292,7 @@ const VisitList = () => {
                   </OverlayScrollbarsComponent>
                 )}
 
+
                 {/* Manual Pagination to simulate DataGrid structure */}
                 <div className="d-flex justify-content-between align-items-center mt-3">
                   <div className="text-muted">
@@ -860,7 +1303,7 @@ const VisitList = () => {
                     to{" "}
                     {Math.min(
                       (paginationModel.page + 1) * paginationModel.pageSize,
-                      rowCount
+                      rowCount,
                     )}{" "}
                     of {rowCount} entries
                   </div>
@@ -915,6 +1358,7 @@ const VisitList = () => {
           </div>
         </div>
       </div>
+
 
       {/* Edit Modal (Sidebar style from Emr.jsx) */}
       {editDialog.open && (
@@ -989,9 +1433,14 @@ const VisitList = () => {
         </>
       )}
 
+
       <Footer />
     </div>
   );
 };
 
+
 export default VisitList;
+
+
+

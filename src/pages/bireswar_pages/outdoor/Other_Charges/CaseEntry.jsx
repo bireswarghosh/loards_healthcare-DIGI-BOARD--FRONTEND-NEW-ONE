@@ -446,7 +446,7 @@ const CaseEntry = () => {
   const fetchCaseTests = async (caseId) => {
     try {
       const res = await axiosInstance.get(`/case-bill-dtl/case/${caseId}`);
-      if (res.data.success) {
+      if (res.data.success && res.data.data && res.data.data.length > 0) {
         const testsData = await Promise.all(
           res.data.data.map(async (t, index) => {
             // Fetch test name from test master
@@ -454,7 +454,7 @@ const CaseEntry = () => {
             if (t.TestId) {
               try {
                 const testRes = await axiosInstance.get(`/tests/${t.TestId}`);
-                if (testRes.data.success) {
+                if (testRes.data.success && testRes.data.data) {
                   testName = testRes.data.data.Test;
                 }
               } catch (err) {
@@ -462,16 +462,26 @@ const CaseEntry = () => {
               }
             }
             return {
-              id: index,
-              ...t,
+              id: t.CaseBillDtlId || index,
+              TestId: t.TestId,
               TestName: testName,
+              Rate: t.Rate || 0,
+              NetRate: t.NetRate || t.Rate || 0,
+              DeliveryDate: t.DeliveryDate ? new Date(t.DeliveryDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+              DeliveryTime: t.DeliveryTime || "07:00 PM",
+              Profile: t.Profile || "N",
+              ComYN: t.ComYN || "Y",
             };
           }),
         );
         setTests(testsData);
+        calculateTotal(testsData);
+      } else {
+        setTests([]);
       }
     } catch (error) {
       console.log("Error fetching case tests:", error);
+      setTests([]);
     }
   };
 
@@ -480,7 +490,7 @@ const CaseEntry = () => {
     try {
       setLoading(true);
 
-      if (mode === "create" || !orgId) {
+      if (mode === "create" || !orgId || orgId === "undefined") {
         // CREATE new case with tests
         if (tests.length === 0) {
           alert("Please add at least one test");
@@ -493,8 +503,9 @@ const CaseEntry = () => {
         if (caseRes.data.success) {
           const newCaseId = caseRes.data.data.CaseId;
 
-          // Step 2: Create Billing Details
+          // Step 2: Create Billing Details and Test Details
           for (const test of tests) {
+            // Create Billing Detail
             await axiosInstance.post("/case-bill-dtl", {
               CaseId: newCaseId,
               TestId: test.TestId || null,
@@ -515,7 +526,7 @@ const CaseEntry = () => {
               CaseBillDtlId: null,
             });
 
-            // Step 3: Create Test Details
+            // Create Test Detail
             await axiosInstance.post("/case-dtl-01", {
               CaseId: newCaseId,
               TestId: test.TestId || null,
@@ -556,13 +567,83 @@ const CaseEntry = () => {
           alert(`Case created successfully! Case ID: ${newCaseId}`);
           navigate("/CaseList");
         }
-      } else if (mode === "edit" && orgId) {
+      } else if (mode === "edit" && orgId && orgId !== "undefined") {
         // UPDATE existing case
+        
+        // Step 1: Update case master data
         const res = await axiosInstance.put(`/case01/${orgId}`, formData);
         if (res.data.success) {
+          // Step 2: Delete existing test records
+          try {
+            await axiosInstance.delete(`/case-bill-dtl/case/${orgId}`);
+            await axiosInstance.delete(`/case-dtl-01/case/${orgId}`);
+          } catch (err) {
+            console.log("Error deleting old tests:", err);
+          }
+
+          // Step 3: Create new test records
+          for (const test of tests) {
+            // Create Billing Detail
+            await axiosInstance.post("/case-bill-dtl", {
+              CaseId: orgId,
+              TestId: test.TestId || null,
+              Rate: test.Rate || null,
+              Remarks: null,
+              DeliveryDate: test.DeliveryDate || null,
+              DeliveryTime: test.DeliveryTime || null,
+              ReportDate: null,
+              PathologistId: null,
+              ValueEntry: null,
+              Delivery: null,
+              DeliveryDt: null,
+              CancelTast: null,
+              Profile: test.Profile || null,
+              SlNo: null,
+              NetRate: test.NetRate || null,
+              ComYN: test.ComYN || null,
+            });
+
+            // Create Test Detail
+            await axiosInstance.post("/case-dtl-01", {
+              CaseId: orgId,
+              TestId: test.TestId || null,
+              Rate: test.Rate || null,
+              Remarks: null,
+              DeliveryDate: test.DeliveryDate || null,
+              DeliveryTime: test.DeliveryTime || null,
+              ReportDate: null,
+              PathologistId: null,
+              ValueEntry: null,
+              Delivery: null,
+              DeliveryDt: null,
+              CancelTast: null,
+              LabId: null,
+              Profile: null,
+              SlNo: null,
+              PrintUser: null,
+              LISData: null,
+              CollDate: null,
+              CollTime: null,
+              PPBarCode: null,
+              Approve: null,
+              ApprovedPathologist: null,
+              ApproveDate: null,
+              ProfileID: null,
+              LabRcptDate: null,
+              LabRcptTime: null,
+              ReportTime: null,
+              LabSlNo: null,
+              Checked: null,
+              Printed: null,
+              reported: null,
+              ComYN: test.ComYN || null,
+            });
+          }
+
           alert("Case updated successfully!");
           setMode("view");
           fetchData();
+          fetchCaseTests(orgId);
         }
       }
     } catch (error) {

@@ -37,6 +37,10 @@ const VisitEntry = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { mode, patientData, searchState } = location.state || {};
+
+  console.log("mode : ", mode);
+  // console.log("patient data: ",patientData)
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [religions, setReligions] = useState([]);
@@ -131,29 +135,65 @@ const VisitEntry = () => {
     CompanyYN: "N",
     CompanyName: "",
     CompanyId: "",
+
+    VisitTypeId: patientData?.VisitTypeId || "",
   });
 
-  const [docDetail, setDocDetail] = useState({})
+  const [docDetail, setDocDetail] = useState({});
 
-const fetchDocById = async (id) => {
-  try {
-    if(id){
-
-
-      const res = await axiosInstance.get(`/doctormaster/${id}`)
-      res.data.success?setDocDetail(res.data.data):setDocDetail({})
-      console.log("doc de: ",res.data.data)
+  const fetchDocById = async (id) => {
+    try {
+      if (id) {
+        const res = await axiosInstance.get(`/doctormaster/${id}`);
+        res.data.success ? setDocDetail(res.data.data) : setDocDetail({});
+        console.log("doc de: ", res.data.data);
+      }
+    } catch (error) {
+      console.log("Error fetching doc by id:", error);
     }
-  } catch (error) {
-    console.log("Error fetching doc by id:",error)
-  }
-}
- 
+  };
 
-useEffect(() => {
-  fetchDocById(formData.doctorId)
-}, [formData.doctorId])
+  const [ratesData, setRatesData] = useState([]);
 
+  const fetchRates = async (id) => {
+    try {
+      if (!id) {
+        console.log("id is not present");
+        return;
+      }
+      const res = await axiosInstance.get(`/doctormaster/${id}/rates`);
+      console.log("Rate data: ", res.data.data);
+      res.data.success ? setRatesData(res.data.data) : setRatesData([]);
+    } catch (error) {
+      console.log("error fetching rate: ", error);
+    }
+  };
+
+  useEffect(() => {
+    if (mode != "view" && mode != "edit") {
+      console.log("visit type id hihi: ", formData.VisitTypeId, mode);
+      console.log("rates in use: ", ratesData);
+      if (ratesData.length !== 0) {
+        const data = ratesData.find(
+          (item) => item.VisitTypeId == formData.VisitTypeId,
+        );
+        console.log("fethed fin rate: ", data);
+        setFormData(prev=>({...prev,
+          Rate:data?.Rate,
+          svrCh:data?.ServiceCh
+        }))
+      }
+    }
+  }, [formData.VisitTypeId]);
+
+  useEffect(() => {
+    fetchDocById(formData.doctorId);
+    if (mode != "view" && mode != "edit") {
+      console.log("mode add ");
+      console.log("doc id: ", formData.doctorId);
+      fetchRates(formData.doctorId);
+    }
+  }, [formData.doctorId]);
 
   useEffect(() => {
     const fetchCashLessAndCompany = async () => {
@@ -175,7 +215,6 @@ useEffect(() => {
     };
 
     fetchCashLessAndCompany();
-
   }, []);
 
   const [modex, setModex] = useState("add");
@@ -325,10 +364,12 @@ useEffect(() => {
           PhoneNo: data.PhoneNo || "",
           Age: data.Age?.toString() || "",
           Sex: data.Sex || "",
-          Add1: data.PatientAdd1 || data.Add1 || "",
-          Add2: data.PatientAdd2 || data.Add2 || "",
-          Add3: data.PatientAdd3 || data.Add3 || "",
-          fullAddress: data.PatientAdd1 || data.Add1 || "",
+          Add1: patientData.PatientAdd1 || patientData.Add1 || "",
+          Add2: patientData.PatientAdd2 || patientData.Add2 || "",
+          Add3: patientData.PatientAdd3 || patientData.Add3 || "",
+          fullAddress:
+            `${patientData?.PatientAdd1}, ${patientData?.PatientAdd2}, ${patientData?.PatientAdd3}` ||
+            " ",
           PPr: data.PPr || "",
           GurdianName: data.GurdianName || "",
           Relation: data.Relation || "",
@@ -645,7 +686,8 @@ useEffect(() => {
         BTime: formData.RegistrationTime,
         BDate: formData.RegistrationDate,
         BookingYN: formData.Booking,
-        VisitTypeId: 1,
+        // VisitTypeId: 1,
+        VisitTypeId: formData.VisitTypeId,
         Rate: parseFloat(formData.Rate) || 0,
         Discount: parseFloat(formData.Discount) || 0,
         TotAmount: parseFloat(formData.billAmt) || 0,
@@ -751,6 +793,7 @@ useEffect(() => {
   };
 
   const autoFillForm = async (data) => {
+    console.log("hi data: ", data);
     setFormData((prev) => ({
       ...prev,
 
@@ -794,6 +837,7 @@ useEffect(() => {
       BloodGroup: data.BloodGroup || "",
 
       VisitTypeName: data.VisitTypeName ? data.VisitTypeName : "",
+      VisitTypeId: Number(data.VisitTypeId) || "",
 
       // VISIT DETAILS
       RegistrationDate: data.RegistrationDate
@@ -843,7 +887,7 @@ useEffect(() => {
 
       // ✔ Extract the FIRST object from "data" array
       const patient = res.data?.data?.[0];
-
+      // setFormData(prev=>({...prev, VisitTypeId:res.p}))
       if (!patient) {
         alert("No matching patient found");
         return;
@@ -1100,13 +1144,6 @@ useEffect(() => {
             margin: 0;
             letter-spacing: 1px;
           }
-          .hospital-name1 {
-            font-size: 15px;
-            font-weight: 700;
-            
-            margin: 0;
-            letter-spacing: 1px;
-          }
           .address {
             font-size: 11px;
             margin: 2px 0;
@@ -1208,7 +1245,7 @@ useEffect(() => {
         </div>
  <div class="header">
           <div class="hospital-name">LORDS HEALTH CARE (Nurshing Home)</div>
-          <div class="hospital-name1">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
           <div class="address">
             13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
             (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
@@ -1590,10 +1627,16 @@ useEffect(() => {
                   {/* Address & Contact */}
                   <div className="col-md-6">
                     <label className="form-label">Complete Address</label>
-                    <input
+                    <textarea
                       name="fullAddress"
                       className="form-control"
-                      value={formData.fullAddress || ""}
+                      value={
+                        !formData?.fullAddress
+                          ?.split(",")
+                          .map((item) => item != "")[0]
+                          ? ""
+                          : formData?.fullAddress
+                      }
                       onChange={handleChange}
                       placeholder="Enter complete address"
                     />
@@ -2022,6 +2065,28 @@ useEffect(() => {
                     />
                   </div>
                   <div className="col-md-2">
+                    <label className="form-label">Visit Type</label>
+                    {/* <input
+                      type="time"
+                      name="RegistrationTime"
+                      className="form-control"
+                      value={formData.RegistrationTime}
+                      onChange={handleChange}
+                    /> */}
+                    {console.log("for m visitetypid: ", formData.VisitTypeId)}
+                    <select
+                      value={formData.VisitTypeId}
+                      className="form-control"
+                      name="VisitTypeId"
+                      onChange={handleChange}
+                    >
+                      <option value="">--</option>
+                      <option value={1}>DIAGNOSIS</option>
+                      <option value={2}>REPORTING</option>
+                      <option value={3}>CONSULTATION</option>
+                    </select>
+                  </div>
+                  <div className="col-md-2">
                     <label className="form-label">Registration Charge </label>
                     <input
                       type="number"
@@ -2324,19 +2389,25 @@ useEffect(() => {
                         onClick={() => {
                           console.log("visit type: ", formData);
                           let t;
-                          if (Number(formData.RegistrationTime.split(":")[0] )> 12) {
-                            t = `${Number(formData.RegistrationTime.split(":")[0] ) - 12}:${formData.RegistrationTime.split(":")[1]} PM`;
+                          if (
+                            Number(formData.RegistrationTime.split(":")[0]) > 12
+                          ) {
+                            t = `${Number(formData.RegistrationTime.split(":")[0]) - 12}:${formData.RegistrationTime.split(":")[1]} PM`;
                           } else {
                             t = `${formData.RegistrationTime} AM`;
                           }
-
+                          console.log("fo: ", formData);
                           DrPressPrint({
                             registrationNo: `S-${formData.RegistrationId}`,
                             visitDate: formData.RegistrationDate,
                             patientName: formData.PatientName,
                             age: formData.Age,
                             sex: formData.Sex,
-                            address: formData.fullAddress,
+                            address: !formData?.fullAddress
+                              ?.split(",")
+                              .map((item) => item != "")[0]
+                              ? ""
+                              : formData?.fullAddress,
                             phone: formData.PhoneNo,
                             visitTime: t,
                             // consultant: formData.VisitTypeName,
@@ -2349,7 +2420,7 @@ useEffect(() => {
                               )?.Speciality ||
                               "",
                             qualification: docDetail.Qualification,
-                            barcodeValue: "S-002106/23-24",
+                            barcodeValue: `S-${formData.RegistrationId}`,
                           });
                         }}
                       >
