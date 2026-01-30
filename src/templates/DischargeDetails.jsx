@@ -3,18 +3,21 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 // import useAxiosFetch from "./Fetch";
 import { useForm, } from "react-hook-form";
-import axiosInstance from "../axiosInstance";
+// import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
 // import AsyncApiSelect from "./AsyncApiSelect";
 import JsBarcode from "jsbarcode";
-import useAxiosFetch from "./DiagnosisMaster/Fetch";
+import axiosInstance from "../axiosInstance";
 import AsyncApiSelect from "../components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleRe/AsyncApiSelect";
+import useAxiosFetch from "./DiagnosisMaster/Fetch";
+// import axiosInstance from "../axiosInstance";
 
 const DischargeDetails = ({ mode }) => {
-  console.log("mode",mode);
+  // console.log("mode",mode);
   
   const navigate=useNavigate()
   const { id } = useParams();
+  
   const { register, control, handleSubmit, reset, watch, setValue } = useForm({
     defaultValues: {
       DisCerNo: "",
@@ -35,6 +38,8 @@ const DischargeDetails = ({ mode }) => {
   //   fetch dischargedata====================================================
   const { data: dischargeData } = useAxiosFetch(id ?`/discert/${id}` :null, [id]);
   // const admissionId = dischargeData?.AdmitionId;
+
+   const { data: emrData } = useAxiosFetch(id ? `/emr/D-${id}` : null, [id]);
   // fetch by admissionId===================================================
   const { data: patientDetails } = useAxiosFetch(
     admissionId ? `/admission/${admissionId}` : null,
@@ -53,8 +58,16 @@ const { data: doctor } = useAxiosFetch(
   [patient?.UCDoctor1Id]
 );
 
-  console.log("Discharge:", dischargeData);
-  console.log("Patient:", patientDetails);
+// fetch user==============================
+const{data:users}=useAxiosFetch('/auth/users',[])
+const userMap = useMemo(() => {
+  const map = {};
+  (users || []).forEach((u) => {
+    map[u.UserId] = u.UserName;
+  });
+  return map;
+}, [users]);
+ 
 
 
 
@@ -83,11 +96,33 @@ const onSubmit = async (data) => {
     // toast.success("Updated Successfully!")
         if (mode === "edit") {
           const res = await axiosInstance.put(`/discert/${id}`, payload);
-          toast.success("Updated Successfully!");
+          // toast.success("Updated Successfully!");
         } else {
           await axiosInstance.post("/discert", payload);
-          toast.success("Added Successfully!");
+          // toast.success("Added Successfully!");
         }
+        const diagnosisPayload = diagnosisRows
+          .filter((item) => item.diagnosis.trim() !== "")
+          .map((item) => ({
+            diagonisis: item.diagnosis,
+          }));
+
+        const complaintPayload = complaintRows
+          .filter((item) => item.complaint.trim() !== "")
+          .map((item) => ({
+            chief: item.complaint,
+          }));
+
+        const emrPayload = {
+          RegistrationId: selectedPatient?.RegistrationId || "",
+          VisitId: "",
+          admissionid:  null,
+          diagnosis: diagnosisPayload,
+          complaints: complaintPayload,
+        };
+
+        await axiosInstance.post("/emr/bulk", emrPayload);
+        toast.success("Saved Successfully!");
   } catch (error) {
     console.error("Update Error:", error);
     
@@ -140,20 +175,24 @@ useEffect(() => {
   loadPatient();
 }, [admObj]);
 
+
+
+
+
   const [activeTab, setActiveTab] = useState("Detail");
 
   const [diagnosisRows, setDiagnosisRows] = useState([
-    {
-      sl: 1,
-      diagnosis: "HEAD INJURY WITH FOCAL PARENCHYMAL HEMORRHAGIC CONTUSIONS.",
-    },
-    { sl: 2, diagnosis: "" },
+    // {
+    //   sl: 1,
+    //   diagnosis: "HEAD INJURY WITH FOCAL PARENCHYMAL HEMORRHAGIC CONTUSIONS.",
+    // },
+    { sl: 1, diagnosis: "" },
   ]);
 
   const [complaintRows, setComplaintRows] = useState([
-    { sl: 1, complaint: "ON ADMISSION PATIENT WAS UNCONCIOUS STATE." },
-    { sl: 2, complaint: "ALLEGED H/O- HEAD INJURY DUE TO FALL FROM HEIGHT." },
-    { sl: 3, complaint: "" },
+    // { sl: 1, complaint: "ON ADMISSION PATIENT WAS UNCONCIOUS STATE." },
+    // { sl: 2, complaint: "ALLEGED H/O- HEAD INJURY DUE TO FALL FROM HEIGHT." },
+    { sl: 1, complaint: "" },
   ]);
 
   // --- HANDLERS ---
@@ -169,11 +208,46 @@ useEffect(() => {
   const handleComplaintChange = (index, value) => {
     const newData = [...complaintRows];
     newData[index].complaint = value;
-    if (index === newData.length - 1 && value.trim() !== "") {
-      newData.push({ sl: newData.length + 1, complaint: "" });
+    if (index === newData.length - 1 && value.trim() !== "") { 
     }
     setComplaintRows(newData);
   };
+
+
+
+  useEffect(() => {
+    if (!emrData) return;
+
+    // ---------------- DIAGNOSIS ----------------
+    if (emrData.diagnosis?.length > 0) {
+      const diag = emrData.diagnosis
+        .sort((a, b) => a.SlNo - b.SlNo)
+        .map((item) => ({
+          sl: item.SlNo,
+          diagnosis: item.diagonisis ||  "",
+        }));
+
+      // last empty row add
+      diag.push({ sl: diag.length + 1, diagnosis: "" });
+
+      setDiagnosisRows(diag);
+    }
+
+    // ---------------- COMPLAINTS ----------------
+    if (emrData.complaints?.length > 0) {
+      const comp = emrData.complaints
+        .sort((a, b) => a.SlNo - b.SlNo)
+        .map((item) => ({
+          sl: item.SlNo,
+          complaint: item.chief || item.Complaint || "",
+        }));
+
+      // last empty row add
+      comp.push({ sl: comp.length + 1, complaint: "" });
+
+      setComplaintRows(comp);
+    }
+  }, [emrData]);
 
   // --- STYLES ---
   const inputStyle = {
@@ -195,7 +269,7 @@ useEffect(() => {
    const barcodeImg = useMemo(() => {
      if (!dischargeData?.AdmitionId) return "";
      const canvas = document.createElement("canvas");
-     JsBarcode(canvas, dischargeData?.AdmitionId, {
+     JsBarcode(canvas, `A-${dischargeData?.AdmitionId }`, {
        format: "CODE128",
        width: 2,
        height: 40,
@@ -217,10 +291,10 @@ useEffect(() => {
       )}
       <form onSubmit={handleSubmit(onSubmit)}>
         <div id="printSection">
-          <h1>{id ? id : "Add page no id"}</h1>
-          {mode === "add" && "Add Discharge page"}
+          {/* <h1>{id ? id : "Add page no id"}</h1> */}
+          {/* {mode === "add" && "Add Discharge page"}
           {mode === "view" && "View Discharge page"}
-          {mode === "edit" && "edit Discharge page"}
+          {mode === "edit" && "edit Discharge page"} */}
 
           <div className="d-flex flex-column h-100 overflow-hidden">
             {/* --- Form Section (Fixed Height Content) --- */}
@@ -324,12 +398,7 @@ useEffect(() => {
                           style={{ ...inputStyle, width: "40px" }}
                           value={patient?.Age}
                         />
-                        <select
-                          className="form-select form-select-sm p-0 ps-1"
-                          style={{ ...inputStyle, width: "40px" }}
-                        >
-                          <option>Y</option>
-                        </select>
+
                         <label style={labelStyle}>Sex</label>
                         <select
                           className="form-select form-select-sm p-0 ps-1"
@@ -410,13 +479,6 @@ useEffect(() => {
                   <div className="col-md-3 d-flex align-items-center justify-content-center">
                     <div className="border p-2  text-center w-100 h-100 d-flex flex-column justify-content-center align-items-center">
                       {barcodeImg && <img src={barcodeImg} alt="barcode" />}
-                      <span
-                        className="small fw-bold mt-1"
-                        style={{ fontSize: "10px" }}
-                      >
-                        {dischargeData?.AdmitionId &&
-                          `A-${dischargeData?.AdmitionId}`}
-                      </span>
                     </div>
                   </div>
                 </div>
@@ -445,7 +507,7 @@ useEffect(() => {
                       type="text"
                       className="form-control form-control-sm"
                       style={inputStyle}
-                      value={patient?.UCDoctor2Id}
+                      value={patient?.Referral}
                     />
                   </div>
                   <div className="col-md-2 d-flex align-items-center gap-1">
@@ -527,18 +589,18 @@ useEffect(() => {
               {/* Left: Diagnosis */}
               <div className="col-md-6 d-flex flex-column h-100">
                 <div className="d-flex gap-1 mb-1 flex-shrink-0">
-                  <button
+                  {/* <button
                     className="btn btn-sm btn-outline-primary py-0"
                     style={{ fontSize: "10px" }}
                   >
                     Load EMR
-                  </button>
-                  <button
+                  </button> */}
+                  {/* <button
                     className="btn btn-sm btn-outline-primary py-0"
                     style={{ fontSize: "10px" }}
                   >
                     Load Diet
-                  </button>
+                  </button> */}
                 </div>
 
                 <div
@@ -582,7 +644,7 @@ useEffect(() => {
                               <td className="p-0">
                                 <input
                                   type="text"
-                                  className="form-control form-control-sm border-0 rounded-0 bg-transparent h-100 w-100"
+                                  className="form-control form-control-sm border-0 rounded-0  h-100 w-100"
                                   style={{
                                     fontSize: "11px",
                                     boxShadow: "none",
@@ -608,12 +670,12 @@ useEffect(() => {
                   <span className="small fw-bold">
                     Present Complains (Reason for Admission)
                   </span>
-                  <button
+                  {/* <button
                     className="btn btn-sm btn-outline-secondary py-0"
                     style={{ fontSize: "10px" }}
                   >
                     Load Disc Adv Word
-                  </button>
+                  </button> */}
                 </div>
 
                 <div
@@ -697,10 +759,17 @@ useEffect(() => {
                     Current User
                   </span>
                   <input
+                    hidden
                     type="text"
                     className="form-control form-control-sm fw-bold"
                     style={{ ...inputStyle, width: "100px" }}
                     {...register("UserId")}
+                  />
+                  <input
+                    type="text"
+                    className="form-control form-control-sm fw-bold"
+                    style={{ ...inputStyle, width: "100px" }}
+                    value={userMap[dischargeData.UserId]}
                   />
                 </div>
                 {mode !== "view" && (
@@ -708,6 +777,7 @@ useEffect(() => {
                     Submit
                   </button>
                 )}
+               
               </div>
             </div>
           </div>

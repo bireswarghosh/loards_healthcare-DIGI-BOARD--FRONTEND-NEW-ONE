@@ -331,6 +331,8 @@ import UserAiBookings from "./pages/UserAiBookings";
 import AiChatOld from "./pages/AiChatOld";
 import DateWiseAdmReg from "./pages/DateWiseAdmReg.jsx";
 import DoctorVisit from "./DoctorVisit.jsx";
+import DischargeNewAdvice from "./templates/DischargeNewAdvice.jsx";
+import DatewiseMoneyReceipt from "./pages/DatewiseMoneyReceipt.jsx";
 
 
 
@@ -391,6 +393,17 @@ function App() {
           <Route path="/IVFBiodataMaster" element={<PermissionRoute section="outdoor_ivfBiodata"><IVFBIODATAMASTER /></PermissionRoute>} />
           <Route path="/other_charges" element={<PermissionRoute section="outdoor"><OtherCharges /></PermissionRoute>} />
           <Route path="/date-wise-registration-charge" element={<PermissionRoute section="outdoor"><DateWiseRegistrationCharge /></PermissionRoute>} />
+
+<Route
+            path="/datawise-moneyreceipt"
+            element={
+              <>
+                <DatewiseMoneyReceipt/>
+              </>
+            }
+          />
+
+
           <Route path="/patient-history" element={<PermissionRoute section="outdoor"><PatientHistory /></PermissionRoute>} />
           <Route path="/others-bill-register" element={<PermissionRoute section="outdoor"><OthersBillRegister /></PermissionRoute>} />
           <Route path="/IVFBiodataMaster" element={<PermissionRoute section="outdoor"><IVFBIODATAMASTER /></PermissionRoute>} />
@@ -493,7 +506,7 @@ function App() {
 <Route path="add" element={<DischargeDetails mode="add"/> } />
 <Route path=":id" element={<DischargeDetails mode="view"/>}/>
 <Route path=":id/edit" element={<DischargeDetails mode="edit"/>}/>
-{/* <Route path=":id/advice" element={<DischargeNewAdvice/>}/> */}
+<Route path=":id/advice" element={<DischargeNewAdvice/>}/>
 <Route path="/discharge/:id/print" element={<DischargePrint />}/>
 <Route path=":id/mrd" element={<DischargeMrd/>}/>
 </Route>

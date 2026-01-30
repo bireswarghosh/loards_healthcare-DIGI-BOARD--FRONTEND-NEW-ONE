@@ -6,60 +6,63 @@ import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
 
 const OutdoorOtherChargeMaster = () => {
   const { isBelowLg } = useContext(DigiContext)
-  const dropdownRef = useRef(null)
+
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [modalType, setModalType] = useState('add')
   const [selectedItem, setSelectedItem] = useState(null)
-  const [formData, setFormData] = useState({ OutdoorOtherCharge: '' })
+  const [formData, setFormData] = useState({ OtherCharge: '', Rate: '', UNIT: '', OT: '', OTSLOTID: '' })
+  const [showInactive, setShowInactive] = useState(false)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
 
-  const handleDropdownToggle = (event, index) => {
-    event.stopPropagation()
-    setItems(items.map((data, i) => ({ ...data, showDropdown: i === index ? !data.showDropdown : false })))
-  }
 
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setItems(items.map((data) => ({ ...data, showDropdown: false })))
-      }
-    }
-    document.addEventListener('click', handleOutsideClick)
-    return () => document.removeEventListener('click', handleOutsideClick)
-  }, [items])
 
   const fetchItems = async () => {
     setLoading(true)
+    setError(null)
     try {
-      const response = await axiosInstance.get('/outdoor-other-charges')
-      const data = response.data.success ? response.data.data : (Array.isArray(response.data) ? response.data : [])
-      setItems(data.map(item => ({ ...item, showDropdown: false })))
+      const endpoint = showInactive ? '/outdoor-other-charges/inactive' : '/outdoor-other-charges'
+      const response = await axiosInstance.get(endpoint)
+      const data = response.data.success ? response.data.data : []
+      setItems(data)
     } catch (error) {
       console.error("Error:", error)
-      setError('Failed to fetch')
+      setError('Failed to fetch: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleAddNew = () => {
-    setFormData({ OutdoorOtherCharge: '' })
+    setFormData({ OtherCharge: '', Rate: '', UNIT: '', OT: '', OTSLOTID: '' })
     setSelectedItem(null)
     setModalType('add')
     setShowModal(true)
   }
 
   const handleEdit = (item) => {
-    setFormData({ OutdoorOtherCharge: item.OutdoorOtherCharge || '' })
+    setFormData({
+      OtherCharge: item.OtherCharge || '',
+      Rate: item.Rate || '',
+      UNIT: item.UNIT || '',
+      OT: item.OT || '',
+      OTSLOTID: item.OTSLOTID || ''
+    })
     setSelectedItem(item)
     setModalType('edit')
     setShowModal(true)
   }
 
   const handleView = (item) => {
-    setFormData({ OutdoorOtherCharge: item.OutdoorOtherCharge || '' })
+    setFormData({
+      OtherCharge: item.OtherCharge || '',
+      Rate: item.Rate || '',
+      UNIT: item.UNIT || '',
+      OT: item.OT || '',
+      OTSLOTID: item.OTSLOTID || ''
+    })
     setSelectedItem(item)
     setModalType('view')
     setShowModal(true)
@@ -67,72 +70,113 @@ const OutdoorOtherChargeMaster = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
       if (modalType === 'edit' && selectedItem) {
-        await axiosInstance.put(`/outdoor-other-charges/${selectedItem.OutdoorOtherChargeId}`, formData)
-        fetchItems()
-        setShowModal(false)
+        await axiosInstance.put(`/outdoor-other-charges/${selectedItem.OtherChId}`, formData)
+        alert('Updated successfully!')
       } else {
         await axiosInstance.post('/outdoor-other-charges', formData)
-        fetchItems()
-        setShowModal(false)
+        alert('Added successfully!')
       }
+      setShowModal(false)
+      fetchItems()
     } catch (error) {
       console.error("Error:", error)
-      setError('Failed to save')
+      setError('Failed to save: ' + (error.response?.data?.message || error.message))
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure?')) {
+    if (window.confirm('Are you sure you want to delete this charge?')) {
+      setLoading(true)
+      setError(null)
       try {
-        setLoading(true)
         await axiosInstance.delete(`/outdoor-other-charges/${id}`)
+        alert('Deleted successfully!')
         fetchItems()
       } catch (error) {
         console.error("Error:", error)
-        setError('Failed to delete')
+        setError('Failed to delete: ' + (error.response?.data?.message || error.message))
       } finally {
         setLoading(false)
       }
     }
   }
 
-  useEffect(() => { fetchItems() }, [])
+  const handleToggleStatus = async (id) => {
+    setLoading(true)
+    setError(null)
+    try {
+      await axiosInstance.patch(`/outdoor-other-charges/${id}/toggle-status`)
+      fetchItems()
+    } catch (error) {
+      console.error("Toggle Error:", error)
+      setError('Failed to toggle status: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const filtered = items.filter(i => i.OutdoorOtherCharge?.toLowerCase().includes(searchTerm.toLowerCase()))
+  useEffect(() => { fetchItems() }, [showInactive])
+
+  const filtered = items.filter(i => 
+    i.OtherCharge?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    i.OtherChId?.toString().includes(searchTerm)
+  )
 
   const renderTable = () => (
     <table className="table table-dashed table-hover digi-dataTable all-employee-table table-striped">
       <thead>
         <tr>
           <th className="no-sort"><div className="form-check"><input className="form-check-input" type="checkbox" /></div></th>
-          <th>Action</th>
           <th>ID</th>
-          <th>Outdoor Other Charge</th>
+          <th>Charge Name</th>
+          <th>Rate</th>
+          <th>Unit</th>
+          <th>OT</th>
+          <th>Status</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        {filtered.map((item, index) => (
-          <tr key={item.OutdoorOtherChargeId}>
+        {filtered.map((item) => (
+          <tr key={item.OtherChId}>
             <td><div className="form-check"><input className="form-check-input" type="checkbox" /></div></td>
+            <td>{item.OtherChId}</td>
+            <td>{item.OtherCharge}</td>
+            <td>₹{item.Rate || 'N/A'}</td>
+            <td>{item.UNIT || 'N/A'}</td>
+            <td>{item.OT || 'N/A'}</td>
             <td>
-              <div className="digi-dropdown dropdown d-inline-block" ref={dropdownRef}>
-                <button className={`btn btn-sm btn-outline-primary ${item.showDropdown ? 'show' : ''}`} onClick={(e) => handleDropdownToggle(e, index)}>
-                  Action <i className="fa-regular fa-angle-down"></i>
-                </button>
-                <ul className={`digi-table-dropdown digi-dropdown-menu dropdown-menu dropdown-slim dropdown-menu-sm ${item.showDropdown ? 'show' : ''}`}>
-                  <li><a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleView(item) }}><span className="dropdown-icon"><i className="fa-light fa-eye"></i></span> View</a></li>
-                  <li><a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleEdit(item) }}><span className="dropdown-icon"><i className="fa-light fa-pen-to-square"></i></span> Edit</a></li>
-                  <li><a href="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleDelete(item.OutdoorOtherChargeId) }}><span className="dropdown-icon"><i className="fa-light fa-trash-can"></i></span> Delete</a></li>
-                </ul>
+              <div className="form-check form-switch">
+                <input 
+                  className="form-check-input" 
+                  type="checkbox" 
+                  role="switch" 
+                  checked={item.Active === 1}
+                  onChange={() => handleToggleStatus(item.OtherChId)}
+                  style={{ cursor: 'pointer' }}
+                  title={item.Active ? 'Active - Click to Deactivate' : 'Inactive - Click to Activate'}
+                />
               </div>
             </td>
-            <td>{item.OutdoorOtherChargeId}</td>
-            <td>{item.OutdoorOtherCharge}</td>
+            <td>
+              <div className="d-flex gap-1">
+                <button className="btn btn-sm btn-outline-info" onClick={() => handleView(item)} title="View">
+                  <i className="fa-light fa-eye"></i>
+                </button>
+                <button className="btn btn-sm btn-outline-primary" onClick={() => handleEdit(item)} title="Edit">
+                  <i className="fa-light fa-pen-to-square"></i>
+                </button>
+                <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(item.OtherChId)} title="Delete">
+                  <i className="fa-light fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
           </tr>
         ))}
       </tbody>
@@ -149,6 +193,9 @@ const OutdoorOtherChargeMaster = () => {
               <h5>💰 Outdoor Other Charge Master</h5>
               <div className="btn-box d-flex flex-wrap gap-2">
                 <div id="tableSearch"><input type="text" className="form-control form-control-sm" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+                <button className={`btn btn-sm ${showInactive ? 'btn-warning' : 'btn-info'}`} onClick={() => setShowInactive(!showInactive)}>
+                  <i className="fa-light fa-filter"></i> {showInactive ? 'Show Active' : 'Show Inactive'}
+                </button>
                 <button className="btn btn-sm btn-primary" onClick={handleAddNew}><i className="fa-light fa-plus"></i> Add New</button>
               </div>
             </div>
@@ -168,7 +215,26 @@ const OutdoorOtherChargeMaster = () => {
               <OverlayScrollbarsComponent style={{ height: 'calc(100% - 70px)' }}>
                 <div className="p-3">
                   <form onSubmit={handleSubmit}>
-                    <div className="mb-3"><label className="form-label">💰 Outdoor Other Charge *</label><input type="text" className="form-control" value={formData.OutdoorOtherCharge} onChange={(e) => setFormData({ ...formData, OutdoorOtherCharge: e.target.value })} disabled={modalType === 'view'} required /></div>
+                    <div className="mb-3">
+                      <label className="form-label">💰 Charge Name *</label>
+                      <input type="text" className="form-control" value={formData.OtherCharge} onChange={(e) => setFormData({ ...formData, OtherCharge: e.target.value })} disabled={modalType === 'view'} required />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">💵 Rate</label>
+                      <input type="number" step="0.01" className="form-control" value={formData.Rate} onChange={(e) => setFormData({ ...formData, Rate: e.target.value })} disabled={modalType === 'view'} />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">📦 Unit</label>
+                      <input type="text" className="form-control" value={formData.UNIT} onChange={(e) => setFormData({ ...formData, UNIT: e.target.value })} disabled={modalType === 'view'} />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">🏥 OT</label>
+                      <input type="text" className="form-control" value={formData.OT} onChange={(e) => setFormData({ ...formData, OT: e.target.value })} disabled={modalType === 'view'} />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">🔢 OT Slot ID</label>
+                      <input type="text" className="form-control" value={formData.OTSLOTID} onChange={(e) => setFormData({ ...formData, OTSLOTID: e.target.value })} disabled={modalType === 'view'} />
+                    </div>
                     <div className="d-flex gap-2 mt-3">
                       <button type="button" className="btn btn-secondary w-50" onClick={() => setShowModal(false)}>Cancel</button>
                       {modalType !== 'view' && <button type="submit" className="btn btn-primary w-50" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>}

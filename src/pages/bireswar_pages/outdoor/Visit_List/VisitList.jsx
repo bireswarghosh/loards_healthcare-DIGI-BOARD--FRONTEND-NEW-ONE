@@ -16,6 +16,7 @@ const VisitList = () => {
   const savedSearchState = location.state?.searchState;
 
 
+
   // State from original Visit_list.jsx - ALL PRESERVED
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -795,7 +796,8 @@ const VisitList = () => {
       <body>
 <div class="top-header-row">
         <div class="top-favicon">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
+            
+<img src="/assets/images/logo-small.png"/>
         </div>
  <div class="header">
           <div class="hospital-name">LORDS HEALTH CARE (Nursing Home)</div>

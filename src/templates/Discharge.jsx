@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
-import PaginationBar from "../templates/DiagnosisMaster/PaginationBar";
+// import axiosInstance from "../../axiosInstance";
+// import PaginationBar from "./PaginationBar";
 import { Navigate, NavLink, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import PaginationBar from "./DiagnosisMaster/PaginationBar";
+import axiosInstance from "../axiosInstance";
 
 const Discharge = () => {
   const [dischargeList, setDischargeList] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const getToday = () => new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(getToday());
+  const [endDate, setEndDate] = useState(getToday());
   const [userId, setUserId] = useState("");
   const [discType, setDiscType] = useState(null);
 
@@ -15,6 +20,23 @@ const Discharge = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
 
+  /* ================= DELETE ================= */
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+    /* ================= DELETE ================= */
+    const confirmDelete = async () => {
+      try {
+        await axiosInstance.delete(`/discert/${deleteId}`);
+        // console.log("hi");
+        
+        toast.success("Deleted successfully");
+        setShowConfirm(false);
+        fetchDischarge();
+      } catch {
+        toast.error("Delete failed");
+      }
+    };
   //     const fetchDischarge=async()=>{
   // try {
   //     const res = await axiosInstance.get(
@@ -51,8 +73,9 @@ const Discharge = () => {
     fetchDischarge(); // API call
   };
   const clearSearch = () => {
-    setStartDate("");
-    setEndDate("");
+    const today = getToday();
+    setStartDate(today);
+    setEndDate(today);
     setPageNo(1);
     fetchDischarge();
   };
@@ -69,7 +92,7 @@ const Discharge = () => {
   return (
     <div>
       <div className="panel-header d-flex justify-content-between align-items-center">
-        <h5>🎯 Salutation</h5>
+        <h1></h1>
 
         <div className="d-flex gap-2 align-items-center">
           Form-
@@ -162,7 +185,12 @@ const Discharge = () => {
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => {}}
+                        onClick={() => {
+                          console.log(item.DisCerId);
+                          
+                          setDeleteId(item.DisCerId);
+                          setShowConfirm(true);
+                        }}
                       >
                         <i className="fa-light fa-trash" />
                       </button>
@@ -203,7 +231,31 @@ const Discharge = () => {
           </tbody>
         </table>
       </div>
-
+      {showConfirm && (
+        <div className="modal d-block" onClick={() => setShowConfirm(false)}>
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-body text-center">
+                <p>Are you sure you want to delete?</p>
+                <div className="d-flex justify-content-center gap-3">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button className="btn btn-danger" onClick={confirmDelete}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <PaginationBar
         pageNo={pageNo}
         totalPages={totalPages}
@@ -211,6 +263,6 @@ const Discharge = () => {
       />
     </div>
   );
-};
+};;
 
 export default Discharge;
