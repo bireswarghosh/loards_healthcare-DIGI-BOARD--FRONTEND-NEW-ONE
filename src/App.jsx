@@ -655,7 +655,7 @@ function App() {
 
 
 
-<Route path="/DoctorVisit" element={<ProtectedRoute><DoctorVisit/></ProtectedRoute>}/>
+
 <Route path="/TestReportSeq" element={<ProtectedRoute><TestReportSeq/></ProtectedRoute>}/>
 <Route path="/Formula" element={<Formula />} />
 <Route path="/TypeOfService" element={<ProtectedRoute><TypeOfService/></ProtectedRoute>}/>
@@ -727,7 +727,7 @@ function App() {
   <Route path="/*" element={<ComingSoon />} />
 
 
- {/* <Route path="/DoctorVisit " element={< DoctorVisit/>} /> */}
+ 
 
 
 
@@ -740,7 +740,7 @@ function App() {
 
 {/* //!   sir  given  */}
 
-          <Route path="/DoctorVisit" element={<DoctorVisit/>}/>
+        
           {/* <Route path="/DiagBooking" element={<DiagBooking/>}/> */}
           <Route path="/TestReportingSequence" element={<TestReportingSequence/>}/>
           <Route path="/TestPropertyGroup" element={<TestPropertyGroup/>}/>

@@ -1,13 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import axiosInstance from "../../axiosInstance";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { DigiContext } from "../../context/DigiContext";
 
 const TestMaster = () => {
+  const { isBelowLg } = useContext(DigiContext);
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
   const [showDrawer, setShowDrawer] = useState(false);
   const [modalType, setModalType] = useState("add"); // add | edit | view
@@ -159,7 +162,8 @@ const onKeyPressSearch = (e) => {
   const fetchTests = async (pageNumber = 1) => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get(`/tests?page=${pageNumber}&limit=${limit}`);
+      const endpoint = showInactive ? '/tests/inactive' : '/tests';
+      const res = await axiosInstance.get(`${endpoint}?page=${pageNumber}&limit=${limit}`);
       const data = res.data.data || [];
       setTests(data);
 
@@ -177,13 +181,12 @@ const onKeyPressSearch = (e) => {
   };
 
 
-  // init
   useEffect(() => {
     fetchSubDepartments();
     fetchSampleTypes();
     fetchTests(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [showInactive]);
 
   // drawer openers
   const openDrawerAdd = () => {
@@ -304,6 +307,16 @@ const onKeyPressSearch = (e) => {
     }
   };
 
+  const toggleStatus = async (id) => {
+    try {
+      await axiosInstance.patch(`/tests/${id}/toggle-status`);
+      fetchTests(page);
+    } catch (err) {
+      console.error("toggle error", err);
+      toast.error("Failed to toggle status");
+    }
+  };
+
   const confirmDelete = async () => {
     if (!deleteId) return;
     try {
@@ -383,10 +396,15 @@ const onKeyPressSearch = (e) => {
 </div>
 
           <div className="d-flex gap-2">
+            <button
+              className={`btn btn-sm ${showInactive ? "btn-secondary" : "btn-warning"}`}
+              onClick={() => setShowInactive(!showInactive)}
+            >
+              {showInactive ? "Show Active" : "Show Inactive"}
+            </button>
             <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
               <i className="fa-light fa-plus"></i> Add Test
             </button>
-           
           </div>
         </div>
 
@@ -397,17 +415,17 @@ const onKeyPressSearch = (e) => {
             </div>
           ) : (
             <OverlayScrollbarsComponent>
-              <div >
+              <div style={{ height: isBelowLg ? "calc(100vh - 250px)" : "calc(100vh - 200px)" }}>
                 <table className="table table-sm table-striped table-hover table-dashed">
-                  <thead className=" sticky-top">
+                  <thead className="sticky-top">
                     <tr>
-                      <th>Action</th>
                       <th>Sl No</th>
                       <th>Test</th>
                       <th>SubDept</th>
                       <th>Code</th>
                       <th>Rate</th>
-                      <th>Format</th>
+                      <th>Status</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -420,6 +438,21 @@ const onKeyPressSearch = (e) => {
                     ) : (
                       tests.map((t, i) => (
                         <tr key={t.TestId ?? i}>
+                          <td>{startSerial + i + 1}</td>
+                          <td>{t.Test}</td>
+                          <td>{getSubDeptName(t.SubDepartmentId)}</td>
+                          <td>{t.TestCode}</td>
+                          <td>{t.Rate}</td>
+                          <td>
+                            <div className="form-check form-switch">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={t.Active === 1}
+                                onChange={() => toggleStatus(t.TestId)}
+                              />
+                            </div>
+                          </td>
                           <td>
                             <div className="d-flex gap-2">
                               <button
@@ -445,12 +478,6 @@ const onKeyPressSearch = (e) => {
                               </button>
                             </div>
                           </td>
-                          <td>{startSerial + i + 1}</td>
-                          <td>{t.Test}</td>
-                          <td>{getSubDeptName(t.SubDepartmentId)}</td>
-                          <td>{t.TestCode}</td>
-                          <td>{t.Rate}</td>
-                          <td>{t.DescFormat}</td>
                         </tr>
                       ))
                     )}
