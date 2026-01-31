@@ -216,7 +216,7 @@ const OutdoorMaster = () => {
         {/* Other Charges Master */}
         {(isSuperAdmin || permissions?.outdoorMaster_otherCharges !== false) && (
           <li className="sidebar-dropdown-item">
-            <NavLink to="/OutdoorOtherChargesMaster" className="sidebar-link">
+            <NavLink to="/OutdoorOtherChargeMaster" className="sidebar-link">
               Outdoor Other Charges Master
             </NavLink>
           </li>
