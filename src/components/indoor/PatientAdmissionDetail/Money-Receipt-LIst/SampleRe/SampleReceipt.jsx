@@ -23,24 +23,33 @@ const SampleReceipt = () => {
   const barcodeData = "OP/2425/08287";
 
   useEffect(() => {
-    fetchReceipts();
-  }, [pagination.page, dateFrom, dateTo, allReceipt, refund, searchTerm]);
+    fetchReceipts(dateFrom, dateTo);
+  }, [pagination.page,  allReceipt, refund, searchTerm]);
 
-  const fetchReceipts = async () => {
+  // debounce search from to to data
+  // useEffect(() => {
+  //   const delayDebounceFn = setTimeout(() => {
+  //     fetchReceipts(dateFrom, dateTo);
+  //   }, 700);
+
+  //   return () => clearTimeout(delayDebounceFn);
+  // }, [dateFrom, dateTo]);
+
+
+  const fetchReceipts = async (from, to) => {
     try {
       setLoading(true);
 
       const params = new URLSearchParams({
         page: pagination.page,
         limit: pagination.limit,
-        dateFrom,
-        dateTo,
         allReceipt,
+        allReceipt:false,
         refund,
         search: searchTerm,
       });
 
-      const response = await axiosInstance.get(`/moneyreceipt/search?${params}`);
+      const response = await axiosInstance.get(`/moneyreceipt/search?${params}&dateFrom=${from}&dateTo=${to}`);
 
       if (response.data.success) {
         setReceipts(response.data.data || []);
@@ -84,7 +93,7 @@ const SampleReceipt = () => {
 <button className="btn btn-success" onClick={() => {
  navigate('/initialFormData') 
 }
-}>Add</button>
+}><i class="fa-solid fa-plus"></i>Add</button>
           <button className="btn btn-sm btn-primary">List</button>
           <button className="btn btn-sm btn-outline-light">Detail</button>
         </div>
@@ -116,6 +125,23 @@ const SampleReceipt = () => {
                 onChange={(e) => setDateTo(e.target.value)}
               />
             </div>
+
+            <div className="col-md-3">
+              {/* <label className="form-label "> </label>
+              <input
+                type="date"
+                className="form-control form-control-sm"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              /> */}
+              <button className="btn btn-sm btn-primary mt-4 me-2" onClick={() => fetchReceipts(dateFrom, dateTo)}><i class="fas fa-search"></i> Search</button>
+
+              <button className="btn btn-sm btn-primary mt-4" onClick={() => {
+                setDateFrom(new Date(Date.now()).toISOString().slice(0, 10));
+                setDateTo(new Date(Date.now()).toISOString().slice(0, 10));
+                fetchReceipts(new Date(Date.now()).toISOString().slice(0, 10), new Date(Date.now()).toISOString().slice(0, 10))}}>Clear</button>
+            </div>
+ 
 
             {/* <div className="col-md-2 d-flex align-items-end">
               <div className="form-check">
@@ -204,7 +230,7 @@ const SampleReceipt = () => {
                   <tr key={index}>
                     <td>
                       <button
-                        className="btn btn-sm btn-info me-1"
+                        className="btn btn-sm btn-outline-info me-1"
                         onClick={() =>
                           navigate(
                             `/initialFormData/${encodeURIComponent(
@@ -213,11 +239,11 @@ const SampleReceipt = () => {
                           )
                         }
                       >
-                        View
+                          <i className="fa-light fa-eye"></i>
                       </button>
 
                       <button
-                        className="btn btn-sm btn-warning me-1"
+                        className="btn btn-sm btn-outline-warning me-1"
                         onClick={() =>
                           navigate(
                             `/initialFormData/${encodeURIComponent(
@@ -226,17 +252,16 @@ const SampleReceipt = () => {
                           )
                         }
                       >
-                        Edit
+                          <i className="fa-light fa-pen-to-square"></i>
                       </button>
 
                       <button
-                        className="btn btn-sm btn-danger"
+                        className="btn btn-sm btn-outline-danger"
                         onClick={() =>
                           handleDelete(receipt.MoneyreeciptId)
                         }
                       >
-                        Delete
-                      </button>
+<i className="fa-light fa-trash-can"></i>                      </button>
                     </td>
 
                     <td>{receipt.MoneyreeciptNo}</td>
