@@ -26,6 +26,7 @@ import Section8 from './Section8';
 import Section9 from './Section9';
 import Section10 from './Section10';
 import AiPart from './AiPart';
+import WhatsAppAPISection from './WhatsAppAPISection';
 
 const MainSidebar = () => {
   const {
@@ -98,6 +99,7 @@ const MainSidebar = () => {
             <Doctor/>
             <Marketing/>
             <AiPart />
+            <WhatsAppAPISection />
 
 
             {/* setting */}
@@ -124,6 +126,7 @@ const MainSidebar = () => {
             <Doctor/>
             <Marketing/>
             <AiPart />
+            <WhatsAppAPISection />
 
 {/* setting */}
             <Section2/>

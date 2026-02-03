@@ -221,6 +221,7 @@ const DigiContextProvider = ({ children }) => {
     section9: false,
     section10: false,
     ai: false,
+    whatsapp: false,
   });
 
   const handleDropdownClick = (dropdown) => {
@@ -1463,6 +1464,27 @@ const DigiContextProvider = ({ children }) => {
   const section9 = createSectionState(9);
   const section10 = createSectionState(10);
 
+  // WhatsApp API Part
+  const initialWhatsappState = { isMainDropdownOpen: false };
+  const [whatsappState, setWhatsappState] = useState(
+    localStorage.getItem("whatsappState") ? JSON.parse(localStorage.getItem("whatsappState")) : initialWhatsappState
+  );
+  useEffect(() => { localStorage.setItem("whatsappState", JSON.stringify(whatsappState)); }, [whatsappState]);
+  const toggleWhatsAppDropdown = () => {
+    setWhatsappState((prevState) => ({ ...prevState, isMainDropdownOpen: !prevState.isMainDropdownOpen }));
+    handleDropdownClick("whatsapp");
+  };
+  const whatsappRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (whatsappRef.current && !whatsappRef.current.contains(event.target)) {
+        setDropdownOpen((prev) => ({ ...prev, whatsapp: false }));
+      }
+    };
+    if (dropdownOpen.whatsapp) { document.addEventListener("mousedown", handleClickOutside); }
+    return () => { document.removeEventListener("mousedown", handleClickOutside); };
+  }, [dropdownOpen.whatsapp]);
+
   // AI Part
   const initialAiState = { isMainDropdownOpen: false };
   const [aiState, setAiState] = useState(
@@ -2652,6 +2674,9 @@ const DigiContextProvider = ({ children }) => {
         mainAiRef,
         aiSettings,
         setAiSettings,
+        whatsappState,
+        toggleWhatsAppDropdown,
+        whatsappRef,
       }}
     >
       {children}

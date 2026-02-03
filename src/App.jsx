@@ -334,6 +334,22 @@ import DoctorVisit from "./DoctorVisit.jsx";
 import DischargeNewAdvice from "./templates/DischargeNewAdvice.jsx";
 import DatewiseMoneyReceipt from "./pages/DatewiseMoneyReceipt.jsx";
 
+// WhatsApp API imports
+import SendText from "./pages/WhatsAppAPI/SendText";
+import SendMedia from "./pages/WhatsAppAPI/SendMedia";
+import SendButton from "./pages/WhatsAppAPI/SendButton";
+import SendPoll from "./pages/WhatsAppAPI/SendPoll";
+import SendList from "./pages/WhatsAppAPI/SendList";
+import SendLocation from "./pages/WhatsAppAPI/SendLocation";
+import SendVCard from "./pages/WhatsAppAPI/SendVCard";
+import SendSticker from "./pages/WhatsAppAPI/SendSticker";
+import SendProduct from "./pages/WhatsAppAPI/SendProduct";
+import SendTextChannel from "./pages/WhatsAppAPI/SendTextChannel";
+import CheckNumber from "./pages/WhatsAppAPI/CheckNumber";
+import UserManagementWA from "./pages/WhatsAppAPI/UserManagementWA";
+import DeviceManagement from "./pages/WhatsAppAPI/DeviceManagement";
+import CaseWiseLab from "./templates/CaseWiseLab.jsx";
+
 
 
 
@@ -500,7 +516,7 @@ function App() {
 
 
 
-
+<Route path="/caseWiseLab" element={<ProtectedRoute><CaseWiseLab/></ProtectedRoute>}/>
 <Route path="/discharge" element={<DischargeLayout/>}>
 <Route index element={ <Discharge/>}/>
 <Route path="add" element={<DischargeDetails mode="add"/> } />
@@ -791,6 +807,22 @@ function App() {
           <Route path="/aiHealthAnalytics" element={<AiHealthAnalytics />} />
           <Route path="/aiScribe" element={<AiScribe />} />
 {/* ai */}
+
+{/* WhatsApp API routes */}
+          <Route path="/whatsapp/send-text" element={<ProtectedRoute><SendText /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-media" element={<ProtectedRoute><SendMedia /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-button" element={<ProtectedRoute><SendButton /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-poll" element={<ProtectedRoute><SendPoll /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-list" element={<ProtectedRoute><SendList /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-location" element={<ProtectedRoute><SendLocation /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-vcard" element={<ProtectedRoute><SendVCard /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-sticker" element={<ProtectedRoute><SendSticker /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-product" element={<ProtectedRoute><SendProduct /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-channel" element={<ProtectedRoute><SendTextChannel /></ProtectedRoute>} />
+          <Route path="/whatsapp/check-number" element={<ProtectedRoute><CheckNumber /></ProtectedRoute>} />
+          <Route path="/whatsapp/user-management" element={<ProtectedRoute><UserManagementWA /></ProtectedRoute>} />
+          <Route path="/whatsapp/device-management" element={<ProtectedRoute><DeviceManagement /></ProtectedRoute>} />
+{/* WhatsApp API routes end */}
 
 
 
