@@ -70,7 +70,15 @@ const DiagnosisMaster = () => {
         {(isSuperAdmin || permissions?.diagnosisMaster_test !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/TestMaster" className="sidebar-link">
-              Test
+              Test 
+            </NavLink>
+          </li>
+        )}
+
+          {(isSuperAdmin || permissions?.diagnosisMaster_testCalculation !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/TestCalculation" className="sidebar-link">
+              Test Calculation
             </NavLink>
           </li>
         )}

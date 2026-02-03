@@ -349,6 +349,7 @@ import CheckNumber from "./pages/WhatsAppAPI/CheckNumber";
 import UserManagementWA from "./pages/WhatsAppAPI/UserManagementWA";
 import DeviceManagement from "./pages/WhatsAppAPI/DeviceManagement";
 import CaseWiseLab from "./templates/CaseWiseLab.jsx";
+import TestCalculation from "./templates/TestCalculation.jsx";
 
 
 
@@ -515,6 +516,7 @@ function App() {
 
 
 
+<Route path="/TestCalculation" element={<ProtectedRoute><TestCalculation/></ProtectedRoute>}/>
 
 <Route path="/caseWiseLab" element={<ProtectedRoute><CaseWiseLab/></ProtectedRoute>}/>
 <Route path="/discharge" element={<DischargeLayout/>}>
