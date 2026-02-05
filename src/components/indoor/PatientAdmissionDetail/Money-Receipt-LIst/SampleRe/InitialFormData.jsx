@@ -1492,6 +1492,10 @@ function convertAmountToWords(amount) {
                           value={
                             mode !== "create"
                               ? (() => {
+
+                                if(!receiptData.ClearDate){
+                                  return ""
+                                }
                                   const d = new Date(receiptData.ClearDate);
                                   d.setDate(d.getDate() + 1);
                                   return d.toISOString().slice(0, 10);
