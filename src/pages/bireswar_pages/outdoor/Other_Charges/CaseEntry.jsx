@@ -445,7 +445,7 @@ const CaseEntry = () => {
   // Fetch tests for existing case
   const fetchCaseTests = async (caseId) => {
     try {
-      const res = await axiosInstance.get(`/case-bill-dtl/case/${caseId}`);
+      const res = await axiosInstance.get(`/case-dtl-01/case/${caseId}`);
       if (res.data.success && res.data.data && res.data.data.length > 0) {
         const testsData = await Promise.all(
           res.data.data.map(async (t, index) => {
