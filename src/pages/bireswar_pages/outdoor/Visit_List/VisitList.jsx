@@ -1,3 +1,5 @@
+/** @format */
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../../../axiosInstance";
@@ -5,17 +7,13 @@ import jsPDF from "jspdf";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"; // From Emr.jsx
 import Footer from "../../../../components/footer/Footer";
 
-
 const VisitList = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null); // Added from Emr.jsx
 
-
   // Restore search state from navigation
   const savedSearchState = location.state?.searchState;
-
-
 
   // State from original Visit_list.jsx - ALL PRESERVED
   const [visits, setVisits] = useState([]);
@@ -39,9 +37,7 @@ const VisitList = () => {
   const [editForm, setEditForm] = useState({});
   const [showDropdownIndex, setShowDropdownIndex] = useState(null); // Added for Emr dropdown style
 
-
   const [pvisitData, setPvisitData] = useState({});
-
 
   // Original fetchVisits logic - PRESERVED
   const fetchVisits = useCallback(
@@ -62,9 +58,7 @@ const VisitList = () => {
           ...(date && { fromDate: date, toDate: date }),
         });
 
-
         const response = await axiosInstance.get(`/patient-visits?${params}`);
-
 
         if (response.data?.success) {
           const data = response.data.data.map((item) => ({
@@ -74,11 +68,9 @@ const VisitList = () => {
             PhoneNo: item.PhoneNo,
             Age: item.Age,
             Sex:
-              item.Sex === "M"
-                ? "Male"
-                : item.Sex === "F"
-                  ? "Female"
-                  : item.Sex,
+              item.Sex === "M" ? "Male"
+              : item.Sex === "F" ? "Female"
+              : item.Sex,
             Add1: item.PatientAdd1,
             RegDate: item.PVisitDate ? item.PVisitDate.split("T")[0] : "N/A",
             RegTime: item.vTime,
@@ -87,7 +79,6 @@ const VisitList = () => {
             TotAmount: item.TotAmount || 0,
             PVisitId: item.PVisitId,
           }));
-
 
           setVisits(data);
           setRowCount(response.data.pagination?.total || 0);
@@ -100,7 +91,6 @@ const VisitList = () => {
     },
     [],
   );
-
 
   useEffect(() => {
     if (savedSearchState) {
@@ -116,7 +106,6 @@ const VisitList = () => {
     }
   }, [fetchVisits]);
 
-
   // Original handler logic - PRESERVED
   const handleSearch = () => {
     setPaginationModel({ page: 0, pageSize: paginationModel.pageSize });
@@ -128,7 +117,6 @@ const VisitList = () => {
       paginationModel.pageSize,
     );
   };
-
 
   // Original handler logic - PRESERVED
   const handlePaginationChange = (newPage) => {
@@ -147,14 +135,12 @@ const VisitList = () => {
     );
   };
 
-
   // Original handler logic - PRESERVED
   const handleView = async (patient) => {
     try {
       const response = await axiosInstance.get(
         `/patient-visits/${patient.PVisitId}`,
       );
-
 
       if (response.data?.success) {
         const fullData = response.data.data;
@@ -178,14 +164,12 @@ const VisitList = () => {
     }
   };
 
-
   // Original handler logic - PRESERVED
   const handleEdit = async (patient) => {
     try {
       const response = await axiosInstance.get(
         `/patient-visits/${patient.PVisitId}`,
       );
-
 
       if (response.data?.success) {
         const fullData = response.data.data;
@@ -209,7 +193,6 @@ const VisitList = () => {
     }
   };
 
-
   // Original handler logic - PRESERVED
   const handleUpdatePatient = async () => {
     try {
@@ -217,7 +200,6 @@ const VisitList = () => {
         `/patient-visits/${editDialog.patient.PVisitId}`,
         editForm,
       );
-
 
       if (response.data?.success) {
         alert("Patient visit updated successfully!");
@@ -235,7 +217,6 @@ const VisitList = () => {
     }
   };
 
-
   // Original handler logic - PRESERVED
   const generatePDF = async (patient) => {
     try {
@@ -244,12 +225,10 @@ const VisitList = () => {
         `/patient-visits/${patient.PVisitId}`,
       );
 
-
       if (!response.data?.success) {
         alert("Failed to fetch billing details");
         return;
       }
-
 
       const billingData = response.data.data;
       const regCh = parseFloat(billingData.RegCh || 0);
@@ -260,9 +239,7 @@ const VisitList = () => {
       const svrDisc = parseFloat(billingData.SrvChDisc || 0);
       const totalPaid = parseFloat(billingData.RecAmt || 0);
 
-
       const doc = new jsPDF();
-
 
       // Red logo box with white text
       doc.setFillColor(220, 53, 69);
@@ -274,13 +251,11 @@ const VisitList = () => {
       doc.text("H", 22, 35);
       doc.text("C", 22, 42);
 
-
       // Main header
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
       doc.text("LORDS HEALTH CARE", 105, 25, { align: "center" });
-
 
       // Address details
       doc.setFontSize(9);
@@ -307,7 +282,6 @@ const VisitList = () => {
         { align: "center" },
       );
 
-
       // Barcode area
       doc.setLineWidth(1);
       doc.rect(165, 15, 30, 25);
@@ -318,12 +292,10 @@ const VisitList = () => {
       doc.setFontSize(8);
       doc.text("S-" + patient.RegistrationId, 180, 44, { align: "center" });
 
-
       // ADVANCE BOOKING title
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.text("ADVANCE BOOKING", 105, 60, { align: "center" });
-
 
       // MONEY RECEIPT header with Serial No
       doc.setFontSize(14);
@@ -334,19 +306,16 @@ const VisitList = () => {
       doc.setFont("helvetica", "bold");
       doc.text("Serial No : 1", 150, 75);
 
-
       // Main information table
       const startY = 85;
       doc.setLineWidth(0.5);
       doc.setTextColor(0, 0, 0);
-
 
       // Registration details box
       doc.rect(15, startY, 180, 25);
       doc.line(15, startY + 12, 195, startY + 12);
       doc.line(100, startY, 100, startY + 25);
       doc.line(140, startY, 140, startY + 25);
-
 
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
@@ -358,10 +327,8 @@ const VisitList = () => {
         startY + 32,
       );
 
-
       doc.text(`Visit ID :`, 102, startY + 8);
       doc.text(`RRR00351`, 102, startY + 20);
-
 
       doc.text(`Visit Date : ${patient.RegDate}`, 142, startY + 8);
       doc.text(
@@ -370,14 +337,12 @@ const VisitList = () => {
         startY + 20,
       );
 
-
       // Patient information box - made taller to fit consultant info
       const patientY = startY + 25;
       doc.rect(15, patientY, 180, 55);
       doc.line(15, patientY + 20, 195, patientY + 20);
       doc.line(15, patientY + 40, 195, patientY + 40);
       doc.line(140, patientY + 20, 140, patientY + 55);
-
 
       doc.text(`Patient Name : ${patient.PatientName}`, 17, patientY + 12);
       doc.text(
@@ -387,10 +352,8 @@ const VisitList = () => {
       );
       doc.text(`Phone No : ${patient.PhoneNo}`, 142, patientY + 16);
 
-
       doc.text(`Address : ${patient.Add1 || "HOWRAH, ,"}`, 17, patientY + 32);
       doc.text(`SERVER2    0    Cash    N`, 142, patientY + 32);
-
 
       // Consultant and Department in separate row with proper spacing
       doc.text(
@@ -404,22 +367,18 @@ const VisitList = () => {
         patientY + 52,
       );
 
-
       // Services table header - adjusted position
       const servicesY = patientY + 55;
       doc.rect(15, servicesY, 180, 12);
       doc.line(150, servicesY, 150, servicesY + 12);
 
-
       doc.setFont("helvetica", "bold");
       doc.text("Particulars / Description", 17, servicesY + 8);
       doc.text("Amount In Rs.", 152, servicesY + 8);
 
-
       // Service items
       let currentY = servicesY + 12;
       doc.setFont("helvetica", "normal");
-
 
       // Registration Charge (if exists)
       if (regCh > 0) {
@@ -430,7 +389,6 @@ const VisitList = () => {
         currentY += 12;
       }
 
-
       // Service Charge
       if (svrCh > 0) {
         doc.rect(15, currentY, 180, 12);
@@ -439,7 +397,6 @@ const VisitList = () => {
         doc.text(svrCh.toFixed(2), 185, currentY + 8, { align: "right" });
         currentY += 12;
       }
-
 
       // Professional Charge
       if (rate > 0) {
@@ -450,12 +407,10 @@ const VisitList = () => {
         currentY += 12;
       }
 
-
       // Discount row (if applicable)
       const totalDiscount = profDiscAmt + svrDisc;
       if (totalDiscount > 0) {
         doc.rect(15, currentY, 180, 12);
-
 
         doc.line(150, currentY, 150, currentY + 12);
         doc.text(
@@ -468,7 +423,6 @@ const VisitList = () => {
         });
         currentY += 12;
       }
-
 
       // Convert amount to words
       const numberToWords = (num) => {
@@ -509,9 +463,7 @@ const VisitList = () => {
           "nineteen",
         ];
 
-
         if (num === 0) return "zero";
-
 
         const convertHundreds = (n) => {
           let str = "";
@@ -530,10 +482,8 @@ const VisitList = () => {
           return str;
         };
 
-
         let rupees = Math.floor(num);
         const paise = Math.round((num - rupees) * 100);
-
 
         let result = "";
         if (rupees >= 10000000) {
@@ -552,7 +502,6 @@ const VisitList = () => {
           result += convertHundreds(rupees);
         }
 
-
         result = result.trim();
         if (paise > 0) {
           result += " & " + convertHundreds(paise) + "paise";
@@ -560,10 +509,8 @@ const VisitList = () => {
           result += " & zero paise";
         }
 
-
         return result + " only";
       };
-
 
       // Total amount in words
       doc.rect(15, currentY, 180, 18);
@@ -574,11 +521,9 @@ const VisitList = () => {
       doc.text(totalPaid.toFixed(2), 185, currentY + 12, { align: "right" });
       currentY += 18;
 
-
       // Footer signature
       doc.setFont("helvetica", "normal");
       doc.text("Received By : SANJAY ST.", 17, currentY + 15);
-
 
       // Save PDF with patient name
       const fileName = `MoneyReceipt_${patient.PatientName.replace(
@@ -593,7 +538,6 @@ const VisitList = () => {
     }
   };
 
-
   // Original handler logic - PRESERVED
   const handleDelete = async (patient) => {
     if (
@@ -605,7 +549,6 @@ const VisitList = () => {
         const response = await axiosInstance.delete(
           `/patient-visits/${patient.PVisitId}`,
         );
-
 
         if (response.data?.success) {
           alert("Patient visit deleted successfully!");
@@ -622,7 +565,6 @@ const VisitList = () => {
       }
     }
   };
-
 
   // main function for pdf generation
   const DrPressPrint = ({
@@ -649,10 +591,9 @@ const VisitList = () => {
     nutritionalStatus,
     drugAllergies,
   }) => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const printDateTime = new Date().toLocaleString('en-IN');
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const printDateTime = new Date().toLocaleString("en-IN");
     const printWindow = window.open("", "", "width=900,height=800");
-
 
     printWindow.document.write(`
     <!DOCTYPE html>
@@ -888,7 +829,7 @@ const VisitList = () => {
         </div>
 
         <div class="print-meta">
-          <div>Printed By: ${user.UserName || 'System'}</div>
+          <div>Printed By: ${user.UserName || "System"}</div>
           <div>Print Date: ${printDateTime}</div>
         </div>
 
@@ -917,28 +858,23 @@ const VisitList = () => {
     </html>
   `);
 
-
     printWindow.document.close();
   };
-
 
   // generate visit entry pdf
   const generateVisitEntryPDF = async (data) => {
     try {
       console.log("data: ", data);
 
-
       if (!data) {
         console.log("id is not presenet");
         return;
       }
 
-
       const res = await axiosInstance.get(`/patient-visits/${data}`);
       res.data.success ? setPvisitData(res.data.data) : setPvisitData({});
       console.log("pvisit data: ", res.data.data);
       const fetchedData = res.data.data;
-
 
       let t;
       if (Number(fetchedData.RegistrationTime.split(":")[0]) > 12) {
@@ -946,7 +882,6 @@ const VisitList = () => {
       } else {
         t = `${fetchedData.RegistrationTime} AM`;
       }
-
 
       const doctor = await axiosInstance.get(`/doctor/${fetchedData.DoctorId}`);
       console.log("Doctor data: ", doctor.data.data);
@@ -973,13 +908,11 @@ const VisitList = () => {
     }
   };
 
-
   // Added from Emr.jsx to handle dropdown logic for the new table style
   const handleDropdownToggle = (event, index) => {
     event.stopPropagation();
     setShowDropdownIndex(index === showDropdownIndex ? null : index);
   };
-
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -991,16 +924,15 @@ const VisitList = () => {
     return () => document.removeEventListener("click", handleOutsideClick);
   }, []);
 
-
   // JSX for the View/Edit dialog forms (to replace MUI Dialog)
   const renderForm = () => (
     <form>
-      <div className="row">
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Patient Name *</label>
+      <div className='row'>
+        <div className='col-md-6 mb-3'>
+          <label className='form-label'>Patient Name *</label>
           <input
-            type="text"
-            className="form-control"
+            type='text'
+            className='form-control'
             value={editForm.PatientName || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, PatientName: e.target.value })
@@ -1009,11 +941,11 @@ const VisitList = () => {
             required
           />
         </div>
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Phone Number *</label>
+        <div className='col-md-6 mb-3'>
+          <label className='form-label'>Phone Number *</label>
           <input
-            type="tel"
-            className="form-control"
+            type='tel'
+            className='form-control'
             value={editForm.PhoneNo || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, PhoneNo: e.target.value })
@@ -1022,45 +954,45 @@ const VisitList = () => {
             required
           />
         </div>
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Age</label>
+        <div className='col-md-6 mb-3'>
+          <label className='form-label'>Age</label>
           <input
-            type="number"
-            className="form-control"
+            type='number'
+            className='form-control'
             value={editForm.Age || ""}
             onChange={(e) => setEditForm({ ...editForm, Age: e.target.value })}
             disabled={editDialog.open === false}
           />
         </div>
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Gender</label>
+        <div className='col-md-6 mb-3'>
+          <label className='form-label'>Gender</label>
           <select
-            className="form-control"
+            className='form-control'
             value={editForm.Sex || ""}
             onChange={(e) => setEditForm({ ...editForm, Sex: e.target.value })}
             disabled={editDialog.open === false}
           >
-            <option value="">Select Gender</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-            <option value="O">Other</option>
+            <option value=''>Select Gender</option>
+            <option value='M'>Male</option>
+            <option value='F'>Female</option>
+            <option value='O'>Other</option>
           </select>
         </div>
-        <div className="col-md-12 mb-3">
-          <label className="form-label">Address</label>
+        <div className='col-md-12 mb-3'>
+          <label className='form-label'>Address</label>
           <textarea
-            className="form-control"
-            rows="2"
+            className='form-control'
+            rows='2'
             value={editForm.Add1 || ""}
             onChange={(e) => setEditForm({ ...editForm, Add1: e.target.value })}
             disabled={editDialog.open === false}
           />
         </div>
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Guardian Name</label>
+        <div className='col-md-6 mb-3'>
+          <label className='form-label'>Guardian Name</label>
           <input
-            type="text"
-            className="form-control"
+            type='text'
+            className='form-control'
             value={editForm.GurdianName || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, GurdianName: e.target.value })
@@ -1068,11 +1000,11 @@ const VisitList = () => {
             disabled={editDialog.open === false}
           />
         </div>
-        <div className="col-md-6 mb-3">
-          <label className="form-label">Email Address</label>
+        <div className='col-md-6 mb-3'>
+          <label className='form-label'>Email Address</label>
           <input
-            type="email"
-            className="form-control"
+            type='email'
+            className='form-control'
             value={editForm.EMailId || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, EMailId: e.target.value })
@@ -1084,16 +1016,15 @@ const VisitList = () => {
     </form>
   );
 
-
   // Render the table to match Emr.jsx's style
   const renderTable = () => {
     return (
-      <table className="table table-dashed table-hover digi-dataTable table-striped">
+      <table className='table table-dashed table-hover digi-dataTable table-striped'>
         <thead>
           <tr>
-            <th className="no-sort">
-              <div className="form-check">
-                <input className="form-check-input" type="checkbox" />
+            <th className='no-sort'>
+              <div className='form-check'>
+                <input className='form-check-input' type='checkbox' />
               </div>
             </th>
             <th>Action</th>
@@ -1113,8 +1044,8 @@ const VisitList = () => {
           {visits.map((data, index) => (
             <tr key={data.id}>
               <td>
-                <div className="form-check">
-                  <input className="form-check-input" type="checkbox" />
+                <div className='form-check'>
+                  <input className='form-check-input' type='checkbox' />
                 </div>
               </td>
               <td>
@@ -1122,80 +1053,80 @@ const VisitList = () => {
                   <ul className={`d-flex gap-2`}>
                     <li>
                       <a
-                        href="#"
-                        className="dropdown-item"
+                        href='#'
+                        className='dropdown-item'
                         onClick={(e) => {
                           e.preventDefault();
                           handleView(data);
                         }}
                       >
-                        <button className="btn btn-sm btn-outline-info me-1">
-                          <i className="fa-light fa-eye"></i>
+                        <button className='btn btn-sm btn-outline-info me-1'>
+                          <i className='fa-light fa-eye'></i>
                         </button>
                       </a>
                     </li>
                     <li>
                       <a
-                        href="#"
-                        className="dropdown-item"
+                        href='#'
+                        className='dropdown-item'
                         onClick={(e) => {
                           e.preventDefault();
                           handleEdit(data);
                         }}
                       >
-                        <button className="btn btn-sm btn-outline-primary me-1">
-                          <i className="fa-light fa-pen-to-square"></i>
+                        <button className='btn btn-sm btn-outline-primary me-1'>
+                          <i className='fa-light fa-pen-to-square'></i>
                         </button>
                       </a>
                     </li>
                     <li>
                       <a
-                        href="#"
+                        href='#'
                         onClick={(e) => {
                           e.preventDefault();
                           generatePDF(data);
                         }}
                       >
                         <button
-                          className="btn btn-sm btn-outline-success me-1"
-                          data-toggle="tooltip"
-                          data-placement="bottom"
-                          title="Money Receipt PDF"
+                          className='btn btn-sm btn-outline-success me-1'
+                          data-toggle='tooltip'
+                          data-placement='bottom'
+                          title='Money Receipt PDF'
                         >
-                          <i className="fa-solid fa-indian-rupee-sign"></i>
+                          <i className='fa-solid fa-indian-rupee-sign'></i>
                         </button>{" "}
                       </a>
                     </li>
                     <li>
                       <a
-                        href="#"
-                        className="dropdown-item"
+                        href='#'
+                        className='dropdown-item'
                         onClick={(e) => {
                           e.preventDefault();
                           generateVisitEntryPDF(data.PVisitId);
                         }}
                       >
                         <button
-                          className="btn btn-sm btn-outline-warning"
-                          data-toggle="tooltip"
-                          data-placement="bottom"
-                          title="Dr Press PDF"
+                          className='btn btn-sm btn-outline-warning'
+                          data-toggle='tooltip'
+                          data-placement='bottom'
+                          title='Dr Press PDF'
                         >
-                          <i className="fa-light fa-file-pdf"></i>
+                          <i className='fa-light fa-file-pdf'></i>
                         </button>
                       </a>
                     </li>
                     <li>
                       <a
-                        href="#"
-                        className="dropdown-item"
+                        href='#'
+                        className='dropdown-item'
                         onClick={(e) => {
                           e.preventDefault();
                           handleDelete(data);
                         }}
                       >
-                        <button className="btn btn-sm btn-outline-danger">
-                          <i className="fa-light fa-trash-can"></i>
+                        <button className='btn btn-sm btn-outline-danger'>
+                          <i className='fa-light fa-trash-can'></i>
                         </button>
                       </a>
                     </li>
@@ -1212,7 +1143,7 @@ const VisitList = () => {
               <td>{data.DoctorName}</td>
               <td>{data.SpecialityName}</td>
               <td>
-                <span className="badge bg-success">
+                <span className='badge bg-success'>
                   ₹{data.TotAmount.toFixed(2)}
                 </span>
               </td>
@@ -1223,56 +1154,54 @@ const VisitList = () => {
     );
   };
 
-
   return (
     <div>
-      <div className="main-content">
-        <div className="row">
-          <div className="col-12">
-            <div className="panel">
+      <div className='main-content'>
+        <div className='row'>
+          <div className='col-12'>
+            <div className='panel'>
               {/* FIXED: Applied d-flex justify-content-between align-items-center for horizontal alignment of title and controls,
                 and restructured the search inputs based on AllEmployeeHeader.jsx reference. */}
-              <div className="panel-header d-flex justify-content-between align-items-center">
+              <div className='panel-header d-flex justify-content-between align-items-center'>
                 <h5>🏥 Patient Visit List</h5>
-                <div className="btn-box d-flex flex-wrap gap-2">
+                <div className='btn-box d-flex flex-wrap gap-2'>
                   {/* Group search inputs under id="tableSearch" */}
-                  <div id="tableSearch" className="d-flex gap-2">
+                  <div id='tableSearch' className='d-flex gap-2'>
                     {/* Search by Phone - compact placeholder */}
                     <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Phone"
+                      type='text'
+                      className='form-control form-control-sm'
+                      placeholder='Phone'
                       value={searchPhone}
                       onChange={(e) => setSearchPhone(e.target.value)}
                     />
                     {/* Search by Registration ID - compact placeholder */}
                     <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Reg ID"
+                      type='text'
+                      className='form-control form-control-sm'
+                      placeholder='Reg ID'
                       value={searchRegistrationId}
                       onChange={(e) => setSearchRegistrationId(e.target.value)}
                     />
                     {/* Search by Date - explicit width to contain the date picker */}
                     <input
-                      type="date"
-                      className="form-control form-control-sm"
+                      type='date'
+                      className='form-control form-control-sm'
                       value={searchDate}
                       onChange={(e) => setSearchDate(e.target.value)}
                     />
                   </div>
 
-
                   {/* Search Button */}
                   <button
-                    className="btn btn-sm btn-primary flex-shrink-0"
+                    className='btn btn-sm btn-primary flex-shrink-0'
                     onClick={handleSearch}
                   >
-                    <i className="fa-light fa-magnifying-glass"></i> Search
+                    <i className='fa-light fa-magnifying-glass'></i> Search
                   </button>
                   {/* Clear Button */}
                   <button
-                    className="btn btn-sm btn-secondary flex-shrink-0"
+                    className='btn btn-sm btn-secondary flex-shrink-0'
                     onClick={() => {
                       setSearchPhone("");
                       setSearchDate("");
@@ -1284,10 +1213,10 @@ const VisitList = () => {
                       fetchVisits("", "", "", 1, paginationModel.pageSize);
                     }}
                   >
-                    <i className="fa-light fa-trash-arrow-up"></i> Clear
+                    <i className='fa-light fa-trash-arrow-up'></i> Clear
                   </button>
                   <button
-                    className="btn btn-sm btn-success flex-shrink-0"
+                    className='btn btn-sm btn-success flex-shrink-0'
                     onClick={() => {
                       navigate("/visit_entry");
                     }}
@@ -1297,29 +1226,31 @@ const VisitList = () => {
                 </div>
               </div>
 
-
-              <div className="panel-body">
-                {loading ? (
-                  <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading...</span>
+              <div className='panel-body'>
+                {
+                  loading ?
+                    <div className='text-center py-5'>
+                      <div
+                        className='spinner-border text-primary'
+                        role='status'
+                      >
+                        <span className='visually-hidden'>Loading...</span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  // Using OverlayScrollbarsComponent for Emr.jsx style
-                  <OverlayScrollbarsComponent style={{ height: "500px" }}>
-                    {renderTable()}
-                  </OverlayScrollbarsComponent>
-                )}
+                    // Using OverlayScrollbarsComponent for Emr.jsx style
+                  : <OverlayScrollbarsComponent style={{ height: "500px" }}>
+                      {renderTable()}
+                    </OverlayScrollbarsComponent>
 
+                }
 
                 {/* Manual Pagination to simulate DataGrid structure */}
-                <div className="d-flex justify-content-between align-items-center mt-3">
-                  <div className="text-muted">
+                <div className='d-flex justify-content-between align-items-center mt-3'>
+                  <div className='text-muted'>
                     Showing{" "}
-                    {visits.length
-                      ? paginationModel.page * paginationModel.pageSize + 1
-                      : 0}{" "}
+                    {visits.length ?
+                      paginationModel.page * paginationModel.pageSize + 1
+                    : 0}{" "}
                     to{" "}
                     {Math.min(
                       (paginationModel.page + 1) * paginationModel.pageSize,
@@ -1328,15 +1259,15 @@ const VisitList = () => {
                     of {rowCount} entries
                   </div>
                   <nav>
-                    <ul className="pagination pagination-sm m-0">
+                    <ul className='pagination pagination-sm m-0'>
                       <li
                         className={`page-item ${
                           paginationModel.page === 0 ? "disabled" : ""
                         }`}
                       >
                         <a
-                          className="page-link"
-                          href="#"
+                          className='page-link'
+                          href='#'
                           onClick={(e) => {
                             e.preventDefault();
                             handlePaginationChange(paginationModel.page - 1);
@@ -1346,22 +1277,24 @@ const VisitList = () => {
                         </a>
                       </li>
                       {/* Simple page button for current page - complex button logic is removed to avoid function alteration */}
-                      <li className="page-item active">
-                        <a className="page-link" href="#">
+                      <li className='page-item active'>
+                        <a className='page-link' href='#'>
                           {paginationModel.page + 1}
                         </a>
                       </li>
                       <li
                         className={`page-item ${
-                          paginationModel.page >=
-                          Math.ceil(rowCount / paginationModel.pageSize) - 1
-                            ? "disabled"
-                            : ""
+                          (
+                            paginationModel.page >=
+                            Math.ceil(rowCount / paginationModel.pageSize) - 1
+                          ) ?
+                            "disabled"
+                          : ""
                         }`}
                       >
                         <a
-                          className="page-link"
-                          href="#"
+                          className='page-link'
+                          href='#'
                           onClick={(e) => {
                             e.preventDefault();
                             handlePaginationChange(paginationModel.page + 1);
@@ -1379,12 +1312,11 @@ const VisitList = () => {
         </div>
       </div>
 
-
       {/* Edit Modal (Sidebar style from Emr.jsx) */}
       {editDialog.open && (
         <>
           <div
-            className="modal-backdrop fade show"
+            className='modal-backdrop fade show'
             onClick={() => setEditDialog({ open: false, patient: null })}
             style={{ zIndex: 9998 }}
           ></div>
@@ -1402,17 +1334,17 @@ const VisitList = () => {
             }}
           >
             <button
-              className="right-bar-close"
+              className='right-bar-close'
               onClick={() => setEditDialog({ open: false, patient: null })}
             >
-              <i className="fa-light fa-angle-right"></i>
+              <i className='fa-light fa-angle-right'></i>
             </button>
             <div
-              className="top-panel"
+              className='top-panel'
               style={{ height: "100%", paddingTop: "10px" }}
             >
               <div
-                className="dropdown-txt"
+                className='dropdown-txt'
                 style={{
                   position: "sticky",
                   top: 0,
@@ -1425,12 +1357,12 @@ const VisitList = () => {
               <OverlayScrollbarsComponent
                 style={{ height: "calc(100% - 70px)" }}
               >
-                <div className="p-3">
+                <div className='p-3'>
                   {renderForm()}
-                  <div className="d-flex gap-2 mt-3">
+                  <div className='d-flex gap-2 mt-3'>
                     <button
-                      type="button"
-                      className="btn btn-secondary w-50"
+                      type='button'
+                      className='btn btn-secondary w-50'
                       onClick={() =>
                         setEditDialog({ open: false, patient: null })
                       }
@@ -1438,8 +1370,8 @@ const VisitList = () => {
                       Cancel
                     </button>
                     <button
-                      type="button"
-                      className="btn btn-primary w-50"
+                      type='button'
+                      className='btn btn-primary w-50'
                       onClick={handleUpdatePatient}
                       disabled={loading}
                     >
@@ -1453,14 +1385,9 @@ const VisitList = () => {
         </>
       )}
 
-
       <Footer />
     </div>
   );
 };
 
-
 export default VisitList;
-
-
-

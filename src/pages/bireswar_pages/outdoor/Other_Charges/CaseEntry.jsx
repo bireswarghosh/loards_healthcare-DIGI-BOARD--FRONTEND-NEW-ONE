@@ -153,7 +153,7 @@ const CaseEntry = () => {
     try {
       console.log("Indoor searching: ", searchTerm);
       const res = await axiosInstance.get(
-        `/admissions?page=1&limit=20&search=${encodeURIComponent(searchTerm)}`,
+        `/admissions?page=1&limit=20&search=${encodeURIComponent(searchTerm)}`
       );
       setSearchResults(res.data.data || []);
     } catch (err) {
@@ -174,8 +174,8 @@ const CaseEntry = () => {
     try {
       const res = await axiosInstance.get(
         `/patient-visits?page=1&limit=20&patientName=${encodeURIComponent(
-          searchTerm,
-        )}`,
+          searchTerm
+        )}`
       );
       setSearchResultsOPD(res.data.data || []);
     } catch (err) {
@@ -366,7 +366,7 @@ const CaseEntry = () => {
   const fetchTestMaster = async () => {
     try {
       const res = await axiosInstance.get(
-        "/tests/search/advanced?page=1&limit=50",
+        "/tests/search/advanced?page=1&limit=50"
       );
       if (res.data.success) {
         setTestMasterData(res.data.data || []);
@@ -385,7 +385,7 @@ const CaseEntry = () => {
     setIsSearchingTest(true);
     try {
       const res = await axiosInstance.get(
-        `/tests/search/advanced?test=${encodeURIComponent(searchTerm)}&page=1&limit=50`,
+        `/tests/search/advanced?test=${encodeURIComponent(searchTerm)}&page=1&limit=50`
       );
       setTestSearchResults(res.data.data || []);
     } catch (err) {
@@ -431,7 +431,7 @@ const CaseEntry = () => {
   const calculateTotal = (testList) => {
     const total = testList.reduce(
       (sum, test) => sum + parseFloat(test.NetRate || 0),
-      0,
+      0
     );
     setFormData((prev) => ({
       ...prev,
@@ -467,12 +467,14 @@ const CaseEntry = () => {
               TestName: testName,
               Rate: t.Rate || 0,
               NetRate: t.NetRate || t.Rate || 0,
-              DeliveryDate: t.DeliveryDate ? new Date(t.DeliveryDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+              DeliveryDate: t.DeliveryDate
+                ? new Date(t.DeliveryDate).toISOString().slice(0, 10)
+                : new Date().toISOString().slice(0, 10),
               DeliveryTime: t.DeliveryTime || "07:00 PM",
               Profile: t.Profile || "N",
               ComYN: t.ComYN || "Y",
             };
-          }),
+          })
         );
         setTests(testsData);
         calculateTotal(testsData);
@@ -569,7 +571,7 @@ const CaseEntry = () => {
         }
       } else if (mode === "edit" && orgId && orgId !== "undefined") {
         // UPDATE existing case
-        
+
         // Step 1: Update case master data
         const res = await axiosInstance.put(`/case01/${orgId}`, formData);
         if (res.data.success) {
@@ -650,7 +652,7 @@ const CaseEntry = () => {
       console.error("Error saving case:", error);
       alert(
         "Failed to save case: " +
-          (error.response?.data?.message || error.message),
+          (error.response?.data?.message || error.message)
       );
     } finally {
       setLoading(false);
@@ -676,7 +678,7 @@ const CaseEntry = () => {
         console.error("Error deleting case:", error);
         alert(
           "Failed to delete case: " +
-            (error.response?.data?.message || error.message),
+            (error.response?.data?.message || error.message)
         );
       } finally {
         setLoading(false);
@@ -944,6 +946,114 @@ const CaseEntry = () => {
     color: "white",
     padding: "0 4px",
   };
+
+const fetchIndoorDetails = async (admId) => {
+  try {
+    const res = await axiosInstance.get(`/admissions/${admId}`);
+
+    if (res.data.success) {
+      const p = res.data.data.admission;
+
+      setFormData((prev) => ({
+        ...prev,
+        // BASIC INFO
+        AdmitionId: p.AdmitionId || "",
+        PatientName: p.PatientName || "",
+        Sex: p.Sex || "",
+        Age: p.Age || "",
+        AgeType: p.AgeType || "Y",
+
+        // ADDRESS
+        Add1: p.Add1 || "",
+        Add2: p.Add2 || "",
+        Add3: p.Add3 || "",
+
+        // PHONE / EMAIL
+        MobileNo: p.PhoneNo || "",
+        Phone: p.PhoneNo || "",
+        Email: p.Email || "",
+
+        // CARD & EXTRA
+        CardNo: p.CardNo || "",
+        Remarks: p.Remarks || "",
+
+        // OPD / INDOOR ID
+        PatientId: p.OPDId || "",
+        OPDID: p.OPDId || "",
+
+        // ADVANCED AGES
+        AgeD: p.AgeD || "",
+        AgeTypeD: p.AgeTypeD || "",
+      }));
+    }
+  } catch (err) {
+    console.log("Indoor details fetch error:", err);
+  }
+};
+
+
+const fetchOPDDetails = async (regId) => {
+  try {
+    const res = await axiosInstance.get(
+      `/patient-visits?registrationId=${regId}`
+    );
+
+    if (res.data.success && res.data.data.length > 0) {
+      const p = res.data.data[0];
+
+      setFormData((prev) => ({
+        ...prev,
+
+        // BASIC
+        PatientName: p.PatientName || "",
+        PPr: p.PPr || "",
+        Sex: p.Sex || "",
+        Age: p.Age || "",
+        AgeType: p.AgeType || "Y",
+
+        // ADDRESS
+        Add1: p.PatientAdd1 || "",
+        Add2: p.PatientAdd2 || "",
+        Add3: p.PatientAdd3 || "",
+
+        // CONTACT
+        MobileNo: p.PhoneNo || "",
+        Phone: p.PhoneNo || "",
+        Email: p.EMailId || "",
+
+        // OPD IDs
+        PatientId: p.RegistrationId || "",
+        OPDID: p.RegistrationId || "",
+
+        // ADVANCED AGE FIELDS
+        AgeD: p.AgeD || "",
+        AgeTypeD: p.AgeTypeD || "",
+        AgeN: p.AgeN || "",
+        AgeTypeN: p.AgeTypeN || "",
+
+        // EXTRA
+        Remarks: p.Remarks || "",
+      }));
+    }
+  } catch (err) {
+    console.log("OPD details fetch error:", err);
+  }
+};
+
+useEffect(() => {
+  if (selectedTest?.value) {
+    fetchIndoorDetails(selectedTest.value);
+  }
+}, [selectedTest]);
+
+useEffect(() => {
+  if (selectedTestOPD?.value) {
+    fetchOPDDetails(selectedTestOPD.value);
+  }
+}, [selectedTestOPD]);
+
+
+
 
   return (
     <div className="main-content">
@@ -1535,7 +1645,7 @@ const CaseEntry = () => {
                         />
                       </div>
                       <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
-                        <label style={labelStyle}>Husband Name</label>
+                        <label style={labelStyle}>Gurdian Name</label>
                         <input
                           type="text"
                           name="HusbandName"
@@ -1948,32 +2058,32 @@ const CaseEntry = () => {
               {/* SECTION 9: BILL SUMMARY */}
               <div className="col-12 col-md-3">
                 <div className="p-1 h-100 d-flex flex-column gap-1">
-                   <Select
-                      styles={compactSelectStyles}
-                      value={selectedTestMaster}
-                      onChange={setSelectedTestMaster}
-                      onInputChange={(inputValue) => {
-                        searchTestMaster(inputValue);
-                      }}
-                      options={testSearchResults.map((item) => ({
-                        value: item.TestId,
-                        label: `${item.Test} - ₹${item.Rate}`,
-                        ...item,
-                      }))}
-                      placeholder="Search test..."
-                      isSearchable
-                      isClearable
-                      isLoading={isSearchingTest}
-                      isDisabled={mode === "view"}
-                      noOptionsMessage={({ inputValue }) =>
-                        inputValue.length < 2
-                          ? "Type at least 2 characters"
-                          : "No test found"
-                      }
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                      style={{ width: "280px" }} // ⬅ search box width increased (change anytime)
-                    />
+                  <Select
+                    styles={compactSelectStyles}
+                    value={selectedTestMaster}
+                    onChange={setSelectedTestMaster}
+                    onInputChange={(inputValue) => {
+                      searchTestMaster(inputValue);
+                    }}
+                    options={testSearchResults.map((item) => ({
+                      value: item.TestId,
+                      label: `${item.Test} - ₹${item.Rate}`,
+                      ...item,
+                    }))}
+                    placeholder="Search test..."
+                    isSearchable
+                    isClearable
+                    isLoading={isSearchingTest}
+                    isDisabled={mode === "view"}
+                    noOptionsMessage={({ inputValue }) =>
+                      inputValue.length < 2
+                        ? "Type at least 2 characters"
+                        : "No test found"
+                    }
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                    style={{ width: "280px" }} // ⬅ search box width increased (change anytime)
+                  />
                   <div className="d-flex align-items-start">
                     {/* <Select
                       styles={compactSelectStyles}
@@ -2009,7 +2119,6 @@ const CaseEntry = () => {
                       Add Test
                     </button>
 
-                   
                     {/* <button
                       className="btn btn-success btn-sm py-0"
                       onClick={handleAddTest}
@@ -2183,7 +2292,7 @@ const CaseEntry = () => {
                                 handleServiceChange(
                                   index,
                                   "serviceType",
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
                               onKeyDown={(e) => handleServiceKeyDown(e, index)}
@@ -2198,7 +2307,7 @@ const CaseEntry = () => {
                                 handleServiceChange(
                                   index,
                                   "serviceRate",
-                                  e.target.value,
+                                  e.target.value
                                 )
                               }
                               onKeyDown={(e) => handleServiceKeyDown(e, index)}
@@ -2460,6 +2569,8 @@ const CaseEntry = () => {
     </div>
   );
 };
+
+
 
 export default CaseEntry;
 

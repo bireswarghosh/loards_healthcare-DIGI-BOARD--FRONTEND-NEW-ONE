@@ -30,6 +30,7 @@ import {
 } from "react-icons/fa";
 import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
+import socket from "../../socketClient";
 
 const DoctorManagement = () => {
   // State variables
@@ -631,7 +632,6 @@ const DoctorManagement = () => {
           ...prev,
           [doctorId]: newStatus,
         }));
-        // Update the doctor in the current list
         setDoctors((prev) =>
           prev.map((doctor) =>
             doctor.DoctorId === doctorId
@@ -644,6 +644,14 @@ const DoctorManagement = () => {
             newStatus === "on" ? "Active" : "Inactive"
           }!`
         );
+        
+        // Emit socket event for live update
+        const activeRes = await axiosInstance.get('/doctormaster/active');
+        socket.emit('doctormaster:active:update', {
+          success: true,
+          total: activeRes.data.total || 0,
+          data: activeRes.data.data || []
+        });
       }
     } catch (err) {
       console.error("Error updating doctor status:", err);

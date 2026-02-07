@@ -50,6 +50,7 @@
     "react-uploader": "^3.37.0",
     "recharts": "^2.6.2",
     "sass": "^1.63.6",
+    "socket.io-client": "^4.8.3",
     "sortablejs": "^1.15.0",
     "sweetalert2": "^11.4.8",
     "sweetalert2-react-content": "^5.0.7",
