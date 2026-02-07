@@ -824,7 +824,7 @@ const CaseEntry = () => {
     },
     { label: "Bill", variant: "info" },
     { label: "Com Bill", variant: "info" },
-    { label: "Dep Print", variant: "info" },
+    { label: "Dep Print", variant: "info"  },
     { label: "Exit", variant: "secondary", onClick: () => navigate(-1) },
   ];
 
@@ -1051,6 +1051,237 @@ useEffect(() => {
     fetchOPDDetails(selectedTestOPD.value);
   }
 }, [selectedTestOPD]);
+
+const handleDepPrint = () => {
+  const logoUrl = "/assets/images/logo-small.png";
+
+  const printContent = `
+  <html>
+  <head>
+    <title>Department Print</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        font-size: 13px;
+      }
+
+      .top-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .top-favicon img {
+        width: 80px;
+        height: auto;
+      }
+
+      .header {
+        text-align: center;
+        flex-grow: 1;
+      }
+
+      .hospital-name {
+        font-size: 20px;
+        font-weight: bold;
+        margin: 2px 0;
+      }
+
+      .address, .contact-info {
+        font-size: 12px;
+        line-height: 1.4;
+        margin-top: 3px;
+      }
+
+      .title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 16px;
+        margin-top: 15px;
+      }
+
+      /* ⭐ PATIENT DETAILS STYLE */
+      .patient-block {
+        margin-top: 15px;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: 40px;
+        border: 1px solid #000;
+        padding: 12px;
+        border-radius: 4px;
+        background: #fafafa;
+      }
+
+      .patient-col {
+        width: 48%;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .patient-row {
+        display: flex;
+        margin-bottom: 6px;
+      }
+
+      .patient-label {
+        font-weight: bold;
+        width: 120px;
+        display: inline-block;
+      }
+
+      .patient-value {
+        flex-grow: 1;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      th, td {
+        border: 1px solid #333;
+        padding: 6px;
+        font-size: 13px;
+      }
+
+      th {
+        background-color: #f0f0f0;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+        color: #555;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <!-- ⭐ TOP HEADER -->
+    <div class="top-header-row">
+      
+      <div class="top-favicon">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" />
+      </div>
+
+      <div class="header">
+        <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
+        <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+
+        <div class="address">
+          13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+          (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
+        </div>
+
+        <div class="contact-info">
+          E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
+          Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+        </div>
+      </div>
+    </div>
+
+    <hr/>
+    
+    <!-- MAIN TITLE -->
+    <div class="title">CLINICAL PATHOLOGY</div>
+
+    <!-- ⭐ PATIENT DETAILS BLOCK -->
+    <div class="patient-block">
+
+      <div class="patient-col">
+        <div class="patient-row">
+          <span class="patient-label">Patient Name</span>
+          <span class="patient-value">${formData.PatientName}</span>
+        </div>
+
+        <div class="patient-row">
+          <span class="patient-label">Case No</span>
+          <span class="patient-value">${formData.CaseNo}</span>
+        </div>
+
+        <div class="patient-row">
+          <span class="patient-label">Phone</span>
+          <span class="patient-value">${formData.MobileNo}</span>
+        </div>
+
+        <div class="patient-row">
+          <span class="patient-label">Address</span>
+          <span class="patient-value">${formData.Add1} ${formData.Add2} ${formData.Add3}</span>
+        </div>
+      </div>
+
+      <div class="patient-col">
+        <div class="patient-row">
+          <span class="patient-label">Age</span>
+          <span class="patient-value">${formData.Age} ${formData.AgeType}</span>
+        </div>
+
+        <div class="patient-row">
+          <span class="patient-label">Sex</span>
+          <span class="patient-value">${formData.Sex}</span>
+        </div>
+
+        <div class="patient-row">
+          <span class="patient-label">Date</span>
+          <span class="patient-value">${new Date().toISOString().slice(0, 10)}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <hr/>
+
+    <!-- ⭐ TABLE -->
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60px;">Sl No</th>
+          <th>Test Name</th>
+          <th style="width:120px; text-align:right;">Net Rate</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        ${
+          tests.length
+            ? tests
+                .map(
+                  (t, i) => `
+        <tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td>${t.TestName}</td>
+          <td style="text-align:right;">${t.NetRate}</td>
+        </tr>`
+                )
+                .join("")
+            : `<tr><td colspan="3" style="text-align:center;">No Test Added</td></tr>`
+        }
+      </tbody>
+    </table>
+
+    <div class="footer">** End of Report — This is a computer-generated document **</div>
+
+  </body>
+  </html>
+  `;
+
+  const win = window.open("", "_blank");
+  win.document.open();
+  win.document.write(printContent);
+  win.document.close();
+
+  win.onload = () => win.print();
+};
+
+
+
+
 
 
 
@@ -1415,7 +1646,7 @@ useEffect(() => {
               </div>
 
               {/* RIGHT COLUMN: Sidebar & Barcode */}
-              <div className="col-12 col-lg-3">
+              {/* <div className="col-12 col-lg-3">
                 <Barcode
                   value={formData.CaseNo}
                   height={40}
@@ -1425,7 +1656,7 @@ useEffect(() => {
                 <div className="text-center small fw-bold">
                   Test Instruction
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* === MIDDLE ROW: PATIENT DETAILS === */}
@@ -2514,6 +2745,7 @@ useEffect(() => {
           <button
             className="btn btn-sm btn-light border shadow-sm"
             style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            onClick={handleDepPrint}
           >
             Dep Print
           </button>
@@ -2569,6 +2801,10 @@ useEffect(() => {
     </div>
   );
 };
+
+
+
+
 
 
 
