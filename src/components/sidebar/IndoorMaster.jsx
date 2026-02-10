@@ -270,6 +270,15 @@ const IndoorMaster = () => {
             </NavLink>
           </li>
         )}
+
+        {(isSuperAdmin || permissions?.indoorMaster_agentMaster !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/AgentMaster" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-user-tie"></i></span>
+              <span className="sidebar-txt">Agent Master</span>
+            </NavLink>
+          </li>
+        )}
       </ul>
     </li>
   );

@@ -72,26 +72,16 @@ const Indoor = () => {
         {/* OT Billing List */}
         {(isSuperAdmin || permissions?.indoor_otBillingList !== false) && (
           <li className="sidebar-dropdown-item">
-            <NavLink to="/OTBillingList" className="sidebar-link">
+            <NavLink to="/OTBillingIpd" className="sidebar-link">
               <span className="nav-icon">
                 <i className="fa-light fa-user-headset"></i>
               </span>{' '}
-              <span className="sidebar-txt">OTBilling List</span>
+              <span className="sidebar-txt">OTBilling</span>
             </NavLink>
           </li>
         )}
 
-        {/* OT Billing Detail */}
-        {(isSuperAdmin || permissions?.indoor_otBillingDetail !== false) && (
-          <li className="sidebar-dropdown-item">
-            <NavLink to="/OTBillingDetail" className="sidebar-link">
-              <span className="nav-icon">
-                <i className="fa-light fa-user-headset"></i>
-              </span>{' '}
-              <span className="sidebar-txt">OT Billing Detail</span>
-            </NavLink>
-          </li>
-        )}
+    
 
         {/* Doctor Visit */}
         {(isSuperAdmin || permissions?.indoor_doctorVisit !== false) && (

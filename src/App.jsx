@@ -161,6 +161,7 @@ import OTItemMaster from "./components/indoor-master/OTItemMaster.jsx";
 import CashlessMaster from "./components/indoor-master/CashlessMaster.jsx";
 import ConsentMaster from "./components/indoor-master/ConsentMaster.jsx";
 import BillPrintHeadMaster from "./components/indoor-master/BillPrintHeadMaster.jsx";
+import AgentMaster from "./components/indoor-master/AgentMaster.jsx";
 
 
 
@@ -213,7 +214,8 @@ import AppBannerSettings from "./components/bookingApp/AppBannerSettings.jsx";
 
 
 import NurshingCare from "./components/bookingApp/NurshingCare/NurshingCare.jsx";
-import NurshingBookingList from "./components/bookingApp/NurshingBooking/NurshingBookingList.jsx";import AppSocialMediaSettings from "./components/bookingApp/AppSocialMediaSettings/AppSocialMediaSettings.jsx";
+import NurshingBookingList from "./components/bookingApp/NurshingBooking/NurshingBookingList.jsx";
+import AppSocialMediaSettings from "./components/bookingApp/AppSocialMediaSettings/AppSocialMediaSettings.jsx";
 
 
 // import AddAmbulance from "./components/Ambulance";
@@ -591,6 +593,7 @@ function App() {
           <Route path="/CashlessMaster" element={<ProtectedRoute><CashlessMaster/></ProtectedRoute>}/>
           <Route path="/ConsentMaster" element={<ProtectedRoute><ConsentMaster/></ProtectedRoute>}/>
           <Route path="/BillPrintHeadMaster" element={<ProtectedRoute><BillPrintHeadMaster/></ProtectedRoute>}/>
+          <Route path="/AgentMaster" element={<ProtectedRoute><AgentMaster/></ProtectedRoute>}/>
 
 
 

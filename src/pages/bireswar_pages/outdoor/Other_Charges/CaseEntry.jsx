@@ -22,6 +22,9 @@ const CaseEntry = () => {
   const [indoorData, setIndoorData] = useState([]);
   const [doctorData, setDoctorData] = useState([]);
   const [collectorData, setCollectorData] = useState([]);
+  const [agentData, setAgentData] = useState([]);
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [isSearchingAgent, setIsSearchingAgent] = useState(false);
 
   // form data state
   const [formData, setFormData] = useState({
@@ -185,6 +188,7 @@ const CaseEntry = () => {
       setIsSearchingOPD(false);
     }
   };
+  
 
   // fetch company type-d
   const fetchCompany = async () => {
@@ -359,6 +363,26 @@ const CaseEntry = () => {
       }
     } catch (error) {
       console.log("error fetching collector:", error);
+    }
+  };
+
+  // search agents
+  const searchAgents = async (searchTerm) => {
+    if (!searchTerm || searchTerm.length < 2) {
+      setAgentData([]);
+      return;
+    }
+    setIsSearchingAgent(true);
+    try {
+      const res = await axiosInstance.get(
+        `/agents?page=1&limit=50&Agent=${encodeURIComponent(searchTerm)}`
+      );
+      setAgentData(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching agents:", err);
+      setAgentData([]);
+    } finally {
+      setIsSearchingAgent(false);
     }
   };
 
@@ -2116,13 +2140,48 @@ const handleDepPrint = () => {
                 <select
                   name="BranchName"
                   value={formData.BranchName}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    setFormData((p) => ({ ...p, BranchName: newValue, AgentId: "" }));
+                    if (newValue === "N") {
+                      setSelectedAgent(null);
+                    }
+                  }}
                   style={{ ...inputStyle, width: "40px", padding: 0 }}
                 >
                   <option value="N">N</option>
                   <option value="Y">Y</option>
                 </select>
-                <input type="text" style={{ ...inputStyle, width: "150px" }} />
+                {formData.BranchName === "Y" && (
+                  <div style={{ width: "200px" }}>
+                    <Select
+                      styles={compactSelectStyles}
+                      value={selectedAgent}
+                      onChange={(selected) => {
+                        setSelectedAgent(selected);
+                        setFormData((p) => ({
+                          ...p,
+                          AgentId: selected?.value || "",
+                        }));
+                      }}
+                      onInputChange={(inputValue) => {
+                        searchAgents(inputValue);
+                      }}
+                      options={agentData.map((agent) => ({
+                        value: agent.AgentId,
+                        label: agent.Agent,
+                      }))}
+                      placeholder="Search Agent..."
+                      isClearable
+                      isLoading={isSearchingAgent}
+                      noOptionsMessage={({ inputValue }) =>
+                        inputValue.length < 2
+                          ? "Type at least 2 characters"
+                          : "No agent found"
+                      }
+                    />
+                  </div>
+                )}
 
                 <label
                   style={{ ...labelStyle, width: "auto", marginLeft: "10px" }}
@@ -2371,7 +2430,7 @@ const handleDepPrint = () => {
                           style={{ ...inputStyle, width: "80px" }}
                         />
                       </div>
-                      <div className="d-flex justify-content-end align-items-center mb-1">
+                      {/* <div className="d-flex justify-content-end align-items-center mb-1">
                         <label style={labelStyle}>GST</label>
                         <input
                           type="text"
@@ -2381,11 +2440,11 @@ const handleDepPrint = () => {
                           className="text-end fw-bold ms-1"
                           style={{ ...inputStyle, width: "80px" }}
                         />
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
-                  <div className="d-flex justify-content-end align-items-center">
+                  {/* <div className="d-flex justify-content-end align-items-center">
                     <label style={labelStyle}>Collection Chg.</label>
                     <input
                       type="text"
@@ -2393,7 +2452,7 @@ const handleDepPrint = () => {
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
-                  </div>
+                  </div> */}
                   <div className="d-flex justify-content-end align-items-center">
                     <label style={labelStyle}>Discount</label>
                     <input
@@ -2415,7 +2474,7 @@ const handleDepPrint = () => {
                       style={{ ...inputStyle, width: "80px" }}
                     />
                   </div>
-                  <div className="d-flex justify-content-end align-items-center">
+                  {/* <div className="d-flex justify-content-end align-items-center">
                     <label
                       style={{ ...labelStyle, backgroundColor: "#ffcccc" }}
                     >
@@ -2429,7 +2488,7 @@ const handleDepPrint = () => {
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
-                  </div>
+                  </div> */}
                   <div className="d-flex justify-content-end align-items-center">
                     <label style={labelStyle}>Cancel Test Amount</label>
                     <input
@@ -2475,7 +2534,7 @@ const handleDepPrint = () => {
                     />
                   </div>
                   <div className="d-flex justify-content-end align-items-center">
-                    <label style={labelStyle}>Balance</label>
+                    <label style={labelStyle}>Due Balance</label>
                     <input
                       type="text"
                       name="Balance"
