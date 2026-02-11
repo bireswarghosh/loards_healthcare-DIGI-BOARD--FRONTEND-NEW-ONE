@@ -64,6 +64,7 @@ const CaseEntry = () => {
     GrossAmt: "0",
     CTestAmt: "",
     Balance: "0",
+    ReceiptAmt: "0",
     PaymentType: "C",
     CollectorId: "",
     CompanyId: "",
@@ -244,6 +245,23 @@ const CaseEntry = () => {
   const [services, setServices] = useState([
     { serviceType: "", serviceRate: "" },
   ]);
+
+  // Handle service table changes
+  const handleServiceChange = (index, field, value) => {
+    const updatedServices = [...services];
+    updatedServices[index][field] = value;
+    setServices(updatedServices);
+  };
+
+  // Handle Enter key in service table
+  const handleServiceKeyDown = (e, index) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (index === services.length - 1) {
+        setServices([...services, { serviceType: "", serviceRate: "" }]);
+      }
+    }
+  };
 
   // fetch opd
   const fetchOPD = async () => {
@@ -451,20 +469,110 @@ const CaseEntry = () => {
     calculateTotal(updatedTests);
   };
 
-  // Calculate total amount
+  // Calculate total amount with all deductions
   const calculateTotal = (testList) => {
     const total = testList.reduce(
       (sum, test) => sum + parseFloat(test.NetRate || 0),
       0
     );
+    
+    const discPercent = parseFloat(formData.Desc) || 0;
+    const discAmt = parseFloat(formData.DescAmt) || 0;
+    const cancelTestAmt = parseFloat(formData.CTestAmt) || 0;
+    const advance = parseFloat(formData.Advance) || 0;
+    const receiptAmt = parseFloat(formData.ReceiptAmt) || 0;
+    
+    // Calculate discount amount from percentage if percentage is entered
+    let finalDiscAmt = discAmt;
+    if (discPercent > 0 && discAmt === 0) {
+      finalDiscAmt = (total * discPercent) / 100;
+    }
+    
+    // G Total = Total - (Discount + Cancel Test + Advance)
+    const grossAmt = total - finalDiscAmt - cancelTestAmt - advance;
+    
+    // Balance = G Total - Receipt Amount
+    const balance = grossAmt - receiptAmt;
+    
     setFormData((prev) => ({
       ...prev,
-      Total: total,
-      Amount: total,
-      GrossAmt: total,
-      Balance: total - parseFloat(prev.Advance || 0),
+      Total: total.toFixed(2),
+      DescAmt: finalDiscAmt.toFixed(2),
+      Amount: total.toFixed(2),
+      GrossAmt: grossAmt.toFixed(2),
+      Balance: balance.toFixed(2),
     }));
   };
+
+  // Handle discount percentage change
+  const handleDiscountChange = (field, value) => {
+    const numValue = parseFloat(value) || 0;
+    const total = parseFloat(formData.Total) || 0;
+    
+    if (field === "Desc") {
+      // Calculate amount from percentage
+      const discAmt = (total * numValue) / 100;
+      setFormData((prev) => ({
+        ...prev,
+        Desc: value,
+        DescAmt: discAmt.toFixed(2),
+      }));
+      recalculateGrossAndBalance(discAmt);
+    } else if (field === "DescAmt") {
+      // Calculate percentage from amount
+      const discPercent = total > 0 ? (numValue / total) * 100 : 0;
+      setFormData((prev) => ({
+        ...prev,
+        DescAmt: value,
+        Desc: discPercent.toFixed(2),
+      }));
+      recalculateGrossAndBalance(numValue);
+    }
+  };
+
+  // Recalculate G Total and Balance
+  const recalculateGrossAndBalance = (discAmt = null) => {
+    const total = parseFloat(formData.Total) || 0;
+    const finalDiscAmt = discAmt !== null ? discAmt : parseFloat(formData.DescAmt) || 0;
+    const cancelTestAmt = parseFloat(formData.CTestAmt) || 0;
+    const advance = parseFloat(formData.Advance) || 0;
+    const receiptAmt = parseFloat(formData.ReceiptAmt) || 0;
+    
+    // G Total = Total - (Discount + Cancel Test + Advance)
+    const grossAmt = total - finalDiscAmt - cancelTestAmt - advance;
+    
+    // Balance = G Total - Receipt Amount
+    const balance = grossAmt - receiptAmt;
+    
+    setFormData((prev) => ({
+      ...prev,
+      GrossAmt: grossAmt.toFixed(2),
+      Balance: balance.toFixed(2),
+    }));
+  };
+
+  // Handle receipt amount change
+  const handleReceiptAmtChange = (value) => {
+    setFormData((prev) => ({ ...prev, ReceiptAmt: value }));
+    setTimeout(() => recalculateGrossAndBalance(), 0);
+  };
+
+  // Handle cancel test amount change
+  const handleCancelTestChange = (value) => {
+    setFormData((prev) => ({ ...prev, CTestAmt: value }));
+    setTimeout(() => recalculateGrossAndBalance(), 0);
+  };
+
+  // Handle advance change
+  const handleAdvanceChange = (value) => {
+    setFormData((prev) => ({ ...prev, Advance: value }));
+    setTimeout(() => recalculateGrossAndBalance(), 0);
+  };
+
+  // Auto-recalculate when discount, cancel test, advance, or receipt changes
+  useEffect(() => {
+    recalculateGrossAndBalance();
+  }, [formData.DescAmt, formData.CTestAmt, formData.Advance, formData.ReceiptAmt]);
 
   // Fetch tests for existing case
   const fetchCaseTests = async (caseId) => {
@@ -2459,7 +2567,7 @@ const handleDepPrint = () => {
                       type="text"
                       name="Desc"
                       value={formData.Desc}
-                      onChange={handleInputChange}
+                      onChange={(e) => handleDiscountChange("Desc", e.target.value)}
                       className="text-end ms-1"
                       style={{ ...inputStyle, width: "40px" }}
                     />
@@ -2469,7 +2577,7 @@ const handleDepPrint = () => {
                       type="text"
                       name="DescAmt"
                       value={formData.DescAmt}
-                      onChange={handleInputChange}
+                      onChange={(e) => handleDiscountChange("DescAmt", e.target.value)}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
@@ -2495,7 +2603,9 @@ const handleDepPrint = () => {
                       type="text"
                       name="CTestAmt"
                       value={formData.CTestAmt}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleCancelTestChange(e.target.value);
+                      }}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
@@ -2506,7 +2616,9 @@ const handleDepPrint = () => {
                       type="text"
                       name="Advance"
                       value={formData.Advance}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleAdvanceChange(e.target.value);
+                      }}
                       className="text-end ms-1"
                       style={{ ...inputStyle, width: "40px" }}
                     />
@@ -2517,9 +2629,9 @@ const handleDepPrint = () => {
                       type="text"
                       name="GrossAmt"
                       value={formData.GrossAmt}
-                      onChange={handleInputChange}
+                      readOnly
                       className="text-end fw-bold ms-1"
-                      style={{ ...inputStyle, width: "80px" }}
+                      style={{ ...inputStyle, width: "80px", backgroundColor: "#f0f0f0" }}
                     />
                   </div>
                   <div className="d-flex justify-content-end align-items-center">
@@ -2528,7 +2640,9 @@ const handleDepPrint = () => {
                     </label>
                     <input
                       type="text"
-                      defaultValue="0.00"
+                      name="ReceiptAmt"
+                      value={formData.ReceiptAmt}
+                      onChange={(e) => handleReceiptAmtChange(e.target.value)}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
@@ -2539,9 +2653,9 @@ const handleDepPrint = () => {
                       type="text"
                       name="Balance"
                       value={formData.Balance}
-                      onChange={handleInputChange}
+                      readOnly
                       className="text-end fw-bold ms-1"
-                      style={{ ...inputStyle, width: "80px" }}
+                      style={{ ...inputStyle, width: "80px", backgroundColor: "#f0f0f0" }}
                     />
                   </div>
                 </div>
