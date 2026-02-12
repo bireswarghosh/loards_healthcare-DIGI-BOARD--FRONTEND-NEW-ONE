@@ -75,6 +75,17 @@ Doctor Section
           </li>
         )}
 
+        {(isSuperAdmin || permissions?.doctor_speciality !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/SpecialityMaster" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-star"></i>
+              </span>{" "}
+              <span className="sidebar-txt">Speciality Master</span>
+            </NavLink>
+          </li>
+        )}
+
       </ul>
     </li>
   );

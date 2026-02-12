@@ -38,7 +38,7 @@ const AiPart = () => {
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink to="/aiUserChat" className="sidebar-link">
+          <NavLink to="/aiUserChat" className="asidebar-link">
             <span className="nav-icon">
               <i className="fa-light fa-robot"></i>
             </span>{" "}

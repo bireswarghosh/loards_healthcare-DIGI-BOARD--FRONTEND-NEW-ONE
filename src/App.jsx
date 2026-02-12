@@ -263,6 +263,7 @@ import InitialFormData from "./components/indoor/PatientAdmissionDetail/Money-Re
 import DepartmentSubdepartment from "./components/outdoor/DeptSubDept.jsx";
 import DoctorManagement from "./components/outdoor/DoctorManagement.jsx";
 import DoctorWiseAppointments from "./components/outdoor/DoctorWiseAppointments.jsx";
+import SpecialityMaster from "./components/outdoor/SpecialityMaster.jsx";
 import EditTestRate from "./templates/DiagnosisMaster/EditTestRate.jsx";
 import PackageMaster from "./templates/DiagnosisMaster/PackageMaster.jsx";
 import Formula from "./templates/DiagnosisMaster/Formula.jsx";
@@ -697,6 +698,7 @@ function App() {
  <Route path="/department" element={<DepartmentSubdepartment/>}/>
  <Route path="/doctor" element={<DoctorManagement/>}/>
 <Route path="/doctor-wise-appointments" element={<DoctorWiseAppointments />} />
+<Route path="/SpecialityMaster" element={<ProtectedRoute><SpecialityMaster/></ProtectedRoute>}/>
 <Route path="/MoneyReceipt" element={<ProtectedRoute><MoneyReceipt/></ProtectedRoute>}/>
 <Route path="/Refund" element={<ProtectedRoute><Refund/></ProtectedRoute>}/>
  <Route path="/Opd_Other_Charges" element={<ProtectedRoute><OtherChargesss/></ProtectedRoute>}/>
