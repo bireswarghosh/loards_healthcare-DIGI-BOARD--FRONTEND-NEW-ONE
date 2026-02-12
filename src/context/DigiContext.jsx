@@ -1512,8 +1512,18 @@ const DigiContextProvider = ({ children }) => {
     apiKey: "",
     model: "gpt-4o-mini",
     maxTokens: 2000,
-    systemPrompt: "You are a helpful medical AI assistant."
+    temperature: 0.7,
+    systemPrompt: "You are a helpful medical AI assistant.",
+    orgLogoUrl: "",
+    orgName: "",
+    orgAddress: "",
+    orgPhone: "",
+    orgEmail: "",
   });
+
+  const updateAiSettings = (newSettings) => {
+    setAiSettings((prev) => ({ ...prev, ...newSettings }));
+  };
 
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
@@ -2674,6 +2684,7 @@ const DigiContextProvider = ({ children }) => {
         mainAiRef,
         aiSettings,
         setAiSettings,
+        updateAiSettings,
         whatsappState,
         toggleWhatsAppDropdown,
         whatsappRef,
