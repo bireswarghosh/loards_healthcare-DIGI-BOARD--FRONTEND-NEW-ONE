@@ -14,23 +14,29 @@ import AsyncApiSelect from "../components/indoor/PatientAdmissionDetail/Money-Re
 const OTBilling = () => {
   const [admissionOption, setAdmissionOption] = useState(null);
 
+
   const [chargeItems, setChargeItems] = useState([]);
   const [availableCharges, setAvailableCharges] = useState([]);
+
 
   /* ================= LIST STATE ================= */
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
+
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
 
   /* ================= DRAWER ================= */
   const [showDrawer, setShowDrawer] = useState(false);
   const [modalType, setModalType] = useState("add"); // add | edit | view
   const [editingItem, setEditingItem] = useState(null);
 
+
   const calculateTotal = (items, fd) => {
     const chargeTotal = items.reduce((s, i) => s + Number(i.Amount || 0), 0);
+
 
     return (
       chargeTotal +
@@ -46,23 +52,28 @@ const OTBilling = () => {
     );
   };
 
+
   /* ================= FORM ================= */
   const initialFormData = {
     OtBillId: "",
     OtBillNo: "",
-    BillDate: "",
+    BillDate: new Date().toISOString().split("T")[0],
     AdmitionId: "",
     PatientName: "",
+
 
     AnesthesiaDocId: "",
     anttype: "",
     AnesthesiaAmt: 0,
 
+
     SergonDocId: "",
     SergonDocAmt: 0,
 
+
     OthersDocId: "",
     OthersDocAmt: 0,
+
 
     OTId: "",
     OTType: "",
@@ -71,14 +82,17 @@ const OTBilling = () => {
     OTHr: 0,
     OTMinit: 0,
 
+
     ConsumableAmt: 0,
     InstrumentAmt: 0,
     MedicineAmt: 0,
     OthersCh: 0,
     TotalAmt: 0,
 
+
     // UserId: "",
   };
+
 
   const [formData, setFormData] = useState({
     ...initialFormData,
@@ -89,17 +103,20 @@ const OTBilling = () => {
       return;
     }
 
+
     setAdmissionOption({
       label: formData.AdmitionId,
       value: formData.AdmitionId,
     });
   }, [formData.AdmitionId]);
 
+
   // useEffect(() => {
   //   const consumableTotal = formData.Consumables.reduce(
   //     (sum, row) => sum + Number(row.amount || 0),
   //     0
   //   );
+
 
   //   const grandTotal =
   //     Number(formData.AnesthesiaAmt || 0) +
@@ -111,6 +128,7 @@ const OTBilling = () => {
   //     Number(formData.OTMedicines || 0) +
   //     Number(formData.OTOtherCharge || 0) +
   //     Number(formData.ServiceCharge || 0);
+
 
   //   setFormData((prev) => ({
   //     ...prev,
@@ -129,17 +147,21 @@ const OTBilling = () => {
   //   formData.ServiceCharge,
   // ]);
 
+
   /* ================= SEARCH ================= */
   const [searchPatient, setSearchPatient] = useState("");
+
 
   /* ================= PAGINATION ================= */
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
 
+
   /* ================= DELETE ================= */
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+
 
   /* ================= FETCH LIST ================= */
   const fetchBills = async (pageNo = 1) => {
@@ -148,6 +170,7 @@ const OTBilling = () => {
       const res = await axiosInstance.get(
         `/ot-bills?page=${pageNo}&limit=${limit}`
       );
+
 
       setItems(res.data.data || []);
       setPage(res.data.pagination?.currentPage || pageNo);
@@ -158,31 +181,39 @@ const OTBilling = () => {
     setLoading(false);
   };
 
+
   useEffect(() => {
     fetchBills(1);
     fetchChargeResponse();
   }, []);
   // ================= AUTO FILL WHEN ADMITION ID SELECTED =================
   useEffect(() => {
-     if (modalType !== "add") return;
+    if (modalType !== "add") return;
 
-     if (!formData.AdmitionId) return;
+
+    if (!formData.AdmitionId) return;
+
 
     const fetchAdmissionDetails = async () => {
       try {
         const res1 = await axiosInstance.get(
           `/ot-bills/search/admission?admissionId=${formData.AdmitionId}&page=1`
+          // `/admission/search?q=${formData.AdmitionId}`
         );
+
 
         const OtBillId = res1.data?.data?.[0]?.OtBillId;
         if (!OtBillId) return;
+
 
         const res = await axiosInstance.get(
           `/ot-bills/${encodeURIComponent(OtBillId)}`
         );
 
+
         const item = res.data?.data;
         if (!item) return;
+
 
         setFormData((prev) => ({
           ...prev,
@@ -213,9 +244,11 @@ const OTBilling = () => {
         }));
         // setChargeItems(item.otBillDetails || []);
 
+
         const chargesResponse = await axiosInstance.get("/otItem");
         if (chargesResponse.data.success) {
           console.log(chargesResponse.data.data);
+
 
           setAvailableCharges(chargesResponse.data.data);
         }
@@ -224,6 +257,7 @@ const OTBilling = () => {
             OtItemId: d.OtItemId,
             Rate: d.Rate,
             Unit: d.Unit,
+
 
             Qty: d.Qty,
             Amount: d.Amount,
@@ -234,25 +268,31 @@ const OTBilling = () => {
       }
     };
 
+
     fetchAdmissionDetails();
   }, [formData.AdmitionId, modalType]);
+
 
   const handleSearch = async () => {
     setLoading(true);
 
+
     try {
       let url = "";
       let params = new URLSearchParams();
+
 
       /* ===== DATE RANGE SEARCH ===== */
       if (startDate && endDate) {
         params.append("startDate", startDate);
         params.append("endDate", endDate);
 
+
         url = `/ot-bills/search/date-range?${params.toString()}`;
       } else if (searchPatient) {
         /* ===== PATIENT SEARCH ===== */
         params.append("patientName", searchPatient);
+
 
         url = `/ot-bills/search/patient?${params.toString()}`;
       } else {
@@ -261,9 +301,12 @@ const OTBilling = () => {
         return;
       }
 
+
       const res = await axiosInstance.get(url);
 
+
       setItems(res.data.data || []);
+
 
       setPage(1);
       setTotalPages(1);
@@ -272,8 +315,10 @@ const OTBilling = () => {
       toast.error("Search failed");
     }
 
+
     setLoading(false);
   };
+
 
   const clearSearch = () => {
     setSearchPatient("");
@@ -282,15 +327,20 @@ const OTBilling = () => {
     fetchBills(1);
   };
 
+
   /* ================= DRAWER OPEN ================= */
   const openAdd = () => {
     setModalType("add");
     setEditingItem(null);
-    setFormData({ ...initialFormData });
+    setFormData({
+      ...initialFormData,
+      BillDate: new Date().toISOString().split("T")[0],
+    });
     setAdmissionOption(null);
     setChargeItems([]);
     setShowDrawer(true);
   };
+
 
   // const openEdit = (item) => {
   //   setModalType("edit");
@@ -300,6 +350,7 @@ const OTBilling = () => {
   //     ...item,
   //     BillDate: item.BillDate?.split("T")[0],
   //   }));
+
 
   //   setChargeItems(
   //     (item.otBillDetails || []).map((d) => ({
@@ -311,6 +362,7 @@ const OTBilling = () => {
   //     }))
   //   );
 
+
   //   setShowDrawer(true);
   // };
   const openEdit = async (otBillId) => {
@@ -319,10 +371,12 @@ const OTBilling = () => {
       setModalType("edit");
       setShowDrawer(true);
 
+
       // 🔥 OtBillId may contain "/" → encode REQUIRED
       const res = await axiosInstance.get(
         `/ot-bills/${encodeURIComponent(otBillId)}`
       );
+
 
       const item = res.data?.data;
       if (!item) {
@@ -330,7 +384,9 @@ const OTBilling = () => {
         return;
       }
 
+
       setEditingItem(item);
+
 
       // 🔥 FORM DATA FILL
       setFormData({
@@ -338,6 +394,7 @@ const OTBilling = () => {
         ...item,
         BillDate: item.BillDate?.split("T")[0],
       });
+
 
       // 🔥 Admission Async Select fix
       if (item.AdmitionId) {
@@ -347,6 +404,7 @@ const OTBilling = () => {
         });
       }
 
+
       // 🔥 Charge Items
       setChargeItems(
         (item.otBillDetails || []).map((d) => ({
@@ -365,6 +423,7 @@ const OTBilling = () => {
     }
   };
 
+
   // const openView = (item) => {
   //   setModalType("view");
   //   setEditingItem(item);
@@ -372,15 +431,18 @@ const OTBilling = () => {
   //   setShowDrawer(true);
   // };
 
+
   const openView = async (otBillId) => {
     try {
       setLoading(true);
       setModalType("view");
       setShowDrawer(true);
 
+
       const res = await axiosInstance.get(
         `/ot-bills/${encodeURIComponent(otBillId)}`
       );
+
 
       const item = res.data?.data;
       if (!item) {
@@ -388,7 +450,9 @@ const OTBilling = () => {
         return;
       }
 
+
       setEditingItem(item);
+
 
       // 🔥 Form Fill
       setFormData({
@@ -396,6 +460,7 @@ const OTBilling = () => {
         ...item,
         BillDate: item.BillDate?.split("T")[0],
       });
+
 
       // 🔥 Admission select UI sync
       if (item.AdmitionId) {
@@ -405,6 +470,7 @@ const OTBilling = () => {
         });
       }
 
+
       // 🔥 Charge Items
       setChargeItems(
         (item.otBillDetails || []).map((d) => ({
@@ -423,26 +489,33 @@ const OTBilling = () => {
     }
   };
 
+
   const buildPayload = () => ({
     ...formData,
+
 
     // 🔥 backend expects this exact key
     otBillDetails: chargeItems.map((item, index) => ({
       OtItemId: item.OtItemId,
       Rate: Number(item.Rate),
 
+
       Unit: item.Unit,
-      Amount: Number(item.Amount),
+      // Amount: Number(item.Amount),
+      Amount: Number(item.rate * item.Qty),
       SlNo: index + 1,
       Qty: Number(item.Qty),
     })),
   });
 
+
   /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+
     const payload = buildPayload();
+
 
     try {
       if (modalType === "edit") {
@@ -453,6 +526,7 @@ const OTBilling = () => {
         toast.success("Created successfully");
       }
 
+
       setShowDrawer(false);
       fetchBills(page);
     } catch (err) {
@@ -460,6 +534,7 @@ const OTBilling = () => {
       toast.error("Save failed");
     }
   };
+
 
   /* ================= DELETE ================= */
   const confirmDelete = async () => {
@@ -472,6 +547,7 @@ const OTBilling = () => {
       toast.error("Delete failed");
     }
   };
+
 
   const fetchChargeResponse = async () => {
     try {
@@ -486,9 +562,11 @@ const OTBilling = () => {
     }
   };
 
+
   /* ================= PAGINATION ================= */
   const goToPage = (p) => {
     if (p < 1 || p > totalPages) return;
+
 
     // 🔥 search active
     if ((startDate && endDate) || searchPatient) {
@@ -499,6 +577,7 @@ const OTBilling = () => {
       fetchBills(p);
     }
   };
+
 
   // chargeitem fnc-----
   const addChargeItem = () => {
@@ -515,40 +594,48 @@ const OTBilling = () => {
     ]);
   };
 
+
   // removeChargeitem fnc---
   const removeChargeItem = (index) => {
     setChargeItems((prev) => {
       const updated = prev.filter((_, i) => i !== index);
 
+
       return updated;
     });
   };
+
 
   // updateChargeItem fnc----
   const updateChargeItem = (index, field, value) => {
     const updated = [...chargeItems];
     updated[index][field] = value;
 
+
     if (field === "Rate" || field === "Qty") {
       updated[index].Amount =
         (updated[index].Rate || 0) * (updated[index].Qty || 1);
     }
 
+
     if (field === "OtItemId") {
       const selected = availableCharges.find((c) => c.OtItemId == value);
+
 
       if (selected) {
         updated[index].OtItem = selected.OtItem;
         updated[index].Rate = selected.Rate;
         updated[index].Unit = selected.Unit;
-         const qty = Number(updated[index].Qty || 1);
-         updated[index].Amount = Number(selected.Rate) * qty;
+        const qty = Number(updated[index].Qty || 1);
+        updated[index].Amount = Number(selected.Rate) * qty;
         // updated[index].Qty = selected.Qty;
         // updated[index].Amount = selected.Rate * (updated[index].Qty || 1);
       }
     }
 
+
     setChargeItems(updated);
+
 
     // const total = updated.reduce(
     //   (sum, item) => sum + (parseFloat(item.Amount) || 0),
@@ -569,6 +656,7 @@ const OTBilling = () => {
     formData.ServiceCharge,
   ]);
 
+
   // ================= DELETE =================
   // const confirmDelete = async () => {
   //   try {
@@ -581,6 +669,7 @@ const OTBilling = () => {
   //   }
   // };
 
+
   return (
     <div className="main-content">
       <ToastContainer />
@@ -589,6 +678,7 @@ const OTBilling = () => {
       <div className="panel">
         <div className="panel-header d-flex justify-content-between align-items-center">
           <h5>🏥 OT Billing</h5>
+
 
           <div className="d-flex gap-2">
             <input
@@ -599,6 +689,7 @@ const OTBilling = () => {
               style={{ width: 140 }}
             />
 
+
             <input
               type="date"
               className="form-control form-control-sm"
@@ -606,6 +697,7 @@ const OTBilling = () => {
               onChange={(e) => setEndDate(e.target.value)}
               style={{ width: 140 }}
             />
+
 
             <input
               className="form-control form-control-sm"
@@ -628,6 +720,7 @@ const OTBilling = () => {
             </button>
           </div>
         </div>
+
 
         {/* ================= TABLE ================= */}
         <div className="panel-body">
@@ -667,12 +760,14 @@ const OTBilling = () => {
                               <i className="fa-light fa-eye"></i>
                             </button>
 
+
                             <button
                               className="btn btn-sm btn-outline-primary"
                               onClick={() => openEdit(item.OtBillId)}
                             >
                               <i className="fa-light fa-pen-to-square"></i>
                             </button>
+
 
                             <button
                               className="btn btn-sm btn-outline-danger"
@@ -700,6 +795,7 @@ const OTBilling = () => {
         </div>
       </div>
 
+
       {showDrawer && (
         <>
           {/* BACKDROP */}
@@ -708,6 +804,7 @@ const OTBilling = () => {
             style={{ zIndex: 9998 }}
             onClick={() => setShowDrawer(false)}
           />
+
 
           {/* DRAWER */}
           <div
@@ -726,6 +823,7 @@ const OTBilling = () => {
             >
               <i className="fa-light fa-angle-right"></i>
             </button>
+
 
             <div className="top-panel" style={{ height: "100%" }}>
               {/* HEADER */}
@@ -746,6 +844,7 @@ const OTBilling = () => {
                     : "👁️ View OT Billing"}
               </div>
 
+
               <OverlayScrollbarsComponent
                 style={{ height: "calc(100% - 50px)" }}
               >
@@ -764,13 +863,15 @@ const OTBilling = () => {
                         />
                       </div>
 
+
                       <div className="col-md-3">
                         <label className="form-label">Bill Date</label>
                         <input
                           type="date"
                           className="form-control"
                           name="BillDate"
-                          value={new Date().toISOString().split("T")[0]}
+                          // value={new Date().toISOString().split("T")[0]}
+                          value={formData.BillDate || ""}
                           disabled={modalType === "view"}
                           onChange={(e) =>
                             setFormData({
@@ -781,8 +882,10 @@ const OTBilling = () => {
                         />
                       </div>
 
+
                       <div className="col-md-3" disabled={modalType === "edit"}>
                         <label className="form-label">Admission No</label>
+
 
                         {/* <AsyncApiSelect
                           api="https://lords-backend.onrender.com/api/v1/ot-bills/search/admission"
@@ -793,17 +896,23 @@ const OTBilling = () => {
                               AdmitionId: val,
                             }))
                           }
-                          searchKey="admissionId" 
+                          searchKey="admissionId"
                           labelKey="AdmitionId"
                           valueKey="AdmitionId"
                           defaultPage={1}
                           isDisabled={modalType === "edit"}
                         /> */}
                         <AsyncApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/ot-bills/search/admission"
+                          // api="https://lords-backend.onrender.com/api/v1/ot-bills/search/admission"
+                          api="https://lords-backend.onrender.com/api/v1/admission/search"
+                          // `/admission/search?q=${formData.AdmitionId}`
                           value={admissionOption} // ✅ UI object
-                          searchKey="admissionId"
+                          // searchKey="admissionId"
+
+
+                          searchKey="q"
                           labelKey="AdmitionId"
+                          showKey="PatientName"
                           valueKey="AdmitionId"
                           onChange={(opt) => {
                             setAdmissionOption(opt); // UI
@@ -814,6 +923,7 @@ const OTBilling = () => {
                           }}
                         />
                       </div>
+
 
                       <div className="col-md-3">
                         <label className="form-label">Patient Name</label>
@@ -832,12 +942,13 @@ const OTBilling = () => {
                       </div>
                     </div>
 
+
                     {/* ================= BOOKING ================= */}
                     <hr />
-                    <h6 className="text-primary">Booking Info</h6>
+                    {/* <h6 className="text-primary">Booking Info</h6> */}
                     <div className="row">
                       {/* Booking No */}
-                      <div className="col-md-3 mb-3">
+                      {/* <div className="col-md-3 mb-3">
                         <label className="form-label fw-semibold">
                           Booking No
                         </label>
@@ -853,10 +964,11 @@ const OTBilling = () => {
                             })
                           }
                         />
-                      </div>
+                      </div> */}
+
 
                       {/* Booking Date */}
-                      <div className="col-md-3 mb-3">
+                      {/* <div className="col-md-3 mb-3">
                         <label className="form-label fw-semibold">
                           Booking Date
                         </label>
@@ -873,12 +985,14 @@ const OTBilling = () => {
                             })
                           }
                         />
-                      </div>
+                      </div> */}
                     </div>
 
+
                     {/* ================= DOCTORS ================= */}
-                    <hr />
+                   
                     <h6 className="text-primary">Doctors</h6>
+
 
                     <div className="row g-2 align-items-end">
                       <div className="col-md-4">
@@ -906,6 +1020,7 @@ const OTBilling = () => {
                           }
                         />
                       </div>
+
 
                       <div className="col-md-4">
                         <label className="form-label">Anesthesia Type</label>
@@ -948,6 +1063,7 @@ const OTBilling = () => {
                         </select>
                       </div>
 
+
                       <div className="col-md-4">
                         <label className="form-label">Anesthesia Amount</label>
                         <input
@@ -967,9 +1083,11 @@ const OTBilling = () => {
                       </div>
                     </div>
 
+
                     <div className="row g-2 align-items-end">
                       <div className="col-md-3">
                         <label className="form-label">Surgeon Doctor</label>
+
 
                         <ApiSelect
                           api="https://lords-backend.onrender.com/api/v1/doctormaster?page=1&limit=10000"
@@ -985,6 +1103,7 @@ const OTBilling = () => {
                           }
                         />
                       </div>
+
 
                       <div className="col-md-3">
                         <label className="form-label">Surgeon Amount</label>
@@ -1004,8 +1123,10 @@ const OTBilling = () => {
                         />
                       </div>
 
+
                       <div className="col-md-3">
                         <label className="form-label">Under Care Doctor</label>
+
 
                         <ApiSelect
                           api="https://lords-backend.onrender.com/api/v1/doctormaster?page=1&limit=10000"
@@ -1021,6 +1142,7 @@ const OTBilling = () => {
                           }
                         />
                       </div>
+
 
                       <div className="col-md-3">
                         <label className="form-label">Under Care Amount</label>
@@ -1041,13 +1163,16 @@ const OTBilling = () => {
                       </div>
                     </div>
 
+
                     {/* ================= OT DETAILS ================= */}
                     <hr />
                     <h6 className="text-primary">OT Charge</h6>
 
+
                     <div className="row g-2 align-items-end">
                       <div className="col-md-3">
                         <label className="form-label">OT Name</label>
+
 
                         <ApiSelect
                           api="https://lords-backend.onrender.com/api/v1/otMaster"
@@ -1064,8 +1189,10 @@ const OTBilling = () => {
                         />
                       </div>
 
+
                       <div className="col-md-3">
                         <label className="form-label">OT Slot</label>
+
 
                         <ApiSelect
                           api="https://lords-backend.onrender.com/api/v1/otSlot"
@@ -1082,8 +1209,10 @@ const OTBilling = () => {
                         />
                       </div>
 
+
                       <div className="col-md-3">
                         <label className="form-label">OT Type</label>
+
 
                         <ApiSelect
                           api="https://lords-backend.onrender.com/api/v1/otType"
@@ -1099,6 +1228,7 @@ const OTBilling = () => {
                           }
                         />
                       </div>
+
 
                       <div className="col-md-3">
                         <label className="form-label">OT Charge Amount</label>
@@ -1119,6 +1249,7 @@ const OTBilling = () => {
                       </div>
                     </div>
 
+
                     <div className="row g-2 align-items-end">
                       <div className="col-md-4">
                         <label className="form-label">OT Hour</label>
@@ -1133,6 +1264,7 @@ const OTBilling = () => {
                           }
                         />
                       </div>
+
 
                       <div className="col-md-4">
                         <label className="form-label">OT Minute</label>
@@ -1151,6 +1283,7 @@ const OTBilling = () => {
                         />
                       </div>
 
+
                       <div className="col-md-4">
                         <label className="form-label">Remarks</label>
                         <input
@@ -1167,6 +1300,7 @@ const OTBilling = () => {
                         />
                       </div>
                     </div>
+
 
                     {/* ================= CONSUMABLES ================= */}
                     <hr />
@@ -1194,12 +1328,14 @@ const OTBilling = () => {
                           <th className="text-center" style={{ width: "10%" }}>
                             Unit
 
+
                           </th>
                           <th className="text-center" style={{ width: "10%" }}>
                             Amount
                           </th>
                         </tr>
                       </thead>
+
 
                       <tbody>
                         {chargeItems?.map((item, index) => (
@@ -1231,6 +1367,7 @@ const OTBilling = () => {
                               </div>
                             </td> */}
 
+
                     {/* <td>
                               <select
                                 className="form-control form-control-sm"
@@ -1248,6 +1385,7 @@ const OTBilling = () => {
                     {/* </select>
                             </td> */}
 
+
                     {/* ===== UNIT ===== */}
                     {/* <td>
                               <input
@@ -1256,6 +1394,7 @@ const OTBilling = () => {
                                 disabled
                               />
                             </td> */}
+
 
                     {/* ===== RATE ===== */}
                     {/* <td>
@@ -1281,6 +1420,7 @@ const OTBilling = () => {
                                 }}
                               />
                             </td> */}
+
 
                     {/* ===== Unit
  ===== */}
@@ -1308,6 +1448,7 @@ const OTBilling = () => {
                               />
                             </td> */}
 
+
                     {/* ===== AMOUNT ===== */}
                     {/* <td>
                               <input
@@ -1321,6 +1462,7 @@ const OTBilling = () => {
                       </tbody>
                     </table> */}
                     {/* <h6 className="text-primary">Consumables</h6> */}
+
 
                     {/* <button
                       type="button"
@@ -1345,6 +1487,7 @@ const OTBilling = () => {
                       + Add Item
                     </button>
                     <h1>hello</h1> */}
+
 
                     <table
                       className="table table-bordered table-sm"
@@ -1378,6 +1521,7 @@ const OTBilling = () => {
                         </tr>
                       </thead>
 
+
                       <tbody>
                         {chargeItems.map((item, index) => (
                           <tr key={index}>
@@ -1404,6 +1548,7 @@ const OTBilling = () => {
                               </select>
                             </td>
 
+
                             {/* ===== UNIT ===== */}
                             <td>
                               <input
@@ -1413,6 +1558,7 @@ const OTBilling = () => {
                                 disabled
                               />
                             </td>
+
 
                             {/* ===== RATE ===== */}
                             <td>
@@ -1432,6 +1578,7 @@ const OTBilling = () => {
                               />
                             </td>
 
+
                             {/* ===== Unit
  ===== */}
                             <td className="text-center">
@@ -1450,11 +1597,12 @@ const OTBilling = () => {
                               />
                             </td>
 
+
                             {/* ===== AMOUNT ===== */}
                             <td>
                               <input
                                 className="form-control form-control-sm"
-                                value={item.Amount || 0}
+                                value={item.Amount}
                                 disabled
                               />
                             </td>
@@ -1477,6 +1625,7 @@ const OTBilling = () => {
                     </table>
                     {/* {modalType === "edit" && */}
 
+
                     <div className="mt-2 text-end">
                       <button
                         type="button"
@@ -1487,6 +1636,7 @@ const OTBilling = () => {
                         Add Charge Item
                       </button>
                     </div>
+
 
                     {/* }    */}
                     {/* ================= SUMMARY ================= */}
@@ -1510,6 +1660,7 @@ const OTBilling = () => {
                         />
                       </div> */}
 
+
                       {/* <div className="col-md-2">
                         <label className="form-label">Instrument Amt</label>
                         <input
@@ -1526,6 +1677,7 @@ const OTBilling = () => {
                           }
                         />
                       </div> */}
+
 
                       {/* <div className="col-md-2">
                         <label className="form-label">Medicine Amt</label>
@@ -1544,6 +1696,7 @@ const OTBilling = () => {
                         />
                       </div> */}
 
+
                       {/* <div className="col-md-2">
                         <label className="form-label">Other Charges</label>
                         <input
@@ -1560,6 +1713,7 @@ const OTBilling = () => {
                           }
                         />
                       </div> */}
+
 
                       <div className="col-md-2">
                         <label className="form-label">Service Charge</label>
@@ -1594,7 +1748,9 @@ const OTBilling = () => {
                       </div>
                     </div>
 
+
                     {/* ================= TOTAL ================= */}
+
 
                     {/* ================= ACTION ================= */}
                     <div className="d-flex gap-2 mt-4">
@@ -1619,7 +1775,9 @@ const OTBilling = () => {
         </>
       )}
 
+
       {/* {showDrawer && <OT/>} */}
+
 
       {/* ================= DELETE CONFIRM ================= */}
       {showConfirm && (
@@ -1648,7 +1806,9 @@ const OTBilling = () => {
         </div>
       )}
 
+
       {/* ================= DRAWER ================= */}
+
 
       {/* ================= PAGINATION ================= */}
       {!searchPatient && !startDate && !endDate && (
@@ -1660,7 +1820,9 @@ const OTBilling = () => {
               </button>
             </li>
 
+
             <button className="page-link">{`${page}/${totalPages}`}</button>
+
 
             <li
               className={`page-item ${page === totalPages ? "disabled" : ""}`}
@@ -1673,9 +1835,12 @@ const OTBilling = () => {
         </div>
       )}
 
+
       <Footer />
     </div>
   );
 };
+
+
 
 export default OTBilling;

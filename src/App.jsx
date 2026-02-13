@@ -113,6 +113,9 @@ import FinalBillingList from "./components/indoor/FinalBillingList.jsx";
 import PatientEnquiryDetail from "./components/indoor/PatientEnquiryDetail.jsx";
 
 
+import FinalBilling from "./pages/FinalBilling.jsx";
+import FinalBillingListB from "./pages/FinalBillingList2.jsx";
+import FinalBillingAdd from "./pages/FinalBillingAdd.jsx";
 
 
 //master imports
@@ -480,6 +483,8 @@ function App() {
 
 
 
+
+
 <Route path="/BedTransfer" element={<ProtectedRoute><BedTransferList /></ProtectedRoute>} />
           <Route path="/Bed-Transfer" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
           <Route path="/Bed-Transfer/:id/:mode" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
@@ -493,6 +498,13 @@ function App() {
               </>
             }
           />
+
+
+<Route path="/fina-bill-add" element={<FinalBillingAdd />} />
+          <Route path="/fina-bill/:id/:mode_type" element={<FinalBilling />} />
+          {/* <Route path="/fina-bill-list1" element={<FinalBillingListA />} /> */}
+
+          <Route path="/fina-bill-list2" element={<FinalBillingListB />} />
 
 
           {/* indoor route end---------------------------------  */}
@@ -715,7 +727,7 @@ function App() {
             }
           />  
           <Route
-            path="/BloodReport/Add"
+            path="/BloodReport/Add/:id"
             element={ 
               <ProtectedRoute>
                 <BloodReportAdd />

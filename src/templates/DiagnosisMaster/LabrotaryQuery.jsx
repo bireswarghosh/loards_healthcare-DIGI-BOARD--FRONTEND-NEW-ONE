@@ -637,7 +637,9 @@ const LaboratoryQuery = () => {
                                     if (res.data.success) {
                                       const bloodFormatData = res.data.data;
                                       if (bloodFormatData.length == 0) {
-                                        navigate("/BloodReport/Add");
+                                        navigate(`/BloodReport/Add/${encodeURIComponent(
+                                            id,
+                                          )}`);
                                       } else {
                                         navigate(
                                           `/BloodReport/${encodeURIComponent(

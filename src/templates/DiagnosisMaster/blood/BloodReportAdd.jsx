@@ -1,12 +1,23 @@
 import React, { useEffect, useState } from "react";
 import Barcode from "react-barcode";
 
+
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Select from "react-select";
 import axiosInstance from "../../../axiosInstance";
 
+
 const BloodReportAdd = () => {
+
+
+const { id } = useParams()
+console.log("halum id: ", id)
+
+
+const [idX, setIdX] = useState(id)
+
+
   // --- STATE ---
   const [isDarkMode, setIsDarkMode] = useState(false);
   // State for LIS Table Data (20 empty rows for data entry)
@@ -14,17 +25,22 @@ const BloodReportAdd = () => {
     Array.from({ length: 20 }, () => ({ test: "", value: "" }))
   );
 
+
   const handleLisChange = (index, field, val) => {
     const newData = [...lisData];
     newData[index][field] = val;
     setLisData(newData);
   };
 
+
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(false);
+
 
   const [formData, setFormData] = useState({
     "1StHrsCount": 0,
     "2ndHrsCount": 0,
+
 
     AbnCell1: "",
     AbnCell1Val: 0,
@@ -39,32 +55,39 @@ const BloodReportAdd = () => {
     AbnCell6: "",
     AbnCell6Val: 0,
 
+
     AdEosCount: 0,
     Basophils: 0,
     BleedTimeMin: 0,
     BleedTimeSec: 0,
 
+
     BloodGroup: "",
     BloodId: "",
     CaseId: "",
+
 
     CoagulMin: 0,
     CoagulSec: 0,
     CorrectedWBCCount: 0,
     CorrectedWBCCountUnit: "",
 
+
     Eosinophils: 0,
     Erythrocytes: 0,
     ErythrocytesUnit: "million/cumm.",
+
 
     Himoglobin1: 0,
     Himoglobin2: 0,
     Himoglobin3: 0,
 
+
     LabId: "",
     Leucocytes: 0,
     LeucocytesUnit: "/cumm.",
     Lymphocytes: 0,
+
 
     MaleriaParasite: "",
     MCH: 0,
@@ -76,9 +99,11 @@ const BloodReportAdd = () => {
     MeanESR: 0,
     Monocytes: 0,
 
+
     Neutrophils: 0,
     NucleatedRBC: 0,
     NucleatedRBCUnit: "",
+
 
     PalateCountUnit: "",
     PalletsCount: 0,
@@ -90,6 +115,7 @@ const BloodReportAdd = () => {
     PDW: 0,
     PDWUnit: "",
 
+
     RDW: 0,
     RDWUnit: "",
     Remarks: "",
@@ -98,36 +124,46 @@ const BloodReportAdd = () => {
     ReticulocyCount: 0,
     RHType: "",
 
+
     SemearStudy1: "",
     SemearStudy2: "",
     SemearStudy3: "",
   });
 
+
   const [caseNO, setCaseNO] = useState("");
 
+
   const [caseData, setCaseData] = useState({});
+
 
   const [selectedCase, setSelectedCase] = useState(null);
   const [caseSearchResults, setCaseSearchResults] = useState([]);
   const [isSearchingCase, setIsSearchingCase] = useState(false);
 
+
   const [pathologistMap, setPathologistMap] = useState([]);
+
 
   const [req, setReq] = useState(true);
   const [req1, setReq1] = useState(true);
 
+
   const [data, setData] = useState({});
+
 
   const [users, setUsers] = useState([]);
 
+
   const [remarksSuggest, setRemarksSuggest] = useState([])
-  
+ 
   const onChangeFormData = (e) => {
     const field = e.target.name;
     const value = e.target.value;
     console.log("Field:", field, "Value:", value);
     setFormData({ ...formData, [field]: value });
   };
+
 
   // Search Case
   const searchCase = async (searchTerm) => {
@@ -140,6 +176,8 @@ const BloodReportAdd = () => {
       const res = await axiosInstance.get(
         `/case01?page=1&limit=20&search=${encodeURIComponent(searchTerm)}`
       );
+
+
       setCaseSearchResults(res.data.data || []);
     } catch (err) {
       console.error("Case search error:", err);
@@ -148,6 +186,36 @@ const BloodReportAdd = () => {
       setIsSearchingCase(false);
     }
   };
+
+
+  // Search Case by id
+  const searchCaseById = async (case_id) => {
+    if (!case_id) {
+      setSelectedCase(null);
+      return;
+    }
+   
+    try {
+      console.log("hiiiihdl")
+      const res = await axiosInstance.get(
+        `/case01/${case_id}`
+      );
+      setSelectedCase(res.data.data || null);
+      console.log("hui hiui: ", res.data.data)
+    } catch (err) {
+      console.error("Case search error:", err);
+     setSelectedCase(null);
+    }
+  };
+// searchCaseById(id)
+
+
+  useEffect(() => {
+    console.log("hi hmm")
+    searchCaseById(idX)
+  }, [idX])
+ 
+
 
   useEffect(() => {
     console.log("Selected case no changed: ", selectedCase);
@@ -167,9 +235,11 @@ const BloodReportAdd = () => {
     }
   }, [selectedCase]);
 
+
   // useEffect(() => {
   //   console.log("form data changed : ", formData);
   // }, [formData]);
+
 
   const fetchPathologist = async () => {
     try {
@@ -181,15 +251,18 @@ const BloodReportAdd = () => {
     }
   };
 
+
   const handleSave = async () => {
     try {
       console.log("submitting form: ", formData);
+
 
       if (!formData.CaseId) {
         toast.error("Select Case No.");
         return;
       }
       setLoading(true);
+
 
       const res = await axiosInstance.post(`/bloodformat`, formData);
       console.log("res: ", res.data);
@@ -204,6 +277,7 @@ const BloodReportAdd = () => {
     }
   };
 
+
   const fetchUsers = async () => {
     try {
       const res = await axiosInstance.get("/auth/users");
@@ -213,6 +287,8 @@ const BloodReportAdd = () => {
       console.log("Error fetching users: ", error);
     }
   };
+
+
 
 
   const fetchRemarkShuggestions = async ()=>{
@@ -225,17 +301,21 @@ const BloodReportAdd = () => {
     }
   }
 
+
   useEffect(() => {
     // fetchBloodFormat();
     fetchPathologist();
     fetchUsers();
         fetchRemarkShuggestions()
 
+
   }, []);
+
 
   // useEffect(() => {
   //   console.log(req);
   // }, [req]);
+
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -257,7 +337,9 @@ const BloodReportAdd = () => {
     }));
   }, [formData.PCV]);
 
+
   // --- STYLES ---
+
 
   // Styles from File B
   const inputStyle = {
@@ -275,6 +357,7 @@ const BloodReportAdd = () => {
     color: "var(--secondary-color)",
   };
 
+
   const styles = `
     :root {
       --bg-main: ${isDarkMode ? "#2d2d2d" : "#f0f0f0"};
@@ -289,7 +372,9 @@ const BloodReportAdd = () => {
       --input-height: 22px;
     }
 
+
     * { box-sizing: border-box; }
+
 
     body, html {
       margin: 0; padding: 0;
@@ -301,6 +386,7 @@ const BloodReportAdd = () => {
     //  overflow: hidden; /* Desktop default */
     }
 
+
     /* --- LAYOUT GRID --- */
     .blood-report-layout {
       display: grid;
@@ -310,6 +396,7 @@ const BloodReportAdd = () => {
       gap: 4px;
       padding: 4px;
     }
+
 
     /* --- LEFT SECTION: FORM --- */
     .form-container {
@@ -321,14 +408,16 @@ const BloodReportAdd = () => {
       min-width: 0;
     }
 
+
     /* --- COMMON FIELD STYLES --- */
     .field-row {
       display: flex;
       align-items: center;
       gap: 4px;
       margin-bottom: 2px;
-      flex-wrap: nowrap; 
+      flex-wrap: nowrap;
     }
+
 
     input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
       height: var(--input-height);
@@ -341,13 +430,14 @@ const BloodReportAdd = () => {
     }
     textarea { height: auto; resize: none; font-family: var(--font-family); }
     input.yellow-bg { background-color: var(--bg-input-yellow); }
-    
+   
     .label {
       font-weight: bold;
       white-space: nowrap;
       color: var(--text-label);
       font-size: 11px;
     }
+
 
     /* Panels */
     .panel-box {
@@ -369,6 +459,7 @@ const BloodReportAdd = () => {
       font-size: 11px;
     }
 
+
     /* --- SPECIAL GRIDS --- */
     .hemo-row {
       display: flex; align-items: center; gap: 4px;
@@ -376,11 +467,13 @@ const BloodReportAdd = () => {
       flex-wrap: nowrap;
     }
 
+
     .counts-grid {
       display: grid;
       grid-template-columns: 1.6fr 1fr;
       gap: 4px;
     }
+
 
     .abnormal-container { display: flex; flex-direction: column; gap: 2px; }
     .abnormal-row {
@@ -389,6 +482,7 @@ const BloodReportAdd = () => {
       gap: 8px;
     }
     .abnormal-item { display: flex; align-items: center; gap: 2px; }
+
 
     /* --- RIGHT PANEL (LIS) --- */
     .right-panel {
@@ -411,10 +505,10 @@ const BloodReportAdd = () => {
     }
     .lis-table-container {
       flex: 1; border: 1px solid var(--border-color);
-      background-color: #fff; overflow-y: auto; 
+      background-color: #fff; overflow-y: auto;
       min-height: 100px;
     }
-    
+   
     /* --- LIS EDITABLE TABLE --- */
     .lis-table { width: 100%; border-collapse: collapse; background: #fff; table-layout: fixed; }
     .lis-table th {
@@ -428,7 +522,7 @@ const BloodReportAdd = () => {
       padding: 0; /* Remove padding for input to fill cell */
       height: 20px; /* Force row height */
     }
-    
+   
     /* Seamless Table Inputs */
     .table-input {
       width: 100%;
@@ -442,6 +536,7 @@ const BloodReportAdd = () => {
     .table-input:focus {
       background-color: #e8f0fe;
     }
+
 
     /* --- ACTION BAR --- */
     .action-bar {
@@ -461,6 +556,7 @@ const BloodReportAdd = () => {
     }
     .legacy-btn:active { background: #ccc; }
 
+
     /* --- UTILS --- */
     .w-full { width: 100%; }
     .w-short { width: 60px; }
@@ -470,9 +566,11 @@ const BloodReportAdd = () => {
     .blue-text { color: #000080; }
     .bold { font-weight: bold; }
 
+
     /* --- RESPONSIVE --- */
     @media (max-width: 1024px) {
       body, html { overflow: auto; height: auto; }
+
 
       .blood-report-layout {
         display: flex;
@@ -483,22 +581,26 @@ const BloodReportAdd = () => {
         padding-bottom: 50px;
       }
 
+
       .field-row, .hemo-row { flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
       .form-container { overflow: visible; padding-right: 0; }
-      
+     
       input[type="text"], input[type="number"], input[type="date"], select {
         flex: 1; min-width: 80px;
       }
       .w-short, .w-tiny { width: auto; min-width: 60px; }
 
+
       .counts-grid { grid-template-columns: 1fr; }
       .abnormal-row { grid-template-columns: 1fr; gap: 4px; margin-bottom: 4px; }
+
 
       .right-panel {
         border-left: none; border-top: 4px solid #fff;
         padding: 8px 0; height: auto; flex: none;
       }
       .lis-table-container { min-height: 200px; max-height: 300px; }
+
 
       .action-bar {
         position: fixed; bottom: 0; left: 0; right: 0;
@@ -509,9 +611,11 @@ const BloodReportAdd = () => {
     }
   `;
 
+
   return (
     <>
       <style>{styles}</style>
+
 
       <div style={{ position: "absolute", top: 0, right: 0, zIndex: 1000 }}>
         <button
@@ -521,6 +625,7 @@ const BloodReportAdd = () => {
           Theme
         </button>
       </div>
+
 
       <div className="blood-report-layout">
         {/* === LEFT SECTION: FORM === */}
@@ -540,22 +645,24 @@ const BloodReportAdd = () => {
             </div>
           </div>
 
+
           {/* Header */}
           <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
             <div className="field-row">
               <span className="" style={{ ...labelStyle }}>
                 Case No.
               </span>
-              {/* <input
+              <input
                 type="text"
-                value={caseNO}
+                value={caseData?.CaseNo}
                 // onChange={(e) => {
                 //   setCaseNO(e.target.value);
                 // }}
                 style={{ ...inputStyle, padding: "0 2px" }}
-              /> */}
+              />
 
-              <Select
+
+              {/* <Select
                 value={selectedCase}
                 onChange={setSelectedCase}
                 onInputChange={(inputValue) => {
@@ -578,7 +685,8 @@ const BloodReportAdd = () => {
                 }
                 className="react-select-container"
                 classNamePrefix="react-select"
-              />
+              /> */}
+
 
               <span className="" style={{ ...labelStyle }}>
                 Patient
@@ -606,6 +714,7 @@ const BloodReportAdd = () => {
               />
             </div>
 
+
             <div className="field-row">
               <span className="" style={{ ...labelStyle, width: "80px" }}>
                 Pathologist
@@ -626,6 +735,7 @@ const BloodReportAdd = () => {
                 >
                   <option value="">Select Pathologist</option>
 
+
                   {pathologistMap.map((patho, i) => (
                     <option
                       key={patho.PathologistId}
@@ -642,6 +752,7 @@ const BloodReportAdd = () => {
                   onChange={onChangeFormData}
                 >
                   <option value="">Select Pathologist</option>
+
 
                   {pathologistMap.map((patho, i) => (
                     <option
@@ -702,6 +813,7 @@ const BloodReportAdd = () => {
             </div>
           </div>
 
+
           {/* Haemoglobin */}
           <div className="panel-box" style={{ marginTop: "2px" }}>
             <div className="hemo-row">
@@ -720,6 +832,7 @@ const BloodReportAdd = () => {
                   ).toFixed(2);
                   setFormData((prev) => ({
                     ...prev,
+
 
                     PCV: (Number(e.target.value) * 0.3).toFixed(2),
                     Himoglobin3: val,
@@ -780,6 +893,7 @@ const BloodReportAdd = () => {
             </div>
           </div>
 
+
           {/* Counts & Indices */}
           <div className="counts-grid">
             {/* LEFT SUB-COLUMN */}
@@ -815,6 +929,7 @@ const BloodReportAdd = () => {
                   million/cumm.
                 </span> */}
 
+
                 <input
                   type="text"
                   className=""
@@ -848,6 +963,7 @@ const BloodReportAdd = () => {
                   /cumm.
                 </span> */}
 
+
                 <input
                   type="text"
                   className=""
@@ -857,6 +973,7 @@ const BloodReportAdd = () => {
                   style={{ ...inputStyle, padding: "0 2px" }}
                 />
               </div>
+
 
               <div className="field-row">
                 <span className="" style={{ ...labelStyle }}>
@@ -880,6 +997,7 @@ const BloodReportAdd = () => {
                   className="w-short text-end"
                   disabled={!req}
                 />
+
 
                 <input
                   type="text"
@@ -927,6 +1045,7 @@ const BloodReportAdd = () => {
                   disabled={!req}
                 />
 
+
                 <input
                   type="text"
                   className=""
@@ -937,6 +1056,7 @@ const BloodReportAdd = () => {
                   disabled={!req}
                 />
               </div>
+
 
               <div className="group-border">
                 <div className="field-row">
@@ -1020,6 +1140,7 @@ const BloodReportAdd = () => {
                   </span>
                 </div>
               </div>
+
 
               {/* Abnormal Cell */}
               <div className="group-border">
@@ -1172,6 +1293,7 @@ const BloodReportAdd = () => {
                 </div>
               </div>
 
+
               <div
                 className="group-border"
                 style={{ flex: 1, display: "flex" }}
@@ -1238,6 +1360,7 @@ const BloodReportAdd = () => {
                           setFormData((prev) => ({
                             ...prev,
 
+
                             SemearStudy1: "",
                             SemearStudy2: "",
                             SemearStudy3: "",
@@ -1249,6 +1372,7 @@ const BloodReportAdd = () => {
                   </label>
                 </div>
               </div>
+
 
               <div
                 className="field-row"
@@ -1348,6 +1472,7 @@ const BloodReportAdd = () => {
               </div>
             </div>
 
+
             {/* RIGHT SUB-COLUMN */}
             <div
               className="panel-box"
@@ -1387,6 +1512,7 @@ const BloodReportAdd = () => {
                     />
                   </div>
 
+
                   <div
                     className="field-row"
                     style={{
@@ -1416,6 +1542,7 @@ const BloodReportAdd = () => {
                     />
                     <span className="label" style={{ ...labelStyle }}></span>
                   </div>
+
 
                   <div
                     className="field-row"
@@ -1447,6 +1574,7 @@ const BloodReportAdd = () => {
                     <span className="label"></span>
                   </div>
 
+
                   <div
                     className="field-row"
                     style={{
@@ -1475,6 +1603,7 @@ const BloodReportAdd = () => {
                       className="w-tiny text-end"
                     />
                   </div>
+
 
                   <div
                     className="field-row"
@@ -1505,6 +1634,7 @@ const BloodReportAdd = () => {
                     />
                     <span className="label"></span>
                   </div>
+
 
                   <div
                     className="field-row"
@@ -1537,6 +1667,7 @@ const BloodReportAdd = () => {
                   </div>
                 </div>
               </div>
+
 
               <div className="panel-box">
                 <div className="field-row">
@@ -1610,6 +1741,7 @@ const BloodReportAdd = () => {
                   />
                 </div>
               </div>
+
 
               <div className="panel-box">
                 <div className="field-row">
@@ -1693,6 +1825,7 @@ const BloodReportAdd = () => {
                 </div>
               </div>
 
+
               <div className="group-border" style={{ flex: 1 }}>
                 <span className="group-label">Remarks</span>
                 {
@@ -1703,7 +1836,7 @@ const BloodReportAdd = () => {
                   value={formData.Remarks}
                   onChange={onChangeFormData}
                 ></textarea>:
-                <select 
+                <select
                   className="w-full"
 onChange={
   (e)=>{
@@ -1721,6 +1854,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
           </div>
         </div>
 
+
         {/* === RIGHT SECTION: LIS PANEL === */}
         <div className="right-panel">
           <div className="label bold text-center">Case No.</div>
@@ -1734,6 +1868,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
             />
           </div>
 
+
           <div className="label bold">Lab Sl.No.</div>
           <textarea
             style={{ height: "50px", backgroundColor: "primary" }}
@@ -1741,6 +1876,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
             name="LabId"
             onChange={onChangeFormData}
           ></textarea>
+
 
           {/* EDITABLE LIS TABLE */}
           <div className="lis-header">LIS Machine Generated Value</div>
@@ -1782,6 +1918,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
           </div>
         </div>
 
+
         {/* === BOTTOM ACTION BAR === */}
         <div
           className="panel-footer p-2 border-top bg-rt-color-dark d-flex justify-content-center"
@@ -1797,6 +1934,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
               New
             </button> */}
 
+
             {/* <button className="btn btn-sm btn-primary">Edit</button> */}
             <button
               className="btn btn-sm btn-primary"
@@ -1808,6 +1946,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
             {/* <button className="btn btn-sm btn-primary">Delete</button> */}
             {/* <button className="btn btn-sm btn-primary">Undo</button> */}
 
+
             {/* <button
               className="btn btn-sm btn-primary"
               onClick={() => {
@@ -1816,7 +1955,12 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
             >
               Print
             </button> */}
-            <button className="btn btn-sm btn-primary">Exit</button>
+            <button className="btn btn-sm btn-primary"
+            onClick={() => {
+              navigate('/LaboratoryQuery')
+            }
+            }
+            >Exit</button>
           </div>
         </div>
       </div>
@@ -1824,4 +1968,8 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
   );
 };
 
+
 export default BloodReportAdd;
+
+
+

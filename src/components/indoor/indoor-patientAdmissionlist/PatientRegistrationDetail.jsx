@@ -2095,7 +2095,7 @@ window.onload = function () {
 
                   {/* Col 3 */}
                   <div className="col-12 col-md-6 col-lg-4">
-                    <div className="d-flex align-items-center gap-1 mb-1">
+                    {/* <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Nursing Chg
                       </label>
@@ -2175,7 +2175,7 @@ window.onload = function () {
                         Discharge DT
                       </label>
                       <input type="text" style={inputStyle} />
-                    </div>
+                    </div> */}
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Final Bill DT
