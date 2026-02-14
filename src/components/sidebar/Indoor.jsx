@@ -98,7 +98,7 @@ const Indoor = () => {
         {/* Final Bill Query */}
         {(isSuperAdmin || permissions?.indoor_finalBillQuery !== false) && (
           <li className="sidebar-dropdown-item">
-            <NavLink to="/FinalBillQuery" className="sidebar-link">
+            <NavLink to="/fina-bill-list2" className="sidebar-link">
               <span className="nav-icon">
                 <i className="fa-light fa-user-headset"></i>
               </span>{' '}
