@@ -358,6 +358,10 @@ import DeviceManagement from "./pages/WhatsAppAPI/DeviceManagement";
 import CaseWiseLab from "./templates/CaseWiseLab.jsx";
 import TestCalculation from "./templates/TestCalculation.jsx";
 
+import DateWiseRegistrationCharge1 from "../src/templates/IPD_REPORT/DateWiseRegistrationCharge/DateWiseRegistrationCharge.jsx"
+import DisPatEReg from "../src/templates/IPD_REPORT/DischargePatientReg.jsx"
+import DatewiseMoneyReceipt1 from "../src/templates/IPD_REPORT/DatewiseMoneyReceipt.jsx"
+
 
 
 
@@ -418,14 +422,14 @@ function App() {
           <Route path="/other_charges" element={<PermissionRoute section="outdoor"><OtherCharges /></PermissionRoute>} />
           <Route path="/date-wise-registration-charge" element={<PermissionRoute section="outdoor"><DateWiseRegistrationCharge /></PermissionRoute>} />
 
-<Route
+{/* <Route
             path="/datawise-moneyreceipt"
             element={
               <>
                 <DatewiseMoneyReceipt/>
               </>
             }
-          />
+          /> */}
 
 
           <Route path="/patient-history" element={<PermissionRoute section="outdoor"><PatientHistory /></PermissionRoute>} />
@@ -495,6 +499,34 @@ function App() {
             element={
               <>
                 <DateWiseAdmReg />
+              </>
+            }
+          />
+
+
+<Route
+            path="/date-wise-registration-charge"
+            element={
+              <>
+                <DateWiseRegistrationCharge1 />
+              </>
+            }
+          />
+<Route
+            path="/discharge-pateint-reg"
+            element={
+              <>
+                <DisPatEReg />
+              </>
+            }
+          />
+
+
+ <Route
+            path="/datawise-moneyreceipt"
+            element={
+              <>
+                <DatewiseMoneyReceipt1/>
               </>
             }
           />

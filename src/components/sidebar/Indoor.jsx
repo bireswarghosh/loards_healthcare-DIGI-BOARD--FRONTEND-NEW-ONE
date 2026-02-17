@@ -95,6 +95,20 @@ const Indoor = () => {
           </li>
         )}
 
+
+
+{(isSuperAdmin || permissions?.indoor_doctorVisit !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/BedTransfer" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-user-headset"></i>
+              </span>{' '}
+              <span className="sidebar-txt">Bed Transfer </span>
+            </NavLink>
+          </li>
+        )}
+
+
         {/* Final Bill Query */}
         {(isSuperAdmin || permissions?.indoor_finalBillQuery !== false) && (
           <li className="sidebar-dropdown-item">

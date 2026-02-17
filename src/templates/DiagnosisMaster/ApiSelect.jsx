@@ -1,17 +1,9 @@
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
-/**
- * Reusable API Select Component
- *
- * Props:
- * - api (string)           → API endpoint
- * - value (number|string) → selected ID
- * - onChange (function)   → returns selected ID
- * - placeholder (string)
- * - labelKey (string)     → API label field (default: name)
- * - valueKey (string)     → API id field (default: id)
- */
+
+
+
 export default function ApiSelect({
   api,
   value,
@@ -23,8 +15,10 @@ export default function ApiSelect({
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
+
   useEffect(() => {
     setLoading(true);
+
 
     fetch(api)
       .then(res => {
@@ -46,9 +40,11 @@ export default function ApiSelect({
       .finally(() => setLoading(false));
   }, [api, labelKey, valueKey]);
 
+
   // ID → react-select object
   const selectedOption =
     options.find(opt => opt.value === value) || null;
+
 
 const customStyles = {
   control: (base, state) => ({
@@ -56,7 +52,7 @@ const customStyles = {
     minHeight: "31px",
     height: "31px",
     fontSize: "0.875rem",
-    backgroundColor: "primary",
+    backgroundColor: "white",
     borderColor: state.isFocused ? "#86b7fe" : "#ced4da",
     boxShadow: state.isFocused ? "0 0 0 .2rem rgba(13,110,253,.25)" : "none",
     "&:hover": {
@@ -64,10 +60,11 @@ const customStyles = {
     },
   }),
 
+
   /* 🔥 DROPDOWN MENU */
   menu: (base) => ({
     ...base,
-    backgroundColor: "primary", // black dropdown
+    // backgroundColor: "primary", // black dropdown
     color: "#fff",
     zIndex: 9999,
   }),
@@ -76,11 +73,13 @@ const customStyles = {
     zIndex: 9999,
   }),
 
+
   menuList: (base) => ({
     ...base,
     padding: 0,
     zIndex: 9999,
   }),
+
 
   /* 🔥 EACH OPTION */
   option: (base, state) => ({
@@ -88,27 +87,31 @@ const customStyles = {
     backgroundColor: state.isSelected
       ? "#0d6efd" // selected = bootstrap blue
       : state.isFocused
-      ? "#212529" // hover = dark gray
-      : "#000", // normal = black
-    color: "#fff",
+        ? "#9a9c9e" // hover = dark gray
+        : "#d3cfcf", // normal = black
+    color: "#000",
     cursor: "pointer",
     fontSize: "0.875rem",
   }),
+
 
   valueContainer: (base) => ({
     ...base,
     padding: "0 8px",
   }),
 
+
   indicatorsContainer: (base) => ({
     ...base,
     height: "31px",
   }),
 
+
   dropdownIndicator: (base) => ({
     ...base,
     padding: "2px",
   }),
+
 
   clearIndicator: (base) => ({
     ...base,
@@ -117,9 +120,11 @@ const customStyles = {
 };
 
 
+
+
   return (
     <Select
-      className="form-control form-control-sm"
+      className=""
       options={options}
       value={selectedOption}
       onChange={(opt) => onChange(opt ? opt.value : null)}
@@ -133,3 +138,4 @@ const customStyles = {
     />
   );
 }
+

@@ -13,9 +13,36 @@ Section 3
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.section3 ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
      <li className="sidebar-dropdown-item">
-          <NavLink to="/section3-item1" className="sidebar-link">
+          <NavLink to="/" className="sidebar-link">
             <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
-            <span className="sidebar-txt">Item 1</span>
+            <span className="sidebar-txt">Admission Register
+</span>
+          </NavLink>
+        </li>
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/date-wise-registration-charge
+
+" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Datewise Admision Register
+
+
+</span>
+          </NavLink>
+        </li>
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/discharge-pateint-reg" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Discharge Patient Register
+</span>
+          </NavLink>
+        </li>
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/datawise-moneyreceipt  
+" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Datewise Money Receipt
+</span>
           </NavLink>
         </li>
      <li className="sidebar-dropdown-item">

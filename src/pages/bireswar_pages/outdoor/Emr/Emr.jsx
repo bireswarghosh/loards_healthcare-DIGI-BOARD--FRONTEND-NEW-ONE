@@ -2,12 +2,17 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from "../../../../axiosInstance";
 import { toast } from "react-toastify";
 
+
 const Emr = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [activeTab, setActiveTab] = useState("pastHistory");
+
+
+  const [loadingBtn, setLoadingBtn] = useState(false);
+
 
   // Search and Pagination State
   const [searchFilters, setSearchFilters] = useState({
@@ -25,6 +30,7 @@ const Emr = () => {
     itemsPerPage: 20,
   });
 
+
   // EMR State
   const [pastHistoryRows, setPastHistoryRows] = useState([
     { id: 1, value: "" },
@@ -39,14 +45,95 @@ const Emr = () => {
     { id: 1, medicine: "", dose: "", days: "", unit: "" },
   ]);
 
+
   const [pastHistoryMap, setPastHistoryMap] = useState([]);
 
+
   const [showDropDown, setShowDropDown] = useState(true);
+
+
+  // payload for bulk delete
+  const [bulkDltData, setBulkDltData] = useState({
+    RegistrationId: "",
+    pastHistory: [],
+    diagnosis: [],
+    medicine: [],
+    complaints: [],
+    investigations: [],
+    adviceMedicine: [],
+  });
+
+
+  const [bulkDtlDataLength, setBulkDtlDataLength] = useState(0);
+
+
+  const [bulkUpdateData, setBulkUpdateData] = useState({
+    RegistrationId: "",
+    pastHistory: [],
+    diagnosis: [],
+    medicine: [],
+    complaints: [],
+    investigations: [],
+    adviceMedicine: [],
+  });
+
+
+  const [bulkUpdtLength, setBulkUpdtLength] = useState(0);
+
+
+  useEffect(() => {
+    console.log("update bulk data: ", bulkUpdateData);
+    setBulkUpdtLength(
+      bulkUpdateData.pastHistory.length +
+        bulkUpdateData.diagnosis.length +
+        bulkUpdateData.medicine.length +
+        bulkUpdateData.complaints.length +
+        bulkUpdateData.investigations.length +
+        bulkUpdateData.adviceMedicine.length,
+    );
+    console.log(
+      "bulk update data length: ",
+      bulkUpdateData.pastHistory.length +
+        bulkUpdateData.diagnosis.length +
+        bulkUpdateData.medicine.length +
+        bulkUpdateData.complaints.length +
+        bulkUpdateData.investigations.length +
+        bulkUpdateData.adviceMedicine.length,
+    );
+  }, [bulkUpdateData]);
+
 
   useEffect(() => {
     loadPatients();
     fetchPastHistory();
   }, []);
+
+
+  useEffect(() => {
+    console.log("Bulk data: ", bulkDltData);
+
+
+    console.log(
+      "total length: ",
+      bulkDltData.pastHistory.length +
+        bulkDltData.diagnosis.length +
+        bulkDltData.medicine.length +
+        bulkDltData.complaints.length +
+        bulkDltData.investigations.length +
+        bulkDltData.adviceMedicine.length,
+    );
+
+
+    setBulkDtlDataLength(
+      bulkDltData.pastHistory.length +
+        bulkDltData.diagnosis.length +
+        bulkDltData.medicine.length +
+        bulkDltData.complaints.length +
+        bulkDltData.investigations.length +
+        bulkDltData.adviceMedicine.length,
+    );
+  }, [bulkDltData]);
+
 
   const fetchPastHistory = async () => {
     try {
@@ -60,6 +147,7 @@ const Emr = () => {
     }
   };
 
+
   const loadPatients = async (page = 1) => {
     try {
       setLoading(true);
@@ -68,6 +156,7 @@ const Emr = () => {
         limit: pagination.itemsPerPage.toString(),
         ...searchFilters,
       });
+
 
       const response = await axiosInstance.get(`/emr/patients?${params}`);
       setPatients(response.data.data || []);
@@ -79,17 +168,21 @@ const Emr = () => {
     }
   };
 
+
   const handleSearch = () => {
     loadPatients(1);
   };
+
 
   const handlePageChange = (page) => {
     loadPatients(page);
   };
 
+
   const handleFilterChange = (field, value) => {
     setSearchFilters((prev) => ({ ...prev, [field]: value }));
   };
+
 
   const handleViewEmr = async (patient) => {
     const formattedPatient = {
@@ -109,19 +202,22 @@ const Emr = () => {
       },
     };
 
+
     setSelectedPatient(formattedPatient);
     setShowDetail(true);
     await loadEmrData(formattedPatient);
   };
 
+
   const loadEmrData = async (patient) => {
     if (!patient?.RegistrationId) return;
-
+    setLoadingBtn(true);
     try {
       const response = await axiosInstance.get(
         `/emr/${patient.RegistrationId}`,
       );
       const emrData = response.data.data;
+
 
       setPastHistoryRows([{ id: 1, value: "", isExisting: false }]);
       setDiagnosisRows([{ id: 1, value: "", isExisting: false }]);
@@ -139,6 +235,7 @@ const Emr = () => {
         },
       ]);
 
+
       if (emrData.pastHistory?.length > 0) {
         setPastHistoryRows(
           emrData.pastHistory.map((item, index) => ({
@@ -149,6 +246,7 @@ const Emr = () => {
           })),
         );
       }
+
 
       if (emrData.diagnosis?.length > 0) {
         setDiagnosisRows(
@@ -161,6 +259,7 @@ const Emr = () => {
         );
       }
 
+
       if (emrData.investigations?.length > 0) {
         setInvestigationRows(
           emrData.investigations.map((item, index) => ({
@@ -171,6 +270,7 @@ const Emr = () => {
           })),
         );
       }
+
 
       if (emrData.complaints?.length > 0) {
         setComplaintRows(
@@ -183,6 +283,7 @@ const Emr = () => {
         );
       }
 
+
       if (emrData.medicine?.length > 0) {
         setAdviceRows(
           emrData.medicine.map((item, index) => ({
@@ -193,6 +294,7 @@ const Emr = () => {
           })),
         );
       }
+
 
       if (emrData.adviceMedicine?.length > 0) {
         setMedicineRows(
@@ -209,14 +311,53 @@ const Emr = () => {
       }
     } catch (error) {
       console.error("Error loading EMR data:", error);
+    } finally {
+      setLoadingBtn(false);
     }
   };
+
+
+  const deleteBulkEmr = async () => {
+    if (!selectedPatient) {
+      alert("No patient selected!");
+      return;
+    }
+    try {
+      setLoadingBtn(true);
+      const res = await axiosInstance.post("/emr/bulk-delete", {
+        ...bulkDltData,
+        RegistrationId: selectedPatient.RegistrationId,
+      });
+      console.log("emr bulk dlt res: ", res.data);
+
+
+      if (res.data.success) {
+        await loadEmrData(selectedPatient);
+        setBulkDltData({
+          RegistrationId: "",
+          pastHistory: [],
+          diagnosis: [],
+          medicine: [],
+          complaints: [],
+          investigations: [],
+          adviceMedicine: [],
+        });
+        toast.success("Rows deleted successfully");
+      }
+    } catch (error) {
+      console.log("error deleting bulk emr: ", error);
+    } finally {
+      setLoadingBtn(false);
+    }
+  };
+
 
   const saveEmrData = async () => {
     if (!selectedPatient) {
       alert("No patient selected!");
       return;
     }
+
 
     try {
       const newPastHistory = pastHistoryRows.filter(
@@ -238,6 +379,7 @@ const Emr = () => {
         (row) => row.medicine.trim() && !row.isExisting,
       );
 
+
       const totalNewRecords =
         newPastHistory.length +
         newDiagnosis.length +
@@ -246,20 +388,25 @@ const Emr = () => {
         newAdvice.length +
         newMedicine.length;
 
+
       if (totalNewRecords === 0) {
         toast.error("No new data to save!");
         // alert("No new data to save!");
         return;
       }
 
+
       // const confirmSave = window.confirm(
       //   `Save ${totalNewRecords} new EMR records for patient ${selectedPatient.patientregistration?.PatientName}?`
       // );
       // if (!confirmSave) return;
 
+
       // const savePromises = [];
 
+
       console.log("id: ", selectedPatient.RegistrationId);
+
 
       const finalPastHistory = newPastHistory.map((item) => ({
         pasthistory: item.value,
@@ -281,28 +428,27 @@ const Emr = () => {
         dunit: item.unit,
       }));
 
+
       // console.log("past history: ", finalPastHistory);
       // console.log("diagnosis: ", finalDiagnosis);
       // console.log("investigation: ", finalInvestigations);
       // console.log("complaints: ", finalComplaints);
       // console.log("advice: ", finalAdvice);
       // console.log("medicine: ", finalMedicine);
+      setLoadingBtn(true);
+      await axiosInstance.post("/emr/bulk", {
+        RegistrationId: selectedPatient.RegistrationId,
+        VisitId: "",
+        admissionid: null,
+        pastHistory: finalPastHistory,
+        diagnosis: finalDiagnosis,
+        medicine: finalAdvice,
+        complaints: finalComplaints,
+        investigations: finalInvestigations,
+        adviceMedicine: finalMedicine,
+      });
 
-      
-      
-       await axiosInstance.post("/emr/bulk", {
-         RegistrationId: selectedPatient.RegistrationId,
-         VisitId: "",
-         admissionid: null,
-         pastHistory: finalPastHistory,
-         diagnosis: finalDiagnosis,
-         medicine:finalAdvice,
-         complaints: finalComplaints,
-         investigations: finalInvestigations,
-         adviceMedicine: finalMedicine,
-       });
 
-      
       // newPastHistory.forEach((row) => {
       //   savePromises.push(
       //     axiosInstance.post(`/emr/past-history`, {
@@ -313,6 +459,7 @@ const Emr = () => {
       //     })
       //   );
       // });
+
 
       // newDiagnosis.forEach((row) => {
       //   savePromises.push(
@@ -325,6 +472,7 @@ const Emr = () => {
       //   );
       // });
 
+
       // newInvestigations.forEach((row) => {
       //   savePromises.push(
       //     axiosInstance.post(`/emr/investigations`, {
@@ -335,6 +483,7 @@ const Emr = () => {
       //     })
       //   );
       // });
+
 
       // newComplaints.forEach((row) => {
       //   savePromises.push(
@@ -347,6 +496,7 @@ const Emr = () => {
       //   );
       // });
 
+
       // newAdvice.forEach((row) => {
       //   savePromises.push(
       //     axiosInstance.post(`/emr/medicine`, {
@@ -357,6 +507,7 @@ const Emr = () => {
       //     })
       //   );
       // });
+
 
       // newMedicine.forEach((row) => {
       //   savePromises.push(
@@ -372,7 +523,9 @@ const Emr = () => {
       //   );
       // });
 
+
       // await Promise.all(savePromises);
+
 
       // alert(`✅ Successfully saved ${totalNewRecords} EMR records!`);
       await loadEmrData(selectedPatient);
@@ -383,8 +536,11 @@ const Emr = () => {
         "❌ Error saving EMR data: " +
           (error.response?.data?.message || error.message),
       );
+    } finally {
+      setLoadingBtn(false);
     }
   };
+
 
   const addRow = (rows, setRows) => {
     const newId =
@@ -406,6 +562,7 @@ const Emr = () => {
     }
   };
 
+
   const deleteRow = async (row, rows, setRows) => {
     if (row.isExisting && row.slno) {
       try {
@@ -417,6 +574,7 @@ const Emr = () => {
         else if (rows === adviceRows) endpoint = "medicine";
         else if (rows === medicineRows) endpoint = "advice-medicine";
 
+
         await axiosInstance.delete(`/emr/${endpoint}/${row.slno}`);
         alert("Record deleted successfully!");
       } catch (error) {
@@ -425,6 +583,7 @@ const Emr = () => {
         return;
       }
     }
+
 
     if (rows.length > 1) {
       setRows(rows.filter((r) => r.id !== row.id));
@@ -447,31 +606,68 @@ const Emr = () => {
     }
   };
 
+
+  const handleUpdate = async () => {
+    try {
+      setLoadingBtn(true);
+
+
+      const res = await axiosInstance.put("/emr/bulk", {
+        ...bulkUpdateData,
+        RegistrationId: selectedPatient.RegistrationId,
+      });
+      console.log("emr bulk update res: ", res.data);
+      if (res.data.success) {
+        await loadEmrData(selectedPatient);
+        setBulkUpdateData({
+          RegistrationId: "",
+          pastHistory: [],
+          diagnosis: [],
+          medicine: [],
+          complaints: [],
+          investigations: [],
+          adviceMedicine: [],
+        });
+        toast.success("Rows updated successfully");
+      }
+    } catch (error) {
+      console.log("Error updatind rows: ", error);
+    } finally {
+      setLoadingBtn(false);
+    }
+  };
+
+
   const updateRow = async (row, field, value, rows) => {
     if (row.isExisting && row.slno) {
       try {
         let endpoint = "";
         let data = {};
 
+
+        // console.log("row is update row: ", row)
+
+
         if (rows === pastHistoryRows) {
-          endpoint = "past-history";
-          data = { pasthistory: value };
+          endpoint = "pastHistory";
+          data = { SlNo: row.slno, pasthistory: value };
         } else if (rows === diagnosisRows) {
           endpoint = "diagnosis";
-          data = { diagonisis: value };
+          data = { SlNo: row.slno, diagonisis: value };
         } else if (rows === investigationRows) {
           endpoint = "investigations";
-          data = { Invest: value };
+          data = { SlNo: row.slno, Invest: value };
         } else if (rows === complaintRows) {
           endpoint = "complaints";
-          data = { chief: value };
+          data = { SlNo: row.slno, chief: value };
         } else if (rows === adviceRows) {
           endpoint = "medicine";
-          data = { Medicine: value };
+          data = { SlNo: row.slno, Medicine: value };
         } else if (rows === medicineRows) {
-          endpoint = "advice-medicine";
+          endpoint = "adviceMedicine";
           const currentRow = rows.find((r) => r.id === row.id);
           data = {
+            SlNo: row.slno,
             advmed: field === "medicine" ? value : currentRow.medicine,
             dose: field === "dose" ? value : currentRow.dose,
             nodays: field === "days" ? value : currentRow.days,
@@ -479,12 +675,36 @@ const Emr = () => {
           };
         }
 
-        await axiosInstance.put(`/emr/${endpoint}/${row.slno}`, data);
+
+        // console.log("update data: ",data)
+
+
+        if (bulkUpdateData[endpoint].length == 0) {
+          setBulkUpdateData((prev) => ({
+            ...prev,
+            [endpoint]: [...prev[endpoint], data],
+          }));
+        } else {
+          const sl = data.SlNo;
+          let newArr = bulkUpdateData[endpoint].filter(
+            (item) => item.SlNo != sl,
+          );
+          console.log("newArr1: ", newArr);
+          newArr = [...newArr, data];
+          console.log("newArr2: ", newArr);
+
+
+          setBulkUpdateData((prev) => ({
+            ...prev,
+            [endpoint]: newArr,
+          }));
+        }
       } catch (error) {
         console.error("Error updating record:", error);
       }
     }
   };
+
 
   const handleRowChange = (id, field, value, rows, setRows) => {
     const row = rows.find((r) => r.id === id);
@@ -497,20 +717,79 @@ const Emr = () => {
     }
   };
 
+
   // Generic render function for single-value tables
-  const renderSingleValueTable = (title, rows, setRows, placeholder) => (
+  const renderSingleValueTable = (
+    title,
+    rows,
+    setRows,
+    placeholder,
+    chkBox = "pastHistory",
+  ) => (
     <div className="card shadow-sm border-0">
       <div className="card-header  d-flex justify-content-between align-items-center py-2">
         <h6 className="mb-0 text-primary fw-bold">{title}</h6>
-        <button
-          className="btn btn-sm btn-success"
-          onClick={() => {
-            addRow(rows, setRows);
-            setShowDropDown(true);
-          }}
-        >
-          <i className="bi bi-plus"></i> Add Row
-        </button>
+
+
+        {bulkDtlDataLength == 0 && bulkUpdtLength == 0 && (
+          <button
+            className="btn btn-sm btn-success"
+            disabled={loadingBtn}
+            onClick={() => {
+              addRow(rows, setRows);
+              setShowDropDown(true);
+            }}
+          >
+            <i className="bi bi-plus"></i> Add Row
+          </button>
+        )}
+
+
+        {bulkDtlDataLength != 0 &&(
+          <button
+            className="btn btn-sm btn-danger"
+            disabled={loadingBtn}
+            onClick={() => {
+              deleteBulkEmr();
+            }}
+          >
+            <i className="bi bi-plus"></i> Delete Rows
+          </button>
+        )}
+
+
+        {bulkUpdtLength != 0 &&(
+          <div className="d-flex align-items-center gap-1">
+         
+          <button
+            className="btn btn-sm btn-primary"
+            disabled={loadingBtn}
+            onClick={() => {
+              handleUpdate();
+            }}
+          >
+            Update Rows
+          </button>
+          <button
+            className="btn btn-sm btn-secondary"
+            disabled={loadingBtn}
+            onClick={async() => {
+             setBulkUpdateData({
+          RegistrationId: "",
+          pastHistory: [],
+          diagnosis: [],
+          medicine: [],
+          complaints: [],
+          investigations: [],
+          adviceMedicine: [],
+        });
+        await loadEmrData(selectedPatient);
+            }}
+          >
+            Cancel
+          </button>
+          </div>
+        )}
       </div>
       <div className="card-body p-0">
         <div className="table-responsive">
@@ -619,12 +898,38 @@ const Emr = () => {
                     )}
                   </td>
                   <td className="text-center">
-                    <button
+                    {/* <button
                       className="btn btn-sm btn-outline-danger border-0"
+                      disabled={loadingBtn}
                       onClick={() => deleteRow(row, rows, setRows)}
-                    >
-                      <i className="bi bi-trash"></i> Delete
-                    </button>
+                    > Delete
+                    </button> */}
+                    {/* {console.log("row is : ",typeof row.slno)} */}
+                    <input
+                      disabled={loadingBtn}
+                      type="checkbox"
+                      onChange={() => {
+                        // console.log(row.slno)
+                        // console.log(chkBox)
+                        // console.log(bulkDltData[chkBox])
+                        if (bulkDltData[chkBox].includes(row.slno)) {
+                          const newArr = bulkDltData[chkBox].filter(
+                            (item) => item != row.slno,
+                          );
+                          // console.log("new arr: ", newArr)
+                          setBulkDltData((prev) => ({
+                            ...prev,
+                            [chkBox]: newArr,
+                          }));
+                        } else {
+                          setBulkDltData((prev) => ({
+                            ...prev,
+                            [chkBox]: [...prev[chkBox], row.slno],
+                          }));
+                        }
+                      }}
+                      checked={bulkDltData[chkBox].includes(row.slno)}
+                    />
                   </td>
                 </tr>
               ))}
@@ -635,6 +940,7 @@ const Emr = () => {
     </div>
   );
 
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "pastHistory":
@@ -643,6 +949,7 @@ const Emr = () => {
           pastHistoryRows,
           setPastHistoryRows,
           "Enter past history details...",
+          "pastHistory",
         );
       case "complaints":
         return renderSingleValueTable(
@@ -650,6 +957,7 @@ const Emr = () => {
           complaintRows,
           setComplaintRows,
           "Enter complaint details...",
+          "complaints",
         );
       case "diagnosis":
         return renderSingleValueTable(
@@ -657,6 +965,7 @@ const Emr = () => {
           diagnosisRows,
           setDiagnosisRows,
           "Enter diagnosis...",
+          "diagnosis",
         );
       case "investigations":
         return renderSingleValueTable(
@@ -664,6 +973,7 @@ const Emr = () => {
           investigationRows,
           setInvestigationRows,
           "Enter investigation...",
+          "investigations",
         );
       case "advice":
         return renderSingleValueTable(
@@ -671,6 +981,7 @@ const Emr = () => {
           adviceRows,
           setAdviceRows,
           "Enter advice...",
+          "medicine",
         );
       case "medicine":
         return (
@@ -679,12 +990,72 @@ const Emr = () => {
               <h6 className="mb-0 text-primary fw-bold">
                 Prescription Medicine
               </h6>
-              <button
+              {/* <button
                 className="btn btn-sm btn-success"
                 onClick={() => addRow(medicineRows, setMedicineRows)}
               >
                 + Add Medicine
-              </button>
+              </button> */}
+
+
+               {bulkDtlDataLength == 0 && bulkUpdtLength == 0 && (
+                <button
+                  className="btn btn-sm btn-success"
+                  disabled={loadingBtn}
+                  onClick={() => addRow(medicineRows, setMedicineRows)}
+                >
+                  + Add Medicine
+                </button>
+              )}
+
+
+
+
+               {bulkDtlDataLength != 0 &&(
+          <button
+            className="btn btn-sm btn-danger"
+            disabled={loadingBtn}
+            onClick={() => {
+              deleteBulkEmr();
+            }}
+          >
+            <i className="bi bi-plus"></i> Delete Rows
+          </button>
+        )}
+
+
+        {bulkUpdtLength != 0 &&(
+          <div className="d-flex align-items-center gap-1">
+         
+          <button
+            className="btn btn-sm btn-primary"
+            disabled={loadingBtn}
+            onClick={() => {
+              handleUpdate();
+            }}
+          >
+            Update Rows
+          </button>
+          <button
+            className="btn btn-sm btn-secondary"
+            disabled={loadingBtn}
+            onClick={async() => {
+             setBulkUpdateData({
+          RegistrationId: "",
+          pastHistory: [],
+          diagnosis: [],
+          medicine: [],
+          complaints: [],
+          investigations: [],
+          adviceMedicine: [],
+        });
+        await loadEmrData(selectedPatient);
+            }}
+          >
+            Cancel
+          </button>
+          </div>
+        )}
             </div>
             <div className="card-body p-0">
               <div className="table-responsive">
@@ -700,7 +1071,7 @@ const Emr = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {console.log("Medicine rows: ", medicineRows)}
+                    {/* {console.log("Medicine rows: ", medicineRows)} */}
                     {medicineRows.map((row, index) => (
                       <tr key={row.id}>
                         <td className="text-center">{index + 1}</td>
@@ -773,14 +1144,50 @@ const Emr = () => {
                           />
                         </td>
                         <td className="text-center">
-                          <button
+                          {/* <button
                             className="btn btn-sm btn-outline-danger border-0"
+                            disabled={loadingBtn}
                             onClick={() =>
                               deleteRow(row, medicineRows, setMedicineRows)
                             }
                           >
                             Delete
-                          </button>
+                          </button> */}
+
+
+                          <input
+                            disabled={loadingBtn}
+                            type="checkbox"
+                            onChange={() => {
+                              // console.log(row.slno)
+                              // console.log(chkBox)
+                              // console.log(bulkDltData[chkBox])
+                              if (
+                                bulkDltData.adviceMedicine.includes(row.slno)
+                              ) {
+                                const newArr =
+                                  bulkDltData.adviceMedicine.filter(
+                                    (item) => item != row.slno,
+                                  );
+                                // console.log("new arr: ", newArr)
+                                setBulkDltData((prev) => ({
+                                  ...prev,
+                                  adviceMedicine: newArr,
+                                }));
+                              } else {
+                                setBulkDltData((prev) => ({
+                                  ...prev,
+                                  adviceMedicine: [
+                                    ...prev.adviceMedicine,
+                                    row.slno,
+                                  ],
+                                }));
+                              }
+                            }}
+                            checked={bulkDltData.adviceMedicine.includes(
+                              row.slno,
+                            )}
+                          />
                         </td>
                       </tr>
                     ))}
@@ -794,6 +1201,7 @@ const Emr = () => {
         return null;
     }
   };
+
 
   if (showDetail && selectedPatient) {
     return (
@@ -809,15 +1217,17 @@ const Emr = () => {
               <div className="d-flex gap-2">
                 <button
                   className="btn btn-outline-secondary btn-sm"
+                  disabled={loadingBtn}
                   onClick={() => setShowDetail(false)}
                 >
                   <i className="bi bi-arrow-left"></i> Back to List
                 </button>
-                <button className="btn btn-primary btn-sm active">
+                {/* <button className="btn btn-primary btn-sm active">
                   Detail View
-                </button>
+                </button> */}
                 <button
                   className="btn btn-success btn-sm"
+                  disabled={loadingBtn}
                   onClick={saveEmrData}
                 >
                   <i className="bi bi-save me-1"></i> Save Documents
@@ -825,6 +1235,7 @@ const Emr = () => {
               </div>
             </div>
           </div>
+
 
           <div className="card-body ">
             {/* Patient Info */}
@@ -861,6 +1272,7 @@ const Emr = () => {
                     </div>
                   </div>
 
+
                   <div className="col-md-3 ">
                     <div className="mb-2">
                       <label className="form-label small text-muted mb-1">
@@ -875,6 +1287,7 @@ const Emr = () => {
                         readOnly
                       />
                     </div>
+
 
                     <div>
                       <label className="form-label small text-muted mb-1">
@@ -903,6 +1316,7 @@ const Emr = () => {
                       />
                     </div>
 
+
                     <div>
                       <label className="form-label small text-muted mb-1">
                         Weight
@@ -916,6 +1330,7 @@ const Emr = () => {
                     </div>
                   </div>
 
+
                   <div className="col-md-3 ">
                     <div className="mb-2">
                       <label className="form-label small text-muted mb-1">
@@ -928,6 +1343,7 @@ const Emr = () => {
                         readOnly
                       />
                     </div>
+
 
                     <div>
                       <label className="form-label small text-muted mb-1">
@@ -945,7 +1361,9 @@ const Emr = () => {
               </div>
             </div>
 
+
             {/* Tab Navigation */}
+
 
             <ul
               className="nav nav-pills nav-fill gap-2 mb-3 p-0 border-0"
@@ -961,7 +1379,7 @@ const Emr = () => {
               ].map((tab) => (
                 <li className="nav-item" key={tab.key}>
                   <button
-                    className={`nav-link 
+                    className={`nav-link
                     ${
                       activeTab === tab.key
                         ? "active fw-semibold text-white bg-primary"
@@ -976,6 +1394,7 @@ const Emr = () => {
               ))}
             </ul>
 
+
             {/* Tab Content */}
             <div
               className="tab-content  p-3 rounded-bottom shadow-sm"
@@ -989,12 +1408,14 @@ const Emr = () => {
     );
   }
 
+
   return (
     <div className="container-fluid p-3">
       <div className="card shadow-sm">
         <div className="card-header ">
           <h5 className="card-title mb-0">Patient EMR Records</h5>
         </div>
+
 
         {/* Search Filters */}
         <div className="card-body border-bottom ">
@@ -1084,6 +1505,7 @@ const Emr = () => {
           </div>
         </div>
 
+
         <div className="card-body p-0">
           {loading ? (
             <div className="d-flex justify-content-center align-items-center p-5">
@@ -1141,6 +1563,7 @@ const Emr = () => {
                 </table>
               </div>
 
+
               {/* Pagination */}
               {pagination.totalPages > 1 && (
                 <div className="card-footer  d-flex justify-content-between align-items-center py-3 flex-wrap">
@@ -1171,6 +1594,7 @@ const Emr = () => {
                           Previous
                         </button>
                       </li>
+
 
                       {[...Array(pagination.totalPages)].map((_, i) => {
                         const page = i + 1;
@@ -1208,6 +1632,7 @@ const Emr = () => {
                         return null;
                       })}
 
+
                       <li
                         className={`page-item ${
                           !pagination.hasNextPage ? "disabled" : ""
@@ -1235,4 +1660,8 @@ const Emr = () => {
   );
 };
 
+
 export default Emr;
+
+
+

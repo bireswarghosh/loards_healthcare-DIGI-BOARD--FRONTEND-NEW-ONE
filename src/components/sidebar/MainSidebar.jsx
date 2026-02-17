@@ -93,6 +93,7 @@ const MainSidebar = () => {
             <OutdoorReport/>
             <Indoor />
             <IndoorMaster/>
+             <Section3/>
             <Section1/>
             <DiagnosisMaster/>
             <BookingApp/>
@@ -120,6 +121,7 @@ const MainSidebar = () => {
             <OutdoorReport/>
             <Indoor />
             <IndoorMaster/>
+          <Section3/>
             <Section1/>
             <DiagnosisMaster/>
             <BookingApp/>

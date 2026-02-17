@@ -17,35 +17,8 @@ export default function AsyncApiSelect({
   const [selectedOption, setSelectedOption] = useState(null);
 
 
-  // ------------------------------------------------
-  // 🔹 PRELOAD DATA (edit mode)
-  // ------------------------------------------------
-  // useEffect(() => {
-  //   if (!value) return;
 
 
-  //   const url = `${api}?${searchKey}=${value}&${pageKey}=1`;
-
-
-  //   fetch(url)
-  //     .then((res) => res.json())
-  //     .then((res) => {
-  //       const list = res?.data || [];   // 🔥 FIX
-
-
-  //       if (list.length === 0) return;
-
-
-  //       const item = list[0];
-
-
-  //       setSelectedOption({
-  //         value: item[valueKey],
-  //         label: item[labelKey],
-  //       });
-  //     })
-  //     .catch((err) => console.error("Preload error:", err));
-  // }, [value]);
 
 
   useEffect(() => {
@@ -113,7 +86,7 @@ export default function AsyncApiSelect({
       minHeight: "31px",
       height: "31px",
       fontSize: "0.875rem",
-      backgroundColor: "#beb2b2ff",
+      backgroundColor: "#fff",
 
 
       borderColor: state.isFocused ? "#86b7fe" : "#ced4da",
@@ -127,8 +100,8 @@ export default function AsyncApiSelect({
     /* 🔥 DROPDOWN MENU */
     menu: (base) => ({
       ...base,
-      backgroundColor: "primary", // black dropdown
-      color: "#fff",
+      // backgroundColor: "primary", // black dropdown
+      // color: "#000",
       zIndex: 9999,
     }),
     menuPortal: (base) => ({
@@ -150,9 +123,9 @@ export default function AsyncApiSelect({
       backgroundColor: state.isSelected
         ? "#0d6efd" // selected = bootstrap blue
         : state.isFocused
-          ? "#212529" // hover = dark gray
-          : "#000", // normal = black
-      color: "#fff",
+          ? "#9a9c9e" // hover = dark gray
+          : "#d3cfcf", // normal = black
+      color: "#000",
       cursor: "pointer",
       fontSize: "0.875rem",
     }),
@@ -200,4 +173,6 @@ export default function AsyncApiSelect({
     />
   );
 }
+
+
 

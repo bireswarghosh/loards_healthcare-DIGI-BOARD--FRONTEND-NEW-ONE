@@ -291,6 +291,7 @@ toast.error("Something went wrong");
                   }}
                   searchKey="q"
                   labelKey="AdmitionId"
+                  showKey="PatientName"
                   valueKey="AdmitionId"
                   defaultPage={1}
                 />
