@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 // import Barcode from "react-barcode";
 import axiosInstance from "../../../../../axiosInstance";
 import QRCode from "react-qr-code";
-import AsyncApiSelect from "./AsyncApiSelect";
+import AsyncApiSelect from "./SelDrop.jsx";
 import { toast } from "react-toastify";
 import { set } from "date-fns";
 
