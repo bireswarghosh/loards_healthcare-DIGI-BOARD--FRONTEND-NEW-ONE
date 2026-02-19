@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
+import { toast } from "react-toastify";
+
 
 const FinalBillingListB = () => {
   const navigate = useNavigate();
+
 
   // UI State
   const [searchType, setSearchType] = useState("name");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [delBtnLoading, setDelBtnLoading] = useState(false)
   const [finalBillings, setFinalBillings] = useState([]); // Empty array for UI rendering
   const [pagination, setPagination] = useState({
     page: 1,
@@ -17,11 +21,17 @@ const FinalBillingListB = () => {
     pages: 1,
   });
 
+
   const [fromDate, setFromDate] = useState(
     new Date().toISOString().split("T")[0],
   );
   const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
   const [page, setPage] = useState(1);
+
+
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [delId, setDelId] = useState("")
+
 
   const fetchFinalBillings = async (fromDate,toDate) => {
     try {
@@ -32,10 +42,13 @@ const FinalBillingListB = () => {
       );
       // const res = await axiosInstance.get(`/fb?page=${page}&limit=20`);
 
+
       console.log("Final Billings Response:", res.data.data);
+
 
       if (res.data.success) {
         setFinalBillings(res.data.data || []);
+
 
         if (res.data.pagination) {
           setPagination({
@@ -53,9 +66,33 @@ const FinalBillingListB = () => {
     }
   };
 
+
+const handleDelte = async (id) => {
+ try {
+  setDelBtnLoading(true)
+  const res = await axiosInstance.delete(`/fb/${id}`)
+
+
+  if(res.data.success){
+    setShowConfirm(false)
+    toast.success("Final Bill Deleted Successfully.")
+    fetchFinalBillings(fromDate, toDate)
+    setDelId('')
+  }
+ } catch (error) {
+  console.log("error deleting final bill: ", error)
+ } finally{
+  setDelBtnLoading(false)
+ }
+}
+
+
+
+
   useEffect(() => {
     fetchFinalBillings(fromDate, toDate);
   }, [page]);
+
 
   return (
     <>
@@ -75,6 +112,7 @@ const FinalBillingListB = () => {
             </div>
           </div>
 
+
           {/* Body */}
           <div className="panel-body">
             {/* FILTER PANEL */}
@@ -85,52 +123,57 @@ const FinalBillingListB = () => {
                   <div className="d-flex flex-wrap align-items-center gap-3">
                     <div className="fw-bold text-secondary small">Search</div>
 
+
                     <div className="form-check form-check-inline">
-                      <input 
-                        className="form-check-input" 
-                        type="radio" 
-                        name="search" 
-                        id="byName" 
-                        checked={searchType === 'name'} 
-                        onChange={() => setSearchType('name')} 
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="search"
+                        id="byName"
+                        checked={searchType === 'name'}
+                        onChange={() => setSearchType('name')}
                       />
                       <label className="form-check-label small" htmlFor="byName">By Name</label>
                     </div>
 
+
                     <div className="form-check form-check-inline">
-                      <input 
-                        className="form-check-input" 
-                        type="radio" 
-                        name="search" 
-                        id="byPhone" 
-                        checked={searchType === 'phone'} 
-                        onChange={() => setSearchType('phone')} 
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="search"
+                        id="byPhone"
+                        checked={searchType === 'phone'}
+                        onChange={() => setSearchType('phone')}
                       />
                       <label className="form-check-label small" htmlFor="byPhone">By Phone</label>
                     </div>
 
+
                     <div className="form-check form-check-inline">
-                      <input 
-                        className="form-check-input" 
-                        type="radio" 
-                        name="search" 
-                        id="byReg" 
-                        checked={searchType === 'reg'} 
-                        onChange={() => setSearchType('reg')} 
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="search"
+                        id="byReg"
+                        checked={searchType === 'reg'}
+                        onChange={() => setSearchType('reg')}
                       />
                       <label className="form-check-label small" htmlFor="byReg">By Reg No</label>
                     </div>
 
-                    <input 
-                      type="text" 
-                      className="form-control form-control-sm" 
-                      placeholder={`Search by ${searchType}...`} 
-                      value={searchQuery} 
-                      onChange={(e) => setSearchQuery(e.target.value)} 
-                      style={{ width: '170px' }} 
+
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder={`Search by ${searchType}...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      style={{ width: '170px' }}
                     />
                   </div>
                 </div> */}
+
 
                 <div className="col-lg-8">
                   <div className="input-group input-group-sm">
@@ -172,6 +215,7 @@ const FinalBillingListB = () => {
                 </div>
               </div>
             </div>
+
 
             {/* TABLE */}
             <div
@@ -224,8 +268,15 @@ const FinalBillingListB = () => {
                           >
                             <i className="fa-solid fa-pencil"></i>
                           </button>
-                          <button className="btn btn-sm btn-outline-danger">
+                          <button className="btn btn-sm btn-outline-danger"
+                          onClick={() => {
+                            setDelId(admission.FinalBillId)
+                            setShowConfirm(true)
+                          }
+                          }
+                          >
                             <i className="fa-solid fa-trash"></i>
+                           
                           </button>
                         </td>
                         <td>{admission.BillNo || "N/A"}</td>
@@ -248,6 +299,7 @@ const FinalBillingListB = () => {
             </div>
           </div>
 
+
           {/* Footer / Pagination */}
           <div className="panel-footer d-flex justify-content-between flex-wrap gap-2 p-3">
             <div className="d-flex align-items-center gap-2">
@@ -259,9 +311,11 @@ const FinalBillingListB = () => {
                 Previous
               </button>
 
+
               <span className="small">
                 Page {pagination.page} of {pagination.pages || 1}
               </span>
+
 
               <button
                 className="btn btn-sm btn-outline-secondary"
@@ -272,14 +326,52 @@ const FinalBillingListB = () => {
               </button>
             </div>
 
+
             <div className="btn-group">
               {/* Extra action buttons can go here */}
             </div>
           </div>
         </div>
       </div>
+      {showConfirm && (
+        <div className="modal d-block" onClick={() => setShowConfirm(false)}>
+          <div
+            className="modal-dialog modal-dialog-centered"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-body text-center">
+                <p>Are you sure you want to delete?</p>
+                <div className="d-flex justify-content-center gap-3">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setShowConfirm(false)}
+                    disabled={delBtnLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button className="btn btn-danger" onClick={() => {
+                   handleDelte(delId)
+                  }
+                  }
+                  disabled={delBtnLoading}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
 
+
 export default FinalBillingListB;
+
+
+
+
+
