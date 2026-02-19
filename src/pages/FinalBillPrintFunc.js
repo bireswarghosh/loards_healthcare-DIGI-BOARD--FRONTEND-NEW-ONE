@@ -72,7 +72,7 @@ export const handlePrint1 = (data) => {
     <table class="header-table">
       <tr>
         <td >        
-          <img src="/public/assets/lords.png" style="width:80px;" />
+          <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
           <h1 class="company-name">${data.hospitalName}</h1>
@@ -86,7 +86,7 @@ export const handlePrint1 = (data) => {
      
      
        <td >        
-          <img src="/public/assets/nabh.png" style="width:120px;" />
+          <img src="/assets/nabh.png" style="width:120px;" />
         </td>
       </tr>
     </table>
