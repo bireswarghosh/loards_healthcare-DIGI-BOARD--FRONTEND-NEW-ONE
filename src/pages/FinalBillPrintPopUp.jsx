@@ -1,5 +1,5 @@
 import React from "react";
-import { handlePrint1, handlePrint2 } from "./FinalBillPrintFunc";
+import { handlePrint1, handlePrint2, handlePrint3, handlePrint4 } from "./FinalBillPrintFunc";
 
 
 // Neutral, modern Radio Component
@@ -59,7 +59,8 @@ const ModernNeutralModal = ({
   printType,
   setPrintType,
   billData1,
-  defaultInvoiceData
+  defaultInvoiceData,
+  billData2
 }) => {
   return (
     <div
@@ -209,7 +210,13 @@ const ModernNeutralModal = ({
                     handlePrint1(billData1);
                     break;
                   case "diagnosticDetail":
-                    // handlePrint2(defaultInvoiceData);
+                    handlePrint2(defaultInvoiceData);
+                    break;
+                  case "patientCopy":
+                    handlePrint3(billData2);
+                    break;
+                  case "indoorCopy":
+                    handlePrint4(billData2);
                     break;
                   default:
                     console.log("wrong choice");
