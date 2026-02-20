@@ -363,6 +363,8 @@ import TestCalculation from "./templates/TestCalculation.jsx";
 import DateWiseRegistrationCharge1 from "../src/templates/IPD_REPORT/DateWiseRegistrationCharge/DateWiseRegistrationCharge.jsx"
 import DisPatEReg from "../src/templates/IPD_REPORT/DischargePatientReg.jsx"
 import DatewiseMoneyReceipt1 from "../src/templates/IPD_REPORT/DatewiseMoneyReceipt.jsx"
+import UniversalPReg from "./templates/DiagnosisMaster/UniversalPReg.jsx";
+import UniversalPRegList from "./templates/DiagnosisMaster/UniversalPRegList.jsx";
 
 
 
@@ -554,6 +556,9 @@ function App() {
 
 
 {/* dia booking start */}
+<Route path="/UniversalPReg" element={<ProtectedRoute><UniversalPReg /></ProtectedRoute>} />
+
+          <Route path="/UniversalPRegList" element={<ProtectedRoute><UniversalPRegList /></ProtectedRoute>} />
 
           <Route path="/DiagBookingList" element={<DiagBookingList/>} />
 

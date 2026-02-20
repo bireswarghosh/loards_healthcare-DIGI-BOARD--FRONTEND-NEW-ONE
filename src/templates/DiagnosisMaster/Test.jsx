@@ -82,6 +82,17 @@ const TestMaster = () => {
 
   const drawerRef = useRef(null);
 
+  const handleViewFile = (test) => {
+    const fileName = test.file_name;
+    
+    if (fileName) {
+      const fileUrl = `https://pub-0c4bdcfb191846af8862c428f6c68605.r2.dev/dsc-format/${fileName}`;
+      window.open(fileUrl, '_blank');
+    } else {
+      toast.error('No file attached to this test');
+    }
+  };
+
 
   //// for search-------
   const [searchText, setSearchText] = useState("");
@@ -455,6 +466,13 @@ const onKeyPressSearch = (e) => {
                           </td>
                           <td>
                             <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-sm btn-outline-success"
+                                onClick={() => handleViewFile(t)}
+                                title="View File"
+                              >
+                                <i className="fa-light fa-file" />
+                              </button>
                               <button
                                 className="btn btn-sm btn-outline-info"
                                 onClick={() => openDrawerView(t)}
@@ -1306,6 +1324,8 @@ const onKeyPressSearch = (e) => {
                         disabled={modalType === "view"}
                       />
                     </div>
+
+
 
                     {/* Footer buttons */}
                     <div className="d-flex gap-2 mt-1">

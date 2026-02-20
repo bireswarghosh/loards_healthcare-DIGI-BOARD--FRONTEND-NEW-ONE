@@ -182,3 +182,36 @@ html .os-scrollbar-handle,
 [data-overlayscrollbars] .os-scrollbar-arrow::after {
   border-color: #ffffff !important;
 }
+
+
+
+
+
+
+
+
+.light-theme .sidebar-item .sidebar-link .nav-icon, .light-theme .sidebar-item .sidebar-dropdown-item .sidebar-link {
+    color: #000000;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

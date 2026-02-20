@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { Modal, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../../axiosInstance";
 
+
 const API_BASE_URL = "https://lords-backend.onrender.com/api/v1";
+
 
 const OtherCharges = () => {
   const location = useLocation();
-  const [admissionData, setAdmissionData] = useState(null);
+  const navigate = useNavigate();
+  const [admissionData, setAdmissionData] = useState({});
   const [otherCharges, setOtherCharges] = useState([]);
   const [masterCharges, setMasterCharges] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -35,14 +38,19 @@ const OtherCharges = () => {
   const [chargeSearch, setChargeSearch] = useState("");
   const [filteredCharges, setFilteredCharges] = useState([]);
 
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+
   const [delId, setDelId] = useState("");
+
 
   const [bedName, setBedName] = useState("");
 
+
   const [company, setCompany] = useState([]);
+
 
   const [selOtherCharges, setSelOtherCharges] = useState({
     Qty: "",
@@ -51,43 +59,50 @@ const OtherCharges = () => {
     Remarks: "",
     Package: "",
   });
-  
-  const handleChange = (e,i) => {
-    const {name, value}= e.target
-
-   let data = otherCharges[i]
- 
-   data[name]=value
- 
-   setSelOtherCharges({
-     Qty:data.Qty,
-    Rate: data.Rate,
-    Amount:data.Amount,
-    Remarks: data.Remarks,
-    Package: data.Package,
-   })
+  const [companyWiseOCdata, setCompanyWiseOCdata] = useState([]);
 
 
-   setOtherCharges(prev=>([...prev]))
-  
-  }
-  
-const handleSave = async (id) => {
-  try {
-    const res = axiosInstance.put(`/admissions/${admissionId}/charges/${id}`,selOtherCharges)
-    fetchOtherCharges();
-    toast.success("Updated successfully")
+  const handleChange = (e, i) => {
+    const { name, value } = e.target;
 
-  } catch (error) {
-    console.log("error updating: ",error)
-  }
-}
 
+    let data = otherCharges[i];
+
+
+    data[name] = value;
+
+
+    setSelOtherCharges({
+      Qty: data.Qty,
+      Rate: data.Rate,
+      Amount: data.Amount,
+      Remarks: data.Remarks,
+      Package: data.Package,
+    });
+
+
+    setOtherCharges((prev) => [...prev]);
+  };
+
+
+  const handleSave = async (id) => {
+    try {
+      const res = axiosInstance.put(
+        `/admissions/${admissionId}/charges/${id}`,
+        selOtherCharges,
+      );
+      fetchOtherCharges();
+      toast.success("Updated successfully");
+    } catch (error) {
+      console.log("error updating: ", error);
+    }
+  };
 
 
   const fetchCompany = async () => {
     try {
       const res = await axiosInstance.get(`/cashless`);
+
 
       res.data.success ? setCompany(res.data.data) : null;
     } catch (error) {
@@ -95,16 +110,19 @@ const handleSave = async (id) => {
     }
   };
 
+
   const fetchBed = async (id) => {
     try {
       console.log("HD");
       const res = await axiosInstance.get(`/bedMaster/${id}`);
+
 
       res.data.success ? setBedName(res.data.data.Bed) : setBedName("");
     } catch (error) {
       console.log("error fetching bed by id: ", error);
     }
   };
+
 
   useEffect(() => {
     // If coming from AdmissionList, use the passed data
@@ -118,6 +136,7 @@ const handleSave = async (id) => {
       }
     }
 
+
     if (admissionId) {
       if (!location.state?.selectedAdmission) {
         fetchAdmissionData();
@@ -127,6 +146,66 @@ const handleSave = async (id) => {
     fetchMasterCharges();
     fetchCompany();
   }, [admissionId, location.state]);
+
+
+  const fetchCompanyWiseOC = async (id) => {
+    try {
+      const res = await axiosInstance.get(
+        `/company-wise-other-charges?cashlessId=${id}`,
+      );
+      console.log("Company wise oc data: ", res.data.data);
+      res.data.success
+        ? setCompanyWiseOCdata(res.data.data)
+        : setCompanyWiseOCdata([]);
+    } catch (error) {
+      console.log("error fetching company wise oc: ", error);
+    }
+  };
+
+
+  useEffect(() => {
+    console.log("cashless id: ", admissionData.CashLessId);
+    if (admissionData.CashLessId) {
+      fetchCompanyWiseOC(admissionData.CashLessId);
+    }
+  }, [admissionData.CashLessId]);
+
+
+  useEffect(() => {
+    if (companyWiseOCdata.length != 0 && masterCharges.length != 0) {
+      console.log("Company wise other charges data: ", companyWiseOCdata);
+      console.log("Master charges data: ", masterCharges);
+
+
+      const comWOClookUP = {};
+      for (let i = 0; i < companyWiseOCdata.length; i++) {
+        comWOClookUP[companyWiseOCdata[i].other_charges_id] =
+          companyWiseOCdata[i];
+      }
+
+
+      const b = masterCharges;
+
+
+      for (let i = 0; i < b.length; i++) {
+        const id = b[i].OtherChargesId;
+
+
+        if (comWOClookUP[id]) {
+          const fromComWOClookUP = comWOClookUP[id];
+
+
+          b[i].Rate = Number(fromComWOClookUP.rate);
+          b[i].ICU = Number(fromComWOClookUP.icu);
+          b[i].CAB = Number(fromComWOClookUP.cab);
+          b[i].SUIT = Number(fromComWOClookUP.suit);
+        }
+      }
+console.log("bigb: ",b)
+      setMasterCharges(b)
+    }
+  }, [companyWiseOCdata, masterCharges.length]);
+
 
   useEffect(() => {
     const filtered = masterCharges.filter(
@@ -138,6 +217,7 @@ const handleSave = async (id) => {
     setFilteredCharges(filtered);
   }, [masterCharges, chargeSearch]);
 
+
   const fetchMasterCharges = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/otherCharges`);
@@ -148,6 +228,7 @@ const handleSave = async (id) => {
       console.error("Error fetching master charges:", error);
     }
   };
+
 
   const fetchAdmissionData = async () => {
     try {
@@ -165,6 +246,7 @@ const handleSave = async (id) => {
     }
   };
 
+
   const fetchOtherCharges = async () => {
     try {
       const response = await axios.get(
@@ -178,15 +260,18 @@ const handleSave = async (id) => {
     }
   };
 
+
   const handleFind = async () => {
     if (!searchValue) return;
     try {
       setLoading(true);
       let url = `${API_BASE_URL}/admissions/search/${searchValue}`;
 
+
       // Add search type parameter
       const params = new URLSearchParams();
       params.append("searchBy", searchBy);
+
 
       const response = await axios.get(`${url}?${params}`);
       if (response.data.success && response.data.data.length > 0) {
@@ -201,6 +286,7 @@ const handleSave = async (id) => {
             (a, b) => new Date(b.AdmitionDate) - new Date(a.AdmitionDate),
           );
         }
+
 
         setSearchResults(sortedResults);
         setShowSearchResults(true);
@@ -217,11 +303,13 @@ const handleSave = async (id) => {
     }
   };
 
+
   const selectPatient = async (admission) => {
     setAdmissionId(admission.AdmitionId);
     setAdmissionData(admission);
     setShowSearchResults(false);
     setSearchValue("");
+
 
     // Fetch charges for selected patient
     try {
@@ -236,6 +324,7 @@ const handleSave = async (id) => {
     }
   };
 
+
   const selectMasterCharge = (charge) => {
     setSelectedCharge(charge);
     setNewCharge({
@@ -244,6 +333,7 @@ const handleSave = async (id) => {
       Rate: charge.Rate || 0,
     });
   };
+
 
   const toggleChargeSelection = (charge) => {
     const isSelected = selectedCharges.find(
@@ -260,6 +350,7 @@ const handleSave = async (id) => {
     }
   };
 
+
   const selectAllCharges = () => {
     if (selectedCharges.length === filteredCharges.length) {
       setSelectedCharges([]);
@@ -267,6 +358,7 @@ const handleSave = async (id) => {
       setSelectedCharges([...filteredCharges]);
     }
   };
+
 
   const addMultipleCharges = async () => {
     try {
@@ -297,6 +389,7 @@ const handleSave = async (id) => {
     }
   };
 
+
   const addNewCharge = async () => {
     try {
       const chargeData = {
@@ -326,8 +419,10 @@ const handleSave = async (id) => {
     }
   };
 
+
   //   const deleteCharge = async (chargeId) => {
   //     // if (!window.confirm("Are you sure you want to delete this charge?")) return;
+
 
   //     setShowConfirm(true);
   //     if (confirmDelete) {
@@ -336,6 +431,7 @@ const handleSave = async (id) => {
   //       setShowConfirm(false);
   //     }
   //   };
+
 
   const deleteChargeById = async (chargeId) => {
     try {
@@ -354,6 +450,7 @@ const handleSave = async (id) => {
     }
   };
 
+
   const calculateTotals = () => {
     const total = otherCharges.reduce(
       (sum, charge) => sum + (charge.Amount || 0),
@@ -362,12 +459,24 @@ const handleSave = async (id) => {
     return { total, sgst: 0, cgst: 0 };
   };
 
+
   const totals = calculateTotals();
+
 
   return (
     <>
       <div className="container-fluid py-4">
         <div className="card shadow-lg rounded-4 border-0 ">
+          <div className="text-end">
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                navigate("/othercharges");
+              }}
+            >
+              <i className="fa-solid fa-arrow-left"></i> Back
+            </button>
+          </div>
           <div className="card-body">
             {/* Search Filters */}
             <div className="row g-3 mb-4 align-items-center">
@@ -429,6 +538,7 @@ const handleSave = async (id) => {
               </div> */}
             </div>
 
+
             {/* Search Options */}
             {/* <div className="row mb-3">
               <div className="col-md-12 d-flex gap-4">
@@ -478,6 +588,7 @@ const handleSave = async (id) => {
                 </div>
               </div>
             </div> */}
+
 
             {/* Search Results Modal */}
             {showSearchResults && (
@@ -534,10 +645,12 @@ const handleSave = async (id) => {
               </div>
             )}
 
+
             {/* Patient Info */}
             {admissionData && (
               <div className="border rounded p-3  mb-4">
                 <h6 className="fw-bold text-primary mb-3">Patient Detail</h6>
+
 
                 <div className="row g-5 mb-3">
                   <div className="col-md-6">
@@ -548,6 +661,7 @@ const handleSave = async (id) => {
                       readOnly
                     />
                   </div>
+
 
                   <div className="col-md-2">
                     <label>Age</label>
@@ -567,6 +681,7 @@ const handleSave = async (id) => {
                   </div>
                 </div>
 
+
                 <div className="row g-5 mb-3">
                   <div className="col-md-4">
                     <label>Phone</label>
@@ -577,6 +692,7 @@ const handleSave = async (id) => {
                     />
                   </div>
 
+
                   <div className="col-md-3">
                     <label>Marital Status[U/M]</label>
                     <input
@@ -585,6 +701,7 @@ const handleSave = async (id) => {
                       readOnly
                     />
                   </div>
+
 
                   <div className="col-md-3">
                     <label>Admission Date</label>
@@ -602,6 +719,7 @@ const handleSave = async (id) => {
                   </div>
                 </div>
 
+
                 <div className="row g-5 mb-3">
                   <div className="col-md-5">
                     <label>Remarks</label>
@@ -611,6 +729,7 @@ const handleSave = async (id) => {
                       readOnly
                     />
                   </div>
+
 
                   <div className="col-md-2">
                     <label>Company</label>
@@ -647,6 +766,7 @@ const handleSave = async (id) => {
                     />
                   </div>
 
+
                   <div className="col-md-2">
                     <label>
                       Package (Need to ask Lords what is the purpose of it)
@@ -660,6 +780,7 @@ const handleSave = async (id) => {
                 </div>
               </div>
             )}
+
 
             {/* Add Button */}
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -676,6 +797,7 @@ const handleSave = async (id) => {
                 </button>
               </div>
             </div>
+
 
             {/* Existing Patient Charges */}
             <div className="border rounded p-3  mb-4">
@@ -719,7 +841,7 @@ const handleSave = async (id) => {
                               <button
                                 className="btn btn-sm btn-outline-info me-1"
                                 onClick={() => {
-                                  handleSave(charge.Id)
+                                  handleSave(charge.Id);
                                 }}
                               >
                                 <i className="fa-solid fa-pen"></i>
@@ -745,9 +867,8 @@ const handleSave = async (id) => {
                                 value={charge.Rate}
                                 name="Rate"
                                 onChange={(e) => {
-                                 handleChange(e,i)
-                                }
-                                }
+                                  handleChange(e, i);
+                                }}
                                 // placeholder={charge.Rate}
                               />
                             </td>
@@ -759,9 +880,8 @@ const handleSave = async (id) => {
                                 value={charge.Qty}
                                 name="Qty"
                                 onChange={(e) => {
-                                 handleChange(e,i)
-                                }
-                                }
+                                  handleChange(e, i);
+                                }}
                               />
                             </td>
                             <td>₹{Number(charge.Rate) * Number(charge.Qty)}</td>
@@ -772,9 +892,8 @@ const handleSave = async (id) => {
                                 value={charge.Remarks}
                                 name="Remarks"
                                 onChange={(e) => {
-                                 handleChange(e,i)
-                                }
-                                }
+                                  handleChange(e, i);
+                                }}
                               />
                             </td>
                             <td>
@@ -784,9 +903,8 @@ const handleSave = async (id) => {
                                 value={charge.Package}
                                 name="Package"
                                 onChange={(e) => {
-                                 handleChange(e,i)
-                                }
-                                }
+                                  handleChange(e, i);
+                                }}
                               />
                             </td>
                             <td>{charge.EDate?.split("T")[0]}</td>
@@ -804,6 +922,7 @@ const handleSave = async (id) => {
                 </table>
               </div>
             </div>
+
 
             {/* Totals */}
             <div className="row g-3 mb-4">
@@ -833,6 +952,7 @@ const handleSave = async (id) => {
               </div>
             </div>
 
+
             {/* Action Buttons */}
             {/* <div className="d-flex gap-2">
               <button className="btn btn-primary" onClick={fetchOtherCharges}>
@@ -845,6 +965,7 @@ const handleSave = async (id) => {
                 Print
               </button>
             </div> */}
+
 
             {/* Add Charge Modal */}
             <Modal
@@ -868,6 +989,7 @@ const handleSave = async (id) => {
                   />
                 </div>
 
+
                 {/* Select All */}
                 <div className="mb-3">
                   <label className="form-check-label">
@@ -883,6 +1005,7 @@ const handleSave = async (id) => {
                     Select All ({filteredCharges.length} charges)
                   </label>
                 </div>
+
 
                 {/* Selected Charges Display */}
                 {selectedCharges.length > 0 && (
@@ -904,6 +1027,7 @@ const handleSave = async (id) => {
                     </div>
                   </div>
                 )}
+
 
                 <div
                   className="table-responsive"
@@ -952,6 +1076,7 @@ const handleSave = async (id) => {
                     </tbody>
                   </table>
                 </div>
+
 
                 {selectedCharge && (
                   <div className="mt-4 border-top pt-3">
@@ -1049,6 +1174,7 @@ const handleSave = async (id) => {
         </div>
       </div>
 
+
       {/* Confirm Delete Modal */}
       {showConfirm && (
         <div
@@ -1087,12 +1213,14 @@ const handleSave = async (id) => {
                 ></button>
               </div>
 
+
               <div className="modal-body text-center">
                 <p className="fs-6 mb-1">
                   Are you sure you want to delete this?
                 </p>
                 <p className="text-muted">This cannot be undone.</p>
               </div>
+
 
               <div className="modal-footer d-flex justify-content-center gap-3">
                 <button
@@ -1103,6 +1231,7 @@ const handleSave = async (id) => {
                 >
                   Cancel
                 </button>
+
 
                 <button
                   className="btn btn-danger px-4"
@@ -1121,4 +1250,8 @@ const handleSave = async (id) => {
   );
 };
 
+
 export default OtherCharges;
+
+
+
