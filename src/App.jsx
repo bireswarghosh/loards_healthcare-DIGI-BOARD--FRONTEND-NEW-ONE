@@ -114,6 +114,7 @@ import PatientEnquiryDetail from "./components/indoor/PatientEnquiryDetail.jsx";
 
 
 import FinalBilling from "./pages/FinalBilling.jsx";
+import FinalBillingCopy from "./pages/FinalBillingCopy.jsx";
 import FinalBillingListB from "./pages/FinalBillingList2.jsx";
 import FinalBillingAdd from "./pages/FinalBillingAdd.jsx";
 import FinalBillingAddCopy from "./pages/FinalBillingAddCopy.jsx";
@@ -536,6 +537,7 @@ function App() {
 <Route path="/fina-bill-add-copy" element={<FinalBillingAddCopy />} />
 <Route path="/fina-bill-add" element={<FinalBillingAdd />} />
           <Route path="/fina-bill/:id/:mode_type" element={<FinalBilling />} />
+          <Route path="/fina-bill-copy/:id/:mode_type" element={<FinalBillingCopy />} />
           {/* <Route path="/fina-bill-list1" element={<FinalBillingListA />} /> */}
 
           <Route path="/fina-bill-list2" element={<FinalBillingListB />} />

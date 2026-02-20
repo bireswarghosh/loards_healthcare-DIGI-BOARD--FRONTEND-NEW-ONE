@@ -4,156 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
 import JsBarcode from "jsbarcode";
 import { toast } from "react-toastify";
-import AsyncSelect from "react-select/async";
-import { fi } from "date-fns/locale";
-
-function AsyncApiSelect({
-  api,
-  value,
-  onChange,
-  placeholder = "Search...",
-  labelKey = "label",
-  valueKey = "value",
-  searchKey = "admissionId",
-  pageKey = "page",
-  defaultPage = 1,
-  isDisabled = false,
-}) {
-  const [selectedOption, setSelectedOption] = useState(null);
-
-  useEffect(() => {
-    if (!value) return;
-
-    // 🔥 value can be string OR object
-    const q = typeof value === "string" ? value : value?.value;
-
-    if (!q) return;
-
-    // fetch(`${api}?${searchKey}=${encodeURIComponent(q)}`)
-    fetch(`${api}?${searchKey}=${q}`)
-      .then((res) => res.json())
-      .then((res) => {
-        const item = res?.data?.[0];
-        if (!item) return;
-
-        setSelectedOption({
-          value: item[valueKey],
-          label: item[labelKey],
-          // label: "d",
-        });
-      });
-  }, [value]);
-
-  // ------------------------------------------------
-  // 🔹 SEARCH
-  // ------------------------------------------------
-  const loadOptions = async (inputValue) => {
-    if (!inputValue) return [];
-
-    const url = `${api}/search?${searchKey}=${inputValue}`;
-
-    try {
-      const res = await fetch(url);
-      const result = await res.json();
-
-      const list = result?.data || [];
-
-      return list.map((item) => ({
-        value: item[valueKey],
-        // label: item[labelKey],
-        label: `${item["PatientName"]} ----- ${item["AdmitionNo"]}`,
-      }));
-    } catch (err) {
-      console.error("Search error:", err);
-      return [];
-    }
-  };
-
-  const customStyles = {
-    control: (base, state) => ({
-      ...base,
-      minHeight: "23px",
-      height: "23px",
-      fontSize: "2 px",
-      backgroundColor: "rgb(253, 250, 250)",
-
-      borderColor: state.isFocused ? "#86b7fe" : "#ced4da",
-      boxShadow: state.isFocused ? "0 0 0 .2rem rgba(13,110,253,.25)" : "none",
-      "&:hover": {
-        borderColor: "#86b7fe",
-      },
-    }),
-
-    /* 🔥 DROPDOWN MENU */
-    menu: (base) => ({
-      ...base,
-      backgroundColor: "primary", // black dropdown
-      color: "#fff",
-      zIndex: 9999,
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-
-    menuList: (base) => ({
-      ...base,
-      padding: 0,
-      zIndex: 9999,
-    }),
-
-    /* 🔥 EACH OPTION */
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isSelected
-        ? "#0d6efd" // selected = bootstrap blue
-        : state.isFocused
-          ? "#212529" // hover = dark gray
-          : "#000", // normal = black
-      color: "#fff",
-      cursor: "pointer",
-      fontSize: "0.875rem",
-    }),
-
-    valueContainer: (base) => ({
-      ...base,
-      padding: "0 8px",
-    }),
-
-    indicatorsContainer: (base) => ({
-      ...base,
-      height: "31px",
-    }),
-
-    dropdownIndicator: (base) => ({
-      ...base,
-      padding: "2px",
-    }),
-
-    clearIndicator: (base) => ({
-      ...base,
-      padding: "2px",
-    }),
-  };
-  return (
-    <AsyncSelect
-      cacheOptions
-      loadOptions={loadOptions}
-      // value={selectedOption}
-      value={value ?? selectedOption}
-      onChange={(opt) => {
-        setSelectedOption(opt);
-        onChange(opt ? opt : null);
-      }}
-      placeholder={placeholder}
-      isClearable
-      menuPortalTarget={document.body}
-      menuPosition="fixed"
-      styles={customStyles}
-      isDisabled={isDisabled}
-    />
-  );
-}
+import RetroModal from "./FinalBillPrintPopUp";
 
 const Barcode = ({ value }) => {
   const svgRef = useRef(null);
@@ -174,7 +25,7 @@ const Barcode = ({ value }) => {
   return <svg ref={svgRef}></svg>;
 };
 
-const FinalBillingAdd = () => {
+const FinalBilling = () => {
   // Styles object to strictly enforce legacy look without external CSS files
   const styles = {
     container: {
@@ -252,68 +103,36 @@ const FinalBillingAdd = () => {
   };
 
   let { id, mode_type } = useParams();
+  console.log("moe", mode_type);
+  // console.log("id1: ",id)
+  id = encodeURIComponent(id || "");
   const navigate = useNavigate();
   const [mode, setMode] = useState(mode_type ? mode_type : "add");
 
-  // convert time from 24 hours to 12 hours format
-  function convertTo12Hour(timeString) {
-    // timeString can be "14:30" or "14:30:55"
-    const [hoursStr, minutesStr] = timeString.split(":");
+  const [fbMode, setFbMode] = useState("estimate"); // 'final or estimate'
 
-    let hours = parseInt(hoursStr, 10);
-    const minutes = minutesStr;
+  const [printType, setPrintType] = useState(""); // this will decide will which pdf will be print
 
-    const ampm = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12; // Convert 0 → 12
+  // const [fbData, setFbData] = useState({});
+  const [showPrintModal, setShowPrintModal] = useState(false);
 
-    return `${hours}:${minutes} ${ampm}`;
-  }
-
-  // convert time from 12 hours to 24 hours format
-  function convertTo24Hour(time12) {
-    // Example input: "2:35 PM"
-
-    const [time, modifier] = time12.split(" "); // "2:35" , "PM"
-    let [hours, minutes] = time.split(":");
-
-    hours = parseInt(hours, 10);
-
-    if (modifier === "PM" && hours !== 12) {
-      hours = hours + 12;
-    }
-
-    if (modifier === "AM" && hours === 12) {
-      hours = 0;
-    }
-
-    // Format to HH:MM
-    const hh = String(hours).padStart(2, "0");
-    const mm = String(minutes).padStart(2, "0");
-
-    return `${hh}:${mm}`;
-  }
-  const [loggedInUser, setLoggedInUser] = useState(
-    localStorage.getItem("userId") || "",
-  );
-  const [formData, setFormData] = useState({
-    // FinalBillId: "",
+  const [fbData, setFbData] = useState({
+    FinalBillId: "",
     BillNo: "",
-    // BillDate: "",
-    BillDate: new Date().toISOString().split("T")[0],
-    // BillTime: "",
-    BillTime: convertTo12Hour(new Date().toTimeString().slice(0, 5)),
-    ReleaseTime: convertTo12Hour(new Date().toTimeString().slice(0, 5)),
-    BillType: "I",
+    BillDate: "",
+    BillTime: "",
+    ReleaseTime: "",
+    BillType: "",
     ReffId: "",
     Discount: 0,
     ReciptAmt: 0,
     CB: "",
     ChequeNo: "",
-    ChequeDt: new Date().toISOString().split("T")[0],
+    ChequeDt: "",
     BankName: "",
     CashlessId: 0,
     Rename: "",
-    UserId: loggedInUser || 0,
+    UserId: 0,
     MoneyreeciptId: "",
     BillAmt: 0,
     Remarks: "",
@@ -353,108 +172,48 @@ const FinalBillingAdd = () => {
   const [larDetails, setLarDetails] = useState([]);
 
   const [authUserData, setAuthUserData] = useState([]);
+  const [loggedInUser, setloggedInUser] = useState(
+    localStorage.getItem("userId") || "",
+  );
 
-  const [finalBillDetail, setFinalBillDetail] = useState([
-    {
-      SlNo: 1,
-      HeadName: "Bed Charges",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 2,
-      HeadName: "Others Charges",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 3,
-      HeadName: "O.T. Charges",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 4,
-      HeadName: "Doctor Charges",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 5,
-      HeadName: "Diagnostic Charges",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 6,
-      HeadName: "Medicine Charges",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 7,
-      HeadName: "Service Charges",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 8,
-      HeadName: "GST Amount",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-    {
-      SlNo: 9,
-      HeadName: "Less Advance Receipt",
-      Amount1: 0,
-      Amount2: null,
-      Amount3: 0,
-    },
-  ]);
+  const [allDiagWithTest, setAllDiagWithTest] = useState([]);
 
-  const [bedChargesData, setBedChargesData] = useState([]);
-  const [fetchedAdmBedDetail, setFetchedAdmBedDetail] = useState([]);
-
-  const [allOtherCharges, setAllOtherCharges] = useState([]);
-  const [allOtherCharges1, setAllOtherCharges1] = useState({});
-
-  const [otherChargesByAdmId, setOtherChargesByAdmId] = useState([]);
-  const [otherChargesData, setOtherChargesData] = useState([]);
-
-  const [docVisit, setDocVisit] = useState([]);
   const [diagData, setDiagData] = useState([]);
-  const [lessAdvData, setLessAdvData] = useState([]);
 
-  const [btnLoading, setBtnLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    Approval: "",
+    Discount: "",
+    ReciptAmt: "",
+    Remarks: "",
+    CashlessId: "",
+  });
 
   const handleSave = async () => {
+    console.log("update: ", formData);
     console.log(mode);
-    console.log("add: ", formData);
-    setBtnLoading(true);
-    try {
-      if (mode === "add") {
-        const res = await axiosInstance.post("/fb", formData);
-        console.log("Res after submit: ", res);
+    console.log(mode_type);
+    if (mode_type == "edit") {
+      try {
+        console.log("update: ", formData);
+        const res = await axiosInstance.put(
+          `/fb/${fbData.FinalBillId}`,
+          formData,
+        );
         if (res.data.success) {
-          toast.success("Final Bill added successfully.");
+          fetchFB(id);
+          toast.success(res.data.message);
         }
-        await new Promise((resolve) => {
-          setTimeout(resolve, 400);
-        });
-        navigate("/fina-bill-list2");
+      } catch (error) {
+        console.log("error updating form: ", error);
       }
+    }
+  };
+
+  const handleUndo = async () => {
+    try {
+      fetchFB(id);
     } catch (error) {
-      console.log("error submitting the form data: ", error);
-    } finally {
-      setBtnLoading(false);
+      console.log("error fetching fb detail: ", error);
     }
   };
 
@@ -469,14 +228,14 @@ const FinalBillingAdd = () => {
   };
 
   // this is for getting less adv receipt data
-  // const fetchIpdMR = async (id) => {
-  //   try {
-  //     const res = await axiosInstance(`/moneyreceipt/admission/${id}`);
-  //     res.data.success ? setLarDetails(res.data.data) : setLarDetails([]);
-  //   } catch (error) {
-  //     console.log("error fetching ipd money recipt detail by admId: ", error);
-  //   }
-  // };
+  const fetchIpdMR = async (id) => {
+    try {
+      const res = await axiosInstance(`/moneyreceipt/admission/${id}`);
+      res.data.success ? setLarDetails(res.data.data) : setLarDetails([]);
+    } catch (error) {
+      console.log("error fetching ipd money recipt detail by admId: ", error);
+    }
+  };
 
   const fetchAllDoctors = async () => {
     try {
@@ -484,274 +243,6 @@ const FinalBillingAdd = () => {
       res.data.success ? setAllDoctors(res.data.data) : setAllDoctors([]);
     } catch (error) {
       console.log("error fetching doctors: ", error);
-    }
-  };
-
-  // this will fetch all the ipd other charges
-  const fetchAllIPDOtherCharges = async () => {
-    try {
-      const res = await axiosInstance.get("/otherCharges");
-      res.data.success
-        ? setAllOtherCharges(res.data.data)
-        : setAllOtherCharges([]);
-      // console.log("All ipd oc: ", res.data.data);
-    } catch (error) {
-      console.log("Error fetching all ipd other charges: ", error);
-    }
-  };
-
-  // this will fetch ot bill details by adm id
-  const fetchOTC = async (id) => {
-    try {
-      const res = await axiosInstance.get(
-        `/ot-bills/search/admission?admissionId=${id}`,
-      );
-      res.data.success ? setOtcDetails(res.data.data) : setOcDeatails([]);
-
-      if (res.data.data.length != 0) {
-        const arr = res.data.data;
-        const newArr = arr.map((item) => ({
-          slno: 400,
-          PatientName: item.PatientName,
-          Diseasecode: "",
-          Disease: ".",
-          Add1: "",
-          Add2: "",
-          Add3: "",
-          Age: item.Age,
-          AgeType: "",
-          Sex: item.Sex,
-          AdmitionDate: item.BillDate,
-          PrintHead: "O.T. CHARGES",
-          SubHead: item.OtBillNo,
-          Particular: "",
-          Amount: item.TotalAmt,
-          TotAmount: item.TotalAmt,
-          MyPic: "",
-          scharge: 0,
-        }));
-
-        const totalOTCAmt = newArr.reduce((sum, item) => sum + item.Amount, 0);
-
-        setFinalBillDetail((prev) =>
-          prev.map((item) =>
-            item.SlNo === 3 ? { ...item, Amount1: totalOTCAmt } : item,
-          ),
-        );
-
-        setFormData((prev) => ({
-          ...prev,
-          details: {
-            ...prev.details,
-            finalbillalldtl: [...prev.details.finalbillalldtl, ...newArr],
-          },
-        }));
-      }
-    } catch (error) {
-      console.log("error fetching otc by id:", error);
-    }
-  };
-
-  // this will fetch the other charges details of particular patient by adm Id
-  const fetchIPDOtherChargesByAdmId = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/admission-charges/${id}`);
-      res.data.success
-        ? setOtherChargesByAdmId(res.data.data)
-        : setOtherChargesByAdmId([]);
-      // console.log("ipd oc by id: ", res.data.data);
-      const filteredOC = transformOtherCharges(
-        res.data.data,
-        allOtherCharges,
-        admData,
-      );
-      // console.log("hi: ", filteredOC);
-      setOtherChargesData(filteredOC);
-      const totalOtherCharges = filteredOC.reduce(
-        (sum, item) => sum + item.Amount,
-        0,
-      );
-      setFinalBillDetail((prev) =>
-        prev.map((item) =>
-          item.SlNo === 2 ? { ...item, Amount1: totalOtherCharges } : item,
-        ),
-      );
-
-      setFormData((prev) => ({
-        ...prev,
-        details: {
-          ...prev.details,
-          finalbillalldtl: [...prev.details.finalbillalldtl, ...filteredOC],
-        },
-      }));
-
-      // console.log("total oc :",totalOtherCharges)
-    } catch (error) {
-      console.log("Error fetching all ipd other charges: ", error);
-    }
-  };
-
-  // fetching less adv using adm id
-  const fetchLessAdv = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/moneyreceipt/admission/${id}`);
-      res.data.success ? setLessAdvData(res.data.data) : setLessAdvData([]);
-
-      const arr = res.data.data;
-      if (arr.length) {
-        const totalLessAdv = arr.reduce((sum, item) => sum + item.Amount, 0);
-        console.log("totalLessAdv chrgs; ", totalLessAdv);
-        const newArr = arr.map((item) => ({
-          ...item,
-          PrintHead: "Less Advance Receipt",
-        }));
-
-        console.log("less adv data: ", newArr);
-
-        setFormData((prev) => ({
-          ...prev,
-          details: {
-            ...prev.details,
-            finalbillalldtl: [...prev.details.finalbillalldtl, ...newArr],
-          },
-        }));
-
-        setFinalBillDetail((prev) =>
-          prev.map((item) =>
-            item.SlNo === 9 ? { ...item, Amount1: totalLessAdv } : item,
-          ),
-        );
-      }
-    } catch (error) {
-      console.log("error fetching less adv by admi id: ", error);
-    }
-  };
-
-  // fetching diag charge using adm id
-  const fetchDiag = async (id) => {
-    try {
-      const res = await axiosInstance.get(`/case01/admition/${id}`);
-      console.log("Diag data: ", res.data.data);
-
-      res.data.success ? setDiagData(res.data.data) : setDiagData([]);
-
-      const arr = res.data.data;
-      if (arr.length) {
-        const totalDiag = arr.reduce((sum, item) => sum + item.Total, 0);
-        console.log("total diag chrgs; ", totalDiag);
-
-        const newArr = arr.map((item) => {
-          console.log("tie: ", item);
-          const {
-            PatientName,
-            Diseasecode,
-            Disease,
-            Add1,
-            Add2,
-            Add3,
-            Age,
-            AgeType,
-            Sex,
-            Amount,
-            TotAmount,
-            MyPic,
-            scharge,
-            CaseDate,
-          } = item;
-
-          return {
-            AdmitionDate: CaseDate,
-            PatientName,
-            Diseasecode,
-            Disease,
-            Add1,
-            Add2,
-            Add3,
-            Age,
-            AgeType,
-            Sex,
-            SubHead: item.CaseNo,
-            Amount,
-            TotAmount,
-            MyPic,
-            scharge,
-            PrintHead: "Diagnostic Charges",
-          };
-        });
-
-        setFormData((prev) => ({
-          ...prev,
-          details: {
-            ...prev.details,
-            finalbillalldtl: [...prev.details.finalbillalldtl, ...newArr],
-          },
-        }));
-
-        setFinalBillDetail((prev) =>
-          prev.map((item) =>
-            item.SlNo === 5 ? { ...item, Amount1: totalDiag } : item,
-          ),
-        );
-      }
-    } catch (error) {
-      console.log("error fetching diago charge: ", error);
-    }
-  };
-
-  // fetch doctor visit by adm Id
-  const fetchDoctVisitByAdmId = async (id) => {
-    try {
-      const res = await axiosInstance.get(
-        `/doctor-visits/search/admission?admissionId=${id}`,
-      );
-      // console.log("doc visit: ", res.data.data);
-      res.data.success ? setDocVisit(res.data.data) : setDocVisit([]);
-      const data = res.data.data;
-
-      const updatedDOC = data.map((item) => ({
-        // FinalBillId: "",
-        slno: 500,
-        PatientName: admData?.PatientName,
-        Diseasecode: "",
-        Disease: ".",
-        Add1: admData?.Add1,
-        Add2: admData?.Add2,
-        Add3: admData?.Add3,
-        Age: admData?.Age,
-        AgeType: admData?.AgeType,
-        Sex: admData?.Sex,
-        AdmitionDate: admData?.AdmitionDate,
-        PrintHead: "DOCTOR VISIT",
-        SubHead:
-          allDoctors.find((d) => d.DoctorId == item.DoctorId)?.Doctor || "",
-        Particular: `${item.NoOfVisit}   /VISIT X Rs. ${item.Rate}`,
-        Amount: item.Amount,
-        TotAmount: 0,
-        MyPic: "",
-        scharge: 0,
-      }));
-      const totalDOC = updatedDOC.reduce((sum, item) => sum + item.Amount, 0);
-
-      setDoDetails(updatedDOC);
-      // console.log("Update doc array: ",updatedDOC)
-      // console.log("total doc : ",totalDOC)
-      // console.log("hdihfdioh: ",finalBillDetail)
-
-      setFinalBillDetail((prev) =>
-        prev.map((item) =>
-          item.SlNo === 4 ? { ...item, Amount1: totalDOC } : item,
-        ),
-      );
-
-      setFormData((prev) => ({
-        ...prev,
-        details: {
-          ...prev.details,
-          finalbillalldtl: [...prev.details.finalbillalldtl, ...updatedDOC],
-        },
-      }));
-    } catch (error) {
-      console.log("error fetching doctor visit by adm id: ", error);
     }
   };
 
@@ -780,34 +271,38 @@ const FinalBillingAdd = () => {
               </tr>
             </thead>
             <tbody>
-              {bedChargesData ? (
-                bedChargesData.map((row, idx) => (
-                  <tr key={idx} style={styles.tableRowSelected}>
-                    <td>
-                      {row.MyDate?.split("T")[0]
-                        ?.split("-")
-                        ?.reverse()
-                        ?.join("/") || ""}
-                    </td>
-                    {/* <td>{row?.BedId}</td> */}
-                    <td>
-                      {fetchedAdmBedDetail.find(
-                        (item) => item.BedId == row.BedId,
-                      )?.Bed || ""}
-                    </td>
-                    <td className="text-end">{row?.BedRate}</td>
-                    <td className="text-end">
-                      {bedDetails.find((item) => item.BedId == row.BedId)
-                        ?.AtttndantCh || 0}
-                    </td>
-                    <td className="text-end">
-                      {fetchedAdmBedDetail.find(
-                        (item) => item.BedId == row.BedId,
-                      )?.RMOCh || 0}
-                    </td>
-                    {/* <td className="text-end">{row.rmo}</td> */}
+              {fbData ? (
+                fbData?.details?.finalbillbeddtl ? (
+                  fbData?.details?.finalbillbeddtl.map((row, idx) => (
+                    <tr key={idx} style={styles.tableRowSelected}>
+                      <td>
+                        {row.MyDate?.split("T")[0]
+                          ?.split("-")
+                          ?.reverse()
+                          ?.join("/") || ""}
+                      </td>
+                      {/* <td>{row?.BedId}</td> */}
+                      <td>
+                        {bedDetails.find((item) => item.BedId == row.BedId)
+                          ?.Bed || ""}
+                      </td>
+                      <td className="text-end">{row?.BedRate}</td>
+                      <td className="text-end">
+                        {bedDetails.find((item) => item.BedId == row.BedId)
+                          ?.AtttndantCh || 0}
+                      </td>
+                      <td className="text-end">
+                        {bedDetails.find((item) => item.BedId == row.BedId)
+                          ?.RMOCh || 0}
+                      </td>
+                      {/* <td className="text-end">{row.rmo}</td> */}
+                    </tr>
+                  ))
+                ) : (
+                  <tr colSpan="2" className="text-end text-white">
+                    No data found.
                   </tr>
-                ))
+                )
               ) : (
                 <tr colSpan="2" className="text-end text-white">
                   No data found.
@@ -836,8 +331,8 @@ const FinalBillingAdd = () => {
               </tr>
             </thead>
             <tbody>
-              {otherChargesData ? (
-                otherChargesData.map((row, idx) => (
+              {ocDeatails ? (
+                ocDeatails.map((row, idx) => (
                   <tr key={idx} style={styles.tableRowSelected}>
                     <td>
                       {row.AdmitionDate?.split("T")[0]
@@ -881,14 +376,14 @@ const FinalBillingAdd = () => {
               {otcDetails ? (
                 otcDetails.map((row, idx) => (
                   <tr key={idx} style={styles.tableRowSelected}>
-                    <td>{row.OtBillNo || ""}</td>
+                    <td>{row.SubHead || ""}</td>
                     <td>
-                      {row.BillDate?.split("T")[0]
+                      {row.AdmitionDate?.split("T")[0]
                         ?.split("-")
                         ?.reverse()
                         ?.join("/") || ""}
                     </td>
-                    <td>{row.TotalAmt || 0}</td>
+                    <td>{row.Amount || 0}</td>
                   </tr>
                 ))
               ) : (
@@ -1031,8 +526,8 @@ const FinalBillingAdd = () => {
               </tr>
             </thead>
             <tbody>
-              {lessAdvData ? (
-                lessAdvData.map((row, idx) => (
+              {larDetails ? (
+                larDetails.map((row, idx) => (
                   <tr key={idx} style={styles.tableRowSelected}>
                     <td>
                       {row.ReceiptDate?.split("T")[0]
@@ -1067,22 +562,23 @@ const FinalBillingAdd = () => {
     }
   };
 
+  // fetching diag charge using adm id
+  const fetchDiag = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/case01/admition/${id}`);
+      console.log("Diag data: ", res.data.data);
+      res.data.success ? setDiagData(res.data.data.reverse()) : setDiagData([]);
+    } catch (error) {
+      console.log("error fetching diago charge: ", error);
+    }
+  };
+
   // fetching ipd adm details
   const fetchAdm = async (id) => {
-    if (!id) {
-      return;
-    }
     try {
       const response = await axiosInstance.get(`/admission/${id}`);
-      console.log("adm data: ", response.data.data);
+      console.log("adm data: ", response);
       response.data.success ? setAdmData(response.data.data) : setAdmData({});
-      setFormData((prev) => ({
-        ...prev,
-        ReffId: response.data.data?.AdmitionId,
-      }));
-
-      fetchDiag(id);
-      fetchLessAdv(id);
     } catch (error) {
       console.log("error fetching: ", error);
     }
@@ -1092,7 +588,7 @@ const FinalBillingAdd = () => {
   const fetchDept = async () => {
     try {
       const response = await axiosInstance.get(`/departmentIndoor`);
-      // console.log("dept data: ", response);
+      console.log("dept data: ", response);
       response.data.success
         ? setDeptIndoor(response.data.data)
         : setDeptIndoor({});
@@ -1101,218 +597,598 @@ const FinalBillingAdd = () => {
     }
   };
 
-  // day difference count
-  function getDayDifference(startDate, endDate) {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
+  // fectch final bill data for a specific user
+  const fetchFB = async (id) => {
+    console.log("id3: ", id);
 
-    const diffTime = end.getTime() - start.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    try {
+      if (!id) {
+        console.log("no id presenet");
+        return;
+      }
+      const res = await axiosInstance.get(`/fb/${id}`);
+      // res.data.success?setFbData(res.data.data):setFbData({})
+      console.log("Fb data: ", res.data.data);
+      if (res.data.success) {
+        setFbData(res.data.data);
+        setBillHeadData(res.data.data.details?.finalbilldtl);
 
-    return Math.abs(diffDays);
-  }
+        if (res.data.data.details?.finalbillalldtl) {
+          setOcDeatails(
+            filterCharges(res.data.data.details?.finalbillalldtl, " "),
+          );
 
-  // this create duplicate objects
-  // function multiplyObject(obj, count) {
-  //   return Array.from({ length: count }, () => ({
-  //     ...obj, // shallow copy
-  //   }));
-  // }
-  function multiplyObject(obj, count) {
-    // console.log("tds1: ", obj);
-    // console.log("tds: ", obj.MyDate);
-    const baseDate = new Date(obj.MyDate);
-    // console.log("td: ", baseDate);
-    return Array.from({ length: count }, (_, index) => {
-      const newDate = new Date(baseDate);
-      newDate.setDate(baseDate.getDate() + index); // + index দিন
+          // setDiagData(
+          //   filterCharges(
+          //     res.data.data.details?.finalbillalldtl,
+          //     "Diagnostic Charges",
+          //   ),
+          // );
 
-      return {
-        ...obj,
-        MyDate: newDate.toISOString(), // updated date
-      };
-    });
-  }
+          setDoDetails(
+            filterCharges(
+              res.data.data.details?.finalbillalldtl,
+              "DOCTOR VISIT",
+            ),
+          );
+          setOtcDetails(
+            filterCharges(
+              res.data.data.details?.finalbillalldtl,
+              "O.T. CHARGES",
+            ),
+          );
+          setScDetail(
+            filterCharges(
+              res.data.data.details?.finalbillalldtl,
+              "SERVICE CHARGES",
+            ),
+          );
+        }
+
+        if (res.data.data?.ReffId) {
+          fetchAdm(res.data.data?.ReffId);
+          fetchIpdMR(res.data.data?.ReffId);
+          fetchAllDiadWithTest(res.data.data?.ReffId);
+          fetchDiag(res.data.data?.ReffId);
+        }
+
+        if (res.data.data?.details?.finalbillbeddtl) {
+          const data = await fetchBedsById(
+            res.data.data?.details?.finalbillbeddtl,
+          );
+          // console.log("bed details: ",data)
+          setBedDetails(data);
+        }
+      } else {
+        // setFbData({});
+        setFbData({
+          FinalBillId: "",
+          BillNo: "",
+          BillDate: "",
+          BillTime: "",
+          ReleaseTime: "",
+          BillType: "",
+          ReffId: "",
+          Discount: 0,
+          ReciptAmt: 0,
+          CB: "",
+          ChequeNo: "",
+          ChequeDt: "",
+          BankName: "",
+          CashlessId: 0,
+          Rename: "",
+          UserId: 0,
+          MoneyreeciptId: "",
+          BillAmt: 0,
+          Remarks: "",
+          EditBill: "",
+          TDS: null,
+          TDSDate: null,
+          MBillNo: "",
+          Approval: 0,
+          ServiceTax: 0,
+          TaxInc: "",
+          PatiectPartyAmt: 0,
+          CorpPabley: 0,
+          details: {
+            fbdtl: [],
+            finalbillalldtl: [],
+            finalbillbeddtl: [],
+            finalbilldtl: [],
+            finalbillitmdtl: [],
+          },
+        });
+      }
+    } catch (error) {
+      console.log("error fetching fb data: ");
+    }
+  };
 
   // fetch bed detail by Id
-  const fetchBedsById = async (admId) => {
+  const fetchBedsById = async (beds) => {
     try {
-      // const promises = beds.map((item) =>
-      //   axiosInstance.get(`/bedMaster/${item.BedId}`),
-      // );
-
-      // const results = await Promise.all(promises);
-
-      // return results.map((res) => res?.data?.data);
-      const res1 = await axiosInstance.get(`/admissions/${admId}`);
-      console.log("fethed bed by admid: ", res1.data.data.bedData);
-
-      const arr = res1.data.data.bedData; // this all fetched bed by admId
-      console.log("hi bed: ", arr);
-      const promises = arr.map((item) =>
+      const promises = beds.map((item) =>
         axiosInstance.get(`/bedMaster/${item.BedId}`),
       );
 
       const results = await Promise.all(promises);
 
-      setFetchedAdmBedDetail(results.map((res) => res?.data?.data));
-      console.log(
-        "res bed: ",
-        results.map((res) => res?.data?.data),
-      );
-      const newA = arr.map((item) =>
-        getDayDifference(item.AdmitionDate, item.ReleaseDate),
-      ); // this is the all bed count with respect to adm and release date
-
-      console.log("newa : ", newA);
-      let allBedsUpTodayDate = arr.map((item, index) =>
-        multiplyObject(
-          {
-            AdmitionId: item?.AdmitionId,
-            NoofDays: 1,
-            MyDate: item?.AdmitionDate,
-            ReleaseDate: item?.ReleaseDate,
-            BedId: item.BedId,
-            BedRate: item.ToDayRate,
-            CGST: 0,
-            SGST: 0,
-          },
-          newA[index],
-        ),
-      );
-
-      const singleArray = allBedsUpTodayDate.flat();
-      console.log("all bed uptoday1 : ", singleArray);
-      const totalBedRate = singleArray.reduce(
-        (sum, item) => sum + item.BedRate,
-        0,
-      );
-      console.log("total bed rate: ", totalBedRate);
-      setFinalBillDetail((prev) =>
-        prev.map((item) =>
-          item.SlNo === 1 ? { ...item, Amount1: totalBedRate } : item,
-        ),
-      );
-
-      setFormData((prev) => ({
-        ...prev,
-        details: {
-          ...prev.details,
-          finalbillbeddtl: [...prev.details.finalbillbeddtl, ...singleArray],
-        },
-      }));
-
-      setBedChargesData(singleArray);
+      return results.map((res) => res?.data?.data);
     } catch (err) {
       console.error("Error while fetching bed data:", err);
       throw err;
     }
   };
 
-  const onChange = (e) => {
-    // console.log("hi I am on change", e);
-    fetchAdm(e.value);
+  // this is for filtering charges
+  const filterCharges = (data, ref) => {
+    const filteredData = data.filter((item) => item.PrintHead == ref);
+    console.log("dd: ", filteredData);
+    return filteredData;
+  };
+
+  // this is for fetching all diag data with the tests by the admId
+  const fetchAllDiadWithTest = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/case01/admition-with-tests/${id}`);
+
+      res.data.success
+        ? setAllDiagWithTest(res.data.data)
+        : setAllDiagWithTest([]);
+    } catch (error) {
+      console.log("Error fetching all diag with test by adm id: ", error);
+    }
+  };
+
+  // this is for handlePrint1
+  // this print final bill summary
+  const billData1 = {
+    hospitalName: "LORDS HEALTH CARE",
+    address:
+      "13/3, Circular 2nd Bye Lane, Kona Expressway, Shibpur, Howrah-711 102, W.B.",
+    phone: "8272904444",
+    helpline: "7003378414",
+    tollFree: "1800-309-0895",
+    email: "patientdesk@lordshealthcare.org",
+    website: "www.lordshealthcare.org",
+
+    patient: {
+      name: admData.PatientName || "",
+      address: admData.Add1 || "",
+      address2: admData.Add2 || "",
+      address3: admData.Add3 || "",
+      contact: admData.PhoneNo || "",
+      age: `${admData.Age || ""} ${admData.AgeType || "Y"}`,
+      sex: admData.Sex || "",
+    },
+
+    billNo: fbData?.BillNo || "",
+    ipdNo: admData.AdmitionNo || "",
+    admissionDate:
+      `${admData?.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/")} Time: ${
+        admData?.AdmitionTime || ""
+      }` || "",
+    dischargeDate:
+      `${fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${fbData?.ReleaseTime || ""}` ||
+      "",
+    dischargeType: "Expired not known confusion",
+    doctor:
+      allDoctors.find((item) => item.DoctorId == admData?.UCDoctor1Id)
+        ?.Doctor || "",
+    bedNo: "", // At time of discharge
+    billDate:
+      fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+
+    bedCharges: {
+      rows: fbData?.details?.finalbillbeddtl.map((row, idx) => [
+        row.MyDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        bedDetails.find((item) => item.BedId == row.BedId)?.Bed || "",
+        "1",
+        row?.BedRate || 0,
+        row?.BedRate || 0,
+      ]) || [["", "", "", "", ""]],
+      total:
+        billHeadData.find((item) => item.HeadName == "Bed Charges")?.Amount1 ||
+        "0",
+    },
+
+    doctorVisits: {
+      rows: doDetails.map((row) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        row.Particular?.trim()?.split("/")[0] || "",
+        row.Particular?.trim()?.split("X")[1] || "",
+        row.Amount || 0,
+      ]) || [["", "", "", "", ""]],
+      total:
+        billHeadData.find((item) => item.HeadName == "Doctor Charges")
+          ?.Amount1 || "0",
+    },
+
+    // criticalCare: {
+    //   rows: [
+    //     ["19/06/2023", "CRITICAL CARE DOCTOR FEES", "2", "600.00", "1,200.00"],
+    //   ],
+    //   total: "1,200.00",
+    // },
+
+    services: {
+      rows: ocDeatails.map((row) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        row.Particular?.trim()?.split("x")[0] || "",
+        row.Particular?.trim()?.split("x")[1] || "",
+        row.Amount || "",
+      ]),
+
+      total:
+        billHeadData.find((item) => item.HeadName == "Others Charges")
+          ?.Amount1 || "0",
+    },
+
+    // medicine: {
+    //   rows: [
+    //     [
+    //       "19/06/2023",
+    //       "MEDICINE-LORDS PHARMACY",
+    //       "1",
+    //       "26,256.00",
+    //       "26,256.00",
+    //     ],
+    //   ],
+    //   total: "26,256.00",
+    // },
+
+    investigations: {
+      rows: diagData.map((row) => [
+        row.CaseDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.CaseNo || "",
+        // row.Particular?.trim()?.split("x")[0] || "",
+        // row.Particular?.trim()?.split("x")[1] || "",
+        row.Total || "",
+      ]),
+      total:
+        billHeadData.find((item) => item.HeadName == "Diagnostic Charges")
+          ?.Amount1 || "0",
+    },
+
+    serviceCharges: {
+      // rows: [["-", "SERVICE CHARGES", "1", "2,743.00", "2,743.00"]],
+      rows: scDetail.map((row, idx) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        "1",
+        row.Amount || 0,
+        row.Amount || 0,
+      ]) || [["-", "", "", "", ""]],
+      total:
+        billHeadData.find((item) => item.HeadName == "Service Charges")
+          ?.Amount1 || "0",
+    },
+
+    // grandTotal: "274,544.00",
+    grandTotal:
+      billHeadData.reduce((acc, cur) => acc + Number(cur.Amount1), 0) -
+      larDetails.reduce((acc, curr) => acc + Number(curr.Amount), 0),
+    // advancePaid: "33,000.00",
+    advancePaid: larDetails.reduce((acc, curr) => acc + Number(curr.Amount), 0),
+    insuranceApproval: Number(fbData?.Approval),
+    nonPayable: "",
+    // nonPayable: "1725", // not found
+    billedBy: "Admin",
+  };
+
+  // this is for handlePrint2
+  // this print final bill diagnosis report
+  const defaultInvoiceData = {
+    hospital: {
+      name: "LORDS HEALTH CARE",
+      address:
+        "13/3, Circular 2nd Bye Lane, Kona Expressway, (Near Jumanabala Balika Vidyalaya) Shibpur, Howrah-711 102, W.B.",
+      phone: "8272904444",
+      helpline: "7003378414",
+      email: "patientdesk@lordshealthcare.org",
+      website: "www.lordshealthcare.org",
+    },
+    patient: {
+      name: admData.PatientName || "",
+      address: `${admData.Add1 || ""}, ${admData.Add2 || ""}, ${admData.Add3 || ""},`,
+      doctor:
+        allDoctors.find((item) => item.DoctorId == admData?.UCDoctor1Id)
+          ?.Doctor || "",
+      billNo: fbData?.BillNo || "",
+      age: `${admData.Age || ""} ${admData.AgeType || "Y"}`,
+      sex: admData.Sex || "",
+      admDate:
+        `${admData?.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/")} Time: ${
+          admData?.AdmitionTime || ""
+        }` || "",
+      disDate:
+        `${fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${fbData?.ReleaseTime || ""}` ||
+        "",
+      regdNo: admData.AdmitionNo || "",
+      billDate:
+        fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+    },
+    // groups: [
+    //   {
+    //     caseDate: "19/06/2023",
+    //     caseNo: "IP/2324/01892",
+    //     subtotal: "3,550.00",
+    //     tests: [
+    //       {
+    //         name: "COMPLETE HAEMOGRAM",
+    //         deliveryDate: "20/06/2023",
+    //         rate: "350.00",
+    //       },
+    //       { name: "URINE R/E", deliveryDate: "19/06/2023", rate: "150.00" },
+    //       { name: "URINE FOR C/S", deliveryDate: "22/06/2023", rate: "400.00" },
+    //       {
+    //         name: "C-REACTIVE PROTEIN (CRP) QUANTITATIVE",
+    //         deliveryDate: "20/06/2023",
+    //         rate: "500.00",
+    //       },
+    //       { name: "ECG", deliveryDate: "19/06/2023", rate: "250.00" },
+    //       {
+    //         name: "CHEST PA VIEW (DIGITAL)",
+    //         deliveryDate: "21/06/2023",
+    //         rate: "400.00",
+    //       },
+    //       { name: "ABG TEST", deliveryDate: "19/06/2023", rate: "1,500.00" },
+    //     ],
+    //   },
+    //   {
+    //     caseDate: "20/06/2023",
+    //     caseNo: "IP/2324/01894",
+    //     subtotal: "500.00",
+    //     tests: [
+    //       { name: "SODIUM", deliveryDate: "20/06/2023", rate: "250.00" },
+    //       { name: "POTASSIUM", deliveryDate: "20/06/2023", rate: "250.00" },
+    //     ],
+    //   },
+    //   {
+    //     caseDate: "20/06/2023",
+    //     caseNo: "IP/2324/01896",
+    //     subtotal: "3,300.00",
+    //     tests: [
+    //       {
+    //         name: "USG OF WHOLE ABDOMEN (FEMALE)",
+    //         deliveryDate: "21/06/2023",
+    //         rate: "1,800.00",
+    //       },
+    //       {
+    //         name: "ECHOCARDIOGRAPHY",
+    //         deliveryDate: "21/06/2023",
+    //         rate: "1,500.00",
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     caseDate: "20/06/2023",
+    //     caseNo: "IP/2324/01899",
+    //     subtotal: "150.00",
+    //     tests: [
+    //       {
+    //         name: "BLOOD GROUPING & RH FACTOR",
+    //         deliveryDate: "20/06/2023",
+    //         rate: "150.00",
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     caseDate: "21/06/2023",
+    //     caseNo: "IP/2324/01946",
+    //     subtotal: "8,550.00",
+    //     tests: [
+    //       { name: "URINE R/E", deliveryDate: "21/06/2023", rate: "150.00" },
+    //       { name: "URINE FOR C/S", deliveryDate: "24/06/2023", rate: "400.00" },
+    //       {
+    //         name: "BLOOD CULTURE AEROBIC",
+    //         deliveryDate: "25/06/2023",
+    //         rate: "1,500.00",
+    //       },
+    //       {
+    //         name: "MRI BRAIN 1.5",
+    //         deliveryDate: "22/06/2023",
+    //         rate: "6,500.00",
+    //       },
+    //     ],
+    //   },
+    //   {
+    //     caseDate: "22/06/2023",
+    //     caseNo: "IP/2324/01969",
+    //     subtotal: "3,050.00",
+    //     tests: [
+    //       {
+    //         name: "COMPLETE HAEMOGRAM",
+    //         deliveryDate: "23/06/2023",
+    //         rate: "350.00",
+    //       },
+    //       { name: "CREATININE", deliveryDate: "22/06/2023", rate: "150.00" },
+    //       { name: "SODIUM", deliveryDate: "22/06/2023", rate: "250.00" },
+    //       { name: "POTASSIUM", deliveryDate: "22/06/2023", rate: "250.00" },
+    //       { name: "UREA", deliveryDate: "22/06/2023", rate: "150.00" },
+    //       {
+    //         name: "CHEST PA VIEW (DIGITAL)",
+    //         deliveryDate: "23/06/2023",
+    //         rate: "400.00",
+    //       },
+    //       { name: "ABG TEST", deliveryDate: "23/06/2023", rate: "1,500.00" },
+    //     ],
+    //   },
+    // ],
+    printBy:
+      authUserData?.find((item) => item.UserId == fbData.UserId)?.UserName ||
+      "",
+    groups: allDiagWithTest,
+    // grandTotal: "19,100.00",
+  };
+
+  // this is for handlePrint3
+  // this print final bill patient copy
+  const billData2 = {
+    hospitalName: "LORDS HEALTH CARE",
+    address:
+      "13/3, Circular 2nd Bye Lane, Kona Expressway, Shibpur, Howrah-711 102, W.B.",
+    phone: "8272904444",
+    helpline: "7003378414",
+    tollFree: "1800-309-0895",
+    email: "patientdesk@lordshealthcare.org",
+    website: "www.lordshealthcare.org",
+
+    patient: {
+      name: admData.PatientName || "",
+      address: admData.Add1 || "",
+      address2: admData.Add2 || "",
+      address3: admData.Add3 || "",
+      contact: admData.PhoneNo || "",
+      age: `${admData.Age || ""} ${admData.AgeType || "Y"}`,
+      sex: admData.Sex || "",
+    },
+
+    billNo: fbData?.BillNo || "",
+    ipdNo: admData.AdmitionNo || "",
+    admissionDate:
+      `${admData?.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/")} Time: ${
+        admData?.AdmitionTime || ""
+      }` || "",
+    dischargeDate:
+      `${fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${fbData?.ReleaseTime || ""}` ||
+      "",
+    dischargeType: "Expired not known confusion",
+    doctor:
+      allDoctors.find((item) => item.DoctorId == admData?.UCDoctor1Id)
+        ?.Doctor || "",
+    bedNo: "", // At time of discharge
+    billDate:
+      fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+
+    bedCharges: {
+      rows: fbData?.details?.finalbillbeddtl.map((row, idx) => [
+        row.MyDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        bedDetails.find((item) => item.BedId == row.BedId)?.Bed || "",
+        "1",
+        row?.BedRate || 0,
+        row?.BedRate || 0,
+      ]) || [["", "", "", "", ""]],
+      total:
+        billHeadData.find((item) => item.HeadName == "Bed Charges")?.Amount1 ||
+        "0",
+    },
+
+    doctorVisits: {
+      rows: doDetails.map((row) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        row.Particular?.trim()?.split("/")[0] || "",
+        row.Particular?.trim()?.split("X")[1] || "",
+        row.Amount || 0,
+      ]) || [["", "", "", "", ""]],
+      total:
+        billHeadData.find((item) => item.HeadName == "Doctor Charges")
+          ?.Amount1 || "0",
+    },
+
+    // criticalCare: {
+    //   rows: [
+    //     ["19/06/2023", "CRITICAL CARE DOCTOR FEES", "2", "600.00", "1,200.00"],
+    //   ],
+    //   total: "1,200.00",
+    // },
+
+    services: {
+      rows: ocDeatails.map((row) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        row.Particular?.trim()?.split("x")[0] || "",
+        row.Particular?.trim()?.split("x")[1] || "",
+        row.Amount || "",
+      ]),
+
+      total:
+        billHeadData.find((item) => item.HeadName == "Others Charges")
+          ?.Amount1 || "0",
+    },
+
+    // medicine: {
+    //   rows: [
+    //     [
+    //       "19/06/2023",
+    //       "MEDICINE-LORDS PHARMACY",
+    //       "1",
+    //       "26,256.00",
+    //       "26,256.00",
+    //     ],
+    //   ],
+    //   total: "26,256.00",
+    // },
+
+    investigations: {
+      rows: diagData.map((row) => [
+        row.CaseDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.CaseNo || "",
+        // row.Particular?.trim()?.split("x")[0] || "",
+        // row.Particular?.trim()?.split("x")[1] || "",
+        row.Total || "",
+      ]),
+      total:
+        billHeadData.find((item) => item.HeadName == "Diagnostic Charges")
+          ?.Amount1 || "0",
+    },
+
+    serviceCharges: {
+      // rows: [["-", "SERVICE CHARGES", "1", "2,743.00", "2,743.00"]],
+      rows: scDetail.map((row, idx) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        "1",
+        row.Amount || 0,
+        row.Amount || 0,
+      ]) || [["-", "", "", "", ""]],
+      total:
+        billHeadData.find((item) => item.HeadName == "Service Charges")
+          ?.Amount1 || "0",
+    },
+
+    // grandTotal: "274,544.00",
+    grandTotal:
+      billHeadData.reduce((acc, cur) => acc + Number(cur.Amount1), 0) -
+      larDetails.reduce((acc, curr) => acc + Number(curr.Amount), 0),
+    // advancePaid: "33,000.00",
+    advancePaid: larDetails.reduce((acc, curr) => acc + Number(curr.Amount), 0),
+    insuranceApproval: Number(fbData?.Approval),
+    nonPayable: "",
+    // nonPayable: "1725", // not found
+    billedBy: "Admin",
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    // console.log("name: ", name, " value:", value);
-    setFormData((prev) => ({
+    console.log("name: ", name, " value:", value);
+    setFbData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  // this function will filter the ipd other charges details by id from all ipd other charges and make the structure as required
-  function transformOtherCharges(
-    otherChargesByAdmId,
-    allOtherCharges,
-    patientInfo,
-  ) {
-    return otherChargesByAdmId.map((item, index) => {
-      // const matched = allOtherCharges.find(
-      //   (oc) => oc.OtherChargesId == item.OtherChargesId,
-      // );
-
-      // console.log("matched", matched);
-      return {
-        slno: index + 1,
-        PatientName: patientInfo?.PatientName || "",
-        Diseasecode: patientInfo?.Diseasecode || "",
-        // Disease: patientInfo?.DiseaseId|| ".",
-        Disease: "",
-        Add1: patientInfo?.Add1 || "",
-        Add2: patientInfo?.Add2 || "",
-        Add3: patientInfo?.Add3 || "",
-        Age: patientInfo?.Age || "",
-        AgeType: patientInfo?.AgeType || "",
-        Sex: patientInfo?.Sex || "",
-        AdmitionDate: patientInfo?.AdmitionDate || "",
-        PrintHead: " ",
-        // SubHead: matched?.OtherCharges || "",
-        SubHead: allOtherCharges1[item.OtherChargesId]?.OtherCharges || "",
-        Particular: `   ${item.Qty} x Rs. ${item.Rate.toFixed(2)} `,
-        Amount: item.Amount,
-        TotAmount: 0,
-        MyPic: "",
-        scharge:
-          allOtherCharges1[item.OtherChargesId]?.ServiceCh === "Y" ? 1 : 0,
-        // scharge: matched?.ServiceCh === "Y" ? 1 : 0,
-      };
-    });
-  }
-
-  useEffect(() => {
-    if (Object.keys(admData).length) {
-      console.log("adm data1: ", admData);
-
-      fetchBedsById(admData?.AdmitionId, admData?.BedId);
-      // console.log("Adm date:", admData?.AdmitionDate);
-      fetchOTC(admData?.AdmitionId);
-      fetchIPDOtherChargesByAdmId(admData?.AdmitionId);
-
-      fetchDoctVisitByAdmId(admData?.AdmitionId);
-
-      setTimeout(() => {
-        setBtnLoading(false);
-      }, 5000);
-    }
-  }, [admData]);
-
   useEffect(() => {
     fetchAuthUsers();
-    // fetchFB(id);
-    fetchAllIPDOtherCharges();
+    fetchFB(id);
     fetchAllDoctors();
     fetchDept();
     fetchCashLess();
   }, []);
 
   useEffect(() => {
-    if (allOtherCharges.length) {
-      const obj = allOtherCharges.reduce((acc, item) => {
-        acc[item.OtherChargesId] = item;
-        return acc;
-      }, {});
-      console.log("objd: ", obj);
-      setAllOtherCharges1(obj);
-    }
-  }, [allOtherCharges]);
-
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      details: {
-        ...formData.details,
-        finalbilldtl: finalBillDetail,
-      },
-    }));
-  }, [finalBillDetail]);
+    const { Approval, Discount, ReciptAmt, Remarks, CashlessId } = fbData;
+    setFormData({ Approval, Discount, ReciptAmt, Remarks, CashlessId });
+  }, [fbData]);
 
   return (
     <div className="min-vh-100 ">
+      {" "}
       {/* Top Header */}
-      <div className=" d-flex justify-content-between align-items-center px-2 py-3 mb-1 border">
+           <div className=" d-flex justify-content-between align-items-center px-2 py-3 mb-1 border">
         <div className="d-flex align-items-center">
           <span
             style={{
@@ -1328,7 +1204,23 @@ const FinalBillingAdd = () => {
             <h6>Final Billing</h6>
           </span>
         </div>
-        <div className="d-flex align-items-center pe-3">
+        <div className="d-flex align-items-center gap-2">
+          <button
+            className={`btn ${fbMode === "estimate" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            onClick={() => {
+              setFbMode("estimate");
+            }}
+          >
+            Estimate
+          </button>
+          <button
+            className={`btn ${fbMode !== "estimate" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            onClick={() => {
+              setFbMode("final");
+            }}
+          >
+            Final
+          </button>
           <button
             className="btn btn-primary btn-sm"
             onClick={() => {
@@ -1339,10 +1231,10 @@ const FinalBillingAdd = () => {
           </button>
         </div>
       </div>
-      <div className="min-vh-80 container-fluid p-0">
+        <div className="min-vh-80 container-fluid p-0">
         <div className="row g-1 min-vh-80 ms-2">
           {/* LEFT MAIN PANEL */}
-          <div className="col-12 col-lg-9 ">
+          <div className="col-12 col-lg-9">
             {/* 1. BILL DETAIL SECTION */}
             <div style={styles.sectionGroup}>
               <span style={styles.legend} className="bg-primary">
@@ -1356,8 +1248,7 @@ const FinalBillingAdd = () => {
                   <input
                     type="text"
                     style={styles.input}
-                    // value={formData?.BillNo || ""}
-                    value={formData?.BillNo || ""}
+                    value={fbData?.BillNo || ""}
                   />
                 </div>
 
@@ -1368,53 +1259,34 @@ const FinalBillingAdd = () => {
                   <input
                     type="date"
                     style={styles.input}
-                    // value={formData?.BillDate?.split("T")[0] || ""}
-                    name="BillDate"
-                    value={formData?.BillDate}
-                    onChange={handleChange}
+                    value={fbData?.BillDate?.split("T")[0] || ""}
                   />
                 </div>
 
                 <div className="col-md-1 col-4 text-end">
                   <span style={styles.label}>Bill Time</span>
                 </div>
-                <div className="col-md-2 col-8">
+                <div className="col-md-1 col-8">
                   <input
-                    type="time"
+                    type="text"
                     style={styles.input}
-                    name="BillTime"
-                    // value={formData?.BillTime || ""}
-                    value={convertTo24Hour(formData?.BillTime) || ""}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        BillTime: convertTo12Hour(e.target.value),
-                      }));
-                    }}
+                    value={fbData?.BillTime || ""}
                   />
                 </div>
 
-                <div className="col-md-1 col-4 text-end">
+                <div className="col-md-2 col-4 text-end">
                   <span style={styles.label}>Discharge Time</span>
                 </div>
                 <div className="col-md-2 col-8">
                   <input
-                    type="time"
+                    type="text"
                     style={styles.input}
-                    name="ReleaseTime"
-                    // value={formData?.ReleaseTime || ""}
-                    value={convertTo24Hour(formData?.ReleaseTime) || ""}
-                    onChange={(e) => {
-                      setFormData((prev) => ({
-                        ...prev,
-                        ReleaseTime: convertTo12Hour(e.target.value),
-                      }));
-                    }}
+                    value={fbData?.ReleaseTime || ""}
                   />
                 </div>
               </div>
 
-              <div className="row g-1 align-items-center mb-2">
+              <div className="row g-1 align-items-center">
                 <div className="col-md-1 col-4 text-end">
                   <span style={styles.label}>Indoor/[O].T.</span>
                 </div>
@@ -1422,22 +1294,14 @@ const FinalBillingAdd = () => {
                   <input
                     type="text"
                     style={styles.input}
-                    value={formData?.BillType || ""}
+                    value={fbData?.BillType || ""}
                   />
                 </div>
                 <div className="col-md-3 col-6">
-                  {/* <input
+                  <input
                     type="text"
                     style={styles.input}
                     value={admData.PatientName || ""}
-                  /> */}
-
-                  <AsyncApiSelect
-                    api={"https://lords-backend.onrender.com/api/v1/admission"}
-                    searchKey={"name"}
-                    labelKey="PatientName"
-                    valueKey="AdmitionId"
-                    onChange={onChange}
                   />
                 </div>
 
@@ -1465,11 +1329,10 @@ const FinalBillingAdd = () => {
                     style={styles.input}
                     // defaultValue="Admin"
                     value={
-                      authUserData?.find((item) => item.UserId == loggedInUser)
+                      authUserData?.find((item) => item.UserId == fbData.UserId)
                         ?.UserName || ""
                     }
                   />
-
                   {/* {console.log("hi: ", authUserData)} */}
                 </div>
 
@@ -1480,7 +1343,7 @@ const FinalBillingAdd = () => {
                   <input
                     type="text"
                     style={styles.input}
-                    // defaultValue="Admin"
+                    defaultValue="Admin"
                     value={
                       authUserData?.find((item) => item.UserId == loggedInUser)
                         ?.UserName || ""
@@ -1551,7 +1414,7 @@ const FinalBillingAdd = () => {
                 </div>
               </div>
 
-              <div className="row g-1 mb-2">
+              <div className="row g-1">
                 {/* Address Block */}
                 <div className="col-md-1 text-end pt-1">
                   <span style={styles.label}>Address</span>
@@ -1663,8 +1526,7 @@ const FinalBillingAdd = () => {
 
                       <tbody>
                         {/* {console.log(billHeadData)} */}
-                        {/* {billHeadData.length === 0 ? ( */}
-                        {finalBillDetail.length === 0 ? (
+                        {billHeadData.length === 0 ? (
                           <tr>
                             <td
                               colSpan="2"
@@ -1674,8 +1536,7 @@ const FinalBillingAdd = () => {
                             </td>
                           </tr>
                         ) : (
-                          // billHeadData.map((row, idx) => (
-                          finalBillDetail.map((row, idx) => (
+                          billHeadData.map((row, idx) => (
                             <tr
                               key={idx}
                               style={
@@ -1712,10 +1573,7 @@ const FinalBillingAdd = () => {
             </div>
 
             {/* 5. TOTALS & CALCULATIONS */}
-            <div
-              style={{ ...styles.sectionGroup, padding: "5px" }}
-              className=""
-            >
+            <div style={{ ...styles.sectionGroup, padding: "5px" }}>
               <div className="row g-1">
                 {/* Left Column Totals */}
                 <div className="col-md-4">
@@ -1743,7 +1601,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.BillAmt || 0}
+                        value={fbData?.BillAmt || 0}
                       />
                     </div>
                   </div>
@@ -1755,7 +1613,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="number"
                         style={styles.input}
-                        value={Number(formData?.Approval) || 0}
+                        value={Number(fbData?.Approval) || 0}
                         name="Approval"
                         onChange={handleChange}
                       />
@@ -1769,7 +1627,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.PatiectPartyAmt || 0}
+                        value={fbData?.PatiectPartyAmt || 0}
                       />
                     </div>
                   </div>
@@ -1781,7 +1639,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="number"
                         style={styles.input}
-                        value={formData?.Discount || 0}
+                        value={fbData?.Discount || 0}
                         name="Discount"
                         onChange={handleChange}
                       />
@@ -1795,7 +1653,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="number"
                         style={styles.input}
-                        value={formData?.ReciptAmt || 0}
+                        value={fbData?.ReciptAmt || 0}
                         name="ReciptAmt"
                         onChange={handleChange}
                       />
@@ -1828,11 +1686,7 @@ const FinalBillingAdd = () => {
                       <span style={styles.label}>Tax Inclusive(Y/N)</span>
                     </div>
                     <div className="col-6">
-                      <select
-                        value={formData?.TaxInc}
-                        name="TaxInc"
-                        onChange={handleChange}
-                      >
+                      <select value={fbData?.TaxInc}>
                         <option value={""}>--</option>
                         <option value={"Y"}>Y</option>
                         <option value={"N"}>N</option>
@@ -1847,7 +1701,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.ServiceTax || 0}
+                        value={fbData?.ServiceTax || 0}
                       />
                     </div>
                   </div>
@@ -1859,7 +1713,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.CorpPabley || 0}
+                        value={fbData?.CorpPabley || 0}
                       />
                     </div>
                   </div>
@@ -1891,7 +1745,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.PatiectPartyAmt || 0}
+                        value={fbData?.PatiectPartyAmt || 0}
                       />
                     </div>
                   </div>
@@ -1918,7 +1772,7 @@ const FinalBillingAdd = () => {
                     <div className="col-8">
                       <select
                         style={styles.input}
-                        value={formData?.CashlessId}
+                        value={fbData?.CashlessId}
                         name="CashlessId"
                         onChange={handleChange}
                       >
@@ -1939,7 +1793,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.Approval || 0}
+                        value={fbData?.Approval || 0}
                       />
                     </div>
                   </div>
@@ -1951,7 +1805,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.PatiectPartyAmt || 0}
+                        value={fbData?.PatiectPartyAmt || 0}
                       />
                     </div>
                   </div>
@@ -1975,7 +1829,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="number"
                         style={styles.input}
-                        value={formData?.Discount || 0}
+                        value={fbData?.Discount || 0}
                         name="Discount"
                         onChange={handleChange}
                       />
@@ -1988,7 +1842,7 @@ const FinalBillingAdd = () => {
                     <div className="col-9">
                       <textarea
                         style={{ ...styles.input, height: "40px" }}
-                        value={formData?.Remarks || ""}
+                        value={fbData?.Remarks || ""}
                         name="Remarks"
                         onChange={handleChange}
                       ></textarea>
@@ -2006,11 +1860,7 @@ const FinalBillingAdd = () => {
               <div className="mt-2 row g-1 align-items-center">
                 <div className="col-md-3 col-12 d-flex align-items-center">
                   <span style={styles.label}> [C]ash/[B]ank/[R]Card</span>
-                  <select
-                    value={formData?.CB}
-                    name="CB"
-                    onChange={handleChange}
-                  >
+                  <select value={fbData?.CB}>
                     <option value={""}>-</option>
                     <option value={"C"}>C</option>
                     <option value={"B"}>B</option>
@@ -2022,19 +1872,20 @@ const FinalBillingAdd = () => {
                   <input
                     type="text"
                     style={styles.input}
-                    value={formData?.ChequeNo || ""}
-                    name="ChequeNo"
-                    onChange={handleChange}
+                    value={fbData?.ChequeNo || ""}
                   />
                 </div>
                 <div className="col-md-3 col-6 d-flex align-items-center">
                   <span style={styles.label}>Date</span>
                   <input
-                    type="date"
+                    type="text"
                     style={styles.input}
-                    value={formData?.ChequeDt}
-                    name="ChequeDt"
-                    onChange={handleChange}
+                    value={
+                      fbData?.ChequeDt?.split("T")[0]
+                        ?.split("-")
+                        ?.reverse()
+                        ?.join("/") || ""
+                    }
                   />
                 </div>
                 <div className="col-md-3 col-12 d-flex align-items-center">
@@ -2042,9 +1893,7 @@ const FinalBillingAdd = () => {
                   <input
                     type="text"
                     style={styles.input}
-                    value={formData?.BankName || ""}
-                    name="BankName"
-                    onChange={handleChange}
+                    value={fbData?.BankName || ""}
                   />
                 </div>
               </div>
@@ -2052,13 +1901,13 @@ const FinalBillingAdd = () => {
           </div>
 
           {/* RIGHT SIDE PANEL */}
-        <div className="col-12 col-lg-3 d-flex flex-column gap-2">
+          <div className="col-12 col-lg-3 d-flex flex-column gap-2">
             {/* Barcode Area */}
             <div
               className="bg-primary p-2 text-center"
               style={{
                 border: "1px solid white",
-                minHeight: "30%",
+                minHeight: "100px",
                 backgroundColor: "#0078D7",
               }}
             >
@@ -2075,6 +1924,7 @@ const FinalBillingAdd = () => {
                 ) : null}
               </div>
             </div>
+
             {/* Advances */}
             <div className="row g-1 align-items-center">
               <div className="col-8 text-end">
@@ -2100,6 +1950,7 @@ const FinalBillingAdd = () => {
                 />
               </div>
             </div>
+
             {/* Remarks Big */}
             <div>
               <span
@@ -2110,52 +1961,85 @@ const FinalBillingAdd = () => {
               <textarea
                 style={{
                   width: "100%",
-                  height: "25vh",
+                  height: "150px",
                   border: "1px solid #999",
                 }}
                 value={admData?.Remarks || ""}
               ></textarea>
             </div>
+
             {/* Side Buttons */}
-            {/* <div className="d-flex gap-1 justify-content-end mt-2">
+            <div className="d-flex gap-1 justify-content-end">
               <button className="btn btn-sm btn-primary">
                 All Money Receipt
               </button>
               <button className="btn btn-sm btn-primary">PrintMRct</button>
             </div>
+
             <div className="d-flex gap-2 align-items-center">
               <input type="checkbox" />
               <span className="fw-bold bg-white px-1">Submited</span>
-            </div> */}
-            {/* <input type="text" style={{ ...styles.input, height: "20%" }} /> */}
-            {/* <textarea
-              style={{
-                width: "100%",
-                height: "30%",
-                border: "1px solid #999",
-              }}
-              // value={admData?.Remarks || ""}
-            ></textarea> */}
+            </div>
+
+            <input type="text" style={{ ...styles.input, height: "30px" }} />
+
             <div>
-              {/* <button className="btn btn-sm btn-primary">Update</button> */}
+              <button className="btn btn-sm btn-primary">Update</button>
             </div>
           </div>
         </div>
       </div>
       {/* 8. FOOTER BUTTON BAR */}
       <div
-        className=" mt-4 p-1 d-flex justify-content-between align-items-center"
+        className="mt-4 p-1 d-flex justify-content-between align-items-center"
         style={{ backgroundColor: "primary", borderTop: "1px solid white" }}
       >
         <div className="d-flex flex-wrap gap-1">
-          <button
-            className="btn btn-sm btn-primary"
-            onClick={handleSave}
-            disabled={btnLoading}
-          >
-            Save
-          </button>
+          {/* <button className="btn btn-sm btn-primary">Modify</button> */}
+          {/* <button className="btn btn-sm btn-primary">New</button> */}
+          {/* <button className="btn btn-sm btn-primary">Edit</button> */}
+          {fbMode === "final" && (
+            <>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={handleSave}
+                disabled={mode_type === "view"}
+              >
+                Save
+              </button>
+              {/* <button className="btn btn-sm btn-primary">Delete</button> */}
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={handleUndo}
+                disabled={mode_type === "view"}
+              >
+                Undo
+              </button>
 
+              {/* this is print type selection modal */}
+              {showPrintModal && (
+                <RetroModal
+                  showModal={showPrintModal}
+                  setShowModal={setShowPrintModal}
+                  printType={printType}
+                  setPrintType={setPrintType}
+                  billData1={billData1}
+                  defaultInvoiceData={defaultInvoiceData}
+                  billData2={billData2}
+                />
+              )}
+
+              {console.log("Print type: ", printType)}
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={() => {
+                  setShowPrintModal((prev) => !prev);
+                }}
+              >
+                Print
+              </button>
+            </>
+          )}
           <button
             className="btn btn-sm btn-primary"
             onClick={() => {
@@ -2170,6 +2054,6 @@ const FinalBillingAdd = () => {
   );
 };
 
-export default FinalBillingAdd;
+export default FinalBilling;
 
 

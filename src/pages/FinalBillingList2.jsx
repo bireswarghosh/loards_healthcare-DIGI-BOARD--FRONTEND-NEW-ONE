@@ -104,7 +104,8 @@ const handleDelte = async (id) => {
             <div>
               <button
                 className="btn btn-sm btn-primary"
-                onClick={() => navigate("/fina-bill-add")}
+                // onClick={() => navigate("/fina-bill-add")}
+                onClick={() => navigate("/fina-bill-add-copy")}
               >
                 New
               </button>
@@ -254,7 +255,7 @@ const handleDelte = async (id) => {
                         <td>
                           <button className="btn btn-sm btn-outline-info me-1"
                             onClick={() => {
-                          navigate(`/fina-bill/${encodeURIComponent(admission.FinalBillId)}/view`)  
+                          navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/view`)  
                           }
                           }
                           >
@@ -262,7 +263,7 @@ const handleDelte = async (id) => {
                           </button>
                           <button className="btn btn-sm btn-outline-warning me-1"
                           onClick={() => {
-                          navigate(`/fina-bill/${encodeURIComponent(admission.FinalBillId)}/edit`)  
+                          navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/edit`)  
                           }
                           }
                           >
