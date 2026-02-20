@@ -89,7 +89,7 @@ const UniversalPReg = ({ RegistrationId, setOpen, setSelectedId }) => {
   return (
     <form onSubmit={handleSubmit} className="b">
       <div className="d-flex justify-content-end  align-items-center p-1 border-bottom">
-        <button onClick={() => navigate("/OtherzzCharges")}>Back</button>;
+        <button onClick={() => navigate("/Opd_Other_Charges")}>Back</button>;
         {/* <h5 className="mb-0">Patient List</h5> */}
         <button
           type="button"
