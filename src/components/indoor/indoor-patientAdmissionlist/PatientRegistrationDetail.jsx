@@ -41,6 +41,13 @@ const PatientAdmission = () => {
   const [totalOPDPages, setTotalOPDPages] = useState(1);
   const [drawerOPDs, setDrawerOPDs] = useState([]);
 
+  const [ipdPerPage] = useState(20);
+  const [showIPDDrawer, setShowIPDDrawer] = useState(false);
+  const [ipdSearchQuery, setIPDSearchQuery] = useState("");
+  const [currentIPDPage, setCurrentIPDPage] = useState(1);
+  const [totalIPDPages, setTotalIPDPages] = useState(1);
+  const [drawerIPDs, setDrawerIPDs] = useState([]);
+
   // Data Lists State
   const [doctors, setDoctors] = useState([]);
   const [district, setDistrict] = useState([]);
@@ -60,13 +67,15 @@ const PatientAdmission = () => {
   const [packages, setPackages] = useState([]);
   const [fetchedState, setFetchedState] = useState([]);
 
-  const [selBed, setSelBed] = useState("")
+  const [selBed, setSelBed] = useState("");
 
   // Main Form Data
   const [formData, setFormData] = useState({
     AdmitionDate: new Date().toISOString().split("T")[0],
-    AdmitionTime: "13:15",
-    BillTime: "12:00",
+    AdmitionTime:  new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+    BillTime: new Date().getHours() >= 12 ? "12:00" : "00:00",
+    IPD: "N",
+    IPDId: "",
     OPD: "Y",
     OPDId: "",
     Booking: "N",
@@ -134,7 +143,7 @@ const PatientAdmission = () => {
     Nameemp: "",
     empcode: "",
     RefDoctorId2: 0,
-    packagevalid: "",
+    packagevalid: new Date().toISOString().split("T")[0],
     optdiagoinc: 0,
     optmediinc: 0,
     optotherchargeinc: 0,
@@ -146,7 +155,7 @@ const PatientAdmission = () => {
     AgeN: 0,
     AgeTypeN: "D",
     URN: "",
-    packagestart: "",
+    packagestart: new Date().toISOString().split("T")[0],
     AcGenLedCompany: 0,
     optotinc: 0,
     MEXECUTIVE: "",
@@ -329,11 +338,29 @@ const PatientAdmission = () => {
     }
   };
 
+  const fetchDrawerIPDs = async (page = 1, search = "") => {
+    try {
+      setLoading(true);
+      let url = `/admission?page=${page}&limit=${ipdPerPage}`;
+      if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
+      const response = await axiosInstance.get(url);
+      if (response.data.success) {
+        setDrawerIPDs(response.data.data || []);
+        setTotalIPDPages(response.data.pagination?.pages || 1);
+      }
+    } catch (error) {
+      console.error("Error fetching IPD:", error);
+      setDrawerIPDs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchOPDPatientData = async (registrationId) => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        `/patient-visits/registration?registrationId=${registrationId}`
+        `/patient-visits/registration?registrationId=${registrationId}`,
       );
       if (
         response.data.success &&
@@ -364,6 +391,86 @@ const PatientAdmission = () => {
       }
     } catch (error) {
       console.error("Error fetching OPD patient data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchIPDPatientData = async (registrationId) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/admission/${registrationId}`);
+      if (response.data.success && response.data.data) {
+        const patientData = response.data.data;
+        console.log("gg ", patientData);
+        setFormData((prev) => ({
+          ...prev,
+          IPDId: registrationId,
+          PatientName: patientData.PatientName || "",
+          Add1: patientData.Add1 || "",
+          Add2: patientData.Add2 || "",
+          Add3: patientData.Add3 || "",
+          Age: patientData.Age || 0,
+          AgeD: patientData.AgeD || 0,
+          AgeN: patientData.AgeN || 0,
+          Sex: patientData.Sex || "M",
+          PhoneNo: patientData.PhoneNo || "",
+          MStatus: patientData.MStatus || "U",
+          GurdianName: patientData.GurdianName || "",
+          AreaId: patientData.AreaId || "",
+          ReligionId: patientData.ReligionId || "",
+          Weight: patientData.PatientWeight || patientData.Weight || "0",
+          PatientId: patientData.AdmitionId || "",
+
+          Relation: patientData.Relation || "",
+          IdentNo: patientData.IdentNo || "",
+          CardNo: patientData.CardNo || "",
+          URN: patientData.URN || "",
+          PanNo: patientData.PanNo || "",
+          RelativeName: patientData.RelativeName || "",
+          AdmType: patientData.AdmType || "",
+          nameemploye: patientData.nameemploye || "",
+          BedId: patientData.BedId || "",
+          DepartmentId: patientData.DepartmentId || "",
+          Occupation: patientData.Occupation || "",
+          Dob: patientData.Dob || "",
+          RelativePhoneNo: patientData.RelativePhoneNo || "",
+          nameemployer: patientData.nameemployer || "",
+          refdate: patientData.refdate || "",
+          UCDoctor1Id: patientData.UCDoctor1Id || "",
+          Referral: patientData.Referral || "",
+          Package: patientData.Package || "",
+          BedRate: patientData.BedRate || "",
+          ReferralId:patientData.ReferralId || "",
+          PackageId:patientData.PackageId || "",
+          DayCareYN: patientData.DayCareYN || "",
+          DayCareId: patientData.DayCareId || "",
+          DiseaseId: patientData.DiseaseId || "",
+          RMOId: patientData.RMOId || "",
+          RefDoctorId: patientData.RefDoctorId || "",
+          RefDoctorId2: patientData.RefDoctorId2 || "",
+          PackageAmount: patientData.PackageAmount || "",
+          oprationdate: patientData.oprationdate || "",
+          optime: patientData.optime || "",
+          MEXECUTIVE: patientData.MEXECUTIVE || "",
+          optdiagoinc: patientData.optdiagoinc || "",
+          optmediinc: patientData.optmediinc || "",
+          optotherchargeinc: patientData.optotherchargeinc || "",
+          optotinc: patientData.optotinc || "",
+          PackageCHK: patientData.PackageCHK || "",
+          packagevalid: patientData.packagevalid || "",
+          packagestart: patientData.packagestart || "",
+          Company: patientData.Company || "",
+          CompanyId: patientData.CompanyId || "",
+          CashLess: patientData.CashLess || "",
+          CashLessId: patientData.CashLessId || "",
+          InsComp: patientData.InsComp || "",
+          SpRemarks: patientData.SpRemarks || "",
+          Remarks: patientData.Remarks || "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching IPD patient data:", error);
     } finally {
       setLoading(false);
     }
@@ -470,14 +577,14 @@ const PatientAdmission = () => {
         const apiData = response.data.data;
         console.log("fetched data: ", apiData);
 
-        if(apiData.BedId){
-        const res = await axiosInstance.get(`/bedMaster/${apiData.BedId}`)
-        if(res.data.success){
-  console.log("selected bed: ",res.data.data.Bed)
-  setSelBed(res.data.data.Bed || "")
-}
-      }
-        setFormData(prev=>({...prev, BedId:apiData.BedId}))
+        if (apiData.BedId) {
+          const res = await axiosInstance.get(`/bedMaster/${apiData.BedId}`);
+          if (res.data.success) {
+            console.log("selected bed: ", res.data.data.Bed);
+            setSelBed(res.data.data.Bed || "");
+          }
+        }
+        setFormData((prev) => ({ ...prev, BedId: apiData.BedId }));
 
         let calculatedDob = apiData.Dob ? apiData.Dob.substring(0, 10) : "";
         if (
@@ -581,7 +688,7 @@ const PatientAdmission = () => {
             const lastMonth = new Date(
               admDate.getFullYear(),
               admDate.getMonth(),
-              0
+              0,
             );
             days += lastMonth.getDate();
           }
@@ -626,7 +733,7 @@ const PatientAdmission = () => {
 
       if (response.data.success) {
         toast.success(
-          `Admission ${mode === "create" ? "created" : "updated"} successfully!`
+          `Admission ${mode === "create" ? "created" : "updated"} successfully!`,
         );
         // alert(
         //   `Admission ${mode === "create" ? "created" : "updated"} successfully!`
@@ -648,7 +755,7 @@ const PatientAdmission = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.delete(
-        `/admission/${decodeURIComponent(id)}`
+        `/admission/${decodeURIComponent(id)}`,
       );
       if (response.data.success) {
         alert("Deleted!");
@@ -661,8 +768,7 @@ const PatientAdmission = () => {
     }
   };
 
-
-const handlePrint = (data) => {
+  const handlePrint = (data) => {
     // 1. Open a new window
     const printWindow = window.open("", "", "height=800,width=1000");
 
@@ -1020,8 +1126,6 @@ window.onload = function () {
     }, 250);
   };
 
-
-
   // Styles from File B
   const inputStyle = {
     fontSize: "0.85rem",
@@ -1153,7 +1257,7 @@ window.onload = function () {
                       <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle }}>Bill Time</label>
                         <input
-                          type="text"
+                          type="time"
                           name="BillTime"
                           value={formData.BillTime}
                           onChange={handleInputChange}
@@ -1163,10 +1267,15 @@ window.onload = function () {
                       <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle }}>Adm. Time</label>
                         <input
-                          type="text"
+                          type="time"
                           name="AdmitionTime"
                           value={formData.AdmitionTime}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            console.log("ddd: ",e.target.value)
+                            handleInputChange(e)
+                          }
+                          
+                          }
                           style={{ ...inputStyle, width: "80px" }}
                         />
                       </div>
@@ -1177,13 +1286,21 @@ window.onload = function () {
                         <select
                           name="OPD"
                           value={formData.OPD}
-                          onChange={handleInputChange}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            if (e.target.value == "Y") {
+                              setFormData((prev) => ({ ...prev, IPD: "N" }));
+                            } else {
+                              setFormData((prev) => ({ ...prev, IPD: "Y" }));
+                            }
+                          }}
                           style={{
                             ...inputStyle,
                             width: "50px",
                             padding: "0 2px",
                           }}
                         >
+                          <option value={""}>--</option>
                           <option value="Y">Y</option>
                           <option value="N">N</option>
                         </select>
@@ -1218,6 +1335,7 @@ window.onload = function () {
                             padding: "0 2px",
                           }}
                         >
+                          <option value={""}>--</option>
                           <option value="Y">Y</option>
                           <option value="N">N</option>
                         </select>
@@ -1236,6 +1354,50 @@ window.onload = function () {
                           style={{ height: "24px", fontSize: "0.7rem" }}
                         >
                           Detail
+                        </button>
+                      </div>
+                      <div className="d-flex align-items-center gap-1">
+                        <label style={{ ...labelStyle, width: "80px" }}>
+                          I.P.D. [Y/N]
+                        </label>
+                        <select
+                          name="IPD"
+                          value={formData.IPD}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            if (e.target.value == "Y") {
+                              setFormData((prev) => ({ ...prev, OPD: "N" }));
+                            } else {
+                              setFormData((prev) => ({ ...prev, OPD: "Y" }));
+                            }
+                          }}
+                          style={{
+                            ...inputStyle,
+                            width: "50px",
+                            padding: "0 2px",
+                          }}
+                        >
+                          <option value={""}>--</option>
+                          <option value="Y">Y</option>
+                          <option value="N">N</option>
+                        </select>
+                        <button
+                          className="btn btn-sm btn-primary rounded-0"
+                          style={{
+                            height: "24px",
+                            fontSize: "0.7rem",
+                            padding: "0 5px",
+                          }}
+                          onClick={async () => {
+                            if (mode !== "view" && formData.IPD === "Y") {
+                              setShowIPDDrawer(true);
+                              setCurrentIPDPage(1);
+                              setIPDSearchQuery("");
+                              await fetchDrawerIPDs(1, "");
+                            }
+                          }}
+                        >
+                          ...
                         </button>
                       </div>
                     </div>
@@ -1444,6 +1606,7 @@ window.onload = function () {
                         onChange={handleInputChange}
                         style={{ ...inputStyle, padding: "0 2px" }}
                       >
+                        <option value="">--</option>
                         <option value="M">M</option>
                         <option value="F">F</option>
                         <option value="O">O</option>
@@ -1458,6 +1621,7 @@ window.onload = function () {
                         className="form-select form-select-sm rounded-0 w-25"
                         style={{ ...inputStyle, padding: "0 2px" }}
                       >
+                        <option value="">--</option>
                         <option value="U">U</option>
                         <option value="M">M</option>
                       </select>
@@ -1596,16 +1760,47 @@ window.onload = function () {
                       <select
                         name="Company"
                         value={formData.Company}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          if (e.target.value == "N" || e.target.value == "") {
+                            setFormData((prev) => ({
+                              ...prev,
+                              CompanyId: "",
+                            }));
+                          }
+                        }}
                         style={{
                           ...inputStyle,
                           width: "50px",
                           padding: "0 2px",
                         }}
                       >
+                        <option value={""}>-</option>
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                       </select>
+
+                      {formData.Company == "Y" ? (
+                        <select
+                          name="CompanyId"
+                          value={formData.CompanyId}
+                          onChange={handleInputChange}
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                        >
+                          {fetchedInsCompany.map((d, i) => (
+                            <option key={i} value={d.CashlessId}>
+                              {d.Cashless}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                          readOnly
+                        ></input>
+                      )}
                     </div>
                   </div>
                   <div className="col-12 col-md-6 col-lg-4">
@@ -1656,7 +1851,7 @@ window.onload = function () {
                     </div>
                   </div>
                   <div className="col-12 col-md-6 col-lg-4">
-                    <div className="d-flex align-items-center gap-1 mb-1">
+                    {/* <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         Diet
                       </label>
@@ -1676,8 +1871,8 @@ window.onload = function () {
                           </option>
                         ))}
                       </select>
-                    </div>
-                    <div className="d-flex align-items-center gap-1 mb-1">
+                    </div> */}
+                    {/* <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         Employer
                       </label>
@@ -1688,8 +1883,8 @@ window.onload = function () {
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
-                    </div>
-                    <div className="d-flex align-items-center gap-1">
+                    </div> */}
+                    {/* <div className="d-flex align-items-center gap-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         Ref Date
                       </label>
@@ -1700,7 +1895,7 @@ window.onload = function () {
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
@@ -1722,6 +1917,7 @@ window.onload = function () {
                         onChange={handleInputChange}
                         style={inputStyle}
                       >
+                        <option value={""}>---</option>
                         {department.map((d, i) => (
                           <option key={i} value={d.DepartmentId}>
                             {d.Department}
@@ -1733,11 +1929,13 @@ window.onload = function () {
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Under Care Dr <span className="text-danger">*</span>
                       </label>
+                      <div>
+
                       <input
                         type="text"
                         value={
                           doctors.find(
-                            (d) => d.DoctorId == formData.UCDoctor1Id
+                            (d) => d.DoctorId == formData.UCDoctor1Id,
                           )?.Doctor || ""
                         }
                         onClick={() => {
@@ -1751,6 +1949,43 @@ window.onload = function () {
                         readOnly
                         style={{ ...inputStyle, cursor: "pointer" }}
                       />
+                      <input
+                        type="text"
+                        value={
+                          doctors.find(
+                            (d) => d.DoctorId == formData.UCDoctor2Id,
+                          )?.Doctor || ""
+                        }
+                        onClick={() => {
+                          if (mode !== "view") {
+                            setSelectedDoctorField("UCDoctor2Id");
+                            setShowDoctorDrawer(true);
+                            setCurrentDoctorPage(1);
+                            setDoctorSearchQuery("");
+                          }
+                        }}
+                        readOnly
+                        style={{ ...inputStyle, cursor: "pointer" }}
+                      />
+                      <input
+                        type="text"
+                        value={
+                          doctors.find(
+                            (d) => d.DoctorId == formData.UCDoctor3Id,
+                          )?.Doctor || ""
+                        }
+                        onClick={() => {
+                          if (mode !== "view") {
+                            setSelectedDoctorField("UCDoctor3Id");
+                            setShowDoctorDrawer(true);
+                            setCurrentDoctorPage(1);
+                            setDoctorSearchQuery("");
+                          }
+                        }}
+                        readOnly
+                        style={{ ...inputStyle, cursor: "pointer" }}
+                      />
+                      </div>
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
@@ -1766,9 +2001,31 @@ window.onload = function () {
                           padding: "0 2px",
                         }}
                       >
+                        <option value={""}>--</option>
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                       </select>
+                         {formData.Referral == "Y" ? (
+                        <select
+                          name="ReferralId"
+                          value={formData.ReferralId}
+                          onChange={handleInputChange}
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                        >
+                          {referral.map((d, i) => (
+                            <option key={i} value={d.ReferralId}>
+                              {d.Referal}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                          readOnly
+                        ></input>
+                      )}
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
@@ -1784,10 +2041,32 @@ window.onload = function () {
                           padding: "0 2px",
                         }}
                       >
+                        <option value={""}>--</option>
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                       </select>
-                      <button style={inputStyle}>Show</button>
+
+                 {formData.Package == "Y" ? (
+                        <select
+                          name="PackageId"
+                          value={formData.PackageId}
+                          onChange={handleInputChange}
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                        >
+                          {packages.map((d, i) => (
+                            <option key={i} value={d.PackageId}>
+                              {d.Package}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                          readOnly
+                        ></input>
+                      )}
                     </div>
                     <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
@@ -1798,7 +2077,7 @@ window.onload = function () {
                         name="packagevalid"
                         value={formData.packagevalid}
                         onChange={handleInputChange}
-                        style={{ ...inputStyle, width: "80px" }}
+                        style={{ ...inputStyle, width: "120px" }}
                       />
                       <label style={labelStyle}>Start</label>
                       <input
@@ -1806,7 +2085,7 @@ window.onload = function () {
                         name="packagestart"
                         value={formData.packagestart}
                         onChange={handleInputChange}
-                        style={{ ...inputStyle, width: "80px" }}
+                        style={{ ...inputStyle, width: "120px" }}
                       />
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
@@ -1816,16 +2095,48 @@ window.onload = function () {
                       <select
                         name="CashLess"
                         value={formData.CashLess}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          if (e.target.value == "N" || e.target.value == "") {
+                            // console.log("hiu")
+                            setFormData((prev) => ({
+                              ...prev,
+                              CashLessId: "",
+                            }));
+                          }
+                        }}
                         style={{
                           ...inputStyle,
                           width: "50px",
                           padding: "0 2px",
                         }}
                       >
+                        <option value={""}>--</option>
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                       </select>
+
+                      {formData.CashLess == "Y" ? (
+                        <select
+                          name="CashLessId"
+                          value={formData.CashLessId}
+                          onChange={handleInputChange}
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                        >
+                          {fetchedInsCompany.map((d, i) => (
+                            <option key={i} value={d.CashlessId}>
+                              {d.Cashless}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
+                          style={{ ...inputStyle, padding: "0 2px" }}
+                          readOnly
+                        ></input>
+                      )}
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
@@ -1930,17 +2241,25 @@ window.onload = function () {
                         className="  "
                         name="DayCareYN"
                         value={formData.DayCareYN}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          handleInputChange(e)
+                          if(e.target.value==""|| e.target.value=="N"){
+                            setFormData(prev=>({...prev, DayCareId:""}))
+                          }
+                        }
+                        }
                         style={{
                           ...inputStyle,
                           width: "50px",
                           padding: "0 2px",
                         }}
                       >
+                        <option value={""}>--</option>
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                       </select>
                       <label style={labelStyle}>Particular</label>
+                     { formData.DayCareYN=="Y"?
                       <select
                         name="DayCareId"
                         value={formData.DayCareId}
@@ -1948,7 +2267,7 @@ window.onload = function () {
                           handleInputChange(e);
                           calDayCareBedRate(e.target.value);
                         }}
-                        style={{ ...inputStyle, width: "80px" }}
+                        style={{ ...inputStyle, width: "120px" }}
                       >
                         {dayCare.map((d, i) => (
                           <option key={i} value={d.DayCareId}>
@@ -1956,6 +2275,9 @@ window.onload = function () {
                           </option>
                         ))}
                       </select>
+                    : <input  style={{ ...inputStyle, width: "120px" }}>
+                    </input >  
+                    }
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
@@ -1992,6 +2314,8 @@ window.onload = function () {
                         // className="form-control form-control-sm"
                         style={inputStyle}
                       >
+                        <option value={""}>---</option>
+
                         {diseases.map((d, i) => (
                           <option key={i} value={d.DiseaseId}>
                             {d.Disease}
@@ -2009,6 +2333,7 @@ window.onload = function () {
                         onChange={handleInputChange}
                         style={inputStyle}
                       >
+                        <option value={""}>---</option>
                         {rmo.map((d, i) => (
                           <option key={i} value={d.DoctorId}>
                             {d.Doctor}
@@ -2027,6 +2352,8 @@ window.onload = function () {
                         className=" w-50 py-1"
                         style={inputStyle}
                       >
+                        <option value={""}>---</option>
+
                         {doctors.map((d, i) => (
                           <option key={i} value={d.DoctorId}>
                             {d.Doctor}
@@ -2045,6 +2372,8 @@ window.onload = function () {
                         onChange={handleInputChange}
                         style={inputStyle}
                       >
+                        <option value={""}>---</option>
+
                         {doctors.map((d, i) => (
                           <option key={i} value={d.DoctorId}>
                             {d.Doctor}
@@ -2222,19 +2551,22 @@ window.onload = function () {
                     className="d-flex align-items-center"
                     style={{ minHeight: "16px" }}
                   >
-<div className="me-2">
-  <label >M Executive:</label>
-<select value={formData.MEXECUTIVE}
-name = "MEXECUTIVE"
-onChange={handleInputChange}
-disabled={mode === "view" }
->
-  <option value={""}>---</option>
-  {mExecutives.map((d,i)=>(
-    <option key={d.MExecutiveId} value={d.MExecutiveId}>{d.MExecutive}</option>
-  ))}
-</select>
-</div>
+                    <div className="me-2">
+                      <label>M Executive:</label>
+                      <select
+                        value={formData.MEXECUTIVE}
+                        name="MEXECUTIVE"
+                        onChange={handleInputChange}
+                        disabled={mode === "view"}
+                      >
+                        <option value={""}>---</option>
+                        {mExecutives.map((d, i) => (
+                          <option key={d.MExecutiveId} value={d.MExecutiveId}>
+                            {d.MExecutive}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
                     <input
                       type="checkbox"
@@ -2412,8 +2744,15 @@ disabled={mode === "view" }
                   handlePrint({
                     meta: {
                       admissionNo: formData.AdmitionNo,
-                      admissionDate: formData.AdmitionDate?.split("-").reverse().join("-"),
-                      admissionTime: new Date(`1970-01-01T${formData.AdmitionTime}`).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+                      admissionDate: formData.AdmitionDate?.split("-")
+                        .reverse()
+                        .join("-"),
+                      admissionTime: new Date(
+                        `1970-01-01T${formData.AdmitionTime}`,
+                      ).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }),
                       uhid: "", // Empty in source
                       barcodeValue: formData.AdmitionNo,
                     },
@@ -2428,37 +2767,54 @@ disabled={mode === "view" }
                     patient: {
                       name: formData.PatientName,
                       age: `${formData.Age} Y`,
-                      gender: formData.Sex === "M" ? "MALE" : formData.Sex === "F" ? "FEMALE" : "OTHER",
-                      address:[formData.Add1, formData.Add2, formData.Add3].filter(Boolean).join(", "),
-                      religion: religion.find(item=>item.ReligionId==formData.ReligionId)?.Religion || "",
-                      status: formData.MStatus === "U" ? "UNMARRIED" : "MARRIED",
+                      gender:
+                        formData.Sex === "M"
+                          ? "MALE"
+                          : formData.Sex === "F"
+                            ? "FEMALE"
+                            : "OTHER",
+                      address: [formData.Add1, formData.Add2, formData.Add3]
+                        .filter(Boolean)
+                        .join(", "),
+                      religion:
+                        religion.find(
+                          (item) => item.ReligionId == formData.ReligionId,
+                        )?.Religion || "",
+                      status:
+                        formData.MStatus === "U" ? "UNMARRIED" : "MARRIED",
                       area: formData.Add3,
                       phone: formData.PhoneNo,
                       occupation: formData.Occupation,
                       nationality: formData.Passport,
                     },
                     relative: {
-                      type: "", 
+                      type: "",
                       relatedToName: formData.GurdianName,
                       relativeName: formData.RelativeName,
                       relation: formData.Relation,
-                      phone:formData.RelativePhoneNo,
+                      phone: formData.RelativePhoneNo,
                     },
                     admissionDetails: {
                       bedNo: selBed || "",
                       // department: "GENERAL-WARD-FEMALE",
-                      department: department.find(item=>item.DepartmentId==formData.DepartmentId)?.Department,
+                      department: department.find(
+                        (item) => item.DepartmentId == formData.DepartmentId,
+                      )?.Department,
                       // underCare: "Dr. SOMA KOLEY",
-                      underCare: `${doctors.find(item=>item.DoctorId===formData.UCDoctor1Id)?.Doctor}, ${doctors.find(item=>item.DoctorId===formData.UCDoctor2Id)?.Doctor}, ${doctors.find(item=>item.DoctorId===formData.UCDoctor3Id)?.Doctor}`,
+                      underCare: `${doctors.find((item) => item.DoctorId === formData.UCDoctor1Id)?.Doctor}, ${doctors.find((item) => item.DoctorId === formData.UCDoctor2Id)?.Doctor}, ${doctors.find((item) => item.DoctorId === formData.UCDoctor3Id)?.Doctor}`,
                     },
                     insurance: {
-                      tpa: fetchedCompany.find(item=>item.CashlessId==formData.CashLessId)?.Cashless || "",
-                      company: fetchedCompany.find(item=>item.CashlessId==formData.CompanyId).Cashless|| "",
+                      tpa:
+                        fetchedCompany.find(
+                          (item) => item.CashlessId == formData.CashLessId,
+                        )?.Cashless || "",
+                      company:
+                        fetchedCompany.find(
+                          (item) => item.CashlessId == formData.CompanyId,
+                        ).Cashless || "",
                     },
-                    
-                  })
-                }
-                }
+                  });
+                }}
               >
                 Print
               </button>
@@ -2549,12 +2905,12 @@ disabled={mode === "view" }
                   {doctors
                     .filter((d) =>
                       d.Doctor.toLowerCase().includes(
-                        doctorSearchQuery.toLowerCase()
-                      )
+                        doctorSearchQuery.toLowerCase(),
+                      ),
                     )
                     .slice(
                       (currentDoctorPage - 1) * doctorsPerPage,
-                      currentDoctorPage * doctorsPerPage
+                      currentDoctorPage * doctorsPerPage,
                     )
                     .map((doctor, i) => (
                       <div className="col-12" key={i}>
@@ -2831,8 +3187,126 @@ disabled={mode === "view" }
           </div>
         </>
       )}
+
+      {/* IPD DRAWER */}
+      {showIPDDrawer && (
+        <>
+          <div
+            className="modal-backdrop fade show"
+            onClick={() => setShowIPDDrawer(false)}
+            style={{ zIndex: 9998 }}
+          ></div>
+          <div
+            className="profile-right-sidebar active"
+            style={{
+              zIndex: 9999,
+              width: "100%",
+              maxWidth: "700px",
+              right: 0,
+              top: "70px",
+              height: "calc(100vh - 70px)",
+            }}
+          >
+            <button
+              className="right-bar-close"
+              onClick={() => setShowIPDDrawer(false)}
+            >
+              <i className="fa-light fa-angle-right"></i>
+            </button>
+            <div className="top-panel" style={{ height: "100%" }}>
+              <div
+                className="dropdown-txt"
+                style={{
+                  backgroundColor: "#0a1735",
+                  color: "white",
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                }}
+              >
+                IPD Visit Selection
+              </div>
+              <div
+                style={{ height: "calc(100% - 70px)", overflowY: "auto" }}
+                className="p-3"
+              >
+                <input
+                  type="text"
+                  className="form-control mb-3"
+                  placeholder="Search..."
+                  value={ipdSearchQuery}
+                  onChange={(e) => {
+                    setIPDSearchQuery(e.target.value);
+                    setCurrentIPDPage(1);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") fetchDrawerIPDs(1, ipdSearchQuery);
+                  }}
+                />
+                <table className="table table-hover table-sm">
+                  <thead>
+                    <tr>
+                      <th>Select</th>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {drawerIPDs.map((visit, i) => (
+                      <tr key={i}>
+                        <td>
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="opdSelection"
+                            checked={formData.IPDId === visit.AdmitionId}
+                            onChange={async () => {
+                              await fetchIPDPatientData(visit.AdmitionId);
+                              setShowIPDDrawer(false);
+                            }}
+                          />
+                        </td>
+                        <td>{visit.AdmitionId}</td>
+                        <td>{visit.PatientName}</td>
+                        <td>{visit.VisitDate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="d-flex justify-content-between mt-3">
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => {
+                      const n = currentIPDPage - 1;
+                      setCurrentIPDPage(n);
+                      fetchDrawerIPDs(n, ipdSearchQuery);
+                    }}
+                    disabled={currentIPDPage === 1}
+                  >
+                    Prev
+                  </button>
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => {
+                      const n = currentIPDPage + 1;
+                      setCurrentIPDPage(n);
+                      fetchDrawerIPDs(n, ipdSearchQuery);
+                    }}
+                    disabled={currentIPDPage === totalIPDPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 export default PatientAdmission;
+
+
