@@ -27,13 +27,16 @@ const BedTransfer = () => {
 
   const [showDrop, setShowDrop] = useState(false);
 
-  const [formData, setFormData] = useState({
+ const [formData, setFormData] = useState({
     AdmitionId: id_new || "0",
     BedId: 0,
     AdmitionDate: new Date().toISOString().split("T")[0] + "T00:00:00.000Z",
     ReleaseDate: "",
     Release: "",
-    AdmitionTime: "12.00 PM",
+    AdmitionTime: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
     ReleaseTime: "",
     ToDayRate: 0,
     Rate: 0,
@@ -520,7 +523,7 @@ const BedTransfer = () => {
             {!showDrop ? (
               <input
                 className="form-control form-control-sm"
-                defaultValue="--select--"
+                value="--select--"
               />
             ) : (
               <select

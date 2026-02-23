@@ -5,6 +5,8 @@ import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DigiContext } from "../../context/DigiContext";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 const TestMaster = () => {
   const { isBelowLg } = useContext(DigiContext);
@@ -82,14 +84,49 @@ const TestMaster = () => {
 
   const drawerRef = useRef(null);
 
-  const handleViewFile = (test) => {
-    const fileName = test.file_name;
+  const [showHtmlEditor, setShowHtmlEditor] = useState(false);
+  const [htmlContent, setHtmlContent] = useState('');
+  const [currentTestForHtml, setCurrentTestForHtml] = useState(null);
+  const [isEditingHtml, setIsEditingHtml] = useState(false);
+
+  const handleViewHtml = async (test) => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/tests/${test.TestId}`);
+      
+      if (response.data.success && response.data.data) {
+        const content = response.data.data.html_content || '';
+        setHtmlContent(content);
+        setCurrentTestForHtml(test);
+        setIsEditingHtml(false); // Start with visual editor
+        setShowHtmlEditor(true);
+      } else {
+        toast.error('Failed to load test data');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to load HTML content');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveHtmlContent = async () => {
+    if (!currentTestForHtml?.TestId) return;
     
-    if (fileName) {
-      const fileUrl = `https://pub-0c4bdcfb191846af8862c428f6c68605.r2.dev/dsc-format/${fileName}`;
-      window.open(fileUrl, '_blank');
-    } else {
-      toast.error('No file attached to this test');
+    try {
+      setLoading(true);
+      await axiosInstance.put(`/tests/${currentTestForHtml.TestId}`, {
+        html_content: htmlContent
+      });
+      toast.success('HTML content updated successfully!');
+      setShowHtmlEditor(false);
+      fetchTests(page);
+    } catch (error) {
+      console.error('Error saving HTML:', error);
+      toast.error('Failed to save HTML content');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -468,10 +505,10 @@ const onKeyPressSearch = (e) => {
                             <div className="d-flex gap-2">
                               <button
                                 className="btn btn-sm btn-outline-success"
-                                onClick={() => handleViewFile(t)}
-                                title="View File"
+                                onClick={() => handleViewHtml(t)}
+                                title="View/Edit HTML"
                               >
-                                <i className="fa-light fa-file" />
+                                <i className="fa-light fa-file-code" />
                               </button>
                               <button
                                 className="btn btn-sm btn-outline-info"
@@ -1354,6 +1391,98 @@ const onKeyPressSearch = (e) => {
                   </form>
                 </div>
               </OverlayScrollbarsComponent>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ---------- HTML Editor Modal ---------- */}
+      {showHtmlEditor && (
+        <>
+          <div
+            className="modal-backdrop fade show"
+            style={{ zIndex: 99999 }}
+            onClick={() => setShowHtmlEditor(false)}
+          ></div>
+          <div
+            className="modal d-block"
+            style={{ zIndex: 100000 }}
+            onClick={() => setShowHtmlEditor(false)}
+          >
+            <div
+              className="modal-dialog modal-xl modal-dialog-centered"
+              style={{ maxWidth: '95%', height: '95vh' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-content" style={{ height: '100%' }}>
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    <i className="fa-light fa-file-lines me-2"></i>
+                    HTML Content - {currentTestForHtml?.Test}
+                  </h5>
+                  <button
+                    className="btn-close"
+                    onClick={() => setShowHtmlEditor(false)}
+                  ></button>
+                </div>
+
+                <div className="modal-body" style={{ height: 'calc(100% - 120px)', display: 'flex', flexDirection: 'column' }}>
+                  {isEditingHtml ? (
+                    <textarea
+                      className="form-control"
+                      style={{ height: '100%', fontFamily: 'monospace', fontSize: '14px' }}
+                      value={htmlContent}
+                      onChange={(e) => setHtmlContent(e.target.value)}
+                      placeholder="Enter HTML content here..."
+                    />
+                  ) : (
+                    <ReactQuill
+                      theme="snow"
+                      value={htmlContent}
+                      onChange={setHtmlContent}
+                      style={{ height: 'calc(100% - 50px)' }}
+                      modules={{
+                        toolbar: [
+                          [{ 'header': [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{ 'color': [] }, { 'background': [] }],
+                          [{ 'align': [] }],
+                          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                          ['link', 'image'],
+                          ['clean']
+                        ]
+                      }}
+                    />
+                  )}
+                </div>
+
+                <div className="modal-footer d-flex justify-content-between">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setIsEditingHtml(!isEditingHtml)}
+                  >
+                    <i className={`fa-light fa-${isEditingHtml ? 'eye' : 'code'} me-2`}></i>
+                    {isEditingHtml ? 'Visual Editor' : 'View HTML Code'}
+                  </button>
+                  
+                  <div className="d-flex gap-2">
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowHtmlEditor(false)}
+                    >
+                      Close
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleSaveHtmlContent}
+                      disabled={loading}
+                    >
+                      <i className="fa-light fa-save me-2"></i>
+                      {loading ? 'Saving...' : 'Save HTML'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </>
