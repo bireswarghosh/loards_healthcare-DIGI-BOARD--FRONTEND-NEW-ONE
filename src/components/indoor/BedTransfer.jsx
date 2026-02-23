@@ -25,6 +25,8 @@ const BedTransfer = () => {
 
   const [selectedRate, setSelectedRate] = useState(0);
 
+  const [showDrop, setShowDrop] = useState(false);
+
   const [formData, setFormData] = useState({
     AdmitionId: id_new || "0",
     BedId: 0,
@@ -171,6 +173,7 @@ const BedTransfer = () => {
 
   const fetchBedByDeptId = async () => {
     try {
+      setShowDrop(false);
       const res = await axiosInstance.get("/bedMaster?currentPage=1&limit=1");
       if (res.data.success) {
         const limit = res.data.pagination.totalItems;
@@ -186,6 +189,7 @@ const BedTransfer = () => {
         const newArr = [{ BedId: 0, Bed: "--Select--" }, ...arr];
         setFilteredBedMap(newArr);
         // console.log("Fileterd bed by dept id: ", newArr);
+        setShowDrop(true);
       }
     } catch (error) {
       console.log("error fetching bed by dept id: ", error);
@@ -200,8 +204,28 @@ const BedTransfer = () => {
       }
       setLoadBtn(true);
       const res = await axiosInstance.post("/admitionbeds", formData);
+      let res1;
+      const ele = bedTransfers[bedTransfers.length - 1];
+      if (ele) {
+        res1 = await axiosInstance.put(
+          `/admitionbeds?admitionid=${id_new}&slno=${ele.SlNo}`,
+          {
+            ...ele,
+            Release: "Y",
+            ReleaseDate:
+              new Date().toISOString().split("T")[0] + "T00:00:00.000Z",
+            ReleaseTime: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        );
+      } else {
+       res1={data:{success:true}}
+      }
+
       // console.log("save res: ", res);
-      if (res.data.success) {
+      if (res.data.success && res1.data.success) {
         toast.success(res.data.message);
         setLoadBtn(false);
 
@@ -351,14 +375,14 @@ const BedTransfer = () => {
   }, [formData.BedId]);
 
   return (
-    <div className='panel'>
+    <div className="panel">
       {/* HEADER */}
-      <div className='panel-header d-flex justify-content-between align-items-center'>
-        <h5 className='panel-title'>Bed Transfer</h5>
+      <div className="panel-header d-flex justify-content-between align-items-center">
+        <h5 className="panel-title">Bed Transfer</h5>
 
-        <div className='d-flex gap-2'>
+        <div className="d-flex gap-2">
           <button
-            className='btn btn-sm btn-secondary'
+            className="btn btn-sm btn-secondary"
             onClick={() => {
               navigate("/BedTransfer");
             }}
@@ -370,12 +394,12 @@ const BedTransfer = () => {
       </div>
 
       {/* BODY */}
-      <div className='panel-body'>
+      <div className="panel-body">
         {/* CURRENT DATE */}
-        <h6 className='text-primary fw-bold mb-2'>Current Date</h6>
-        <div className='row g-2 mb-3'>
-          <div className='col-md-4'>
-            <label className='form-label small fw-bold'>Date</label>
+        <h6 className="text-primary fw-bold mb-2">Current Date</h6>
+        <div className="row g-2 mb-3">
+          <div className="col-md-4">
+            <label className="form-label small fw-bold">Date</label>
             <input
               disabled={mode == "view"}
               // value={Date.now()}
@@ -388,32 +412,32 @@ const BedTransfer = () => {
                 })
                 .replace(/ /g, "/")
                 .toLowerCase()}
-              className='form-control form-control-sm'
+              className="form-control form-control-sm"
               // defaultValue="22/Feb/2025"
             />
           </div>
         </div>
 
         {/* PATIENT INFORMATION */}
-        <h6 className='text-primary fw-bold mb-2'>Patient Information</h6>
-        <div className='row g-2 mb-3'>
-          <div className='col-md-4'>
-            <label className='form-label small fw-bold'>Patient Name</label>
+        <h6 className="text-primary fw-bold mb-2">Patient Information</h6>
+        <div className="row g-2 mb-3">
+          <div className="col-md-4">
+            <label className="form-label small fw-bold">Patient Name</label>
             <input
               disabled={mode == "view"}
               value={admData?.PatientName}
-              className='form-control form-control-sm'
-              defaultValue='MD YOUNUS'
+              className="form-control form-control-sm"
+              defaultValue="MD YOUNUS"
             />
           </div>
 
-          <div className='col-md-4'>
-            <label className='form-label small fw-bold'>Admission No</label>
+          <div className="col-md-4">
+            <label className="form-label small fw-bold">Admission No</label>
             <input
               disabled={mode == "view"}
               value={admData?.AdmitionNo}
-              className='form-control form-control-sm'
-              defaultValue='A-000014/16-17'
+              className="form-control form-control-sm"
+              defaultValue="A-000014/16-17"
             />
           </div>
 
@@ -437,47 +461,47 @@ const BedTransfer = () => {
         </div>
 
         {/* BEFORE TRANSFER BED */}
-        <h6 className='text-primary fw-bold mb-2'>Before Transfer Bed</h6>
-        <div className='row g-2 mb-3'>
-          <div className='col-md-4'>
-            <label className='form-label small fw-bold'>Department</label>
+        <h6 className="text-primary fw-bold mb-2">Before Transfer Bed</h6>
+        <div className="row g-2 mb-3">
+          <div className="col-md-4">
+            <label className="form-label small fw-bold">Department</label>
             <input
               disabled={mode == "view"}
               value={selectedDept}
-              className='form-control form-control-sm'
+              className="form-control form-control-sm"
               // defaultValue="ICU"
             />
           </div>
 
-          <div className='col-md-4'>
-            <label className='form-label small fw-bold'>Bed No</label>
+          <div className="col-md-4">
+            <label className="form-label small fw-bold">Bed No</label>
             <input
               disabled={mode == "view"}
-              className='form-control form-control-sm'
+              className="form-control form-control-sm"
               value={selecetdBed.Bed}
             />
           </div>
 
-          <div className='col-md-4'>
-            <label className='form-label small fw-bold'>Rate</label>
+          <div className="col-md-4">
+            <label className="form-label small fw-bold">Rate</label>
             <input
               disabled={mode == "view"}
               // value={admData.BedRate}
               value={selecetdBed.TotalCh}
-              className='form-control form-control-sm'
-              defaultValue='4000.00'
+              className="form-control form-control-sm"
+              defaultValue="4000.00"
             />
           </div>
         </div>
 
         {/* TRANSFER BED */}
-        <h6 className='text-primary fw-bold mb-2'>Transfer Bed</h6>
-        <div className='row g-2 mb-3 align-items-end'>
-          <div className='col-md-3'>
-            <label className='form-label small fw-bold'>Department</label>
+        <h6 className="text-primary fw-bold mb-2">Transfer Bed</h6>
+        <div className="row g-2 mb-3 align-items-end">
+          <div className="col-md-3">
+            <label className="form-label small fw-bold">Department</label>
             <select
               disabled={mode == "view"}
-              className='form-control form-control-sm'
+              className="form-control form-control-sm"
               value={selectedDeptOrginal}
               onChange={(e) => {
                 setSelectedDeptOrginal(e.target.value);
@@ -491,69 +515,75 @@ const BedTransfer = () => {
             </select>
           </div>
 
-          <div className='col-md-2'>
-            <label className='form-label small fw-bold'>Bed No</label>
-            {/* <input className="form-control form-control-sm" defaultValue="13" /> */}
-            <select
-              disabled={mode == "view"}
-              className='form-control form-control-sm'
-              name='BedId'
-              value={formData.BedId}
-              onChange={(e) => {
-                onHandleChange(e);
-              }}
-            >
-              {filteredBedMap.map((bed, i) => (
-                <option key={i} value={bed.BedId}>
-                  {bed.Bed}
-                </option>
-              ))}
-            </select>
+          <div className="col-md-2">
+            <label className="form-label small fw-bold">Bed No</label>
+            {!showDrop ? (
+              <input
+                className="form-control form-control-sm"
+                defaultValue="--select--"
+              />
+            ) : (
+              <select
+                disabled={mode == "view"}
+                className="form-control form-control-sm"
+                name="BedId"
+                value={formData.BedId}
+                onChange={(e) => {
+                  onHandleChange(e);
+                }}
+              >
+                {filteredBedMap.map((bed, i) => (
+                  <option key={i} value={bed.BedId}>
+                    {bed.Bed}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
-          <div className='col-md-2'>
-            <label className='form-label small fw-bold'>Rate</label>
+          <div className="col-md-2">
+            <label className="form-label small fw-bold">Rate</label>
             <input
               disabled={mode == "view"}
-              className='form-control form-control-sm'
+              className="form-control form-control-sm"
               readOnly
               value={formData.Rate}
               // value={selectedRate}
-              type='number'
+              type="number"
             />
           </div>
 
-          <div className='col-md-2'>
-            <label className='form-label small fw-bold'>Time</label>
+          <div className="col-md-2">
+            <label className="form-label small fw-bold">Time</label>
             <input
               disabled={mode == "view"}
-              className='form-control form-control-sm'
-              type='text'
-              name='AdmitionTime'
+              className="form-control form-control-sm"
+              type="text"
+              name="AdmitionTime"
               value={formData.AdmitionTime}
               onChange={onHandleChange}
             />
           </div>
 
-          <div className='col-md-3'>
-            <label className='form-label small fw-bold'>To Day Rate</label>
+          <div className="col-md-3">
+            <label className="form-label small fw-bold">To Day Rate</label>
             <input
               disabled={mode == "view"}
-              className='form-control form-control-sm'
-              name='ToDayRate'
+              className="form-control form-control-sm"
+              name="ToDayRate"
               value={formData.ToDayRate}
               onChange={onHandleChange}
-              type='number'
+              type="number"
             />
           </div>
         </div>
 
         {/* TRANSFER HISTORY */}
-        <h6 className='text-primary fw-bold mb-2 mt-4'>Transfer History</h6>
+        <h6 className="text-primary fw-bold mb-2 mt-4">Transfer History</h6>
 
-        <div className='table-responsive border rounded'>
-          <table className='table table-sm table-bordered table-hover digi-dataTable mb-0'>
-            <thead className='digi-table-header'>
+        <div className="table-responsive border rounded">
+          <table className="table table-sm table-bordered table-hover digi-dataTable mb-0">
+            <thead className="digi-table-header">
               <tr>
                 {mode != "view" && <th>Action</th>}
                 <th>A Date</th>
@@ -576,7 +606,7 @@ const BedTransfer = () => {
                       <td>
                         {/* {console.log("I am bed transfer: ",bed)} */}{" "}
                         <button
-                          className='btn btn-sm btn-warning me-1'
+                          className="btn btn-sm btn-warning me-1"
                           onClick={async () => {
                             setSlNo(bed.SlNo);
                             setUpdate(true);
@@ -613,16 +643,16 @@ const BedTransfer = () => {
                             }
                           }}
                         >
-                          <i className='fa-light fa-pen-to-square'></i>
+                          <i className="fa-light fa-pen-to-square"></i>
                         </button>
                         <button
-                          className='btn btn-sm btn-danger'
+                          className="btn btn-sm btn-danger"
                           onClick={() => {
                             setSlNo(bed.SlNo);
                             setShowConfirm(true);
                           }}
                         >
-                          <i className='fa-light fa-trash-can'></i>
+                          <i className="fa-light fa-trash-can"></i>
                         </button>
                       </td>
                     )}
@@ -640,7 +670,7 @@ const BedTransfer = () => {
                 ))
               ) : (
                 // : "No data available"}
-                <div className='text-center'>No data available</div>
+                <div className="text-center">No data available</div>
               )}
             </tbody>
           </table>
@@ -649,13 +679,13 @@ const BedTransfer = () => {
 
       {/* FOOTER BUTTONS */}
       {mode != "view" && (
-        <div className='panel-footer d-flex justify-content-between flex-wrap gap-2'>
-          <div className='btn-group'>
+        <div className="panel-footer d-flex justify-content-between flex-wrap gap-2">
+          <div className="btn-group">
             {/* <button className="btn btn-sm btn-primary">New</button> */}
             {/* <button className="btn btn-sm btn-secondary">Edit</button> */}
             {!update ? (
               <button
-                className='btn btn-sm btn-success'
+                className="btn btn-sm btn-success"
                 onClick={handleSave}
                 disabled={loadBtn}
               >
@@ -664,7 +694,7 @@ const BedTransfer = () => {
             ) : (
               <>
                 <button
-                  className='btn btn-sm btn-success'
+                  className="btn btn-sm btn-success"
                   onClick={() => {
                     handleUpdate(slNo);
                   }}
@@ -672,7 +702,7 @@ const BedTransfer = () => {
                   {!loadBtn ? "Update" : "Updating..."}
                 </button>
                 <button
-                  className='btn btn-secondary'
+                  className="btn btn-secondary"
                   onClick={() => {
                     setSlNo("");
 
@@ -706,7 +736,7 @@ const BedTransfer = () => {
             {/* <button className="btn btn-sm btn-danger">Delete</button> */}
             {!update && (
               <button
-                className='btn btn-sm btn-dark'
+                className="btn btn-sm btn-dark"
                 onClick={() => {
                   setFormData((prev) => ({
                     ...prev,
@@ -741,43 +771,43 @@ const BedTransfer = () => {
       {showConfirm && (
         <>
           <div
-            className='modal-backdrop fade show'
+            className="modal-backdrop fade show"
             style={{ zIndex: 99999 }}
           ></div>
 
           <div
-            className='modal d-block'
+            className="modal d-block"
             style={{ zIndex: 100000, background: "rgba(0,0,0,0.2)" }}
             onClick={() => setShowConfirm(false)}
           >
             <div
-              className='modal-dialog modal-dialog-centered'
+              className="modal-dialog modal-dialog-centered"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className='modal-content'>
-                <div className='modal-header'>
+              <div className="modal-content">
+                <div className="modal-header">
                   <h5>Confirm Delete</h5>
                   <button
-                    className='btn-close'
+                    className="btn-close"
                     onClick={() => setShowConfirm(false)}
                   ></button>
                 </div>
 
-                <div className='modal-body text-center'>
+                <div className="modal-body text-center">
                   Are you sure you want to delete?
                 </div>
 
-                <div className='modal-footer d-flex justify-content-center gap-3'>
+                <div className="modal-footer d-flex justify-content-center gap-3">
                   <button
                     disabled={loading}
-                    className='btn btn-secondary'
+                    className="btn btn-secondary"
                     onClick={() => setShowConfirm(false)}
                   >
                     Cancel
                   </button>
                   <button
                     disabled={loading}
-                    className='btn btn-danger'
+                    className="btn btn-danger"
                     onClick={() => {
                       handleDelete(slNo);
                     }}

@@ -420,6 +420,9 @@ const FinalBillingAdd = () => {
     },
   ]);
 
+  const [totalReceipt, setTotalReceipt] = useState(0);
+  const [netBal, setNetBal] = useState(0);
+
   const [bedChargesData, setBedChargesData] = useState([]);
   const [fetchedAdmBedDetail, setFetchedAdmBedDetail] = useState([]);
 
@@ -1309,6 +1312,40 @@ const FinalBillingAdd = () => {
     }));
   }, [finalBillDetail]);
 
+  useEffect(() => {
+    console.log("Final Bill detail testing: ", finalBillDetail);
+    const total = finalBillDetail.reduce(
+      (sum, item) => sum + Number(item.Amount1 || 0),
+      0,
+    );
+    console.log("Total final bill is : ", total);
+    setNetBal(
+      total - finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
+    );
+
+    setTotalReceipt(total);
+  }, [finalBillDetail]);
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      PatiectPartyAmt: netBal - formData.Approval,
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      ReciptAmt: netBal - formData.Approval - formData.Discount,
+    }));
+  }, [formData.Approval, netBal]);
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      ReciptAmt: formData.PatiectPartyAmt - formData.Discount,
+    }));
+    console.log("Hi dis: ", formData.Discount);
+  }, [formData.Discount]);
+
   return (
     <div className="min-vh-100 ">
       {/* Top Header */}
@@ -1727,11 +1764,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={
-                          billHeadData?.find(
-                            (item) => item.HeadName == "Less Advance Receipt",
-                          )?.Amount1 || ""
-                        }
+                        value={totalReceipt}
                       />
                     </div>
                   </div>
@@ -1743,7 +1776,7 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.BillAmt || 0}
+                        value={netBal || 0}
                       />
                     </div>
                   </div>
@@ -1797,14 +1830,14 @@ const FinalBillingAdd = () => {
                         style={styles.input}
                         value={formData?.ReciptAmt || 0}
                         name="ReciptAmt"
-                        onChange={handleChange}
+                        // onChange={handleChange}
                       />
                     </div>
                   </div>
                   <div className="row g-1 align-items-center">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>
-                        Net Amount (Not found)
+                        Net Amount
                       </span>
                     </div>
                     <div className="col-6">
@@ -1815,7 +1848,7 @@ const FinalBillingAdd = () => {
                           fontWeight: "bold",
                           color: "red",
                         }}
-                        defaultValue="-4800.00"
+                        value={formData?.ReciptAmt || 0}
                       />
                     </div>
                   </div>
@@ -1823,7 +1856,7 @@ const FinalBillingAdd = () => {
 
                 {/* Middle Column Totals */}
                 <div className="col-md-4">
-                  <div className="row g-1 align-items-center mb-1">
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Tax Inclusive(Y/N)</span>
                     </div>
@@ -1838,8 +1871,8 @@ const FinalBillingAdd = () => {
                         <option value={"N"}>N</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="row g-1 align-items-center mb-1">
+                  </div> */}
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Service Tax</span>
                     </div>
@@ -1850,7 +1883,7 @@ const FinalBillingAdd = () => {
                         value={formData?.ServiceTax || 0}
                       />
                     </div>
-                  </div>
+                  </div> */}
                   <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Corp. Payble</span>
@@ -1859,11 +1892,11 @@ const FinalBillingAdd = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={formData?.CorpPabley || 0}
+                        value={formData?.Approval || 0}
                       />
                     </div>
                   </div>
-                  <div className="row g-1 align-items-center mb-1">
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>
                         (Not found) Net Bill
@@ -1880,7 +1913,7 @@ const FinalBillingAdd = () => {
                         defaultValue="4800.00"
                       />
                     </div>
-                  </div>
+                  </div> */}
                   <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>
@@ -1895,7 +1928,7 @@ const FinalBillingAdd = () => {
                       />
                     </div>
                   </div>
-                  <div className="row g-1 align-items-center">
+                  {/* <div className="row g-1 align-items-center">
                     <div className="col-6 text-end">
                       <span style={styles.label}> (Not found) GST Amount</span>
                     </div>
@@ -1906,7 +1939,7 @@ const FinalBillingAdd = () => {
                         defaultValue="0.00"
                       />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Right Column Totals */}
@@ -1957,13 +1990,13 @@ const FinalBillingAdd = () => {
                   </div>
                   <div className="row g-1 align-items-center mb-1">
                     <div className="col-3 text-end">
-                      <span style={styles.label}> (Not found)CORP Disc</span>
+                      <span style={styles.label}>CORP Disc</span>
                     </div>
                     <div className="col-3">
                       <input
                         type="text"
                         style={styles.input}
-                        defaultValue="0.00"
+                        value={formData?.Approval || 0}
                       />
                     </div>
                   </div>
@@ -2052,7 +2085,7 @@ const FinalBillingAdd = () => {
           </div>
 
           {/* RIGHT SIDE PANEL */}
-        <div className="col-12 col-lg-3 d-flex flex-column gap-2">
+          <div className="col-12 col-lg-3 d-flex flex-column gap-2">
             {/* Barcode Area */}
             <div
               className="bg-primary p-2 text-center"
@@ -2171,5 +2204,3 @@ const FinalBillingAdd = () => {
 };
 
 export default FinalBillingAdd;
-
-

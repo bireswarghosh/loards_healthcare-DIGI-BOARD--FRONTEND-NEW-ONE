@@ -188,12 +188,18 @@ const FinalBilling = () => {
     CashlessId: "",
   });
 
+  const [totalReceipt, setTotalReceipt] = useState(0);
+  const [netBal, setNetBal] = useState(0);
+
+  const [btnLoading, setBtnLoading] = useState(false);
+
   const handleSave = async () => {
     console.log("update: ", formData);
     console.log(mode);
     console.log(mode_type);
     if (mode_type == "edit") {
       try {
+        setBtnLoading(true);
         console.log("update: ", formData);
         const res = await axiosInstance.put(
           `/fb/${fbData.FinalBillId}`,
@@ -205,6 +211,8 @@ const FinalBilling = () => {
         }
       } catch (error) {
         console.log("error updating form: ", error);
+      } finally {
+        setBtnLoading(false);
       }
     }
   };
@@ -613,6 +621,17 @@ const FinalBilling = () => {
         setFbData(res.data.data);
         setBillHeadData(res.data.data.details?.finalbilldtl);
 
+        const total = res.data.data.details?.finalbilldtl?.reduce(
+          (sum, item) => sum + Number(item.Amount1 || 0),
+          0,
+        );
+
+        setNetBal(
+          total -
+            res.data.data.details?.finalbilldtl?.find((item) => item.SlNo == 9)
+              ?.Amount1 || 0,
+        );
+        setTotalReceipt(total);
         if (res.data.data.details?.finalbillalldtl) {
           setOcDeatails(
             filterCharges(res.data.data.details?.finalbillalldtl, " "),
@@ -1180,15 +1199,35 @@ const FinalBilling = () => {
   }, []);
 
   useEffect(() => {
-    const { Approval, Discount, ReciptAmt, Remarks, CashlessId } = fbData;
-    setFormData({ Approval, Discount, ReciptAmt, Remarks, CashlessId });
+    // const { Approval, Discount, ReciptAmt, Remarks, CashlessId } = fbData;
+    setFormData(fbData);
   }, [fbData]);
+
+  useEffect(() => {
+    setFbData((prev) => ({
+      ...prev,
+      PatiectPartyAmt: netBal - fbData.Approval,
+    }));
+
+    setFbData((prev) => ({
+      ...prev,
+      ReciptAmt: netBal - fbData.Approval - fbData.Discount,
+    }));
+  }, [fbData.Approval, netBal]);
+
+  useEffect(() => {
+    setFbData((prev) => ({
+      ...prev,
+      ReciptAmt: fbData.PatiectPartyAmt - fbData.Discount,
+    }));
+    // console.log("Hi dis: ",formData.Discount)
+  }, [fbData.Discount]);
 
   return (
     <div className="min-vh-100 ">
       {" "}
       {/* Top Header */}
-           <div className=" d-flex justify-content-between align-items-center px-2 py-3 mb-1 border">
+      <div className=" d-flex justify-content-between align-items-center px-2 py-3 mb-1 border">
         <div className="d-flex align-items-center">
           <span
             style={{
@@ -1231,7 +1270,7 @@ const FinalBilling = () => {
           </button>
         </div>
       </div>
-        <div className="min-vh-80 container-fluid p-0">
+      <div className="min-vh-80 container-fluid p-0">
         <div className="row g-1 min-vh-80 ms-2">
           {/* LEFT MAIN PANEL */}
           <div className="col-12 col-lg-9">
@@ -1585,11 +1624,7 @@ const FinalBilling = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={
-                          billHeadData?.find(
-                            (item) => item.HeadName == "Less Advance Receipt",
-                          )?.Amount1 || ""
-                        }
+                        value={totalReceipt}
                       />
                     </div>
                   </div>
@@ -1601,7 +1636,7 @@ const FinalBilling = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={fbData?.BillAmt || 0}
+                        value={netBal || 0}
                       />
                     </div>
                   </div>
@@ -1655,14 +1690,14 @@ const FinalBilling = () => {
                         style={styles.input}
                         value={fbData?.ReciptAmt || 0}
                         name="ReciptAmt"
-                        onChange={handleChange}
+                        // onChange={handleChange}
                       />
                     </div>
                   </div>
                   <div className="row g-1 align-items-center">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>
-                        Net Amount (Not found)
+                        Net Amount
                       </span>
                     </div>
                     <div className="col-6">
@@ -1673,7 +1708,7 @@ const FinalBilling = () => {
                           fontWeight: "bold",
                           color: "red",
                         }}
-                        defaultValue="-4800.00"
+                        value={fbData?.ReciptAmt || 0}
                       />
                     </div>
                   </div>
@@ -1681,7 +1716,7 @@ const FinalBilling = () => {
 
                 {/* Middle Column Totals */}
                 <div className="col-md-4">
-                  <div className="row g-1 align-items-center mb-1">
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Tax Inclusive(Y/N)</span>
                     </div>
@@ -1692,8 +1727,8 @@ const FinalBilling = () => {
                         <option value={"N"}>N</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="row g-1 align-items-center mb-1">
+                  </div> */}
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Service Tax</span>
                     </div>
@@ -1704,7 +1739,7 @@ const FinalBilling = () => {
                         value={fbData?.ServiceTax || 0}
                       />
                     </div>
-                  </div>
+                  </div> */}
                   <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Corp. Payble</span>
@@ -1713,11 +1748,11 @@ const FinalBilling = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={fbData?.CorpPabley || 0}
+                        value={fbData?.Approval || 0}
                       />
                     </div>
                   </div>
-                  <div className="row g-1 align-items-center mb-1">
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>
                         (Not found) Net Bill
@@ -1734,7 +1769,7 @@ const FinalBilling = () => {
                         defaultValue="4800.00"
                       />
                     </div>
-                  </div>
+                  </div> */}
                   <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>
@@ -1749,7 +1784,7 @@ const FinalBilling = () => {
                       />
                     </div>
                   </div>
-                  <div className="row g-1 align-items-center">
+                  {/* <div className="row g-1 align-items-center">
                     <div className="col-6 text-end">
                       <span style={styles.label}> (Not found) GST Amount</span>
                     </div>
@@ -1760,7 +1795,7 @@ const FinalBilling = () => {
                         defaultValue="0.00"
                       />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Right Column Totals */}
@@ -1811,13 +1846,13 @@ const FinalBilling = () => {
                   </div>
                   <div className="row g-1 align-items-center mb-1">
                     <div className="col-3 text-end">
-                      <span style={styles.label}> (Not found)CORP Disc</span>
+                      <span style={styles.label}>CORP Disc</span>
                     </div>
                     <div className="col-3">
                       <input
                         type="text"
                         style={styles.input}
-                        defaultValue="0.00"
+                        value={fbData?.Approval || 0}
                       />
                     </div>
                   </div>
@@ -1983,9 +2018,9 @@ const FinalBilling = () => {
 
             <input type="text" style={{ ...styles.input, height: "30px" }} />
 
-            <div>
+            {/* <div>
               <button className="btn btn-sm btn-primary">Update</button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -2003,7 +2038,7 @@ const FinalBilling = () => {
               <button
                 className="btn btn-sm btn-primary"
                 onClick={handleSave}
-                disabled={mode_type === "view"}
+                disabled={mode_type === "view" || btnLoading}
               >
                 Save
               </button>
@@ -2055,5 +2090,3 @@ const FinalBilling = () => {
 };
 
 export default FinalBilling;
-
-
