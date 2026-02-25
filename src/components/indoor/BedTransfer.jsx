@@ -27,7 +27,7 @@ const BedTransfer = () => {
 
   const [showDrop, setShowDrop] = useState(false);
 
- const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     AdmitionId: id_new || "0",
     BedId: 0,
     AdmitionDate: new Date().toISOString().split("T")[0] + "T00:00:00.000Z",
@@ -224,7 +224,8 @@ const BedTransfer = () => {
           },
         );
       } else {
-       res1={data:{success:true}}
+        // res1.data.success = true;
+        res1={data:{success:true}}
       }
 
       // console.log("save res: ", res);
@@ -645,6 +646,7 @@ const BedTransfer = () => {
                               console.log("Error fetching bed master: ", error);
                             }
                           }}
+                          disabled={bed.SlNo==1}
                         >
                           <i className="fa-light fa-pen-to-square"></i>
                         </button>
@@ -654,6 +656,7 @@ const BedTransfer = () => {
                             setSlNo(bed.SlNo);
                             setShowConfirm(true);
                           }}
+                          disabled={bed.SlNo==1}
                         >
                           <i className="fa-light fa-trash-can"></i>
                         </button>

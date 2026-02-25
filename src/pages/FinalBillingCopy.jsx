@@ -672,6 +672,9 @@ const FinalBilling = () => {
         }
 
         if (res.data.data?.details?.finalbillbeddtl) {
+          // await fetchBedsById1(
+          //   res.data.data?.details?.finalbillbeddtl,
+          // );
           const data = await fetchBedsById(
             res.data.data?.details?.finalbillbeddtl,
           );
@@ -723,16 +726,36 @@ const FinalBilling = () => {
     }
   };
 
-  // fetch bed detail by Id
-  const fetchBedsById = async (beds) => {
+  // fetch bed detail by  Id
+  const fetchBedsById = async (Beds) => {
     try {
-      const promises = beds.map((item) =>
-        axiosInstance.get(`/bedMaster/${item.BedId}`),
+      let bedIds = Beds.map((item) => item.BedId);
+
+      console.log("Beds inside function: ", bedIds);
+
+      let uniqueBedIds = [...new Set(bedIds)];
+
+      console.log(" Unique Beds inside function: ", uniqueBedIds);
+
+      const promises = uniqueBedIds.map((bedId) =>
+        axiosInstance.get(`/bedMaster/${bedId}`),
       );
 
       const results = await Promise.all(promises);
+      const bedInfoArray = results.map((res) => res?.data?.data);
 
-      return results.map((res) => res?.data?.data);
+      const bedMap = {};
+
+      for (let index = 0; index < bedInfoArray.length; index++) {
+        bedMap[bedInfoArray[index].BedId] = bedInfoArray[index];
+      }
+
+      console.log("unique beds data: ", bedMap);
+
+      const finalBedDetail = bedIds.map((item) => bedMap[item]);
+
+      return finalBedDetail;
+      // return results.map((res) => res?.data?.data);
     } catch (err) {
       console.error("Error while fetching bed data:", err);
       throw err;

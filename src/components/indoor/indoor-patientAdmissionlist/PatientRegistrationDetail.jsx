@@ -72,7 +72,10 @@ const PatientAdmission = () => {
   // Main Form Data
   const [formData, setFormData] = useState({
     AdmitionDate: new Date().toISOString().split("T")[0],
-    AdmitionTime:  new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+    AdmitionTime: new Date().toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     BillTime: new Date().getHours() >= 12 ? "12:00" : "00:00",
     IPD: "N",
     IPDId: "",
@@ -138,7 +141,7 @@ const PatientAdmission = () => {
     tpaper: null,
     PanNo: "",
     PackageCHK: 0,
-    nameemployer: "",
+    // nameemployer: "",
     refdate: "",
     Nameemp: "",
     empcode: "",
@@ -429,20 +432,20 @@ const PatientAdmission = () => {
           PanNo: patientData.PanNo || "",
           RelativeName: patientData.RelativeName || "",
           AdmType: patientData.AdmType || "",
-          nameemploye: patientData.nameemploye || "",
+          // nameemploye: patientData.nameemploye || "",
           BedId: patientData.BedId || "",
           DepartmentId: patientData.DepartmentId || "",
           Occupation: patientData.Occupation || "",
           Dob: patientData.Dob || "",
           RelativePhoneNo: patientData.RelativePhoneNo || "",
-          nameemployer: patientData.nameemployer || "",
+          // nameemployer: patientData.nameemployer || "",
           refdate: patientData.refdate || "",
           UCDoctor1Id: patientData.UCDoctor1Id || "",
           Referral: patientData.Referral || "",
           Package: patientData.Package || "",
           BedRate: patientData.BedRate || "",
-          ReferralId:patientData.ReferralId || "",
-          PackageId:patientData.PackageId || "",
+          ReferralId: patientData.ReferralId || "",
+          PackageId: patientData.PackageId || "",
           DayCareYN: patientData.DayCareYN || "",
           DayCareId: patientData.DayCareId || "",
           DiseaseId: patientData.DiseaseId || "",
@@ -732,9 +735,34 @@ const PatientAdmission = () => {
           : await axiosInstance.put(`/admission/${id}`, cleanData);
 
       if (response.data.success) {
+        if (mode === "create") {
+          const bedTransData = {
+            AdmitionId: response.data.data.AdmitionId || "0",
+            BedId: cleanData?.BedId || "",
+            AdmitionDate: cleanData.AdmitionDate + "T00:00:00.000Z",
+            ReleaseDate: "",
+            Release: "",
+            AdmitionTime: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            ReleaseTime: "",
+            ToDayRate: cleanData?.BedRate || 0,
+            Rate: cleanData?.BedRate || 0,
+            Userid: 9,
+            RMOCh: 0,
+            AtttndantCh: 0,
+            packagevalid: "",
+            packagestart: "",
+          };
+
+          const res = await axiosInstance.post("/admitionbeds", bedTransData);
+        }
+
         toast.success(
           `Admission ${mode === "create" ? "created" : "updated"} successfully!`,
         );
+
         // alert(
         //   `Admission ${mode === "create" ? "created" : "updated"} successfully!`
         // );
@@ -937,15 +965,15 @@ const PatientAdmission = () => {
          <div class="header-grid">
            
              <div class="logo-wrapper">
-   <img 
-      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" 
+   <img
+      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"
       alt="logo"
       class="logo-img"
    />
 </div>
 
 
-            
+           
             <div class="text-center">
                <h1 class="hospital-title">${data.hospital.name}</h1>
                <div class="hospital-details">
@@ -982,7 +1010,7 @@ const PatientAdmission = () => {
                <span class="label">STATUS</span> <span>: ${data.patient.status}</span>
                
                <span class="label">PHONE NO.</span> <span>: ${data.patient.phone}</span>
-              
+             
                <span class="label">NATIONALITY</span> <span>: ${data.patient.nationality}</span>
                
             </div>
@@ -1013,9 +1041,9 @@ const PatientAdmission = () => {
          <div class="terms-box">
             <span style="margin:0; font-weight:bold;">I do hereby give my full consent to undertake treatment of above Patient by Medical Management, Surgical Management, Intensive Care at this Nursing Home.</span>
             <br>I ..................................................................... in my full sense hereby authorize Dr. ......................................................... & Such Associates, Doctors, Consultants, Nurses & Paramedical staff of Hospital to conduct all necessary Investigation, Medical/Surgical/Procedure on me/my patient under General or religional anaesthesia as deemed suitable for the same.
-            <br>I agree to pay all the bills and when submitted by hospital authority for my/my patient's treatment , and clear all the dues of Nursing Home 
+            <br>I agree to pay all the bills and when submitted by hospital authority for my/my patient's treatment , and clear all the dues of Nursing Home
             incurred for the treatment of the patient before discharge /DORB.
-            <br>I shall not hold the institution, it's staff and the doctors responsible for any unwanted consequences during the course of medical treatment 
+            <br>I shall not hold the institution, it's staff and the doctors responsible for any unwanted consequences during the course of medical treatment
             and the surgery administration of anaesthesia/drug or investigation/treatment etc..
             <br>I have been fully explained the consequences of the procedures and their risks.
             <strong style="display:block; margin-top:10px;">GENERAL NORMS FOR PATIENT ADMISSION:</strong>
@@ -1045,7 +1073,7 @@ const PatientAdmission = () => {
   justify-content: space-between;">
         <div class="text-red font-bold text-center mb-1" style="font-size:10px;">
             Full charge on the day of the admission. No charge if the patient leaves before 11:30 am on the day of discharge.
-         </div> 
+         </div>
          
          <div class="flex justify-between items-center" style="margin-top:-15px;">
             <div></div>
@@ -1074,19 +1102,19 @@ const PatientAdmission = () => {
                <div class="text-red font-bold">Patient's History :</div>
                <div><span class="checkbox"></span> Diabetic</div>
                <div><span class="checkbox"></span> HTN</div>
-              
+             
                <div><span class="checkbox"></span> Asthma</div>
                <div><span class="checkbox"></span> Cardiac</div>
-              
+             
             </div>
             <div class="flex mt-2" style="gap: 20px; align-items:center;">
                <div class="text-red font-bold">Allergies to Food and/or Drugs :</div>
                <div><span class="checkbox "></span> Asprin/Ecosprin</div>
                <div><span class="checkbox "></span> Clopitogril</div>
-              
+             
                <div><span class="checkbox"></span> Others</div>
-          
-              
+         
+             
             </div>
             <div class="signature-row" style="margin-top:20px;">
                <div>Signature of the Front Office Executive : SANJAY ST.</div>
@@ -1169,7 +1197,7 @@ window.onload = function () {
               Patient Admission
             </h6>
             {/* {console.log("for: ",formData)} */}
-            {/* 
+            {/*
             {formData.AdmitionId && (
               <Barcode
                 value={formData.AdmitionNo}
@@ -1271,11 +1299,9 @@ window.onload = function () {
                           name="AdmitionTime"
                           value={formData.AdmitionTime}
                           onChange={(e) => {
-                            console.log("ddd: ",e.target.value)
-                            handleInputChange(e)
-                          }
-                          
-                          }
+                            console.log("ddd: ", e.target.value);
+                            handleInputChange(e);
+                          }}
                           style={{ ...inputStyle, width: "80px" }}
                         />
                       </div>
@@ -1930,61 +1956,60 @@ window.onload = function () {
                         Under Care Dr <span className="text-danger">*</span>
                       </label>
                       <div>
-
-                      <input
-                        type="text"
-                        value={
-                          doctors.find(
-                            (d) => d.DoctorId == formData.UCDoctor1Id,
-                          )?.Doctor || ""
-                        }
-                        onClick={() => {
-                          if (mode !== "view") {
-                            setSelectedDoctorField("UCDoctor1Id");
-                            setShowDoctorDrawer(true);
-                            setCurrentDoctorPage(1);
-                            setDoctorSearchQuery("");
+                        <input
+                          type="text"
+                          value={
+                            doctors.find(
+                              (d) => d.DoctorId == formData.UCDoctor1Id,
+                            )?.Doctor || ""
                           }
-                        }}
-                        readOnly
-                        style={{ ...inputStyle, cursor: "pointer" }}
-                      />
-                      <input
-                        type="text"
-                        value={
-                          doctors.find(
-                            (d) => d.DoctorId == formData.UCDoctor2Id,
-                          )?.Doctor || ""
-                        }
-                        onClick={() => {
-                          if (mode !== "view") {
-                            setSelectedDoctorField("UCDoctor2Id");
-                            setShowDoctorDrawer(true);
-                            setCurrentDoctorPage(1);
-                            setDoctorSearchQuery("");
+                          onClick={() => {
+                            if (mode !== "view") {
+                              setSelectedDoctorField("UCDoctor1Id");
+                              setShowDoctorDrawer(true);
+                              setCurrentDoctorPage(1);
+                              setDoctorSearchQuery("");
+                            }
+                          }}
+                          readOnly
+                          style={{ ...inputStyle, cursor: "pointer" }}
+                        />
+                        <input
+                          type="text"
+                          value={
+                            doctors.find(
+                              (d) => d.DoctorId == formData.UCDoctor2Id,
+                            )?.Doctor || ""
                           }
-                        }}
-                        readOnly
-                        style={{ ...inputStyle, cursor: "pointer" }}
-                      />
-                      <input
-                        type="text"
-                        value={
-                          doctors.find(
-                            (d) => d.DoctorId == formData.UCDoctor3Id,
-                          )?.Doctor || ""
-                        }
-                        onClick={() => {
-                          if (mode !== "view") {
-                            setSelectedDoctorField("UCDoctor3Id");
-                            setShowDoctorDrawer(true);
-                            setCurrentDoctorPage(1);
-                            setDoctorSearchQuery("");
+                          onClick={() => {
+                            if (mode !== "view") {
+                              setSelectedDoctorField("UCDoctor2Id");
+                              setShowDoctorDrawer(true);
+                              setCurrentDoctorPage(1);
+                              setDoctorSearchQuery("");
+                            }
+                          }}
+                          readOnly
+                          style={{ ...inputStyle, cursor: "pointer" }}
+                        />
+                        <input
+                          type="text"
+                          value={
+                            doctors.find(
+                              (d) => d.DoctorId == formData.UCDoctor3Id,
+                            )?.Doctor || ""
                           }
-                        }}
-                        readOnly
-                        style={{ ...inputStyle, cursor: "pointer" }}
-                      />
+                          onClick={() => {
+                            if (mode !== "view") {
+                              setSelectedDoctorField("UCDoctor3Id");
+                              setShowDoctorDrawer(true);
+                              setCurrentDoctorPage(1);
+                              setDoctorSearchQuery("");
+                            }
+                          }}
+                          readOnly
+                          style={{ ...inputStyle, cursor: "pointer" }}
+                        />
                       </div>
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
@@ -2005,7 +2030,7 @@ window.onload = function () {
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                       </select>
-                         {formData.Referral == "Y" ? (
+                      {formData.Referral == "Y" ? (
                         <select
                           name="ReferralId"
                           value={formData.ReferralId}
@@ -2046,7 +2071,7 @@ window.onload = function () {
                         <option value="N">N</option>
                       </select>
 
-                 {formData.Package == "Y" ? (
+                      {formData.Package == "Y" ? (
                         <select
                           name="PackageId"
                           value={formData.PackageId}
@@ -2242,12 +2267,11 @@ window.onload = function () {
                         name="DayCareYN"
                         value={formData.DayCareYN}
                         onChange={(e) => {
-                          handleInputChange(e)
-                          if(e.target.value==""|| e.target.value=="N"){
-                            setFormData(prev=>({...prev, DayCareId:""}))
+                          handleInputChange(e);
+                          if (e.target.value == "" || e.target.value == "N") {
+                            setFormData((prev) => ({ ...prev, DayCareId: "" }));
                           }
-                        }
-                        }
+                        }}
                         style={{
                           ...inputStyle,
                           width: "50px",
@@ -2259,25 +2283,27 @@ window.onload = function () {
                         <option value="N">N</option>
                       </select>
                       <label style={labelStyle}>Particular</label>
-                     { formData.DayCareYN=="Y"?
-                      <select
-                        name="DayCareId"
-                        value={formData.DayCareId}
-                        onChange={(e) => {
-                          handleInputChange(e);
-                          calDayCareBedRate(e.target.value);
-                        }}
-                        style={{ ...inputStyle, width: "120px" }}
-                      >
-                        {dayCare.map((d, i) => (
-                          <option key={i} value={d.DayCareId}>
-                            {d.DayCare}
-                          </option>
-                        ))}
-                      </select>
-                    : <input  style={{ ...inputStyle, width: "120px" }}>
-                    </input >  
-                    }
+                      {formData.DayCareYN == "Y" ? (
+                        <select
+                          name="DayCareId"
+                          value={formData.DayCareId}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            calDayCareBedRate(e.target.value);
+                          }}
+                          style={{ ...inputStyle, width: "120px" }}
+                        >
+                          {dayCare.map((d, i) => (
+                            <option key={i} value={d.DayCareId}>
+                              {d.DayCare}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          style={{ ...inputStyle, width: "120px" }}
+                        ></input>
+                      )}
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
@@ -3308,5 +3334,3 @@ window.onload = function () {
 };
 
 export default PatientAdmission;
-
-

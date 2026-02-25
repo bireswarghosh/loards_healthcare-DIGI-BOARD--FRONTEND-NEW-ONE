@@ -292,6 +292,9 @@ const FinalBillingAdd = () => {
 
     return `${hh}:${mm}`;
   }
+
+  const [fbMode, setFbMode] = useState("estimate"); // 'final or estimate'
+
   const [loggedInUser, setLoggedInUser] = useState(
     localStorage.getItem("userId") || "",
   );
@@ -438,14 +441,31 @@ const FinalBillingAdd = () => {
 
   const [btnLoading, setBtnLoading] = useState(true);
 
+  const [serviceCharge, setServiceCharge] = useState(0); // this is for discount
+  const [serviceChrgCalculated, setServiceChrgCalculated] = useState(0); // this will be calculated by the discounted values of the beds and other charges master in which service charges is on
+
+  const fetchServiceChargeValue = async () => {
+    try {
+      const res = await axiosInstance.get("/parameters");
+      if (res.data.success) {
+        const servChrg = res.data.data.DagP;
+        setServiceCharge(servChrg);
+      } else {
+        setServiceCharge(0);
+      }
+    } catch (error) {
+      console.log("error fetching paramete setup data: ", error);
+    }
+  };
+
   const handleSave = async () => {
-    console.log(mode);
+    // console.log(mode);
     console.log("add: ", formData);
     setBtnLoading(true);
     try {
       if (mode === "add") {
         const res = await axiosInstance.post("/fb", formData);
-        console.log("Res after submit: ", res);
+        // console.log("Res after submit: ", res);
         if (res.data.success) {
           toast.success("Final Bill added successfully.");
         }
@@ -603,13 +623,13 @@ const FinalBillingAdd = () => {
       const arr = res.data.data;
       if (arr.length) {
         const totalLessAdv = arr.reduce((sum, item) => sum + item.Amount, 0);
-        console.log("totalLessAdv chrgs; ", totalLessAdv);
+        // console.log("totalLessAdv chrgs; ", totalLessAdv);
         const newArr = arr.map((item) => ({
           ...item,
           PrintHead: "Less Advance Receipt",
         }));
 
-        console.log("less adv data: ", newArr);
+        // console.log("less adv data: ", newArr);
 
         setFormData((prev) => ({
           ...prev,
@@ -634,17 +654,17 @@ const FinalBillingAdd = () => {
   const fetchDiag = async (id) => {
     try {
       const res = await axiosInstance.get(`/case01/admition/${id}`);
-      console.log("Diag data: ", res.data.data);
+      // console.log("Diag data: ", res.data.data);
 
       res.data.success ? setDiagData(res.data.data) : setDiagData([]);
 
       const arr = res.data.data;
       if (arr.length) {
         const totalDiag = arr.reduce((sum, item) => sum + item.Total, 0);
-        console.log("total diag chrgs; ", totalDiag);
+        // console.log("total diag chrgs; ", totalDiag);
 
         const newArr = arr.map((item) => {
-          console.log("tie: ", item);
+          // console.log("tie: ", item);
           const {
             PatientName,
             Diseasecode,
@@ -1077,7 +1097,7 @@ const FinalBillingAdd = () => {
     }
     try {
       const response = await axiosInstance.get(`/admission/${id}`);
-      console.log("adm data: ", response.data.data);
+      // console.log("adm data: ", response.data.data);
       response.data.success ? setAdmData(response.data.data) : setAdmData({});
       setFormData((prev) => ({
         ...prev,
@@ -1148,10 +1168,10 @@ const FinalBillingAdd = () => {
 
       // return results.map((res) => res?.data?.data);
       const res1 = await axiosInstance.get(`/admissions/${admId}`);
-      console.log("fethed bed by admid: ", res1.data.data.bedData);
+      // console.log("fethed bed by admid: ", res1.data.data.bedData);
 
       const arr = res1.data.data.bedData; // this all fetched bed by admId
-      console.log("hi bed: ", arr);
+      // console.log("hi bed: ", arr);
       const promises = arr.map((item) =>
         axiosInstance.get(`/bedMaster/${item.BedId}`),
       );
@@ -1159,15 +1179,33 @@ const FinalBillingAdd = () => {
       const results = await Promise.all(promises);
 
       setFetchedAdmBedDetail(results.map((res) => res?.data?.data));
-      console.log(
-        "res bed: ",
-        results.map((res) => res?.data?.data),
+      // console.log(
+      //   "res bed: ",
+      //   results.map((res) => res?.data?.data),
+      // );
+
+      // filter the beds where service charge is Y
+
+      const allBedsData = results.map((res) => res?.data?.data);
+
+      const filterBedByServiceChrg = allBedsData.filter(
+        (data) => data.ServiceCh === "Y",
       );
+
+      // bed service chrg
+      const bedServiceChrg = filterBedByServiceChrg.reduce(
+        (sum, item) =>
+          sum + Number(item.TotalCh) * (Number(serviceCharge) / 100),
+        0,
+      );
+      setServiceChrgCalculated((prev) => prev + bedServiceChrg);
+      // console.log("Beds with service charge on : ", filterBedByServiceChrg);
+
       const newA = arr.map((item) =>
         getDayDifference(item.AdmitionDate, item.ReleaseDate),
       ); // this is the all bed count with respect to adm and release date
 
-      console.log("newa : ", newA);
+      // console.log("newa : ", newA);
       let allBedsUpTodayDate = arr.map((item, index) =>
         multiplyObject(
           {
@@ -1185,12 +1223,12 @@ const FinalBillingAdd = () => {
       );
 
       const singleArray = allBedsUpTodayDate.flat();
-      console.log("all bed uptoday1 : ", singleArray);
+      // console.log("all bed uptoday1 : ", singleArray);
       const totalBedRate = singleArray.reduce(
         (sum, item) => sum + item.BedRate,
         0,
       );
-      console.log("total bed rate: ", totalBedRate);
+      // console.log("total bed rate: ", totalBedRate);
       setFinalBillDetail((prev) =>
         prev.map((item) =>
           item.SlNo === 1 ? { ...item, Amount1: totalBedRate } : item,
@@ -1232,6 +1270,25 @@ const FinalBillingAdd = () => {
     allOtherCharges,
     patientInfo,
   ) {
+    // filtering other charges which have service charge on
+
+    const ocWithFullDetails = otherChargesByAdmId.map(
+      (item) => allOtherCharges1[item.OtherChargesId],
+    );
+    // const ocWithFullDetails = otherChargesByAdmId
+    const ocWithServiceChrgOn = ocWithFullDetails.filter(
+      (item) => item.ServiceCh === "Y",
+    );
+
+    const ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
+      (sum, item) => sum + Number(item.Rate) * (Number(serviceCharge) / 100),
+      0,
+    );
+
+    // console.log("filterd oc with service charge on: ", ocWithServiceChrgOn);
+    // console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
+
+    setServiceChrgCalculated((prev) => prev + ocServiceChargeCalculated);
     return otherChargesByAdmId.map((item, index) => {
       // const matched = allOtherCharges.find(
       //   (oc) => oc.OtherChargesId == item.OtherChargesId,
@@ -1267,7 +1324,7 @@ const FinalBillingAdd = () => {
 
   useEffect(() => {
     if (Object.keys(admData).length) {
-      console.log("adm data1: ", admData);
+      // console.log("adm data1: ", admData);
 
       fetchBedsById(admData?.AdmitionId, admData?.BedId);
       // console.log("Adm date:", admData?.AdmitionDate);
@@ -1283,6 +1340,7 @@ const FinalBillingAdd = () => {
   }, [admData]);
 
   useEffect(() => {
+    fetchServiceChargeValue();
     fetchAuthUsers();
     // fetchFB(id);
     fetchAllIPDOtherCharges();
@@ -1297,7 +1355,7 @@ const FinalBillingAdd = () => {
         acc[item.OtherChargesId] = item;
         return acc;
       }, {});
-      console.log("objd: ", obj);
+      // console.log("objd: ", obj);
       setAllOtherCharges1(obj);
     }
   }, [allOtherCharges]);
@@ -1313,12 +1371,12 @@ const FinalBillingAdd = () => {
   }, [finalBillDetail]);
 
   useEffect(() => {
-    console.log("Final Bill detail testing: ", finalBillDetail);
+    // console.log("Final Bill detail testing: ", finalBillDetail);
     const total = finalBillDetail.reduce(
       (sum, item) => sum + Number(item.Amount1 || 0),
       0,
     );
-    console.log("Total final bill is : ", total);
+    // console.log("Total final bill is : ", total);
     setNetBal(
       total - finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
     );
@@ -1343,8 +1401,57 @@ const FinalBillingAdd = () => {
       ...prev,
       ReciptAmt: formData.PatiectPartyAmt - formData.Discount,
     }));
-    console.log("Hi dis: ", formData.Discount);
+    // console.log("Hi dis: ", formData.Discount);
   }, [formData.Discount]);
+
+  useEffect(() => {
+    // console.log("Service charge calculated", serviceChrgCalculated);
+
+    if (serviceChrgCalculated == 0) {
+      return;
+    }
+
+    const p = {
+      slno: 999999999999999,
+      PatientName: admData?.PatientName || "",
+      Diseasecode: admData?.Diseasecode || "",
+      // Disease: patientInfo?.DiseaseId|| ".",
+      Disease: "",
+      Add1: admData?.Add1 || "",
+      Add2: admData?.Add2 || "",
+      Add3: admData?.Add3 || "",
+      Age: admData?.Age || "",
+      AgeType: admData?.AgeType || "",
+      Sex: admData?.Sex || "",
+      AdmitionDate: admData?.AdmitionDate || "",
+      PrintHead: "SERVICE CHARGES",
+      SubHead: "SERVICE CHARGES",
+      Particular: "",
+      Amount: serviceChrgCalculated,
+      TotAmount: 0,
+      MyPic: "",
+      scharge: 0,
+    };
+
+    setScDetail([p])
+
+    const RemoveDuplicateSC = formData.details.finalbillalldtl.filter(item=>item.slno!=999999999999999)
+
+     setFormData((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          finalbillalldtl: [...RemoveDuplicateSC, p],
+        },
+      }));
+
+      setFinalBillDetail((prev) =>
+          prev.map((item) =>
+            item.SlNo === 7 ? { ...item, Amount1:serviceChrgCalculated } : item,
+          ),
+        );
+
+  }, [serviceChrgCalculated]);
 
   return (
     <div className="min-vh-100 ">
@@ -1365,7 +1472,23 @@ const FinalBillingAdd = () => {
             <h6>Final Billing</h6>
           </span>
         </div>
-        <div className="d-flex align-items-center pe-3">
+        <div className="d-flex align-items-center gap-2">
+          <button
+            className={`btn ${fbMode === "estimate" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            onClick={() => {
+              setFbMode("estimate");
+            }}
+          >
+            Estimate
+          </button>
+          <button
+            className={`btn ${fbMode !== "estimate" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            onClick={() => {
+              setFbMode("final");
+            }}
+          >
+            Final
+          </button>
           <button
             className="btn btn-primary btn-sm"
             onClick={() => {
@@ -2181,13 +2304,13 @@ const FinalBillingAdd = () => {
         style={{ backgroundColor: "primary", borderTop: "1px solid white" }}
       >
         <div className="d-flex flex-wrap gap-1">
-          <button
+        { fbMode === "final" && <button
             className="btn btn-sm btn-primary"
             onClick={handleSave}
             disabled={btnLoading}
           >
             Save
-          </button>
+          </button>}
 
           <button
             className="btn btn-sm btn-primary"
