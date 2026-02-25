@@ -145,6 +145,10 @@ const CaseEntry = () => {
   const [selectedTestMaster, setSelectedTestMaster] = useState(null);
   const [testSearchResults, setTestSearchResults] = useState([]);
   const [isSearchingTest, setIsSearchingTest] = useState(false);
+  const [indoor, setIndoor] = useState(true);
+  const inOutRate = indoor
+    ? selectedTestMaster?.BRate
+    : selectedTestMaster?.Rate;
 
   // this function is only for searching the IPD (Admission)
   const searchTests = async (searchTerm) => {
@@ -444,13 +448,15 @@ const CaseEntry = () => {
       alert("Please select a test");
       return;
     }
-
+    const rate = indoor
+      ? Number(selectedTestMaster?.BRate ?? 0)
+      : Number(selectedTestMaster?.Rate ?? 0);
     const newTest = {
       id: Date.now(),
       TestId: selectedTestMaster.TestId,
-      TestName: selectedTestMaster.Test, // API returns 'Test' field
-      Rate: selectedTestMaster.Rate || 0,
-      NetRate: selectedTestMaster.Rate || 0,
+      TestName: selectedTestMaster.Test,
+      Rate: rate,
+      NetRate: rate,
       DeliveryDate: new Date().toISOString().slice(0, 10),
       DeliveryTime: "07:00 PM",
       Profile: "N",
@@ -469,110 +475,22 @@ const CaseEntry = () => {
     calculateTotal(updatedTests);
   };
 
-  // Calculate total amount with all deductions
+  // Calculate total amount
   const calculateTotal = (testList) => {
     const total = testList.reduce(
       (sum, test) => sum + parseFloat(test.NetRate || 0),
       0
     );
-    
-    const discPercent = parseFloat(formData.Desc) || 0;
-    const discAmt = parseFloat(formData.DescAmt) || 0;
-    const cancelTestAmt = parseFloat(formData.CTestAmt) || 0;
-    const advance = parseFloat(formData.Advance) || 0;
-    const receiptAmt = parseFloat(formData.ReceiptAmt) || 0;
-    
-    // Calculate discount amount from percentage if percentage is entered
-    let finalDiscAmt = discAmt;
-    if (discPercent > 0 && discAmt === 0) {
-      finalDiscAmt = (total * discPercent) / 100;
-    }
-    
-    // G Total = Total - (Discount + Cancel Test + Advance)
-    const grossAmt = total - finalDiscAmt - cancelTestAmt - advance;
-    
-    // Balance = G Total - Receipt Amount
-    const balance = grossAmt - receiptAmt;
-    
     setFormData((prev) => ({
       ...prev,
-      Total: total.toFixed(2),
-      DescAmt: finalDiscAmt.toFixed(2),
-      Amount: total.toFixed(2),
-      GrossAmt: grossAmt.toFixed(2),
-      Balance: balance.toFixed(2),
+      Total: total,
+      Amount: total,
+      GrossAmt: total,
+      Balance: total - parseFloat(prev.Advance || 0),
     }));
   };
 
-  // Handle discount percentage change
-  const handleDiscountChange = (field, value) => {
-    const numValue = parseFloat(value) || 0;
-    const total = parseFloat(formData.Total) || 0;
-    
-    if (field === "Desc") {
-      // Calculate amount from percentage
-      const discAmt = (total * numValue) / 100;
-      setFormData((prev) => ({
-        ...prev,
-        Desc: value,
-        DescAmt: discAmt.toFixed(2),
-      }));
-      recalculateGrossAndBalance(discAmt);
-    } else if (field === "DescAmt") {
-      // Calculate percentage from amount
-      const discPercent = total > 0 ? (numValue / total) * 100 : 0;
-      setFormData((prev) => ({
-        ...prev,
-        DescAmt: value,
-        Desc: discPercent.toFixed(2),
-      }));
-      recalculateGrossAndBalance(numValue);
-    }
-  };
 
-  // Recalculate G Total and Balance
-  const recalculateGrossAndBalance = (discAmt = null) => {
-    const total = parseFloat(formData.Total) || 0;
-    const finalDiscAmt = discAmt !== null ? discAmt : parseFloat(formData.DescAmt) || 0;
-    const cancelTestAmt = parseFloat(formData.CTestAmt) || 0;
-    const advance = parseFloat(formData.Advance) || 0;
-    const receiptAmt = parseFloat(formData.ReceiptAmt) || 0;
-    
-    // G Total = Total - (Discount + Cancel Test + Advance)
-    const grossAmt = total - finalDiscAmt - cancelTestAmt - advance;
-    
-    // Balance = G Total - Receipt Amount
-    const balance = grossAmt - receiptAmt;
-    
-    setFormData((prev) => ({
-      ...prev,
-      GrossAmt: grossAmt.toFixed(2),
-      Balance: balance.toFixed(2),
-    }));
-  };
-
-  // Handle receipt amount change
-  const handleReceiptAmtChange = (value) => {
-    setFormData((prev) => ({ ...prev, ReceiptAmt: value }));
-    setTimeout(() => recalculateGrossAndBalance(), 0);
-  };
-
-  // Handle cancel test amount change
-  const handleCancelTestChange = (value) => {
-    setFormData((prev) => ({ ...prev, CTestAmt: value }));
-    setTimeout(() => recalculateGrossAndBalance(), 0);
-  };
-
-  // Handle advance change
-  const handleAdvanceChange = (value) => {
-    setFormData((prev) => ({ ...prev, Advance: value }));
-    setTimeout(() => recalculateGrossAndBalance(), 0);
-  };
-
-  // Auto-recalculate when discount, cancel test, advance, or receipt changes
-  useEffect(() => {
-    recalculateGrossAndBalance();
-  }, [formData.DescAmt, formData.CTestAmt, formData.Advance, formData.ReceiptAmt]);
 
   // Fetch tests for existing case
   const fetchCaseTests = async (caseId) => {
@@ -1186,7 +1104,8 @@ useEffect(() => {
 
 const handleDepPrint = () => {
   const logoUrl = "/assets/images/logo-small.png";
-
+  const doctorName =
+    doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
   const printContent = `
   <html>
   <head>
@@ -1363,6 +1282,12 @@ const handleDepPrint = () => {
           <span class="patient-label">Date</span>
           <span class="patient-value">${new Date().toISOString().slice(0, 10)}</span>
         </div>
+
+         <div class="patient-row">
+          <span class="patient-label">Doctor</span>
+           <span class="patient-value">${doctorName}</span>
+         
+        </div>
       </div>
 
     </div>
@@ -1394,7 +1319,13 @@ const handleDepPrint = () => {
                 .join("")
             : `<tr><td colspan="3" style="text-align:center;">No Test Added</td></tr>`
         }
-      </tbody>
+      </tbody> 
+        <tfoot>
+        <tr>
+          <td colspan="2" style="text-align:right; font-weight:bold;">Grand Total :</td>
+          <td style="text-align:right; font-weight:bold;">${formData.Total}</td>
+        </tr>
+      </tfoot>
     </table>
 
     <div class="footer">** End of Report — This is a computer-generated document **</div>
@@ -1565,8 +1496,10 @@ const handleDepPrint = () => {
                       style={{ width: "60px" }}
                       disabled={mode === "view"}
                       name="AdmitionYN"
-                      value={formData.AdmitionYN}
+                      value={indoor ? "Y" : "N"}
                       onChange={(e) => {
+                        const val = e.target.value === "Y";
+                        setIndoor(val);
                         handleInputChange(e);
                         if (e.target.value === "N")
                           setFormData((prev) => ({ ...prev, AdmitionId: 0 }));
@@ -2457,6 +2390,7 @@ const handleDepPrint = () => {
               <div className="col-12 col-md-3">
                 <div className="p-1 h-100 d-flex flex-column gap-1">
                   <Select
+                    key={indoor}
                     styles={compactSelectStyles}
                     value={selectedTestMaster}
                     onChange={setSelectedTestMaster}
@@ -2465,7 +2399,8 @@ const handleDepPrint = () => {
                     }}
                     options={testSearchResults.map((item) => ({
                       value: item.TestId,
-                      label: `${item.Test} - ₹${item.Rate}`,
+
+                      label: `${item.Test} - ₹${indoor ? item.BRate : item.Rate}`,
                       ...item,
                     }))}
                     placeholder="Search test..."
@@ -2538,36 +2473,16 @@ const handleDepPrint = () => {
                           style={{ ...inputStyle, width: "80px" }}
                         />
                       </div>
-                      {/* <div className="d-flex justify-content-end align-items-center mb-1">
-                        <label style={labelStyle}>GST</label>
-                        <input
-                          type="text"
-                          name="ServiceChg"
-                          value={formData.ServiceChg}
-                          onChange={handleInputChange}
-                          className="text-end fw-bold ms-1"
-                          style={{ ...inputStyle, width: "80px" }}
-                        />
-                      </div> */}
                     </div>
                   </div>
 
-                  {/* <div className="d-flex justify-content-end align-items-center">
-                    <label style={labelStyle}>Collection Chg.</label>
-                    <input
-                      type="text"
-                      defaultValue="0.00"
-                      className="text-end fw-bold ms-1"
-                      style={{ ...inputStyle, width: "80px" }}
-                    />
-                  </div> */}
                   <div className="d-flex justify-content-end align-items-center">
                     <label style={labelStyle}>Discount</label>
                     <input
                       type="text"
                       name="Desc"
                       value={formData.Desc}
-                      onChange={(e) => handleDiscountChange("Desc", e.target.value)}
+                      onChange={handleInputChange}
                       className="text-end ms-1"
                       style={{ ...inputStyle, width: "40px" }}
                     />
@@ -2577,35 +2492,18 @@ const handleDepPrint = () => {
                       type="text"
                       name="DescAmt"
                       value={formData.DescAmt}
-                      onChange={(e) => handleDiscountChange("DescAmt", e.target.value)}
-                      className="text-end fw-bold ms-1"
-                      style={{ ...inputStyle, width: "80px" }}
-                    />
-                  </div>
-                  {/* <div className="d-flex justify-content-end align-items-center">
-                    <label
-                      style={{ ...labelStyle, backgroundColor: "#ffcccc" }}
-                    >
-                      Patient Disc
-                    </label>
-                    <input
-                      type="text"
-                      name="PatientDisc"
-                      value={formData.PatientDisc}
                       onChange={handleInputChange}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
-                  </div> */}
+                  </div>
                   <div className="d-flex justify-content-end align-items-center">
                     <label style={labelStyle}>Cancel Test Amount</label>
                     <input
                       type="text"
                       name="CTestAmt"
                       value={formData.CTestAmt}
-                      onChange={(e) => {
-                        handleCancelTestChange(e.target.value);
-                      }}
+                      onChange={handleInputChange}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
@@ -2616,9 +2514,7 @@ const handleDepPrint = () => {
                       type="text"
                       name="Advance"
                       value={formData.Advance}
-                      onChange={(e) => {
-                        handleAdvanceChange(e.target.value);
-                      }}
+                      onChange={handleInputChange}
                       className="text-end ms-1"
                       style={{ ...inputStyle, width: "40px" }}
                     />
@@ -2629,9 +2525,9 @@ const handleDepPrint = () => {
                       type="text"
                       name="GrossAmt"
                       value={formData.GrossAmt}
-                      readOnly
+                      onChange={handleInputChange}
                       className="text-end fw-bold ms-1"
-                      style={{ ...inputStyle, width: "80px", backgroundColor: "#f0f0f0" }}
+                      style={{ ...inputStyle, width: "80px" }}
                     />
                   </div>
                   <div className="d-flex justify-content-end align-items-center">
@@ -2642,20 +2538,20 @@ const handleDepPrint = () => {
                       type="text"
                       name="ReceiptAmt"
                       value={formData.ReceiptAmt}
-                      onChange={(e) => handleReceiptAmtChange(e.target.value)}
+                      onChange={handleInputChange}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
                   </div>
                   <div className="d-flex justify-content-end align-items-center">
-                    <label style={labelStyle}>Due Balance</label>
+                    <label style={labelStyle}>Balance</label>
                     <input
                       type="text"
                       name="Balance"
                       value={formData.Balance}
-                      readOnly
+                      onChange={handleInputChange}
                       className="text-end fw-bold ms-1"
-                      style={{ ...inputStyle, width: "80px", backgroundColor: "#f0f0f0" }}
+                      style={{ ...inputStyle, width: "80px" }}
                     />
                   </div>
                 </div>
