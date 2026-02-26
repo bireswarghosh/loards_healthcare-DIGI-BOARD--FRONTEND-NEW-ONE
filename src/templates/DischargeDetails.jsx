@@ -14,15 +14,18 @@ import useAxiosFetch from "./DiagnosisMaster/Fetch";
 
 const DischargeDetails = ({ mode }) => {
   // console.log("mode",mode);
-  
-  const navigate=useNavigate()
+
+  const navigate = useNavigate();
   const { id } = useParams();
-  
+
   const { register, control, handleSubmit, reset, watch, setValue } = useForm({
     defaultValues: {
       DisCerNo: "",
-      DisCerTime: "",
-      DisCerDate: "",
+      DisCerTime: new Date().toLocaleTimeString("en-GB", {
+  hour: "2-digit",
+  minute: "2-digit"
+}),
+      DisCerDate: new Date().toISOString().split("T")[0],
       DiscType: "",
       OTTypeId: "",
       Remarks: "",
@@ -34,150 +37,136 @@ const DischargeDetails = ({ mode }) => {
   const admObj = watch("AdmitionObj");
   const admissionId = watch("AdmitionId");
 
- 
   //   fetch dischargedata====================================================
-  const { data: dischargeData } = useAxiosFetch(id ?`/discert/${id}` :null, [id]);
+  const { data: dischargeData } = useAxiosFetch(id ? `/discert/${id}` : null, [
+    id,
+  ]);
   // const admissionId = dischargeData?.AdmitionId;
 
-   const { data: emrData } = useAxiosFetch(id ? `/emr/D-${id}` : null, [id]);
+  const { data: emrData } = useAxiosFetch(id ? `/emr/D-${id}` : null, [id]);
   // fetch by admissionId===================================================
   const { data: patientDetails } = useAxiosFetch(
     admissionId ? `/admission/${admissionId}` : null,
     [admissionId]
   );
-const patient =
-  mode == "edit" || "view" ? patientDetails || {} : selectedPatient || {};
-// fetch bed============================
-const { data: bed } = useAxiosFetch(
-  patient.BedId ? `/bedMaster/${patient.BedId}` : null,
-  [patient.BedId]
-);
-// fetch doctor name===============================
-const { data: doctor } = useAxiosFetch(
-  patient?.UCDoctor1Id ? `doctormaster/${patient?.UCDoctor1Id}` : null,
-  [patient?.UCDoctor1Id]
-);
+  const patient =
+    mode == "edit" || "view" ? patientDetails || {} : selectedPatient || {};
+  // fetch bed============================
+  const { data: bed } = useAxiosFetch(
+    patient.BedId ? `/bedMaster/${patient.BedId}` : null,
+    [patient.BedId]
+  );
+  // fetch doctor name===============================
+  const { data: doctor } = useAxiosFetch(
+    patient?.UCDoctor1Id ? `doctormaster/${patient?.UCDoctor1Id}` : null,
+    [patient?.UCDoctor1Id]
+  );
 
-// fetch user==============================
-const{data:users}=useAxiosFetch('/auth/users',[])
-const userMap = useMemo(() => {
-  const map = {};
-  (users || []).forEach((u) => {
-    map[u.UserId] = u.UserName;
-  });
-  return map;
-}, [users]);
- 
+  // fetch user==============================
+  const { data: users } = useAxiosFetch("/auth/users", []);
+  const userMap = useMemo(() => {
+    const map = {};
+    (users || []).forEach((u) => {
+      map[u.UserId] = u.UserName;
+    });
+    return map;
+  }, [users]);
 
+  const [selectedAdmission, setSelectedAdmission] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
-
-const [selectedAdmission, setSelectedAdmission] = useState(null);
-const [selectedPatient, setSelectedPatient] = useState(null);
-
-
-
-
-
-
-
-const onSubmit = async (data) => {
-  try {
-    const payload = {
-      ...data,
-      // AdmitionId: dischargeData?.AdmitionId,
-      DisCerDate: data.DisCerDate ? `${data.DisCerDate}T00:00:00.000Z` : null,
-      // diagnosis: diagnosisRows,
-      // complaints: complaintRows,
-    };
-
-    // const response = await axiosInstance.put(`/discert/${id}`, payload);
-
-    // console.log("UPDATE SUCCESS:", response.data);
-    // toast.success("Updated Successfully!")
-        if (mode === "edit") {
-          const res = await axiosInstance.put(`/discert/${id}`, payload);
-          // toast.success("Updated Successfully!");
-        } else {
-          await axiosInstance.post("/discert", payload);
-          // toast.success("Added Successfully!");
-        }
-        const diagnosisPayload = diagnosisRows
-          .filter((item) => item.diagnosis.trim() !== "")
-          .map((item) => ({
-            diagonisis: item.diagnosis,
-          }));
-
-        const complaintPayload = complaintRows
-          .filter((item) => item.complaint.trim() !== "")
-          .map((item) => ({
-            chief: item.complaint,
-          }));
-
-        const emrPayload = {
-          RegistrationId: selectedPatient?.RegistrationId || "",
-          VisitId: "",
-          admissionid:  null,
-          diagnosis: diagnosisPayload,
-          complaints: complaintPayload,
-        };
-
-        await axiosInstance.post("/emr/bulk", emrPayload);
-        toast.success("Saved Successfully!");
-  } catch (error) {
-    console.error("Update Error:", error);
-    
-  }
-};
-
-
-
-
-  //   =====================Rhf ==============================
-  
-  useEffect(() => {
-    if (!dischargeData && mode !== "edit") return;
-     
-      reset({
-        DisCerNo: dischargeData.DisCerNo,
-        DisCerTime: dischargeData.DisCerTime,
-        DisCerDate: dischargeData?.DisCerDate?.split("T")[0],
-        DiscType: dischargeData.DiscType,
-        OTTypeId: dischargeData.OTTypeId,
-        Remarks: dischargeData.Remarks,
-        DischargedBy: dischargeData.DischargedBy,
-        AdmitionId: dischargeData.AdmitionId,
-        UserId:dischargeData.UserId,
-        AdmitionObj: {
-          label: dischargeData.AdmitionId,
-          value: dischargeData.AdmitionId,
-        },
-      });
-    
-  }, [dischargeData, mode, reset]);
-
-
-useEffect(() => {
-  if (!admObj?.value) {
-    setSelectedPatient(null);
-    return;
-  }
-
-  const loadPatient = async () => {
+  const onSubmit = async (data) => {
     try {
-      const res = await axiosInstance.get(`/admission/${admObj.value}`);
-      setSelectedPatient(res.data);
-    } catch (err) {
-      console.error(err);
-      setSelectedPatient(null);
+      const payload = {
+        ...data,
+        // AdmitionId: dischargeData?.AdmitionId,
+        DisCerDate: data.DisCerDate ? `${data.DisCerDate}T00:00:00.000Z` : new Date().toISOString().split("T")[0],
+        // diagnosis: diagnosisRows,
+        // complaints: complaintRows,
+      };
+
+      // const response = await axiosInstance.put(`/discert/${id}`, payload);
+
+      // console.log("UPDATE SUCCESS:", response.data);
+      // toast.success("Updated Successfully!")
+      if (mode === "edit") {
+        const res = await axiosInstance.put(`/discert/${id}`, payload);
+        // toast.success("Updated Successfully!");
+      } else {
+        const postRes = await axiosInstance.post("/discert", payload);
+        const postId = await postRes.data.DisCerId;
+        console.log(postId);
+        navigate(`/discharge/${encodeURIComponent(postId)}/advice`);
+        // toast.success("Added Successfully!");
+      }
+      const diagnosisPayload = diagnosisRows
+        .filter((item) => item.diagnosis.trim() !== "")
+        .map((item) => ({
+          diagonisis: item.diagnosis,
+        }));
+
+      const complaintPayload = complaintRows
+        .filter((item) => item.complaint.trim() !== "")
+        .map((item) => ({
+          chief: item.complaint,
+        }));
+
+      const emrPayload = {
+        RegistrationId: selectedPatient?.RegistrationId || "",
+        VisitId: "",
+        admissionid: null,
+        diagnosis: diagnosisPayload,
+        complaints: complaintPayload,
+      };
+
+      await axiosInstance.post("/emr/bulk", emrPayload);
+
+      toast.success("Navigated to advice!");
+    } catch (error) {
+      console.error("Update Error:", error);
     }
   };
 
-  loadPatient();
-}, [admObj]);
+  //   =====================Rhf ==============================
 
+  useEffect(() => {
+    if (!dischargeData && mode !== "edit") return;
 
+    reset({
+      DisCerNo: dischargeData.DisCerNo,
+      DisCerTime: dischargeData.DisCerTime,
+      DisCerDate: dischargeData?.DisCerDate?.split("T")[0],
+      DiscType: dischargeData.DiscType,
+      OTTypeId: dischargeData.OTTypeId,
+      Remarks: dischargeData.Remarks,
+      DischargedBy: dischargeData.DischargedBy,
+      AdmitionId: dischargeData.AdmitionId,
+      UserId: dischargeData.UserId,
+      AdmitionObj: {
+        label: dischargeData.AdmitionId,
+        value: dischargeData.AdmitionId,
+      },
+    });
+  }, [dischargeData, mode, reset]);
 
+  useEffect(() => {
+    if (!admObj?.value) {
+      setSelectedPatient(null);
+      return;
+    }
 
+    const loadPatient = async () => {
+      try {
+        const res = await axiosInstance.get(`/admission/${admObj.value}`);
+        setSelectedPatient(res.data);
+      } catch (err) {
+        console.error(err);
+        setSelectedPatient(null);
+      }
+    };
+
+    loadPatient();
+  }, [admObj]);
 
   const [activeTab, setActiveTab] = useState("Detail");
 
@@ -208,12 +197,10 @@ useEffect(() => {
   const handleComplaintChange = (index, value) => {
     const newData = [...complaintRows];
     newData[index].complaint = value;
-    if (index === newData.length - 1 && value.trim() !== "") { 
+    if (index === newData.length - 1 && value.trim() !== "") {
     }
     setComplaintRows(newData);
   };
-
-
 
   useEffect(() => {
     if (!emrData) return;
@@ -224,7 +211,7 @@ useEffect(() => {
         .sort((a, b) => a.SlNo - b.SlNo)
         .map((item) => ({
           sl: item.SlNo,
-          diagnosis: item.diagonisis ||  "",
+          diagnosis: item.diagonisis || "",
         }));
 
       // last empty row add
@@ -265,18 +252,17 @@ useEffect(() => {
   };
   const headerStyle = { fontSize: "12px", fontWeight: "600", margin: 0 };
 
-
-   const barcodeImg = useMemo(() => {
-     if (!dischargeData?.AdmitionId) return "";
-     const canvas = document.createElement("canvas");
-     JsBarcode(canvas, `A-${dischargeData?.AdmitionId }`, {
-       format: "CODE128",
-       width: 2,
-       height: 40,
-       displayValue: true,
-     });
-     return canvas.toDataURL("image/png");
-   }, [dischargeData?.AdmitionId]);
+  const barcodeImg = useMemo(() => {
+    if (!dischargeData?.AdmitionId) return "";
+    const canvas = document.createElement("canvas");
+    JsBarcode(canvas, `A-${dischargeData?.AdmitionId}`, {
+      format: "CODE128",
+      width: 2,
+      height: 40,
+      displayValue: true,
+    });
+    return canvas.toDataURL("image/png");
+  }, [dischargeData?.AdmitionId]);
   return (
     <>
       {mode === "view" && (
@@ -351,10 +337,17 @@ useEffect(() => {
                       onChange={(opt) => {
                         setValue("AdmitionObj", opt); // UI
                         setValue("AdmitionId", opt?.value || ""); // API
+                          if (opt?.value) {
+                            sessionStorage.setItem(
+                              "selectedAdmitionId",
+                              opt.value
+                            );
+                          }
                       }}
                       searchKey="q"
                       labelKey="AdmitionId"
                       valueKey="AdmitionId"
+                      showKey="PatientName"
                       defaultPage={1}
                       isDisabled={mode !== "add"}
                     />
@@ -587,20 +580,9 @@ useEffect(() => {
             {/* minHeight: 0 is CRITICAL for Flex children to shrink properly */}
             <div className="row g-2 flex-grow-1" style={{ minHeight: 0 }}>
               {/* Left: Diagnosis */}
-              <div className="col-md-6 d-flex flex-column h-100">
+              {/* <div className="col-md-6 d-flex flex-column h-100">
                 <div className="d-flex gap-1 mb-1 flex-shrink-0">
-                  {/* <button
-                    className="btn btn-sm btn-outline-primary py-0"
-                    style={{ fontSize: "10px" }}
-                  >
-                    Load EMR
-                  </button> */}
-                  {/* <button
-                    className="btn btn-sm btn-outline-primary py-0"
-                    style={{ fontSize: "10px" }}
-                  >
-                    Load Diet
-                  </button> */}
+                 
                 </div>
 
                 <div
@@ -662,20 +644,15 @@ useEffect(() => {
                     </OverlayScrollbarsComponent>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Right: Complaints */}
-              <div className="col-md-6 d-flex flex-column h-100">
+              {/* <div className="col-md-6 d-flex flex-column h-100">
                 <div className="d-flex justify-content-between align-items-center mb-1 flex-shrink-0">
                   <span className="small fw-bold">
                     Present Complains (Reason for Admission)
                   </span>
-                  {/* <button
-                    className="btn btn-sm btn-outline-secondary py-0"
-                    style={{ fontSize: "10px" }}
-                  >
-                    Load Disc Adv Word
-                  </button> */}
+                 
                 </div>
 
                 <div
@@ -737,7 +714,7 @@ useEffect(() => {
                     </OverlayScrollbarsComponent>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* --- 5. Footer (Fixed Height) --- */}
@@ -774,10 +751,9 @@ useEffect(() => {
                 </div>
                 {mode !== "view" && (
                   <button type="submit" className="btn btn-primary btn-sm mt-2">
-                    Submit
+                  Next
                   </button>
                 )}
-               
               </div>
             </div>
           </div>

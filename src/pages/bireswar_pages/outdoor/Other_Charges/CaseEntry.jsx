@@ -6,6 +6,16 @@ import axios from "axios";
 import Select from "react-select";
 import axiosInstance from "../../../../axiosInstance";
 
+
+
+
+
+
+
+
+
+
+
 const CaseEntry = () => {
   const { id, Modex } = useParams();
   const orgId = id ? decodeURIComponent(id) : "undefined";
@@ -616,7 +626,51 @@ const CaseEntry = () => {
             });
           }
 
-          alert(`Case created successfully! Case ID: ${newCaseId}`);
+          // Step 3: Create Money Receipt
+          console.log("IPD changed 569", selectedTest);
+          const receiptData = {
+            ReffId: selectedTest?.value || formData.AdmitionId || "",
+            ReceiptDate: new Date().toISOString().slice(0, 10),
+            BillAmount: formData.Total,
+            Desc: formData.Desc || 0,
+            DiscAmt: formData.DescAmt || 0,
+            Amount: formData.GrossAmt,
+            CBalAmt: 0,
+            BalanceAmt: formData.Balance,
+            Remarks: formData.Remarks || "",
+            UserId: 1,
+            TypeofReceipt: 1,
+            DiscOtherId: 1,
+            DiscChk: "Y",
+            HeadId: "HEAD001",
+            ReffType: "C",
+            MRType: "C",
+            BankName: formData.BankName || "",
+            ChequeNo: formData.ChequeNo || "",
+            AgentDiscId: 1,
+            TDS: 0,
+            AdjAmt: 0,
+            CompName: "",
+            Narration: formData.Narration || "",
+            ReceiptTime: new Date().toLocaleTimeString("en-US"),
+            CaseId: newCaseId,
+            paymentMethods: [
+              {
+                method: formData.PaymentType === "C" ? "Cash" : formData.PaymentType === "B" ? "Bank" : "Card",
+                amount: parseFloat(formData.GrossAmt) || 0,
+              },
+            ],
+          };
+
+          try {
+            await axiosInstance.post("/money-receipt01", receiptData);
+            console.log("Money receipt created successfully");
+          } catch (err) {
+            console.error("Error creating money receipt:", err);
+            alert("Case created but money receipt failed: " + (err.response?.data?.message || err.message));
+          }
+
+          alert(`Case + Money Receipt Created Successfully! Case ID: ${newCaseId}`);
           navigate("/CaseList");
         }
       } else if (mode === "edit" && orgId && orgId !== "undefined") {
@@ -1101,6 +1155,41 @@ useEffect(() => {
     fetchOPDDetails(selectedTestOPD.value);
   }
 }, [selectedTestOPD]);
+
+
+
+// ======================================
+useEffect(() => {
+  const total = parseFloat(formData.Total || 0);
+
+  const discPerc = parseFloat(formData.Desc || 0);
+  const discAmt = parseFloat(formData.DescAmt || 0);
+  const advance = parseFloat(formData.Advance || 0);
+  const cancelAmt = parseFloat(formData.CTestAmt || 0);
+
+  let finalDiscAmt = discAmt;
+
+  // jodi user % diye
+  if (discPerc > 0) {
+    finalDiscAmt = (total * discPerc) / 100;
+  }
+
+  const gross = total - finalDiscAmt - cancelAmt;
+  const balance = gross - advance;
+
+  setFormData((prev) => ({
+    ...prev,
+    DescAmt: finalDiscAmt.toFixed(2),
+    GrossAmt: gross.toFixed(2),
+    Balance: balance.toFixed(2),
+  }));
+}, [
+  formData.Total,
+  formData.Desc,
+  formData.DescAmt,
+  formData.Advance,
+  formData.CTestAmt,
+]);
 
 const handleDepPrint = () => {
   const logoUrl = "/assets/images/logo-small.png";
@@ -2625,8 +2714,51 @@ const handleDepPrint = () => {
             </div>
 
             {/* === BOTTOM SECTION: PAYMENT, RECEIPT, BARCODE === */}
-            <div className="row g-1">
+            <div className="row g-1 text-black">
               {/* SECTION 11 & 12 */}
+              <div className="row g-2 mb-1">
+                    <div className="col-md-2">
+                      <label className="form-label">Mode of Payment</label>
+                      <select
+                      name="PaymentType"
+                        className="form-control form-control-sm"
+                        disabled={mode === "view"}
+                        
+                        value={formData.PaymentType}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select</option>
+                        <option value="C">Cash</option>
+                        <option value="B">Bank</option>
+                        <option value="D">Credit Card</option>
+                        <option value="W">W</option>
+                      </select>
+                    </div>
+
+                    <div className="col-md-5">
+                      <label className="form-label">Bank</label>
+                      <input
+                      name="BankName"
+                        type="text"
+                        className="form-control form-control-sm"
+                        
+                        value={formData.BankName}
+                        onChange={handleInputChange}
+                        disabled={mode === "view"}
+                      />
+                    </div>
+                    <div className="col-md-5">
+                      <label className="form-label">Cheque / Card No</label>
+                      <input
+                        name="ChequeNo"
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={formData.ChequeNo}
+                        disabled={mode === "view"}
+                      onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
               <div className="col-12 col-md-8">
                 <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
                   <label style={{ ...labelStyle, width: "auto" }}>
@@ -2878,5 +3010,18 @@ const handleDepPrint = () => {
 
 
 export default CaseEntry;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -84,10 +84,10 @@ const Discharge = () => {
     fetchDischarge();
   }, [pageNo]);
 
-  const goToPage = (p) => {
-    if (p < 1 || p > totalPages) return;
-    setPageNo(p);
-  };
+  // const goToPage = (p) => {
+  //   if (p < 1 || p > totalPages) return;
+  //   setPageNo(p);
+  // };
 
   return (
     <div>
@@ -125,7 +125,7 @@ const Discharge = () => {
         </div>
       </div>
       <div
-        className="flex-grow-1 border bg-secondary bg-opacity-25 mb-1"
+        className="flex-grow-1 border  mb-1"
         style={{ minHeight: "150px" }}
       >
         <table
@@ -142,9 +142,9 @@ const Discharge = () => {
               <th>Discharge Time</th>
               <th>Discharge Date</th>
               <th>Patient Name</th>
-              <th>Under Dr.</th>
+              {/* <th>Under Dr.</th> */}
               <th>Admission No.</th>
-              <th>Admissin Date</th>
+              <th>Admission Date</th>
               <th>Phone</th>
             </tr>
           </thead>
@@ -187,7 +187,7 @@ const Discharge = () => {
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => {
                           console.log(item.DisCerId);
-                          
+
                           setDeleteId(item.DisCerId);
                           setShowConfirm(true);
                         }}
@@ -200,7 +200,7 @@ const Discharge = () => {
                   <td>{item.DisCerTime}</td>
                   <td>{item.DisCerDate.split("T")[0]}</td>
 
-                  <td></td>
+                  {/* <td></td> */}
 
                   {/* <td>{item.DoctorId}</td> */}
                   <td>{/* {doctorMap[item.DoctorId]} */}</td>
@@ -209,15 +209,7 @@ const Discharge = () => {
                   <td></td>
                   <td>{item.AgentId}</td>
 
-                  <td className="text-center">
-                    <input
-                      type="checkbox"
-                      // checked={item.Cancel === 1}
-                      onChange={(e) => {
-                        console.log("Cancel changed:", e.target.checked);
-                      }}
-                    />
-                  </td>
+                  
 
                   <td>{item.Date}</td>
                 </tr>
@@ -259,10 +251,11 @@ const Discharge = () => {
       <PaginationBar
         pageNo={pageNo}
         totalPages={totalPages}
-        onPageChange={goToPage}
+        // onPageChange={goToPage}
+        setPageNo={setPageNo}
       />
     </div>
   );
-};;
+};
 
 export default Discharge;

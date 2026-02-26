@@ -7,6 +7,7 @@ import useAxiosFetch from "./DiagnosisMaster/Fetch";
 import axiosInstance from "../axiosInstance";
 
 const DischargeNewAdvice = () => {
+  const savedAdmitionId = sessionStorage.getItem("selectedAdmitionId");
   const { id } = useParams();
   const { data: emrData } = useAxiosFetch(id ? `/emr/D-${id}` : null, [id]);
 
@@ -102,10 +103,10 @@ const DischargeNewAdvice = () => {
       // .join("\n") || prev.significantFindings,
       conditionAtDischarge: dischargeData?.F,
       // Investigation Results
-      investigationResults:
-        emrData.investigations
-          ?.map((i) => i.Invest || i.invest || "")
-          .join("\n") || prev.investigationResults,
+      investigationResults: dischargeData?.C,
+      // emrData.investigations
+      //   ?.map((i) => i.Invest || i.invest || "")
+      //   .join("\n") || prev.investigationResults,
 
       // Treatment Done (from medicine)
       investigations:
@@ -164,7 +165,9 @@ const DischargeNewAdvice = () => {
     try {
       const payload = {
         RegistrationId: `D-${id}`,
-        admissionid: null,
+
+        admissionid: savedAdmitionId,
+
         VisitId: "null",
         pastHistory: formData.pastHistory,
         // significantFindings: formData.significantFindings,
@@ -200,6 +203,14 @@ const DischargeNewAdvice = () => {
       const advicePayload = {
         records: formData.adviceMedicine.map((item) => ({
           DisCerId: `${id}`,
+          DisCerDate: new Date().toISOString().split("T")[0],
+          DisCerTime: new Date().toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+
+          AdmitionId: savedAdmitionId,
+
           Medicine: item.Medicine || "",
           unit: item.unit || "",
           days: item.days || "",
@@ -219,6 +230,12 @@ const DischargeNewAdvice = () => {
       }
       // ---- DISCHARGE MAIN TABLE UPDATE ----
       const dischargePayload = {
+        DisCerDate: new Date().toISOString().split("T")[0],
+        DisCerTime: new Date().toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        AdmitionId: savedAdmitionId,
         G: formData.significantFindings || "",
         E: formData.followUpDate || "",
         F: formData.conditionAtDischarge || "",
@@ -232,7 +249,7 @@ const DischargeNewAdvice = () => {
       
 
       toast.success("Updated Successfully!");
-      
+      sessionStorage.removeItem("selectedAdmitionId");
     } catch (error) {
       console.error("UPDATE ERROR:", error);
       toast.error("Something went wrong ???!");
@@ -315,25 +332,25 @@ const DischargeNewAdvice = () => {
           </div>
 
           <div
-            className="panel-body"
-            style={{
-              backgroundColor: "#f0f0f0",
-              padding: "10px",
-              height: "auto",
-              overflow: "visible",
-            }}
+            className="panel-body bg-primary"
+            // style={{
+            //   backgroundColor: "#f0f0f0",
+            //   padding: "10px",
+            //   height: "auto",
+            //   overflow: "visible",
+            // }}
           >
             <div className="row g-2">
               {/* ================= LEFT COLUMN ================= */}
               <div className="col-md-6">
                 {/* diagnosis========================= */}
                 <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#0080FF",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
+                  className="mb-2 bg-primary"
+                  // style={{
+                  //   backgroundColor: "#0080FF",
+                  //   padding: "5px",
+                  //   border: "2px solid #000",
+                  // }}
                 >
                   <div
                     style={{
@@ -517,34 +534,35 @@ const DischargeNewAdvice = () => {
                   <textarea
                     className="form-control form-control-sm"
                     rows="3"
-                    // value={formData.investigationResults}
-                    // onChange={(e) =>
-                    //   setFormData((prev) => ({
-                    //     ...prev,
-                    //     investigationResults: e.target.value,
-                    //   }))
-                    // }
+                    value={formData.investigationResults}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        investigationResults: e.target.value,
+                      }))
+                    }
                     style={{ backgroundColor: "#c0c0c0" }}
                   />
                 </div>
 
                 {/* Treatment Done */}
                 <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#0080FF",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
+                  className="mb-2 bg-primary"
+                  // style={{
+                  //   backgroundColor: "#0080FF",
+                  //   padding: "5px",
+                  //   border: "2px solid #000",
+                  // }}
                 >
                   <div
-                    style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      borderBottom: "1px solid #000",
-                    }}
+                    className="bg-primary"
+                    // style={{
+                    //   backgroundColor: "#0080FF",
+                    //   color: "#fff",
+                    //   fontWeight: "bold",
+                    //   padding: "5px",
+                    //   borderBottom: "1px solid #000",
+                    // }}
                   >
                     Treatment Done / Procedure
                   </div>

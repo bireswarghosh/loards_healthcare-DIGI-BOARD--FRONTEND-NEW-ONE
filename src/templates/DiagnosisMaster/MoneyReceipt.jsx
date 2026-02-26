@@ -68,7 +68,7 @@ import Footer from "../../components/footer/Footer";
 
 //   const fetchPatients = async (search = '') => {
 //     try {
-//       const url = search 
+//       const url = search
 //         ? `/case01?search=${encodeURIComponent(search)}&limit=50`
 //         : '/case01?limit=20';
 //       const res = await axiosInstance.get(url);
@@ -169,7 +169,6 @@ import Footer from "../../components/footer/Footer";
 //   }
 // };
 
-
 //   const openDrawer = async (receipt, type) => {
 //   setModalType(type);
 
@@ -211,7 +210,7 @@ import Footer from "../../components/footer/Footer";
 
 // //   setFormData({
 // //     ReceiptId: receipt.ReceiptId,
- 
+
 // //    ReceiptNo: receipt.ReceiptNo || "",
 // //    ReffId:receipt.ReffId || "",
 // //     ReceiptDate: receipt.ReceiptDate?.slice(0, 10) || "",
@@ -226,7 +225,7 @@ import Footer from "../../components/footer/Footer";
 // // ChequeNo: receipt.ChequeNo || "",
 // // CaseData:receipt.CaseData || "",
 
-// // // xtra------ 
+// // // xtra------
 // //   CBalAmt: receipt.CBalAmt || "",
 // //   Remarks: receipt.Remarks || "",
 // //   UserId: receipt.UserId || "",
@@ -238,7 +237,7 @@ import Footer from "../../components/footer/Footer";
 // //   AgentDiscId: receipt.AgentDiscId || "",
 // //   CompName: receipt.CompName || "",
 // //   ReceiptTime: receipt.ReceiptTime || "",
-// // // xtr end ---- 
+// // // xtr end ----
 // //     PaymentType: receipt.PaymentType ?? 0,
 // //     // Bank: receipt.Bank || "",
 // //     Narration: receipt.Narration || "",
@@ -251,7 +250,7 @@ import Footer from "../../components/footer/Footer";
 // //     Sex: receipt.Sex || "",
 // //     AdmitionNo: receipt.AdmitionNo || "",
 // //   });
- 
+
 //   setShowDrawer(true);
 //   setFormData({});
 //   if (type === "edit" && receipt?.ReceiptNo) {
@@ -349,16 +348,16 @@ import Footer from "../../components/footer/Footer";
 //         Narration: formData.Narration,
 //         ReceiptTime: formData.ReceiptTime,
 //       };
-      
+
 //       console.log('Update payload:', payload);
-      
+
 //       await axiosInstance.put(
 //         `/money-receipt01/${encodeURIComponent(formData.ReceiptId)}`,
 //         payload
 //       );
 //       toast.success("Updated successfully");
 //     }
-    
+
 //     setShowDrawer(false);
 //     fetchReceipts(page);
 //   } catch (err) {
@@ -369,9 +368,6 @@ import Footer from "../../components/footer/Footer";
 //     );
 //   }
 // };
-
-
-
 
 //  // delete confirm
 //   const confirmDelete = async (id) => {
@@ -403,7 +399,6 @@ import Footer from "../../components/footer/Footer";
 //   }));
 // };
 
-
 //   const handleDelete = async (id) => {
 //     if (!window.confirm("Delete this receipt?")) return;
 //     try {
@@ -420,13 +415,13 @@ import Footer from "../../components/footer/Footer";
 //       fetchReceipts(1);
 //       return;
 //     }
-    
+
 //     try {
 //       setLoading(true);
 //       const response = await axiosInstance.get(
 //         `/money-receipt01/search?ReceiptNo=${encodeURIComponent(searchTerm.trim())}&page=1&limit=${limit}`
 //       );
-      
+
 //       if (response.data.success) {
 //         setReceipts(response.data.data || []);
 //         setTotalPages(response.data.pagination?.totalPages || 1);
@@ -525,14 +520,13 @@ import Footer from "../../components/footer/Footer";
 //                 <button className="btn btn-sm btn-info" onClick={handleSearch}>
 //                   <i className="fa fa-search"></i>
 //                 </button>
-                
+
 //               </div>
-              
+
 //             </div>
 //             </div>
 //               {/* Search + Barcode */}
 //           {/* <div className="row mb-3"> */}
-          
 
 //             {/* <div className="col-md-6 text-end">
 //               <img
@@ -544,8 +538,6 @@ import Footer from "../../components/footer/Footer";
 //             </div> */}
 //           {/* </div> */}
 //           </div>
-
-        
 
 //           {/* Table */}
 //           {loading ? (
@@ -704,7 +696,7 @@ import Footer from "../../components/footer/Footer";
 //       className="form-control form-control-sm"
 //       name="ReceiptDate"
 //  value={new Date().toISOString().slice(0, 10)}
-     
+
 //     onChange={handleChange}
 //       disabled
 //     />
@@ -741,9 +733,9 @@ import Footer from "../../components/footer/Footer";
 //           By No
 //         </label>
 //       </div>
-      
+
 //     </div>
-    
+
 //   </div>
 
 //   {/* Find Input */}
@@ -770,11 +762,10 @@ import Footer from "../../components/footer/Footer";
 //             </div>
 // </div>
 
-
 //   {/* Receipt / Case */}
 //   <div className="row g-2 mb-1">
 //     {/* <div className="col-md-1 ">
-      
+
 //       <label className="form-label">Receipt</label>
 //       <input
 //         type="radio"
@@ -822,16 +813,13 @@ import Footer from "../../components/footer/Footer";
 //       className="form-control form-control-sm"
 //       value={
 //         formData.CaseDate
-        
 
-          
 //       }
 //       onChange={handleChange}
 //       disabled
 //     />
 //   </div>
 
-  
 //     <div className="col-md-2">
 //       <label className="form-label">Patient Name</label>
 //       <input
@@ -864,10 +852,8 @@ import Footer from "../../components/footer/Footer";
 //         disabled
 //       />
 //     </div>
-  
-//   </div>
 
-  
+//   </div>
 
 //   {/* Patient info */}
 //   <div className="row g-2 mb-1">
@@ -897,11 +883,8 @@ import Footer from "../../components/footer/Footer";
 //         disabled
 //       />
 //     </div>
-   
+
 //   </div>
-
-
-
 
 //   {/* Amount Section */}
 //    {modalType === 'refund' ? (
@@ -1012,7 +995,6 @@ import Footer from "../../components/footer/Footer";
 //    </div>
 //    )}
 
-  
 //   {/* Payment */}
 //   <div className="row g-2 mb-1">
 //     <div className="col-md-2">
@@ -1035,7 +1017,7 @@ import Footer from "../../components/footer/Footer";
 //     <div className="col-md-5">
 //       <label className="form-label">Bank</label>
 //       <input
-      
+
 //         type="text"
 //         className="form-control form-control-sm"
 //         name="BankName"
@@ -1060,7 +1042,7 @@ import Footer from "../../components/footer/Footer";
 //   <div className="mb-1">
 //     <label className="form-label">Narration</label>
 //     <textarea
-    
+
 //       className="form-control form-control-sm"
 //       rows={1}
 //       name="Narration"
@@ -1233,7 +1215,7 @@ import Footer from "../../components/footer/Footer";
 //               </button>
 //             </li>
 //           ))} */}
-//           <button className="page-link">{`${page}/${totalPages}`}</button> 
+//           <button className="page-link">{`${page}/${totalPages}`}</button>
 
 //           <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
 //             <button className="page-link" onClick={() => goToPage(page + 1)}>
@@ -1243,33 +1225,18 @@ import Footer from "../../components/footer/Footer";
 //         </ul>
 //       </div>
 
-
-
 //       <Footer />
 //     </div>
 //   );
 // };
 
-
-
-
-
-
-
-
-
-
-
 const MoneyReceipt = () => {
   const navigate = useNavigate();
-
 
   const [findBy, setFindBy] = useState("name"); // name | no
   const [findValue, setFindValue] = useState("");
 
-
   const [formData, setFormData] = useState({});
-
 
   // data
   const [receipts, setReceipts] = useState([]);
@@ -1279,37 +1246,33 @@ const MoneyReceipt = () => {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [users, setUsers] = useState([]);
 
-
   // drawer
   const [showDrawer, setShowDrawer] = useState(false);
   const [modalType, setModalType] = useState("view"); // view | edit
   const [selectedReceipt, setSelectedReceipt] = useState(null);
-
 
   // filters
   const [startDate, setStartDate] = useState("2024-06-13");
   // const [dateTo, setDateTo] = useState("2025-02-22");
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
 
-
   const [allReceipt, setAllReceipt] = useState(true);
   const [refund, setRefund] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
 
   // pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
 
-
-  const barcodeData = "OP/2425/08287";
-
+  let barcodeData = "OP/2425/08287";
 
   // delete confirm
   const [showConfirm, setShowConfirm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
+  // this is for showing history
+  const [histData, setHistData] = useState([]);
 
   useEffect(() => {
     fetchReceipts(page);
@@ -1317,6 +1280,11 @@ const MoneyReceipt = () => {
     fetchUsers();
   }, [page, startDate, endDate, searchTerm]);
 
+  useEffect(() => {
+    if (!showDrawer) {
+      setHistData([]);
+    }
+  }, [showDrawer]);
 
   const fetchUsers = async () => {
     try {
@@ -1328,7 +1296,6 @@ const MoneyReceipt = () => {
       console.error("Failed to fetch users:", err);
     }
   };
-
 
   const fetchPatients = async (search = "") => {
     try {
@@ -1344,6 +1311,64 @@ const MoneyReceipt = () => {
     }
   };
 
+  // this is for removing duplicate elements from the arrays by comparing the array and its previous array
+  function getNewElements(prevArr, latestArr) {
+    if (!prevArr || prevArr.length === 0) {
+      return latestArr;
+    }
+
+    // deep compare using JSON.stringify
+    return latestArr.filter(
+      (latestItem) =>
+        !prevArr.some(
+          (prevItem) => JSON.stringify(prevItem) === JSON.stringify(latestItem),
+        ),
+    );
+  }
+
+  // this is for fetching transaction of the patient by reff Id
+  const fetchHistory = async (id, ReceiptId) => {
+    try {
+      const res = await axiosInstance.get(
+        `/money-receipt01/search?ReffId=${id}`,
+      );
+      if (res.data.success) {
+        // console.log("History data: ", res.data.data);
+        const data = res.data.data;
+
+        let dataNew = [];
+
+        for (let j = data.length - 1; j >= 0; j--) {
+          if (j == 0) {
+            dataNew.push(data[0]);
+            break;
+          }
+          let value = getNewElements(
+            data[j - 1].paymentMethods,
+            data[j].paymentMethods,
+          );
+          // console.log("value-",j," : ", value )
+          let ele = { ...data[j], paymentMethods: value };
+          //  console.log("ele-",j," : ", ele )
+          dataNew.push(ele);
+        }
+
+        // console.log("Data new: ", dataNew)
+
+        //         console.log("RecpId: ", ReceiptId);
+        const index = dataNew.findIndex((item) => item.ReceiptId === ReceiptId);
+        // console.log("Index is :", index);
+        const prevData = index !== -1 ? dataNew.slice(index + 1) : [];
+
+        // console.log("prev data: ", prevData);
+        setHistData(prevData);
+      } else {
+        setHistData([]);
+      }
+    } catch (error) {
+      console.log("Error fetching history: ", error);
+    }
+  };
 
   const fetchReceipts = async (pageNo = 1) => {
     try {
@@ -1357,7 +1382,6 @@ const MoneyReceipt = () => {
         // refund,
         search: searchTerm,
       });
-
 
       const res = await axiosInstance.get(`/money-receipt01/search?${params}`);
       if (res.data.success) {
@@ -1375,40 +1399,42 @@ const MoneyReceipt = () => {
     }
   };
 
-
   const fetchReceiptByNo = async (receiptNo) => {
     try {
       setLoading(true);
 
-
       const res = await axiosInstance.get(
-        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(receiptNo)}`
+        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(receiptNo)}`,
       );
-
 
       if (res.data.success && res.data.data?.length) {
         const receipt = res.data.data[0];
 
         // Load payment methods if exists
-        if (receipt.paymentMethods && Array.isArray(receipt.paymentMethods) && receipt.paymentMethods.length > 0) {
-          const loadedMethods = receipt.paymentMethods.map(pm => ({
-            type: pm.method === 'Cash' ? '0' : pm.method === 'UPI' ? '1' : '2',
-            amount: pm.amount || '',
-            upiApp: pm.upiApp || '',
-            utrNumber: pm.utrNumber || '',
-            bankName: pm.bankName || '',
-            chequeNumber: pm.chequeNumber || ''
+        if (
+          receipt.paymentMethods &&
+          Array.isArray(receipt.paymentMethods) &&
+          receipt.paymentMethods.length > 0
+        ) {
+          const loadedMethods = receipt.paymentMethods.map((pm) => ({
+            type: pm.method === "Cash" ? "0" : pm.method === "UPI" ? "1" : "2",
+            amount: pm.amount || "",
+            upiApp: pm.upiApp || "",
+            utrNumber: pm.utrNumber || "",
+            bankName: pm.bankName || "",
+            chequeNumber: pm.chequeNumber || "",
           }));
           setPaymentMethods(loadedMethods);
         } else {
           // Default: show old payment method data or empty cash payment
           const defaultMethod = {
-            type: receipt.MRType === 'B' ? '2' : receipt.MRType === 'D' ? '1' : '0',
-            amount: receipt.Amount || '',
-            upiApp: '',
-            utrNumber: '',
-            bankName: receipt.BankName || '',
-            chequeNumber: receipt.ChequeNo || ''
+            type:
+              receipt.MRType === "B" ? "2" : receipt.MRType === "D" ? "1" : "0",
+            amount: receipt.Amount || "",
+            upiApp: "",
+            utrNumber: "",
+            bankName: receipt.BankName || "",
+            chequeNumber: receipt.ChequeNo || "",
           };
           setPaymentMethods([defaultMethod]);
         }
@@ -1428,7 +1454,6 @@ const MoneyReceipt = () => {
           BankName: receipt.BankName || "",
           ChequeNo: receipt.ChequeNo || "",
 
-
           // extra
           CBalAmt: receipt.CBalAmt || 0,
           Remarks: receipt.Remarks || "",
@@ -1442,11 +1467,9 @@ const MoneyReceipt = () => {
           CompName: receipt.CompName || "",
           ReceiptTime: receipt.ReceiptTime || "",
 
-
           Narration: receipt.Narration || "",
           PaidBy: receipt.PaidBy || "",
           TDS: receipt.TDS || 0,
-
 
           // readonly
           PatientName: receipt.PatientName || "",
@@ -1465,10 +1488,8 @@ const MoneyReceipt = () => {
     }
   };
 
-
   const openDrawer = async (receipt, type) => {
     setModalType(type);
-
 
     if (type === "add") {
       setFormData({
@@ -1491,7 +1512,6 @@ const MoneyReceipt = () => {
       return;
     }
 
-
     if (type === "refund") {
       setFormData({
         ReceiptDate: new Date().toISOString().slice(0, 10),
@@ -1507,10 +1527,8 @@ const MoneyReceipt = () => {
       return;
     }
 
-
     //   setFormData({
     //     ReceiptId: receipt.ReceiptId,
-
 
     //    ReceiptNo: receipt.ReceiptNo || "",
     //    ReffId:receipt.ReffId || "",
@@ -1525,7 +1543,6 @@ const MoneyReceipt = () => {
     // BankName: receipt.BankName || "",
     // ChequeNo: receipt.ChequeNo || "",
     // CaseData:receipt.CaseData || "",
-
 
     // // xtra------
     //   CBalAmt: receipt.CBalAmt || "",
@@ -1546,7 +1563,6 @@ const MoneyReceipt = () => {
     //     PaidBy: receipt.PaidBy || "",
     //     TDS: receipt.TDS || 0,
 
-
     //     // read-only / view fields (safe)
     //     PatientName: receipt.PatientName || "",
     //     Age: receipt.Age || "",
@@ -1554,24 +1570,27 @@ const MoneyReceipt = () => {
     //     AdmitionNo: receipt.AdmitionNo || "",
     //   });
 
-
     setShowDrawer(true);
     setFormData({});
     if (type === "edit" && receipt?.ReceiptNo) {
+      console.log("rec data: ", receipt);
+      fetchHistory(receipt.ReffId, receipt.ReceiptId);
       await fetchReceiptByNo(receipt.ReceiptNo);
     }
   };
-
 
   // handle save------
   const handleSave = async () => {
     try {
       // Prepare paymentMethods array
-      const formattedPaymentMethods = paymentMethods.map(p => ({
-        method: p.type === '0' ? 'Cash' : p.type === '1' ? 'UPI' : 'Cheque',
+      const formattedPaymentMethods = paymentMethods.map((p) => ({
+        method: p.type === "0" ? "Cash" : p.type === "1" ? "UPI" : "Cheque",
         amount: parseFloat(p.amount || 0),
-        ...(p.type === '1' && { upiApp: p.upiApp, utrNumber: p.utrNumber }),
-        ...(p.type === '2' && { bankName: p.bankName, chequeNumber: p.chequeNumber })
+        ...(p.type === "1" && { upiApp: p.upiApp, utrNumber: p.utrNumber }),
+        ...(p.type === "2" && {
+          bankName: p.bankName,
+          chequeNumber: p.chequeNumber,
+        }),
       }));
 
       if (modalType === "refund") {
@@ -1606,7 +1625,7 @@ const MoneyReceipt = () => {
             second: "2-digit",
             hour12: true,
           }),
-          paymentMethods: formattedPaymentMethods
+          paymentMethods: formattedPaymentMethods,
         };
         await axiosInstance.post("/money-receipt01", payload);
         toast.success("Refund created successfully");
@@ -1642,7 +1661,7 @@ const MoneyReceipt = () => {
             second: "2-digit",
             hour12: true,
           }),
-          paymentMethods: formattedPaymentMethods
+          paymentMethods: formattedPaymentMethods,
         };
         await axiosInstance.post("/money-receipt01", payload);
         toast.success("Created successfully");
@@ -1674,20 +1693,17 @@ const MoneyReceipt = () => {
           CompName: formData.CompName,
           Narration: formData.Narration,
           ReceiptTime: formData.ReceiptTime,
-          paymentMethods: formattedPaymentMethods
+          paymentMethods: formattedPaymentMethods,
         };
-
 
         console.log("Update payload:", payload);
 
-
         await axiosInstance.put(
           `/money-receipt01/${encodeURIComponent(formData.ReceiptId)}`,
-          payload
+          payload,
         );
         toast.success("Updated successfully");
       }
-
 
       setShowDrawer(false);
       fetchReceipts(page);
@@ -1698,17 +1714,14 @@ const MoneyReceipt = () => {
     }
   };
 
-
   // delete confirm
   const confirmDelete = async (id) => {
     try {
       await axiosInstance.delete(`/moneyreceipt//${deleteId}`);
       toast.success("Deleted successfully!", { autoClose: 1000 });
 
-
       setShowConfirm(false);
       setDeleteId(null);
-
 
       // reload logic
       if (items.length === 1 && page > 1) {
@@ -1722,17 +1735,14 @@ const MoneyReceipt = () => {
     }
   };
 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-
 
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
-
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this receipt?")) return;
@@ -1745,20 +1755,17 @@ const MoneyReceipt = () => {
     }
   };
 
-
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
       fetchReceipts(1);
       return;
     }
 
-
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(searchTerm.trim())}&page=1&limit=${limit}`
+        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(searchTerm.trim())}&page=1&limit=${limit}`,
       );
-
 
       if (response.data.success) {
         setReceipts(response.data.data || []);
@@ -1772,7 +1779,6 @@ const MoneyReceipt = () => {
       setLoading(false);
     }
   };
-
 
   const goToPage = (p) => {
     if (p < 1 || p > totalPages) return;
@@ -1790,7 +1796,6 @@ const MoneyReceipt = () => {
       chequeNumber: "",
     },
   ]);
-
 
   // add Payment Methods Functions
   const addPaymentMethod = () => {
@@ -1812,7 +1817,6 @@ const MoneyReceipt = () => {
     setPaymentMethods(newMethods);
   };
 
-
   //  Update payment method-----
   const updatePaymentMethod = (index, field, value) => {
     const newMethods = [...paymentMethods];
@@ -1821,17 +1825,15 @@ const MoneyReceipt = () => {
   };
   const totalPaid = paymentMethods.reduce(
     (sum, p) => sum + parseFloat(p.amount || 0),
-    0
+    0,
   );
   const billAmount = parseFloat(formData.BillAmount || 0);
-
 
   const calculatedDueAmount = billAmount - totalPaid;
   const isDueAmountPositive = calculatedDueAmount > 0;
   return (
     <div className="main-content">
       <ToastContainer />
-
 
       <div className="panel">
         {/* Header */}
@@ -1853,7 +1855,6 @@ const MoneyReceipt = () => {
           </div>
         </div>
 
-
         <div className="panel-body">
           {/* Filters */}
           <div className="panel border rounded p-3 mb-3">
@@ -1868,7 +1869,6 @@ const MoneyReceipt = () => {
                 />
               </div>
 
-
               <div className="col-md-3">
                 <label className="form-label">Date To</label>
                 <input
@@ -1878,7 +1878,6 @@ const MoneyReceipt = () => {
                   onChange={(e) => setEndDate(e.target.value)}
                 />
               </div>
-
 
               <div className="col-md-2 ">
                 <div className="form-check">
@@ -1891,7 +1890,6 @@ const MoneyReceipt = () => {
                   <label className="form-check-label">All Receipt</label>
                 </div>
               </div>
-
 
               <div className="col-md-2  ">
                 <div className="form-check">
@@ -1928,7 +1926,6 @@ const MoneyReceipt = () => {
             {/* Search + Barcode */}
             {/* <div className="row mb-3"> */}
 
-
             {/* <div className="col-md-6 text-end">
               <img
                 src={`https://barcode.tec-it.com/barcode.ashx?data=${barcodeData}&code=Code128`}
@@ -1939,7 +1936,6 @@ const MoneyReceipt = () => {
             </div> */}
             {/* </div> */}
           </div>
-
 
           {/* Table */}
           {loading ? (
@@ -2006,14 +2002,15 @@ const MoneyReceipt = () => {
                               <i className="fa-light fa-eye"></i>
                             </button> */}
 
-
                             <button
                               className="btn btn-sm btn-outline-primary"
-                              onClick={() => openDrawer(r, "edit")}
+                              onClick={() => {
+                                console.log("r: ", r);
+                                openDrawer(r, "edit");
+                              }}
                             >
                               <i className="fa-light fa-pen-to-square"></i>
                             </button>
-
 
                             {/* <button
                               className="btn btn-sm btn-outline-danger"
@@ -2049,7 +2046,6 @@ const MoneyReceipt = () => {
         </div>
       </div>
 
-
       {showDrawer && (
         <>
           {/* backdrop */}
@@ -2058,7 +2054,6 @@ const MoneyReceipt = () => {
             onClick={() => setShowDrawer(false)}
             style={{ zIndex: 9998 }}
           ></div>
-
 
           {/* right sidebar */}
           <div
@@ -2078,7 +2073,6 @@ const MoneyReceipt = () => {
             >
               <i className="fa-light fa-angle-right"></i>
             </button>
-
 
             <div className="top-panel" style={{ height: "100%" }}>
               {/* Header */}
@@ -2100,7 +2094,6 @@ const MoneyReceipt = () => {
                       : "✏️ Edit Sample Receipt"}
               </div>
 
-
               {/* BODY WITH SCROLL */}
               <OverlayScrollbarsComponent
                 style={{ height: "calc(100% - 60px)" }}
@@ -2121,7 +2114,6 @@ const MoneyReceipt = () => {
                       />
                     </div>
 
-
                     {/* Receipt Date */}
                     <div className="col-md-3">
                       <label className="form-label">Receipt Date</label>
@@ -2134,7 +2126,6 @@ const MoneyReceipt = () => {
                         disabled
                       />
                     </div>
-
 
                     {/* Find By Radios */}
                     <div className="col-md-3">
@@ -2157,7 +2148,6 @@ const MoneyReceipt = () => {
                           </label>
                         </div>
 
-
                         <div className="form-check">
                           <input
                             className="form-check-input"
@@ -2177,7 +2167,6 @@ const MoneyReceipt = () => {
                       </div>
                     </div>
 
-
                     {/* Find Input */}
                     {/* <div className="col-md-12 mt-1">
     <input
@@ -2192,16 +2181,16 @@ const MoneyReceipt = () => {
       onChange={(e) => setFindValue(e.target.value)}
     />
   </div> */}
-                    <div className="col-md-3 text-end">
-                      <img
-                        src={`https://barcode.tec-it.com/barcode.ashx?data=${barcodeData}&code=Code128`}
-                        alt="barcode"
-                        height="40"
-                      />
-                      <div className=" mt-1">{barcodeData}</div>
-                    </div>
+                    {formData.ReffId && (
+                      <div className="col-md-3 text-end">
+                        <img
+                          src={`https://barcode.tec-it.com/barcode.ashx?data=${formData.ReffId}&code=Code128`}
+                          alt="barcode"
+                          height="40"
+                        />
+                      </div>
+                    )}
                   </div>
-
 
                   {/* Receipt / Case */}
                   <div className="row g-2 mb-1">
@@ -2215,7 +2204,6 @@ const MoneyReceipt = () => {
         // disabled
       />
     </div> */}
-
 
                     <div className="col-md-2">
                       <label className="form-label">Case No</label>
@@ -2259,7 +2247,6 @@ const MoneyReceipt = () => {
                       />
                     </div>
 
-
                     <div className="col-md-2">
                       <label className="form-label">Patient Name</label>
                       <input
@@ -2272,7 +2259,6 @@ const MoneyReceipt = () => {
                       />
                     </div>
 
-
                     <div className="col-md-2">
                       <label className="form-label">Age</label>
                       <input
@@ -2284,7 +2270,6 @@ const MoneyReceipt = () => {
                       />
                     </div>
 
-
                     <div className="col-md-2">
                       <label className="form-label">Sex</label>
                       <input
@@ -2295,7 +2280,6 @@ const MoneyReceipt = () => {
                       />
                     </div>
                   </div>
-
 
                   {/* Patient info */}
                   <div className="row g-2 mb-1">
@@ -2326,7 +2310,6 @@ const MoneyReceipt = () => {
                       />
                     </div>
                   </div>
-
 
                   {/* Amount Section */}
                   {modalType === "refund" ? (
@@ -2435,15 +2418,12 @@ const MoneyReceipt = () => {
                     </div>
                   )}
 
-
                   {/* --------------------------------------------------------- */}
-
 
                   {/* Payment Details */}
                   <h6 className="text-primary fw-bold border-bottom pb-1 mt-4 mb-3">
                     Payment
                   </h6>
-
 
                   {/* Payment Summary */}
                   <div className="row g-3 mb-3">
@@ -2463,7 +2443,7 @@ const MoneyReceipt = () => {
                         className="form-control"
                         value={paymentMethods.reduce(
                           (sum, p) => sum + parseFloat(p.amount || 0),
-                          0
+                          0,
                         )}
                         readOnly
                       />
@@ -2491,7 +2471,6 @@ const MoneyReceipt = () => {
                       )}
                     </div>
                   </div>
-
 
                   {/* Multiple Payment Methods */}
                   {paymentMethods.map((payment, index) => (
@@ -2521,7 +2500,7 @@ const MoneyReceipt = () => {
                                 updatePaymentMethod(
                                   index,
                                   "type",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             >
@@ -2540,12 +2519,11 @@ const MoneyReceipt = () => {
                                 updatePaymentMethod(
                                   index,
                                   "amount",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                             />
                           </div>
-
 
                           {/* Conditional fields based on payment type */}
                           {payment.type === "1" && (
@@ -2560,7 +2538,7 @@ const MoneyReceipt = () => {
                                     updatePaymentMethod(
                                       index,
                                       "upiApp",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -2575,14 +2553,13 @@ const MoneyReceipt = () => {
                                     updatePaymentMethod(
                                       index,
                                       "utrNumber",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
                               </div>
                             </>
                           )}
-
 
                           {payment.type === "2" && (
                             <>
@@ -2595,7 +2572,7 @@ const MoneyReceipt = () => {
                                     updatePaymentMethod(
                                       index,
                                       "bankName",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
@@ -2611,14 +2588,13 @@ const MoneyReceipt = () => {
                                     updatePaymentMethod(
                                       index,
                                       "chequeNumber",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                 />
                               </div>
                             </>
                           )}
-
 
                           {payment.type === "0" && (
                             <div className="col-md-4">
@@ -2635,6 +2611,70 @@ const MoneyReceipt = () => {
                     </div>
                   ))}
                   {/* ======================================================= */}
+
+                  {modalType == "edit" && histData.length != 0 && (
+                    <div className="mb-3">
+                      <div className="container mt-4">
+                        <h5 className="mb-3">History</h5>
+
+                        <table className="table table-bordered table-hover table-striped ">
+                          <thead className="">
+                            <tr>
+                              <th>Date</th>
+                              <th>Receipt No</th>
+                              <th className="text-start">Transactions</th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                            {/* <tr key={1}>
+                              <td>{1}</td>
+                              <td>
+                                <div className="border-bottom border-1">d</div>
+                                <div className="border-bottom border-1">d</div>
+                                <div className="border-bottom border-1">d</div>
+                                <div>d</div>
+                              </td>
+                            </tr> */}
+                            {histData.map((item, i) => (
+                              <tr
+                                key={i}
+                                className={
+                                  formData.ReceiptNo == item.ReceiptNo
+                                    ? `table-success`
+                                    : ``
+                                }
+                              >
+                                <td>
+                                  {item.ReceiptDate?.split("T")[0]
+                                    ?.split("-")
+                                    ?.reverse()
+                                    .join("/") || ""}
+                                </td>
+                                <td>{item.ReceiptNo || ""}</td>
+                                <td>
+                                  {item.paymentMethods?.map((value, idx) => (
+                                    <div
+                                      className={
+                                        idx != item.paymentMethods.length - 1
+                                          ? `border-bottom border-1 py-2 text-start`
+                                          : `py-2 text-start`
+                                      }
+                                      key={idx}
+                                    >
+                                      Method: {value.method || ""}, Amount:{" "}
+                                      {value.amount || "0"}
+                                    </div>
+                                  ))}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-1">
                     <label className="form-label">Narration</label>
                     <textarea
@@ -2647,7 +2687,6 @@ const MoneyReceipt = () => {
                     ></textarea>
                   </div>
 
-
                   {/* Buttons */}
                   <div className="d-flex gap-2 mt-1">
                     <button
@@ -2656,7 +2695,6 @@ const MoneyReceipt = () => {
                     >
                       Cancel
                     </button>
-
 
                     {modalType !== "view" && (
                       <button
@@ -2673,7 +2711,6 @@ const MoneyReceipt = () => {
           </div>
         </>
       )}
-
 
       {/* Patient Search Modal */}
       {showPatientModal && (
@@ -2761,7 +2798,6 @@ const MoneyReceipt = () => {
         </>
       )}
 
-
       {/* Confirm Delete Modal */}
       {showConfirm && (
         <div
@@ -2797,14 +2833,12 @@ const MoneyReceipt = () => {
                 ></button>
               </div>
 
-
               <div className="modal-body text-center">
                 <p className="fs-6 mb-1">
                   Are you sure you want to delete this?
                 </p>
                 <p className="text-muted">This cannot be undone.</p>
               </div>
-
 
               <div className="modal-footer d-flex justify-content-center gap-3">
                 <button
@@ -2813,7 +2847,6 @@ const MoneyReceipt = () => {
                 >
                   Cancel
                 </button>
-
 
                 <button className="btn btn-danger px-4" onClick={confirmDelete}>
                   Yes, Delete
@@ -2824,7 +2857,6 @@ const MoneyReceipt = () => {
         </div>
       )}
 
-
       {/* Pagination */}
       <div className="d-flex justify-content-center mt-3">
         <ul className="pagination pagination-sm">
@@ -2833,7 +2865,6 @@ const MoneyReceipt = () => {
               Prev
             </button>
           </li>
-
 
           {/* {[...Array(totalPages)].map((_, i) => (
             <li key={i} className={`page-item ${page === i + 1 ? "active" : ""}`}>
@@ -2844,7 +2875,6 @@ const MoneyReceipt = () => {
           ))} */}
           <button className="page-link">{`${page}/${totalPages}`}</button>
 
-
           <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
             <button className="page-link" onClick={() => goToPage(page + 1)}>
               Next
@@ -2853,22 +2883,9 @@ const MoneyReceipt = () => {
         </ul>
       </div>
 
-
       <Footer />
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default MoneyReceipt;

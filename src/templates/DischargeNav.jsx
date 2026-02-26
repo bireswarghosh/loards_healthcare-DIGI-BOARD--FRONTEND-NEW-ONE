@@ -12,7 +12,7 @@ const DischargeNav = () => {
             className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}
           >
             📋 List
-          </NavLink>a
+          </NavLink>
         </li>
 
         {/* <li className="nav-item">
