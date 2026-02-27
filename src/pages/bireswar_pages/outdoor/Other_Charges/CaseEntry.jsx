@@ -560,8 +560,9 @@ const CaseEntry = () => {
           return;
         }
 
-        // Step 1: Create Case
-        const caseRes = await axiosInstance.post("/case01", formData);
+        // Step 1: Create Case (exclude ReceiptAmt and Balance - they're UI only)
+        const { ReceiptAmt, Balance, ...caseCreateData } = formData;
+        const caseRes = await axiosInstance.post("/case01", caseCreateData);
         if (caseRes.data.success) {
           const newCaseId = caseRes.data.data.CaseId;
 
@@ -675,8 +676,9 @@ const CaseEntry = () => {
       } else if (mode === "edit" && orgId && orgId !== "undefined") {
         // UPDATE existing case
 
-        // Step 1: Update case master data
-        const res = await axiosInstance.put(`/case01/${orgId}`, formData);
+        // Step 1: Update case master data (exclude ReceiptAmt and Balance - they're UI only)
+        const { ReceiptAmt, Balance, ...caseUpdateData } = formData;
+        const res = await axiosInstance.put(`/case01/${orgId}`, caseUpdateData);
         if (res.data.success) {
           // Step 2: Delete existing test records
           try {

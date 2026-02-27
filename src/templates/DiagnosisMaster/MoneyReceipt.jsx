@@ -1252,7 +1252,7 @@ const MoneyReceipt = () => {
   const [selectedReceipt, setSelectedReceipt] = useState(null);
 
   // filters
-  const [startDate, setStartDate] = useState("2024-06-13");
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   // const [dateTo, setDateTo] = useState("2025-02-22");
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
 
@@ -1507,6 +1507,16 @@ const MoneyReceipt = () => {
         ChequeNo: "",
         Narration: "",
       });
+      setPaymentMethods([
+        {
+          type: "0",
+          amount: "",
+          upiApp: "",
+          utrNumber: "",
+          bankName: "",
+          chequeNumber: "",
+        },
+      ]);
       setPatientSearch("");
       setShowDrawer(true);
       return;
@@ -1522,6 +1532,16 @@ const MoneyReceipt = () => {
         ChequeNo: "",
         Narration: "Refund Money Receipt",
       });
+      setPaymentMethods([
+        {
+          type: "0",
+          amount: "",
+          upiApp: "",
+          utrNumber: "",
+          bankName: "",
+          chequeNumber: "",
+        },
+      ]);
       setPatientSearch("");
       setShowDrawer(true);
       return;
