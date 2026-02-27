@@ -627,14 +627,13 @@ const CaseEntry = () => {
           }
 
           // Step 3: Create Money Receipt
-          console.log("IPD changed 569", selectedTest);
           const receiptData = {
-            ReffId: selectedTest?.value || formData.AdmitionId || "",
+            ReffId: newCaseId,
             ReceiptDate: new Date().toISOString().slice(0, 10),
-            BillAmount: formData.Total,
+            BillAmount: formData.GrossAmt,
             Desc: formData.Desc || 0,
             DiscAmt: formData.DescAmt || 0,
-            Amount: formData.GrossAmt,
+            Amount: formData.ReceiptAmt,
             CBalAmt: 0,
             BalanceAmt: formData.Balance,
             Remarks: formData.Remarks || "",
@@ -657,7 +656,7 @@ const CaseEntry = () => {
             paymentMethods: [
               {
                 method: formData.PaymentType === "C" ? "Cash" : formData.PaymentType === "B" ? "Bank" : "Card",
-                amount: parseFloat(formData.GrossAmt) || 0,
+                amount: parseFloat(formData.ReceiptAmt) || 0,
               },
             ],
           };
@@ -1166,6 +1165,7 @@ useEffect(() => {
   const discAmt = parseFloat(formData.DescAmt || 0);
   const advance = parseFloat(formData.Advance || 0);
   const cancelAmt = parseFloat(formData.CTestAmt || 0);
+  const receiptAmt = parseFloat(formData.ReceiptAmt || 0);
 
   let finalDiscAmt = discAmt;
 
@@ -1175,7 +1175,7 @@ useEffect(() => {
   }
 
   const gross = total - finalDiscAmt - cancelAmt;
-  const balance = gross - advance;
+  const balance = gross - receiptAmt;
 
   setFormData((prev) => ({
     ...prev,
@@ -1189,6 +1189,7 @@ useEffect(() => {
   formData.DescAmt,
   formData.Advance,
   formData.CTestAmt,
+  formData.ReceiptAmt,
 ]);
 
 const handleDepPrint = () => {
@@ -2633,7 +2634,7 @@ const handleDepPrint = () => {
                     />
                   </div>
                   <div className="d-flex justify-content-end align-items-center">
-                    <label style={labelStyle}>Balance</label>
+                    <label style={labelStyle}> Due Balance</label>
                     <input
                       type="text"
                       name="Balance"

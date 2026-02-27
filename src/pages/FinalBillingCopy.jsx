@@ -1647,7 +1647,9 @@ const FinalBilling = () => {
                       <input
                         type="text"
                         style={styles.input}
-                        value={totalReceipt}
+                        // value={totalReceipt}
+                        value={billHeadData.find(item=>item.SlNo==9)?.Amount1}
+                        
                       />
                     </div>
                   </div>
