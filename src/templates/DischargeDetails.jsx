@@ -36,6 +36,11 @@ const DischargeDetails = ({ mode }) => {
   });
   const admObj = watch("AdmitionObj");
   const admissionId = watch("AdmitionId");
+  useEffect(() => {
+    if (admissionId) {
+      sessionStorage.setItem("selectedAdmitionId", admissionId);
+    }
+  }, [admissionId]);
 
   //   fetch dischargedata====================================================
   const { data: dischargeData } = useAxiosFetch(id ? `/discert/${id}` : null, [
@@ -337,12 +342,12 @@ const DischargeDetails = ({ mode }) => {
                       onChange={(opt) => {
                         setValue("AdmitionObj", opt); // UI
                         setValue("AdmitionId", opt?.value || ""); // API
-                          if (opt?.value) {
-                            sessionStorage.setItem(
-                              "selectedAdmitionId",
-                              opt.value
-                            );
-                          }
+                        if (opt?.value) {
+                          sessionStorage.setItem(
+                            "selectedAdmitionId",
+                            opt.value
+                          );
+                        }
                       }}
                       searchKey="q"
                       labelKey="AdmitionId"
@@ -742,16 +747,29 @@ const DischargeDetails = ({ mode }) => {
                     style={{ ...inputStyle, width: "100px" }}
                     {...register("UserId")}
                   />
-                  <input
+                  {/* <input
                     type="text"
                     className="form-control form-control-sm fw-bold"
                     style={{ ...inputStyle, width: "100px" }}
                     value={userMap[dischargeData.UserId]}
-                  />
+                  /> */}
+                  <select
+                    className="form-select form-select-sm fw-bold"
+                    style={{ width: "120px", fontSize: "11px" }}
+                    {...register("UserId")}
+                  >
+                    <option value="">Select User</option>
+
+                    {users?.map((u) => (
+                      <option key={u.UserId} value={u.UserId}>
+                        {u.UserName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 {mode !== "view" && (
                   <button type="submit" className="btn btn-primary btn-sm mt-2">
-                  Next
+                    Next
                   </button>
                 )}
               </div>

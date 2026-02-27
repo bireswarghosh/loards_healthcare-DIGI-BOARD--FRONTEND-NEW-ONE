@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -6,6 +7,7 @@ import JsBarcode from "jsbarcode";
 import { toast } from "react-toastify";
 import AsyncSelect from "react-select/async";
 import { fi } from "date-fns/locale";
+import { handlePrint5 } from "./FinalBillPrintFunc";
 
 function AsyncApiSelect({
   api,
@@ -437,12 +439,36 @@ const FinalBillingAdd = () => {
 
   const [docVisit, setDocVisit] = useState([]);
   const [diagData, setDiagData] = useState([]);
+  const [diagDtl, setDiagDtl] = useState([]);
   const [lessAdvData, setLessAdvData] = useState([]);
 
   const [btnLoading, setBtnLoading] = useState(true);
 
   const [serviceCharge, setServiceCharge] = useState(0); // this is for discount
   const [serviceChrgCalculated, setServiceChrgCalculated] = useState(0); // this will be calculated by the discounted values of the beds and other charges master in which service charges is on
+
+  const [allTests, setAllTests] = useState({});
+
+  // this will fetch all test data
+  const fetchAllTests = async () => {
+    try {
+      const res = await axiosInstance.get(
+        "/tests/search/advanced?page=1&limit=2000",
+      );
+      let data = {};
+      if (res.data.success) {
+        const arr = res.data.data;
+        for (let i = 0; i < arr.length; i++) {
+          data[arr[i].TestId] = arr[i];
+        }
+      }
+      setAllTests(data);
+
+      console.log("All test data: ", data);
+    } catch (error) {
+      console.log("error fetching test: ", error);
+    }
+  };
 
   const fetchServiceChargeValue = async () => {
     try {
@@ -477,7 +503,9 @@ const FinalBillingAdd = () => {
     } catch (error) {
       console.log("error submitting the form data: ", error);
     } finally {
-      setBtnLoading(false);
+      setTimeout(() => {
+        setBtnLoading(false);
+      }, 2000);
     }
   };
 
@@ -529,7 +557,7 @@ const FinalBillingAdd = () => {
       const res = await axiosInstance.get(
         `/ot-bills/search/admission?admissionId=${id}`,
       );
-      res.data.success ? setOtcDetails(res.data.data) : setOcDeatails([]);
+      res.data.success ? setOtcDetails(res.data.data) : setOtcDetails([]);
 
       if (res.data.data.length != 0) {
         const arr = res.data.data;
@@ -600,6 +628,8 @@ const FinalBillingAdd = () => {
         ),
       );
 
+      setOcDeatails(filteredOC);
+
       setFormData((prev) => ({
         ...prev,
         details: {
@@ -654,7 +684,7 @@ const FinalBillingAdd = () => {
   const fetchDiag = async (id) => {
     try {
       const res = await axiosInstance.get(`/case01/admition/${id}`);
-      // console.log("Diag data: ", res.data.data);
+      console.log("Diag data: ", res.data.data);
 
       res.data.success ? setDiagData(res.data.data) : setDiagData([]);
 
@@ -662,6 +692,11 @@ const FinalBillingAdd = () => {
       if (arr.length) {
         const totalDiag = arr.reduce((sum, item) => sum + item.Total, 0);
         // console.log("total diag chrgs; ", totalDiag);
+
+        let diagObj = {};
+        for (let i = 0; i < arr.length; i++) {
+          diagObj[arr[i].CaseId] = arr[i];
+        }
 
         const newArr = arr.map((item) => {
           // console.log("tie: ", item);
@@ -715,6 +750,33 @@ const FinalBillingAdd = () => {
             item.SlNo === 5 ? { ...item, Amount1: totalDiag } : item,
           ),
         );
+
+        const caseIdArr = res.data.data.map((item) => item.CaseId);
+        console.log("case Id", caseIdArr);
+
+        const resCaseDtl = caseIdArr.map((item) =>
+          axiosInstance(`/case-dtl-01/case/${item}`),
+        );
+
+        const resCaseDtlPromises = await Promise.all(resCaseDtl);
+        let caseDtlData = resCaseDtlPromises
+          .map((item) => item.data.data)
+          .flat();
+        console.log("case dtls: ", caseDtlData);
+
+        const dtls = caseDtlData.map((item) => [
+          diagObj[item.CaseId]?.CaseDate?.split("T")[0]
+            ?.split("-")
+            ?.reverse()
+            ?.join("/") || "",
+          allTests[item.TestId].Test || "",
+          1,
+          item.Rate || 0,
+          item.Rate || 0,
+        ]);
+
+        console.log("dtl:", dtls);
+        setDiagDtl(dtls);
       }
     } catch (error) {
       console.log("error fetching diago charge: ", error);
@@ -1322,6 +1384,145 @@ const FinalBillingAdd = () => {
     });
   }
 
+  // this is for handlePrint5
+  // this print final bill summary
+  const billData1 = {
+    hospitalName: "LORDS HEALTH CARE",
+    address:
+      "13/3, Circular 2nd Bye Lane, Kona Expressway, Shibpur, Howrah-711 102, W.B.",
+    phone: "8272904444",
+    helpline: "7003378414",
+    tollFree: "1800-309-0895",
+    email: "patientdesk@lordshealthcare.org",
+    website: "www.lordshealthcare.org",
+
+    patient: {
+      name: admData.PatientName || "",
+      address: admData.Add1 || "",
+      address2: admData.Add2 || "",
+      address3: admData.Add3 || "",
+      contact: admData.PhoneNo || "",
+      age: `${admData.Age || ""} ${admData.AgeType || "Y"}`,
+      sex: admData.Sex || "",
+    },
+
+    billNo: formData?.BillNo || "",
+    ipdNo: admData.AdmitionNo || "",
+    admissionDate:
+      `${admData?.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/")} Time: ${
+        admData?.AdmitionTime || ""
+      }` || "",
+    dischargeDate:
+      `${formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${formData?.ReleaseTime || ""}` ||
+      "",
+    dischargeType: "Expired not known confusion",
+    doctor:
+      allDoctors.find((item) => item.DoctorId == admData?.UCDoctor1Id)
+        ?.Doctor || "",
+    bedNo: "", // At time of discharge
+    billDate:
+      formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+
+    bedCharges: {
+      rows: formData?.details?.finalbillbeddtl.map((row, idx) => [
+        row.MyDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        fetchedAdmBedDetail.find((item) => item.BedId == row.BedId)?.Bed || "",
+        "1",
+        row?.BedRate || 0,
+        row?.BedRate || 0,
+      ]) || [["", "", "", "", ""]],
+      total:
+        finalBillDetail.find((item) => item.HeadName == "Bed Charges")
+          ?.Amount1 || "0",
+    },
+
+    doctorVisits: {
+      rows: doDetails.map((row) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        row.Particular?.trim()?.split("/")[0] || "",
+        row.Particular?.trim()?.split("X")[1] || "",
+        row.Amount || 0,
+      ]) || [["", "", "", "", ""]],
+      total:
+        finalBillDetail.find((item) => item.HeadName == "Doctor Charges")
+          ?.Amount1 || "0",
+    },
+
+    // criticalCare: {
+    //   rows: [
+    //     ["19/06/2023", "CRITICAL CARE DOCTOR FEES", "2", "600.00", "1,200.00"],
+    //   ],
+    //   total: "1,200.00",
+    // },
+
+    services: {
+      rows: ocDeatails.map((row) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        row.Particular?.trim()?.split("x")[0] || "",
+        row.Particular?.trim()?.split("x")[1] || "",
+        row.Amount || 0,
+      ]),
+
+      total:
+        finalBillDetail.find((item) => item.HeadName == "Others Charges")
+          ?.Amount1 || "0",
+    },
+
+    // medicine: {
+    //   rows: [
+    //     [
+    //       "19/06/2023",
+    //       "MEDICINE-LORDS PHARMACY",
+    //       "1",
+    //       "26,256.00",
+    //       "26,256.00",
+    //     ],
+    //   ],
+    //   total: "26,256.00",
+    // },
+
+    investigations: {
+      // rows: diagData.map((row) => [
+      //   row.CaseDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+      //   row.CaseNo || "",
+      //   // row.Particular?.trim()?.split("x")[0] || "",
+      //   // row.Particular?.trim()?.split("x")[1] || "",
+      //   row.Total || "",
+      // ]),
+      rows: diagDtl,
+      total:
+        finalBillDetail.find((item) => item.HeadName == "Diagnostic Charges")
+          ?.Amount1 || "0",
+    },
+
+    serviceCharges: {
+      // rows: [["-", "SERVICE CHARGES", "1", "2,743.00", "2,743.00"]],
+      rows: scDetail.map((row, idx) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead || "",
+        "1",
+        row.Amount || 0,
+        row.Amount || 0,
+      ]) || [["-", "", "", "", ""]],
+      total:
+        finalBillDetail.find((item) => item.HeadName == "Service Charges")
+          ?.Amount1 || "0",
+    },
+
+    // grandTotal: "274,544.00",
+    grandTotal:
+      finalBillDetail.reduce((acc, cur) => acc + Number(cur.Amount1), 0) -
+      finalBillDetail?.find((item) => item.SlNo == 9)?.Amount1,
+    // advancePaid: "33,000.00",
+    advancePaid: finalBillDetail?.find((item) => item.SlNo == 9)?.Amount1,
+    insuranceApproval: Number(formData?.Approval),
+    nonPayable: "",
+    // nonPayable: "1725", // not found
+    billedBy: "Admin",
+  };
+
   useEffect(() => {
     if (Object.keys(admData).length) {
       // console.log("adm data1: ", admData);
@@ -1335,11 +1536,12 @@ const FinalBillingAdd = () => {
 
       setTimeout(() => {
         setBtnLoading(false);
-      }, 5000);
+      }, 8000);
     }
   }, [admData]);
 
   useEffect(() => {
+    fetchAllTests();
     fetchServiceChargeValue();
     fetchAuthUsers();
     // fetchFB(id);
@@ -1433,24 +1635,25 @@ const FinalBillingAdd = () => {
       scharge: 0,
     };
 
-    setScDetail([p])
+    setScDetail([p]);
 
-    const RemoveDuplicateSC = formData.details.finalbillalldtl.filter(item=>item.slno!=999999999999999)
+    const RemoveDuplicateSC = formData.details.finalbillalldtl.filter(
+      (item) => item.slno != 999999999999999,
+    );
 
-     setFormData((prev) => ({
-        ...prev,
-        details: {
-          ...prev.details,
-          finalbillalldtl: [...RemoveDuplicateSC, p],
-        },
-      }));
+    setFormData((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        finalbillalldtl: [...RemoveDuplicateSC, p],
+      },
+    }));
 
-      setFinalBillDetail((prev) =>
-          prev.map((item) =>
-            item.SlNo === 7 ? { ...item, Amount1:serviceChrgCalculated } : item,
-          ),
-        );
-
+    setFinalBillDetail((prev) =>
+      prev.map((item) =>
+        item.SlNo === 7 ? { ...item, Amount1: serviceChrgCalculated } : item,
+      ),
+    );
   }, [serviceChrgCalculated]);
 
   return (
@@ -1888,7 +2091,10 @@ const FinalBillingAdd = () => {
                         type="text"
                         style={styles.input}
                         // value={totalReceipt}
-                        value={finalBillDetail.find(item=>item.SlNo==9)?.Amount1 || 0}
+                        value={
+                          finalBillDetail.find((item) => item.SlNo == 9)
+                            ?.Amount1 || 0
+                        }
                       />
                     </div>
                   </div>
@@ -2305,14 +2511,29 @@ const FinalBillingAdd = () => {
         style={{ backgroundColor: "primary", borderTop: "1px solid white" }}
       >
         <div className="d-flex flex-wrap gap-1">
-        { fbMode === "final" && <button
-            className="btn btn-sm btn-primary"
-            onClick={handleSave}
-            disabled={btnLoading}
-          >
-            Save
-          </button>}
+          {fbMode === "final" && (
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={handleSave}
+              disabled={btnLoading}
+            >
+              Save
+            </button>
+          )}
 
+          {fbMode !== "final" && (
+            <button
+              className="btn btn-sm btn-primary"
+              onClick={() => {
+                console.log("print data is: ", billData1);
+                console.log(finalBillDetail);
+                handlePrint5(billData1);
+              }}
+              disabled={btnLoading}
+            >
+              Print
+            </button>
+          )}
           <button
             className="btn btn-sm btn-primary"
             onClick={() => {
@@ -2328,3 +2549,4 @@ const FinalBillingAdd = () => {
 };
 
 export default FinalBillingAdd;
+

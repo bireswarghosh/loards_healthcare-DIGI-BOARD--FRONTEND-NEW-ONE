@@ -31,7 +31,7 @@ const DischargePrint = () => {
   // ───────────────────────────────
   // 3) Fetch EMR DATA
   // ───────────────────────────────
-  const { data: emr } = useAxiosFetch(admissionId ? `/emr/${id}` : null, [
+  const { data: emr } = useAxiosFetch(admissionId ? `/emr/d-${id}` : null, [
     admissionId,
   ]);
   // fetch doctor name===============================
@@ -49,6 +49,12 @@ const DischargePrint = () => {
     patient.BedId ? `/bedMaster/${patient.BedId}` : null,
     [patient.BedId]
   );
+  //fetch medicine data-- advise on discharge---
+  const { data: med } = useAxiosFetch(
+    admissionId ? `discertdtl/by-id/${encodeURIComponent(id)}` : null,
+    [admissionId]
+  );
+  // https://lords-backend.onrender.com/api/v1/discertdtl/by-id/000051%2F26-27
   const getDischargeText = (value) => {
     const map = {
       0: "Normal Discharge",
@@ -68,7 +74,7 @@ const DischargePrint = () => {
     const canvas = document.createElement("canvas");
     JsBarcode(canvas, `A-${dischargeData?.AdmitionId}`, {
       format: "CODE128",
-      width: 3,
+      width: 5,
       height: 100,
       displayValue: true,
     });
@@ -115,16 +121,16 @@ const DischargePrint = () => {
                   {m.SlNo}
                 </td>
                 <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.advmed}
+                  {m.Medicine}
                 </td>
                 <td style={{ border: "1px solid #000", padding: "2px" }}>
                   {m.dose}
                 </td>
                 <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.dunit}
+                  {m.unit}
                 </td>
                 <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.nodays}
+                  {m.days}
                 </td>
               </tr>
             ))}
@@ -286,8 +292,6 @@ const DischargePrint = () => {
           {/* END HEADER BOX */}
         </div>
 
-        
-
         {/* BASIC INFO */}
 
         <div className="container-fluid border rounded p-2 mb-1">
@@ -371,35 +375,53 @@ const DischargePrint = () => {
 
         {/* EMR SECTIONS */}
         <div className="section-title">Diagnosis :</div>
-        {bulletList(emr?.diagnosis, "diagonisis")}
-
+        {bulletList(
+          emr?.diagnosis?.filter((i) => i.diagonisis?.trim() !== ""),
+          "diagonisis"
+        )}
+        {/* 
+        {bulletList(
+          emr?.pastHistory
+            ?.map((i) => i.pasthistory)
+            ?.filter((v) => v && v.trim() !== ""),
+          "diagnosis"
+        )} */}
         <div className="section-title">
           Present Complaints / Reason for Admission :
         </div>
-        {bulletList(emr?.complaints, "chief")}
+        {bulletList(
+          emr?.complaints?.filter((i) => i.chief?.trim() !== ""),
+          "chief"
+        )}
 
         <div className="section-title">Past History :</div>
-        {bulletList(emr?.pastHistory, "History")}
+        {bulletList(
+          emr?.pastHistory?.filter((i) => i.pasthistory?.trim() !== ""),
+          "pasthistory"
+        )}
 
         <div className="section-title">Significant Findings :</div>
         {renderMultiline(dischargeData.G)}
 
         <div className="section-title">Investigation Results :</div>
-        {bulletList(emr?.investigations, "Invest")}
+        {renderMultiline(dischargeData.C)}
 
         <div className="section-title">Course in the Hospital :</div>
-        {renderMultiline(dischargeData.B)}
+        {bulletList(
+          emr?.investigations?.filter((i) => i.Invest?.trim() !== ""),
+          "Invest"
+        )}
 
         <div className="section-title">Condition at Discharge :</div>
         {renderMultiline(dischargeData.F)}
 
         <div className="section-title">
-          {dischargeData?.DiscType === 0
-            ? "Advice (Diet & Medication) :"
-            : "On Going Medicine :"}
+          {dischargeData?.DiscType === 4
+            ? "On Going Medicine :"
+            : "Advice (Diet & Medication) :"}
         </div>
 
-        {adviceTable(emr?.adviceMedicine)}
+        {adviceTable(med)}
 
         <div className="section-title">
           Follow Up Date (With Instruction Notes) :
@@ -419,6 +441,6 @@ const DischargePrint = () => {
       </div>
     </>
   );
-};;;;
+};
 
 export default DischargePrint;

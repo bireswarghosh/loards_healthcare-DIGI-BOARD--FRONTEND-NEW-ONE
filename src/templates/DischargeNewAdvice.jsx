@@ -239,7 +239,7 @@ const DischargeNewAdvice = () => {
         G: formData.significantFindings || "",
         E: formData.followUpDate || "",
         F: formData.conditionAtDischarge || "",
-        C: formData.notesNarration || "",
+        C: formData.investigationResults || "",
       };
 {(formData.significantFindings ||
   formData.followUpDate ||
@@ -332,13 +332,13 @@ const DischargeNewAdvice = () => {
           </div>
 
           <div
-            className="panel-body bg-primary"
-            // style={{
-            //   backgroundColor: "#f0f0f0",
-            //   padding: "10px",
-            //   height: "auto",
-            //   overflow: "visible",
-            // }}
+            className="panel-body "
+            style={{
+              backgroundColor: "#f0f0f0",
+              padding: "10px",
+              height: "auto",
+              overflow: "visible",
+            }}
           >
             <div className="row g-2">
               {/* ================= LEFT COLUMN ================= */}
@@ -353,9 +353,10 @@ const DischargeNewAdvice = () => {
                   // }}
                 >
                   <div
+                    className=" "
                     style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
                       fontWeight: "bold",
                       padding: "5px",
                       borderBottom: "1px solid #000",
@@ -368,16 +369,18 @@ const DischargeNewAdvice = () => {
                       className="table table-bordered mb-0"
                       style={{ fontSize: "12px" }}
                     >
-                      <thead style={{ backgroundColor: "#F19C49" }}>
+                      <thead style={{ backgroundColor: "#f0e2cd" }}>
                         <tr>
-                          <th style={{ width: "50px" }}>slno</th>
-                          <th>Diagnosis</th>
+                          <th style={{ width: "50px", color: "#080000" }}>
+                            slno
+                          </th>
+                          <th style={{ color: "#080000" }}>Diagnosis</th>
                         </tr>
                       </thead>
                       <tbody>
                         {formData.diagnosis.map((row, index) => (
                           <tr key={index}>
-                            <td style={{ backgroundColor: "#F19C49" }}>
+                            <td style={{ backgroundColor: "#f0e2cd" }}>
                               {row.SlNo}
                             </td>
                             <td>
@@ -393,7 +396,11 @@ const DischargeNewAdvice = () => {
                                     e.target.value
                                   )
                                 }
-                                style={{ border: "none", resize: "none" }}
+                                style={{
+                                  border: "none",
+                                  resize: "none",
+                                  color: "#080000",
+                                }}
                               />
                             </td>
                           </tr>
@@ -415,15 +422,15 @@ const DischargeNewAdvice = () => {
                 <div
                   className="mb-2"
                   style={{
-                    backgroundColor: "#0080FF",
+                    backgroundColor: "#f0e2cd",
                     padding: "5px",
                     border: "2px solid #000",
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
                       fontWeight: "bold",
                       padding: "5px",
                       borderBottom: "1px solid #000",
@@ -436,16 +443,18 @@ const DischargeNewAdvice = () => {
                       className="table table-bordered mb-0"
                       style={{ fontSize: "12px" }}
                     >
-                      <thead style={{ backgroundColor: "#F19C49" }}>
+                      <thead style={{ backgroundColor: "#f0e2cd" }}>
                         <tr>
-                          <th style={{ width: "50px" }}>slno</th>
-                          <th>Past History</th>
+                          <th style={{ width: "50px", color: "#080000" }}>
+                            slno
+                          </th>
+                          <th style={{ color: "#080000" }}>Past History</th>
                         </tr>
                       </thead>
                       <tbody>
                         {formData.pastHistory.map((row, index) => (
                           <tr key={index}>
-                            <td style={{ backgroundColor: "#F19C49" }}>
+                            <td style={{ backgroundColor: "#f0e2cd" }}>
                               {row.SlNo}
                             </td>
                             <td>
@@ -461,7 +470,11 @@ const DischargeNewAdvice = () => {
                                     e.target.value
                                   )
                                 }
-                                style={{ border: "none", resize: "none" }}
+                                style={{
+                                  border: "none",
+                                  resize: "none",
+                                  color: "#080000",
+                                }}
                               />
                             </td>
                           </tr>
@@ -483,15 +496,15 @@ const DischargeNewAdvice = () => {
                 <div
                   className="mb-2"
                   style={{
-                    backgroundColor: "#0080FF",
+                    backgroundColor: "#f0e2cd",
                     padding: "5px",
                     border: "2px solid #000",
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
                       fontWeight: "bold",
                       padding: "5px",
                     }}
@@ -508,7 +521,7 @@ const DischargeNewAdvice = () => {
                         significantFindings: e.target.value,
                       }))
                     }
-                    style={{ backgroundColor: "#c0c0c0" }}
+                    style={{ backgroundColor: "#fff" }}
                   />
                 </div>
 
@@ -516,15 +529,15 @@ const DischargeNewAdvice = () => {
                 <div
                   className="mb-2"
                   style={{
-                    backgroundColor: "#0080FF",
+                    backgroundColor: "#f0e2cd",
                     padding: "5px",
                     border: "2px solid #000",
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
                       fontWeight: "bold",
                       padding: "5px",
                     }}
@@ -541,28 +554,28 @@ const DischargeNewAdvice = () => {
                         investigationResults: e.target.value,
                       }))
                     }
-                    style={{ backgroundColor: "#c0c0c0" }}
+                    style={{ backgroundColor: "#fff" }}
                   />
                 </div>
 
                 {/* Treatment Done */}
                 <div
-                  className="mb-2 bg-primary"
-                  // style={{
-                  //   backgroundColor: "#0080FF",
-                  //   padding: "5px",
-                  //   border: "2px solid #000",
-                  // }}
+                  className="mb-2 "
+                  style={{
+                    backgroundColor: "#f0e2cd",
+                    padding: "5px",
+                    border: "2px solid #000",
+                  }}
                 >
                   <div
-                    className="bg-primary"
-                    // style={{
-                    //   backgroundColor: "#0080FF",
-                    //   color: "#fff",
-                    //   fontWeight: "bold",
-                    //   padding: "5px",
-                    //   borderBottom: "1px solid #000",
-                    // }}
+                    className=""
+                    style={{
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
+                      fontWeight: "bold",
+                      padding: "5px",
+                      borderBottom: "1px solid #000",
+                    }}
                   >
                     Treatment Done / Procedure
                   </div>
@@ -571,16 +584,18 @@ const DischargeNewAdvice = () => {
                       className="table table-bordered mb-0"
                       style={{ fontSize: "12px" }}
                     >
-                      <thead style={{ backgroundColor: "#F19C49" }}>
+                      <thead style={{ backgroundColor: "#f0e2cd" }}>
                         <tr>
-                          <th style={{ width: "50px" }}>slno</th>
-                          <th>Advice</th>
+                          <th style={{ width: "50px", color: "#080000" }}>
+                            slno
+                          </th>
+                          <th style={{ color: "#080000" }}>Advice</th>
                         </tr>
                       </thead>
                       <tbody>
                         {formData.investigations.map((row, index) => (
                           <tr key={index}>
-                            <td style={{ backgroundColor: "#F19C49" }}>
+                            <td style={{ backgroundColor: "#f0e2cd" }}>
                               {row.SlNo}
                             </td>
                             <td>
@@ -596,7 +611,11 @@ const DischargeNewAdvice = () => {
                                     e.target.value
                                   )
                                 }
-                                style={{ border: "none", resize: "none" }}
+                                style={{
+                                  border: "none",
+                                  resize: "none",
+                                  color: "#080000",
+                                }}
                               />
                             </td>
                           </tr>
@@ -613,86 +632,96 @@ const DischargeNewAdvice = () => {
                     )}
                   </div>
                 </div>
+              </div>
 
-                {/* Condition At Discharge */}
+              {/* ================= RIGHT COLUMN ================= */}
+              <div className="col-md-6">
+                {/* complaints================================ */}
                 <div
                   className="mb-2"
                   style={{
-                    backgroundColor: "#0080FF",
+                    backgroundColor: "#f0e2cd",
                     padding: "5px",
                     border: "2px solid #000",
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
                       fontWeight: "bold",
                       padding: "5px",
+                      borderBottom: "1px solid #000",
                     }}
                   >
-                    Condition At Discharge
+                    Chief Complaint
                   </div>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="2"
-                    value={formData.conditionAtDischarge}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        conditionAtDischarge: e.target.value,
-                      }))
-                    }
-                    style={{ backgroundColor: "#c0c0c0" }}
-                  />
-                </div>
-
-                {/* Follow Up */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#0080FF",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      padding: "5px",
-                    }}
-                  >
-                    Follow Up Date
+                  <div style={{ backgroundColor: "#fff" }}>
+                    <table
+                      className="table table-bordered mb-0"
+                      style={{ fontSize: "12px" }}
+                    >
+                      <thead
+                        style={{ backgroundColor: "#f0e2cd", color: "#080000" }}
+                      >
+                        <tr>
+                          <th style={{ width: "50px" }}>slno</th>
+                          <th>Chief Complaint</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {formData.complaints.map((row, index) => (
+                          <tr key={index}>
+                            <td style={{ backgroundColor: "#f0e2cd" }}>
+                              {row.SlNo}
+                            </td>
+                            <td>
+                              <textarea
+                                className="form-control form-control-sm"
+                                rows="2"
+                                value={row.chief}
+                                onChange={(e) =>
+                                  updateRow(
+                                    "complaints",
+                                    index,
+                                    "chief",
+                                    e.target.value
+                                  )
+                                }
+                                style={{
+                                  border: "none",
+                                  resize: "none",
+                                  color: "#080000",
+                                }}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {addEditState && (
+                      <button
+                        className="btn btn-sm btn-success m-1"
+                        onClick={() => addRow("complaints")}
+                      >
+                        + Add
+                      </button>
+                    )}
                   </div>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="2"
-                    value={formData.followUpDate}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        followUpDate: e.target.value,
-                      }))
-                    }
-                    style={{ backgroundColor: "#c0c0c0" }}
-                  />
                 </div>
-
                 {/* Advice on Discharge */}
                 <div
                   className="mb-2"
                   style={{
-                    backgroundColor: "#0080FF",
+                    backgroundColor: "#f0e2cd",
                     padding: "5px",
                     border: "2px solid #000",
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
                       fontWeight: "bold",
                       padding: "5px",
                       borderBottom: "1px solid #000",
@@ -705,7 +734,7 @@ const DischargeNewAdvice = () => {
                       className="table table-bordered mb-0 "
                       style={{ fontSize: "11px", tableLayout: "fixed" }}
                     >
-                      <thead style={{ backgroundColor: "#F19C49" }}>
+                      <thead style={{ backgroundColor: "#f0e2cd" }}>
                         <tr>
                           <th style={{ width: "40px" }}>slno</th>
                           <th>Type</th>
@@ -718,7 +747,7 @@ const DischargeNewAdvice = () => {
                       <tbody>
                         {formData.adviceMedicine.map((row, index) => (
                           <tr key={index}>
-                            <td style={{ backgroundColor: "#F19C49" }}>
+                            <td style={{ backgroundColor: "#f0e2cd" }}>
                               {row.SlNo}
                             </td>
                             <td>
@@ -815,79 +844,72 @@ const DischargeNewAdvice = () => {
                     )}
                   </div>
                 </div>
-              </div>
-
-              {/* ================= RIGHT COLUMN ================= */}
-              <div className="col-md-6">
-                {/* complaints================================ */}
+                {/* Follow Up */}
                 <div
                   className="mb-2"
                   style={{
-                    backgroundColor: "#0080FF",
+                    backgroundColor: "#f0e2cd",
                     padding: "5px",
                     border: "2px solid #000",
                   }}
                 >
                   <div
                     style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
                       fontWeight: "bold",
                       padding: "5px",
-                      borderBottom: "1px solid #000",
                     }}
                   >
-                    Chief Complaint
+                    Follow Up Date
                   </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0"
-                      style={{ fontSize: "12px" }}
-                    >
-                      <thead style={{ backgroundColor: "#F19C49" }}>
-                        <tr>
-                          <th style={{ width: "50px" }}>slno</th>
-                          <th>Chief Complaint</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.complaints.map((row, index) => (
-                          <tr key={index}>
-                            <td style={{ backgroundColor: "#F19C49" }}>
-                              {row.SlNo}
-                            </td>
-                            <td>
-                              <textarea
-                                className="form-control form-control-sm"
-                                rows="2"
-                                value={row.chief}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "complaints",
-                                    index,
-                                    "chief",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", resize: "none" }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {addEditState && (
-                      <button
-                        className="btn btn-sm btn-success m-1"
-                        onClick={() => addRow("complaints")}
-                      >
-                        + Add
-                      </button>
-                    )}
+                  <textarea
+                    className="form-control form-control-sm"
+                    rows="2"
+                    value={formData.followUpDate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        followUpDate: e.target.value,
+                      }))
+                    }
+                    style={{ backgroundColor: "#fff", color: "#080000" }}
+                  />
+                </div>
+                {/* Condition At Discharge */}
+                <div
+                  className="mb-2"
+                  style={{
+                    backgroundColor: "#f0e2cd",
+                    padding: "5px",
+                    border: "2px solid #000",
+                  }}
+                >
+                  <div
+                    style={{
+                      backgroundColor: "#f0e2cd",
+                      color: "#080000",
+                      fontWeight: "bold",
+                      padding: "5px",
+                    }}
+                  >
+                    Condition At Discharge
                   </div>
+                  <textarea
+                    className="form-control form-control-sm"
+                    rows="2"
+                    value={formData.conditionAtDischarge}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        conditionAtDischarge: e.target.value,
+                      }))
+                    }
+                    style={{ backgroundColor: "#fff", color: "#080000" }}
+                  />
                 </div>
                 {/* General Format */}
-                <div
+                {/* <div
                   className="mb-2"
                   style={{
                     backgroundColor: "#0080FF",
@@ -1021,10 +1043,10 @@ const DischargeNewAdvice = () => {
                       + Add
                     </button>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Blood Format */}
-                <div
+                {/* <div
                   className="mb-2"
                   style={{
                     backgroundColor: "#0080FF",
@@ -1114,10 +1136,10 @@ const DischargeNewAdvice = () => {
                       + Add
                     </button>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Notes */}
-                <div
+                {/* <div
                   className="mb-2"
                   style={{
                     backgroundColor: "#0080FF",
@@ -1147,7 +1169,7 @@ const DischargeNewAdvice = () => {
                     }
                     style={{ backgroundColor: "#c0c0c0" }}
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 
