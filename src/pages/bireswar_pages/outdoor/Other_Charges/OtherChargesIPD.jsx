@@ -451,14 +451,23 @@ console.log("bigb: ",b)
   };
 
 
+  // const calculateTotals = () => {
+  //   const total = otherCharges.reduce(
+  //     (sum, charge) => sum + (charge.Amount || 0),
+  //     0,
+  //   );
+  //   return { total, sgst: 0, cgst: 0 };
+  // };
   const calculateTotals = () => {
     const total = otherCharges.reduce(
-      (sum, charge) => sum + (charge.Amount || 0),
+      (sum, charge) => sum + (Number(charge.Rate) * Number(charge.Qty)  || 0),
       0,
     );
     return { total, sgst: 0, cgst: 0 };
   };
+  
 
+  // {Number(charge.Rate) * Number(charge.Qty)}
 
   const totals = calculateTotals();
 
