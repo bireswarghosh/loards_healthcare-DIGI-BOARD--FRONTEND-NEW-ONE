@@ -76,7 +76,8 @@ const PatientAdmission = () => {
       hour: "2-digit",
       minute: "2-digit",
     }),
-    BillTime: new Date().getHours() >= 12 ? "12:00" : "00:00",
+    // BillTime: new Date().getHours() >= 12 ? "12:00" : "00:00",
+    BillTime: "12:00",
     IPD: "N",
     IPDId: "",
     OPD: "Y",
@@ -87,7 +88,7 @@ const PatientAdmission = () => {
     Add1: "",
     Add2: "",
     Add3: "",
-    Age: 0,
+    Age: "",
     AgeType: "Y",
     Sex: "M",
     MStatus: "U",
@@ -153,9 +154,9 @@ const PatientAdmission = () => {
     Weight: "0",
     oprationdate: "",
     optime: "",
-    AgeD: 0,
+    AgeD: "",
     AgeTypeD: "M",
-    AgeN: 0,
+    AgeN: "",
     AgeTypeN: "D",
     URN: "",
     packagestart: new Date().toISOString().split("T")[0],
@@ -245,10 +246,10 @@ const PatientAdmission = () => {
 
   const fetchDistrict = async () => {
     try {
-      const fetchedDistrict = await axiosInstance.get("/zone");
+      const fetchedDistrict = await axiosInstance.get("/area?limit=9999");
       setDistrict([
-        { ZoneId: null, Zone: "-- Select --" },
-        ...fetchedDistrict.data,
+        { AreaId: "", Area: "--select--", ZoneId: 0, Rate: 0 },
+        ...fetchedDistrict.data.data,
       ]);
     } catch (error) {
       console.error("Error fetching zone:", error);
@@ -379,9 +380,9 @@ const PatientAdmission = () => {
           Add1: patientData.PatientAdd1 || "",
           Add2: patientData.PatientAdd2 || "",
           Add3: patientData.PatientAdd3 || "",
-          Age: patientData.Age || 0,
-          AgeD: patientData.AgeD || 0,
-          AgeN: patientData.AgeN || 0,
+          Age: patientData.Age || "",
+          AgeD: patientData.AgeD || "",
+          AgeN: patientData.AgeN || "",
           Sex: patientData.Sex || "M",
           PhoneNo: patientData.PhoneNo || "",
           MStatus: patientData.MStatus || "U",
@@ -659,6 +660,7 @@ const PatientAdmission = () => {
   const calDayCareBedRate = (dayCareId) => {
     const result = dayCare.find((item) => item.DayCareId == dayCareId);
     // simplified logic from reference
+    console.log("DayCare Bed Rate Calculation:", result.Rate);
   };
 
   const calPackageAmount = (id) => {
@@ -1526,7 +1528,7 @@ window.onload = function () {
                           onChange={(e) =>
                             handleAgeChange("Age", e.target.value)
                           }
-                          style={{ ...inputStyle, width: "25px" }}
+                          style={{ ...inputStyle, width: "45px" }}
                         />{" "}
                         Y
                         <input
@@ -1537,7 +1539,7 @@ window.onload = function () {
                           onChange={(e) =>
                             handleAgeChange("AgeD", e.target.value)
                           }
-                          style={{ ...inputStyle, width: "25px" }}
+                          style={{ ...inputStyle, width: "45px" }}
                         />{" "}
                         M
                         <input
@@ -1548,7 +1550,7 @@ window.onload = function () {
                           onChange={(e) =>
                             handleAgeChange("AgeN", e.target.value)
                           }
-                          style={{ ...inputStyle, width: "25px" }}
+                          style={{ ...inputStyle, width: "45px" }}
                         />{" "}
                         D
                       </div>
@@ -1600,8 +1602,8 @@ window.onload = function () {
                         style={inputStyle}
                       >
                         {district.map((d, i) => (
-                          <option key={i} value={d.ZoneId}>
-                            {d.Zone}
+                          <option key={i} value={d.AreaId}>
+                            {d.Area}
                           </option>
                         ))}
                       </select>
@@ -1710,8 +1712,12 @@ window.onload = function () {
                       </label>
                       <select
                         name="AreaId"
-                        value={formData.AreaId}
-                        onChange={handleInputChange}
+                        value={
+                          district.find(
+                            (item) => item.AreaId == formData.AreaId,
+                          )?.ZoneId
+                        }
+                        // onChange={handleInputChange}
                         style={inputStyle}
                       >
                         {fetchedState.map((d, i) => (
@@ -1956,60 +1962,67 @@ window.onload = function () {
                         Under Care Dr <span className="text-danger">*</span>
                       </label>
                       <div>
-                        <input
-                          type="text"
-                          value={
-                            doctors.find(
-                              (d) => d.DoctorId == formData.UCDoctor1Id,
-                            )?.Doctor || ""
-                          }
-                          onClick={() => {
-                            if (mode !== "view") {
-                              setSelectedDoctorField("UCDoctor1Id");
-                              setShowDoctorDrawer(true);
-                              setCurrentDoctorPage(1);
-                              setDoctorSearchQuery("");
+                        <div>
+                          <input
+                            type="text"
+                            value={
+                              doctors.find(
+                                (d) => d.DoctorId == formData.UCDoctor1Id,
+                              )?.Doctor || ""
                             }
-                          }}
-                          readOnly
-                          style={{ ...inputStyle, cursor: "pointer" }}
-                        />
-                        <input
-                          type="text"
-                          value={
-                            doctors.find(
-                              (d) => d.DoctorId == formData.UCDoctor2Id,
-                            )?.Doctor || ""
-                          }
-                          onClick={() => {
-                            if (mode !== "view") {
-                              setSelectedDoctorField("UCDoctor2Id");
-                              setShowDoctorDrawer(true);
-                              setCurrentDoctorPage(1);
-                              setDoctorSearchQuery("");
+                            onClick={() => {
+                              if (mode !== "view") {
+                                setSelectedDoctorField("UCDoctor1Id");
+                                setShowDoctorDrawer(true);
+                                setCurrentDoctorPage(1);
+                                setDoctorSearchQuery("");
+                              }
+                            }}
+                            readOnly
+                            style={{ ...inputStyle, cursor: "pointer" }}
+                          />
+                        </div>
+
+                        <div>
+                          <input
+                            type="text"
+                            value={
+                              doctors.find(
+                                (d) => d.DoctorId == formData.UCDoctor2Id,
+                              )?.Doctor || ""
                             }
-                          }}
-                          readOnly
-                          style={{ ...inputStyle, cursor: "pointer" }}
-                        />
-                        <input
-                          type="text"
-                          value={
-                            doctors.find(
-                              (d) => d.DoctorId == formData.UCDoctor3Id,
-                            )?.Doctor || ""
-                          }
-                          onClick={() => {
-                            if (mode !== "view") {
-                              setSelectedDoctorField("UCDoctor3Id");
-                              setShowDoctorDrawer(true);
-                              setCurrentDoctorPage(1);
-                              setDoctorSearchQuery("");
+                            onClick={() => {
+                              if (mode !== "view") {
+                                setSelectedDoctorField("UCDoctor2Id");
+                                setShowDoctorDrawer(true);
+                                setCurrentDoctorPage(1);
+                                setDoctorSearchQuery("");
+                              }
+                            }}
+                            readOnly
+                            style={{ ...inputStyle, cursor: "pointer" }}
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            value={
+                              doctors.find(
+                                (d) => d.DoctorId == formData.UCDoctor3Id,
+                              )?.Doctor || ""
                             }
-                          }}
-                          readOnly
-                          style={{ ...inputStyle, cursor: "pointer" }}
-                        />
+                            onClick={() => {
+                              if (mode !== "view") {
+                                setSelectedDoctorField("UCDoctor3Id");
+                                setShowDoctorDrawer(true);
+                                setCurrentDoctorPage(1);
+                                setDoctorSearchQuery("");
+                              }
+                            }}
+                            readOnly
+                            style={{ ...inputStyle, cursor: "pointer" }}
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
@@ -2289,6 +2302,7 @@ window.onload = function () {
                           value={formData.DayCareId}
                           onChange={(e) => {
                             handleInputChange(e);
+                            console.log("hui: ", e.target.value);
                             calDayCareBedRate(e.target.value);
                           }}
                           style={{ ...inputStyle, width: "120px" }}
@@ -2313,7 +2327,12 @@ window.onload = function () {
                         type="text"
                         className="rounded-0   py-0"
                         disabled
-                        value={formData.BedRate || "0"}
+                        // value={formData.BedRate || "0"}
+                        value={
+                          dayCare.find(
+                            (item) => item.DayCareId == formData.DayCareId,
+                          )?.Rate || "0"
+                        }
                         style={inputStyle}
                       />
                       <label style={labelStyle}>Employee</label>
