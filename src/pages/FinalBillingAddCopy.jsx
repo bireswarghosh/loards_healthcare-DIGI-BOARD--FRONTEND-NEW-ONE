@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -464,7 +463,7 @@ const FinalBillingAdd = () => {
       }
       setAllTests(data);
 
-      console.log("All test data: ", data);
+      // console.log("All test data: ", data);
     } catch (error) {
       console.log("error fetching test: ", error);
     }
@@ -498,6 +497,23 @@ const FinalBillingAdd = () => {
         await new Promise((resolve) => {
           setTimeout(resolve, 400);
         });
+
+console.log("all bed details: ", bedChargesData)
+const ele = bedChargesData[bedChargesData.length-1]
+const res1 = await axiosInstance.put(
+          `/admitionbeds?admitionid=${admData?.AdmitionId}&slno=${ele.SlNo}`,
+          {
+            ...ele,
+            Release: "Y",
+            ReleaseDate:
+              new Date().toISOString().split("T")[0] + "T00:00:00.000Z",
+            ReleaseTime: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        );
+
         navigate("/fina-bill-list2");
       }
     } catch (error) {
@@ -684,7 +700,7 @@ const FinalBillingAdd = () => {
   const fetchDiag = async (id) => {
     try {
       const res = await axiosInstance.get(`/case01/admition/${id}`);
-      console.log("Diag data: ", res.data.data);
+      // console.log("Diag data: ", res.data.data);
 
       res.data.success ? setDiagData(res.data.data) : setDiagData([]);
 
@@ -752,7 +768,7 @@ const FinalBillingAdd = () => {
         );
 
         const caseIdArr = res.data.data.map((item) => item.CaseId);
-        console.log("case Id", caseIdArr);
+        // console.log("case Id", caseIdArr);
 
         const resCaseDtl = caseIdArr.map((item) =>
           axiosInstance(`/case-dtl-01/case/${item}`),
@@ -762,7 +778,7 @@ const FinalBillingAdd = () => {
         let caseDtlData = resCaseDtlPromises
           .map((item) => item.data.data)
           .flat();
-        console.log("case dtls: ", caseDtlData);
+        // console.log("case dtls: ", caseDtlData);
 
         const dtls = caseDtlData.map((item) => [
           diagObj[item.CaseId]?.CaseDate?.split("T")[0]
@@ -775,7 +791,7 @@ const FinalBillingAdd = () => {
           item.Rate || 0,
         ]);
 
-        console.log("dtl:", dtls);
+        // console.log("dtl:", dtls);
         setDiagDtl(dtls);
       }
     } catch (error) {
@@ -1219,18 +1235,68 @@ const FinalBillingAdd = () => {
     });
   }
 
+  // this will design the entire bed details according 12.00pm to 11.59 am = 1 day bed count
+  function splitBedHistoryDateWise(history) {
+    const DAY_START_HOUR = 12; // 12:00 PM
+    const DAY_START_MIN = 0;
+    // console.log("history: ", history);
+    const output = [];
+
+    function getDayWindowStart(dateObj) {
+      const d = new Date(dateObj);
+      d.setHours(DAY_START_HOUR, DAY_START_MIN, 0, 0);
+      return d;
+    }
+
+    function nextWindowStart(dateObj) {
+      const d = new Date(dateObj);
+      d.setDate(d.getDate() + 1);
+      d.setHours(DAY_START_HOUR, DAY_START_MIN, 0, 0);
+      return d;
+    }
+
+    history.forEach((entry) => {
+      const admDateTime = new Date(
+        `${entry.AdmitionDate.split("T")[0]} ${entry.AdmitionTime}`,
+      );
+      const relDateTime =
+        entry.Release === "Y"
+          ? new Date(`${entry.ReleaseDate.split("T")[0]} ${entry.ReleaseTime}`)
+          : new Date(); // if still admitted
+
+      let currentWindowStart = getDayWindowStart(admDateTime);
+
+      // If admitted before noon, shift start window back 1 day
+      if (admDateTime < currentWindowStart) {
+        currentWindowStart.setDate(currentWindowStart.getDate() - 1);
+      }
+
+      while (currentWindowStart <= relDateTime) {
+        const nextStart = nextWindowStart(currentWindowStart);
+
+        // Check if patient was present in this window
+        if (relDateTime > currentWindowStart) {
+          const dateString = currentWindowStart.toISOString().split("T")[0];
+
+          output.push({
+            MyDate: dateString,
+            ...entry,
+            ServiceCh: entry.ServiceCh,
+            BedRate: entry.Rate,
+          });
+        }
+
+        currentWindowStart = nextStart;
+      }
+    });
+
+    return output;
+  }
+
   // fetch bed detail by Id
   const fetchBedsById = async (admId) => {
     try {
-      // const promises = beds.map((item) =>
-      //   axiosInstance.get(`/bedMaster/${item.BedId}`),
-      // );
-
-      // const results = await Promise.all(promises);
-
-      // return results.map((res) => res?.data?.data);
       const res1 = await axiosInstance.get(`/admissions/${admId}`);
-      // console.log("fethed bed by admid: ", res1.data.data.bedData);
 
       const arr = res1.data.data.bedData; // this all fetched bed by admId
       // console.log("hi bed: ", arr);
@@ -1241,52 +1307,25 @@ const FinalBillingAdd = () => {
       const results = await Promise.all(promises);
 
       setFetchedAdmBedDetail(results.map((res) => res?.data?.data));
-      // console.log(
-      //   "res bed: ",
-      //   results.map((res) => res?.data?.data),
-      // );
-
-      // filter the beds where service charge is Y
 
       const allBedsData = results.map((res) => res?.data?.data);
 
-      const filterBedByServiceChrg = allBedsData.filter(
-        (data) => data.ServiceCh === "Y",
-      );
+      // console.log("all bed details: ", allBedsData);
 
-      // bed service chrg
-      const bedServiceChrg = filterBedByServiceChrg.reduce(
-        (sum, item) =>
-          sum + Number(item.TotalCh) * (Number(serviceCharge) / 100),
-        0,
-      );
-      setServiceChrgCalculated((prev) => prev + bedServiceChrg);
-      // console.log("Beds with service charge on : ", filterBedByServiceChrg);
+      let allBedsDataMap = {};
 
-      const newA = arr.map((item) =>
-        getDayDifference(item.AdmitionDate, item.ReleaseDate),
-      ); // this is the all bed count with respect to adm and release date
+      for (let i = 0; i < allBedsData.length; i++) {
+        allBedsDataMap[allBedsData[i].BedId] = allBedsData[i];
+      }
 
-      // console.log("newa : ", newA);
-      let allBedsUpTodayDate = arr.map((item, index) =>
-        multiplyObject(
-          {
-            AdmitionId: item?.AdmitionId,
-            NoofDays: 1,
-            MyDate: item?.AdmitionDate,
-            ReleaseDate: item?.ReleaseDate,
-            BedId: item.BedId,
-            BedRate: item.ToDayRate,
-            CGST: 0,
-            SGST: 0,
-          },
-          newA[index],
-        ),
-      );
+      // console.log("all bed detai map: ", allBedsDataMap);
 
-      const singleArray = allBedsUpTodayDate.flat();
-      // console.log("all bed uptoday1 : ", singleArray);
-      const totalBedRate = singleArray.reduce(
+     
+
+      // this will design the entire bed details according 12.00pm to 11.59 am = 1 day bed count
+      const newBedArr = splitBedHistoryDateWise(arr);
+      // console.log("Calculated bed array: ", newBedArr)
+      const totalBedRate = newBedArr.reduce(
         (sum, item) => sum + item.BedRate,
         0,
       );
@@ -1301,11 +1340,24 @@ const FinalBillingAdd = () => {
         ...prev,
         details: {
           ...prev.details,
-          finalbillbeddtl: [...prev.details.finalbillbeddtl, ...singleArray],
+          finalbillbeddtl: [...prev.details.finalbillbeddtl, ...newBedArr],
         },
       }));
 
-      setBedChargesData(singleArray);
+      setBedChargesData(newBedArr);
+
+      let totalBedServiceChrg = 0;
+
+      for (let j = 0; j < newBedArr.length; j++) {
+        totalBedServiceChrg +=
+          (allBedsDataMap[newBedArr[j].BedId].ServiceCh == "Y" ? 1 : 0) *
+          Number(newBedArr[j].ToDayRate) *
+          (Number(serviceCharge) / 100);
+      }
+
+// console.log("Final bed service charge: ", totalBedServiceChrg)
+ setServiceChrgCalculated((prev) => prev + totalBedServiceChrg);
+
     } catch (err) {
       console.error("Error while fetching bed data:", err);
       throw err;
@@ -2525,8 +2577,8 @@ const FinalBillingAdd = () => {
             <button
               className="btn btn-sm btn-primary"
               onClick={() => {
-                console.log("print data is: ", billData1);
-                console.log(finalBillDetail);
+                // console.log("print data is: ", billData1);
+                // console.log(finalBillDetail);
                 handlePrint5(billData1);
               }}
               disabled={btnLoading}
@@ -2549,4 +2601,3 @@ const FinalBillingAdd = () => {
 };
 
 export default FinalBillingAdd;
-
