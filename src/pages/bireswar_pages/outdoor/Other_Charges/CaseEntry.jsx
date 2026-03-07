@@ -1,11 +1,11 @@
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Barcode from "react-barcode";
 import axios from "axios";
 import Select from "react-select";
 import axiosInstance from "../../../../axiosInstance";
-
+import useAxiosFetch from "../../../../templates/Fetch";
 
 
 
@@ -17,6 +17,18 @@ import axiosInstance from "../../../../axiosInstance";
 
 
 const CaseEntry = () => {
+  const { data: depertments } = useAxiosFetch("/subdepartment");
+
+  const depMap = useMemo(() => {
+    const map = {};
+    (depertments || []).forEach((d) => {
+      map[d.SubDepartmentId] = d.SubDepartment;
+    });
+    return map;
+  });
+
+  const [selectedSubDept, setSelectedSubDept] = useState([]);
+  const [showSubDeptPopup, setShowSubDeptPopup] = useState(false);
   const { id, Modex } = useParams();
   const orgId = id ? decodeURIComponent(id) : "undefined";
 
@@ -303,16 +315,26 @@ const CaseEntry = () => {
         const res = await axiosInstance.get(`/case01/search?CaseId=${orgId}`);
         if (res.data.success) {
           console.log(res.data.data[0]);
-          setFormData(res.data.data[0]);
+          const caseData = res.data.data[0];
+          
+          // Calculate ReceiptAmt = GrossAmt - Balance (from DB)
+          const grossAmt = parseFloat(caseData.GrossAmt || 0);
+          const balance = parseFloat(caseData.Balance || 0);
+          const receiptAmt = grossAmt - balance;
+          
+          setFormData({
+            ...caseData,
+            ReceiptAmt: receiptAmt.toFixed(2)
+          });
 
           // if company id present it should be Y
-          if (res.data.data[0].CompanyId) {
+          if (caseData.CompanyId) {
             setCompanyYN("Y");
           }
 
           // if AdmitionId present (for IPD)
-          if (res.data.data[0].AdmitionId && res.data.data[0].AdmitionId != 0) {
-            const admId = res.data.data[0].AdmitionId;
+          if (caseData.AdmitionId && caseData.AdmitionId != 0) {
+            const admId = caseData.AdmitionId;
             try {
               const adm = await axiosInstance.get(`/admissions/${admId}`);
               if (adm.data.success) {
@@ -329,8 +351,8 @@ const CaseEntry = () => {
           }
 
           // if PatientId present (for OPD) incomplete
-          if (res.data.data[0].PatientId && res.data.data[0].PatientId != 0) {
-            const opdId = res.data.data[0].PatientId;
+          if (caseData.PatientId && caseData.PatientId != 0) {
+            const opdId = caseData.PatientId;
             try {
               const opd = await axiosInstance.get(`/patient-visits?page=1
 &limit=20&registrationId=${opdId}`);
@@ -485,18 +507,35 @@ const CaseEntry = () => {
     calculateTotal(updatedTests);
   };
 
-  // Calculate total amount
-  const calculateTotal = (testList) => {
+  // Calculate total amount and sync with Money Receipt
+  const calculateTotal = async (testList) => {
     const total = testList.reduce(
       (sum, test) => sum + parseFloat(test.NetRate || 0),
       0
     );
+    
+    // Calculate total received from all money receipts for this case
+    let totalReceived = 0;
+    if (orgId && orgId !== "undefined") {
+      try {
+        const mrRes = await axiosInstance.get(`/moneyreceipt/case/${orgId}`);
+        if (mrRes.data.success && mrRes.data.data) {
+          totalReceived = mrRes.data.data.reduce((sum, mr) => sum + parseFloat(mr.Amount || 0), 0);
+        }
+      } catch (err) {
+        console.log("Error fetching money receipts:", err);
+      }
+    }
+    
+    const balance = total - totalReceived;
+    
     setFormData((prev) => ({
       ...prev,
       Total: total,
       Amount: total,
       GrossAmt: total,
-      Balance: total - parseFloat(prev.Advance || 0),
+      Balance: balance,
+      ReceiptAmt: prev.ReceiptAmt
     }));
   };
 
@@ -537,7 +576,7 @@ const CaseEntry = () => {
           })
         );
         setTests(testsData);
-        calculateTotal(testsData);
+        await calculateTotal(testsData);
       } else {
         setTests([]);
       }
@@ -560,9 +599,18 @@ const CaseEntry = () => {
           return;
         }
 
-        // Step 1: Create Case (exclude ReceiptAmt and Balance - they're UI only)
-        const { ReceiptAmt, Balance, ...caseCreateData } = formData;
-        const caseRes = await axiosInstance.post("/case01", caseCreateData);
+        // Step 1: Create Case
+        const caseCreateData = { ...formData };
+        
+        // Convert empty strings to null
+        const cleanedData = Object.fromEntries(
+          Object.entries(caseCreateData).map(([key, value]) => [
+            key,
+            value === "" ? null : value
+          ])
+        );
+        
+        const caseRes = await axiosInstance.post("/case01", cleanedData);
         if (caseRes.data.success) {
           const newCaseId = caseRes.data.data.CaseId;
 
@@ -628,16 +676,19 @@ const CaseEntry = () => {
           }
 
           // Step 3: Create Money Receipt
+          // const receiptAmt = parseFloat(formData?.GrossAmt) - parseFloat(formData?.Balance );
+          
+          
           const receiptData = {
             ReffId: newCaseId,
             ReceiptDate: new Date().toISOString().slice(0, 10),
-            BillAmount: formData.GrossAmt,
-            Desc: formData.Desc || 0,
-            DiscAmt: formData.DescAmt || 0,
-            Amount: formData.ReceiptAmt,
+            BillAmount: parseFloat(formData.GrossAmt || 0),
+            Desc: parseFloat(formData.Desc || 0),
+            DiscAmt: parseFloat(formData.DescAmt || 0),
+            Amount: receiptAmt,
             CBalAmt: 0,
-            BalanceAmt: formData.Balance,
-            Remarks: formData.Remarks || "",
+            BalanceAmt: parseFloat(formData.Balance || 0),
+            Remarks: formData.Remarks || null,
             UserId: 1,
             TypeofReceipt: 1,
             DiscOtherId: 1,
@@ -645,19 +696,19 @@ const CaseEntry = () => {
             HeadId: "HEAD001",
             ReffType: "C",
             MRType: "C",
-            BankName: formData.BankName || "",
-            ChequeNo: formData.ChequeNo || "",
+            BankName: formData.BankName || null,
+            ChequeNo: formData.ChequeNo || null,
             AgentDiscId: 1,
             TDS: 0,
             AdjAmt: 0,
-            CompName: "",
-            Narration: formData.Narration || "",
+            CompName: null,
+            Narration: formData.Narration || null,
             ReceiptTime: new Date().toLocaleTimeString("en-US"),
             CaseId: newCaseId,
             paymentMethods: [
               {
                 method: formData.PaymentType === "C" ? "Cash" : formData.PaymentType === "B" ? "Bank" : "Card",
-                amount: parseFloat(formData.ReceiptAmt) || 0,
+                amount: receiptAmt,
               },
             ],
           };
@@ -677,7 +728,7 @@ const CaseEntry = () => {
         // UPDATE existing case
 
         // Step 1: Update case master data (exclude ReceiptAmt and Balance - they're UI only)
-        const { ReceiptAmt, Balance, ...caseUpdateData } = formData;
+        const caseUpdateData = { ...formData };
         const res = await axiosInstance.put(`/case01/${orgId}`, caseUpdateData);
         if (res.data.success) {
           // Step 2: Delete existing test records
@@ -1177,8 +1228,7 @@ useEffect(() => {
   }
 
   const gross = total - finalDiscAmt - cancelAmt;
-  const balance = gross - receiptAmt;
-
+const balance = gross - receiptAmt;
   setFormData((prev) => ({
     ...prev,
     DescAmt: finalDiscAmt.toFixed(2),
@@ -1193,12 +1243,176 @@ useEffect(() => {
   formData.CTestAmt,
   formData.ReceiptAmt,
 ]);
+const groupedTests = tests.reduce((acc, t) => {
+    if (!acc[t.SubDepartmentId]) acc[t.SubDepartmentId] = [];
+    acc[t.SubDepartmentId].push(t);
+    return acc;
+  }, {});
+  console.log(groupedTests);
 
-const handleDepPrint = () => {
-  const logoUrl = "/assets/images/logo-small.png";
-  const doctorName =
-    doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
-  const printContent = `
+const handleDepPrint = (selectedDept) => {
+    const doctorName =
+      doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
+
+    // Filter only selected sub departments
+    const filteredGroups = Object.keys(groupedTests)
+      .filter((key) => selectedDept.includes(key))
+      .reduce((acc, key) => {
+        acc[key] = groupedTests[key];
+        return acc;
+      }, {});
+
+    if (Object.keys(filteredGroups).length === 0) {
+      alert("Select at least one Sub-Department!");
+      return;
+    }
+
+    setShowSubDeptPopup(false); // Close popup
+
+    const printContent = `
+  <html>
+  <head>
+    <title>Department Print</title>
+
+    <style>
+      body { font-family: Arial; padding: 20px; font-size: 13px; }
+
+      .page-break { page-break-after: always; }
+
+      .top-header-row {
+        display: flex; justify-content: space-between; align-items: center;
+      }
+      .top-favicon img { width: 80px; }
+      .header { text-align: center; flex-grow: 1; }
+      .hospital-name { font-size: 20px; font-weight: bold; }
+      .address, .contact-info { font-size:12px; line-height:1.4; }
+
+      .title { font-size: 16px; text-align:center; font-weight:bold; margin-top:15px; }
+
+      .patient-block {
+        margin-top: 15px; display:flex; justify-content:space-between;
+        gap:40px; border:1px solid #000; padding:12px; background:#fafafa;
+      }
+      .patient-col { width: 48%; }
+
+      table { width:100%; border-collapse: collapse; margin-top:15px; }
+      th, td { border:1px solid #333; padding:6px; font-size:13px; }
+      th { background:#f0f0f0; }
+
+      .footer { text-align:center; margin-top:20px; font-size:12px; }
+    </style>
+  </head>
+
+  <body>
+
+  ${Object.entries(filteredGroups)
+    .map(([subDeptId, list]) => {
+      return `
+      <div class="subdept-section">
+
+        <!-- Header -->
+        <div class="top-header-row">
+          <div class="top-favicon">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" />
+          </div>
+
+          <div class="header">
+            <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
+            <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+
+            <div class="address">
+             13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+             Shibpur. Howrah-711102, W.B.
+            </div>
+
+            <div class="contact-info">
+              E-mail: patientdesk@lordshealthcare.org<br/>
+              Phone: 8272904444 | Toll Free: 1800-309-0895
+            </div>
+          </div>
+        </div>
+
+        <hr/>
+
+        <div class="title">CLINICAL PATHOLOGY — SubDept: ${depMap[subDeptId]}</div>
+
+        <!-- Patient Details -->
+        <div class="patient-block">
+          <div class="patient-col">
+            <p><b>Patient Name:</b> ${formData.PatientName}</p>
+            <p><b>Case No:</b> ${formData.CaseNo}</p>
+            <p><b>Phone:</b> ${formData.MobileNo}</p>
+            <p><b>Address:</b> ${formData.Add1} ${formData.Add2} ${formData.Add3}</p>
+          </div>
+
+          <div class="patient-col">
+            <p><b>Age:</b> ${formData.Age} ${formData.AgeType}</p>
+            <p><b>Sex:</b> ${formData.Sex}</p>
+            <p><b>Date:</b> ${new Date().toISOString().slice(0, 10)}</p>
+            <p><b>Doctor:</b> ${doctorName}</p>
+          </div>
+        </div>
+
+        <hr/>
+
+        <!-- Table -->
+        <table>
+          <thead>
+            <tr>
+              <th>Sl No</th>
+              <th>Test Name</th>
+              <th style="text-align:right;">Net Rate</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${list
+              .map(
+                (t, i) => `
+                <tr>
+                  <td style="text-align:center;">${i + 1}</td>
+                  <td>${t.TestName}</td>
+                  <td style="text-align:right;">${t.NetRate}</td>
+                </tr>
+              `
+              )
+              .join("")}
+          </tbody>
+
+          <tfoot>
+            <tr>
+              <td colspan="2" style="text-align:right;font-weight:bold;">Subtotal:</td>
+              <td style="text-align:right;font-weight:bold;">
+                ${list.reduce((sum, x) => sum + Number(x.NetRate), 0)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="footer">** End of Report — This is a computer-generated document **</div>
+
+      </div>
+
+      <div class="page-break"></div>
+      `;
+    })
+    .join("")}
+
+  </body>
+  </html>
+  `;
+
+    const win = window.open("", "_blank");
+    win.document.write(printContent);
+    win.document.close();
+    win.onload = () => win.print();
+  };
+
+  const handleBillPrint = () => {
+    const logoUrl = "/assets/images/logo-small.png";
+    const doctorName =
+      doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
+    const printContent = `
   <html>
   <head>
     <title>Department Print</title>
@@ -1392,6 +1606,7 @@ const handleDepPrint = () => {
         <tr>
           <th style="width:60px;">Sl No</th>
           <th>Test Name</th>
+          <th>Delivery Date</th>
           <th style="width:120px; text-align:right;">Net Rate</th>
         </tr>
       </thead>
@@ -1405,6 +1620,7 @@ const handleDepPrint = () => {
         <tr>
           <td style="text-align:center;">${i + 1}</td>
           <td>${t.TestName}</td>
+          <td>${t.DeliveryDate}</td>
           <td style="text-align:right;">${t.NetRate}</td>
         </tr>`
                 )
@@ -1414,8 +1630,19 @@ const handleDepPrint = () => {
       </tbody> 
         <tfoot>
         <tr>
-          <td colspan="2" style="text-align:right; font-weight:bold;">Grand Total :</td>
+        <td/>
+          <td colspan="2" style="text-align:right; font-weight:bold;">Total Test Amount :</td>
           <td style="text-align:right; font-weight:bold;">${formData.Total}</td>
+        </tr>
+         <tr>
+         <td/>
+          <td colspan="2" style="text-align:right; font-weight:bold;">Paid Amount :</td>
+          <td style="text-align:right; font-weight:bold;">${formData.ReceiptAmt}</td>
+        </tr>
+         <tr>
+         <td/>
+          <td colspan="2" style="text-align:right; font-weight:bold;">Due Amount :</td>
+          <td style="text-align:right; font-weight:bold;">${formData.Balance}</td>
         </tr>
       </tfoot>
     </table>
@@ -1426,13 +1653,13 @@ const handleDepPrint = () => {
   </html>
   `;
 
-  const win = window.open("", "_blank");
-  win.document.open();
-  win.document.write(printContent);
-  win.document.close();
+    const win = window.open("", "_blank");
+    win.document.open();
+    win.document.write(printContent);
+    win.document.close();
 
-  win.onload = () => win.print();
-};
+    win.onload = () => win.print();
+  };
 
 
 
@@ -2601,7 +2828,7 @@ const handleDepPrint = () => {
                     />
                   </div>
                   <div className="d-flex justify-content-end align-items-center">
-                    <label style={labelStyle}>Adv</label>
+                    <label style={labelStyle}>A dv</label>
                     <input
                       type="text"
                       name="Advance"
@@ -2937,6 +3164,7 @@ const handleDepPrint = () => {
           <button
             className="btn btn-sm btn-light border shadow-sm"
             style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            onClick={handleBillPrint}
           >
             Bill
           </button>
@@ -2946,13 +3174,26 @@ const handleDepPrint = () => {
           >
             Com Bill
           </button>
-          <button
+          {/* <button
             className="btn btn-sm btn-light border shadow-sm"
             style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
             onClick={handleDepPrint}
           >
             Dep Print
+          </button> */}
+
+{/* dev  */}
+
+<button
+            className="btn btn-sm btn-light border shadow-sm"
+            style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            onClick={() => setShowSubDeptPopup(true)}
+          >
+            Dep Print
           </button>
+
+
+
           <button
             onClick={() => navigate(-1)}
             className="btn btn-sm btn-light border shadow-sm"

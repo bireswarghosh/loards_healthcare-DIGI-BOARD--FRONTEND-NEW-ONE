@@ -357,7 +357,7 @@ import SendTextChannel from "./pages/WhatsAppAPI/SendTextChannel";
 import CheckNumber from "./pages/WhatsAppAPI/CheckNumber";
 import UserManagementWA from "./pages/WhatsAppAPI/UserManagementWA";
 import DeviceManagement from "./pages/WhatsAppAPI/DeviceManagement";
-import CaseWiseLab from "./templates/CaseWiseLab.jsx";
+
 import TestCalculation from "./templates/TestCalculation.jsx";
 
 import DateWiseRegistrationCharge1 from "../src/templates/IPD_REPORT/DateWiseRegistrationCharge/DateWiseRegistrationCharge.jsx"
@@ -365,6 +365,14 @@ import DisPatEReg from "../src/templates/IPD_REPORT/DischargePatientReg.jsx"
 import DatewiseMoneyReceipt1 from "../src/templates/IPD_REPORT/DatewiseMoneyReceipt.jsx"
 import UniversalPReg from "./templates/DiagnosisMaster/UniversalPReg.jsx";
 import UniversalPRegList from "./templates/DiagnosisMaster/UniversalPRegList.jsx";
+import PatientIdReport from "./templates/DiagnosisMaster/report/PatientIdReport.jsx";
+import TestScheduleReport from "./templates/DiagnosisMaster/report/TestScheduleReport.jsx";
+import CaseWiseLab from "./templates/DiagnosisMaster/report/CaseWiseLab.jsx";
+
+
+import DoctorList from "./templates/DiagnosisMaster/report/DoctorList.jsx";
+import MonthlyBill from "./templates/DiagnosisMaster/report/MonthlyBill.jsx";
+import CancelTest from "./templates/DiagnosisMaster/report/CancelTest.jsx";
 
 
 
@@ -571,6 +579,49 @@ function App() {
 
 
 
+
+
+<Route
+            path="/PatientIdReport"
+            element={
+              <ProtectedRoute>
+                <PatientIdReport />
+              </ProtectedRoute>
+            }
+          ></Route>
+          <Route
+            path="/TestScheduleReport"
+            element={
+              <ProtectedRoute>
+                <TestScheduleReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/caseWiseLab"
+            element={
+              <ProtectedRoute>
+                <CaseWiseLab />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/DoctorList"
+            element={
+              <ProtectedRoute>
+                <DoctorList />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/MonthlyBill" element={<MonthlyBill />}></Route>
+          <Route
+            path="/CancelTest"
+            element={
+              <ProtectedRoute>
+                <CancelTest />
+              </ProtectedRoute>
+            }
+          ></Route>
 
 
 <Route path="/TestCalculation" element={<ProtectedRoute><TestCalculation/></ProtectedRoute>}/>

@@ -762,8 +762,6 @@ function convertAmountToWords(amount) {
       const { admission, MoneyreeciptId, MoneyreeciptNo, ...rest } =
         receiptData;
 
-      // console.log("data: ",rest)
-
       const newData = {
         ...rest,
         ChqDate: (() => {
@@ -783,8 +781,6 @@ function convertAmountToWords(amount) {
         })(),
       };
 
-      // console.log("newData: ",newData);
-
       const response =
         mode === "create"
           ? await axiosInstance.post("/moneyreceipt", rest)
@@ -794,6 +790,36 @@ function convertAmountToWords(amount) {
             );
 
       if (response.data.success) {
+        // Update Case Entry balance if RefferenceId exists
+        if (rest.RefferenceId) {
+          try {
+            // Fetch case by admission ID
+            const caseRes = await axiosInstance.get(`/case01/admission/${rest.RefferenceId}`);
+            if (caseRes.data.success && caseRes.data.data) {
+              const caseId = caseRes.data.data.CaseId;
+              
+              // Fetch all money receipts for this case
+              const mrRes = await axiosInstance.get(`/moneyreceipt/case/${caseId}`);
+              let totalReceived = 0;
+              if (mrRes.data.success && mrRes.data.data) {
+                totalReceived = mrRes.data.data.reduce((sum, mr) => sum + parseFloat(mr.Amount || 0), 0);
+              }
+              
+              // Update case balance
+              const caseTotal = parseFloat(caseRes.data.data.Total || 0);
+              const newBalance = caseTotal - totalReceived;
+              
+              await axiosInstance.put(`/case01/${caseId}`, {
+                ...caseRes.data.data,
+                Balance: newBalance,
+                ReceiptAmt: totalReceived
+              });
+            }
+          } catch (err) {
+            console.log("Error updating case balance:", err);
+          }
+        }
+        
         toast.success(
           `Receipt ${mode === "create" ? "created" : "updated"} successfully!`,
         );

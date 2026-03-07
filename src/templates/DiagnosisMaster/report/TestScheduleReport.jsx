@@ -1,23 +1,25 @@
 import React, { useState } from "react";
+import useAxiosFetch from "../Fetch";
 
 import { toast } from "react-toastify";
-import useAxiosFetch from "./DiagnosisMaster/Fetch";
+import ZLoader from "../ZLoader";
 
-const CaseWiseLab = () => {
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+const TestScheduleReport = () => {
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [selectionFilter, setSelectionFilter] = useState("selective");
   const [selectedPatients, setSelectedPatients] = useState([]);
-  const { data: patients } = useAxiosFetch(
-    `/case-dtl-01/cases-with-tests?PatientName=&startDate=${startDate}&endDate=${endDate}&page=1&limit=100`,
-    [startDate, endDate]
+  const { data: patients,loading } = useAxiosFetch(
+    // `/case01/search?PatientName=&startDate=${startDate}&endDate=${endDate}&page=1&limit=100`,
+    `case01/cases-with-details?page=1&limit=999&startDate=${startDate}&endDate=${endDate}`,[
+      (startDate, endDate)
+    ]
   );
-  // const patients = patientsold?.filter((x) => x.tests && x.tests.length > 0);
-
+  
   const handleSelectionFilter = (type) => {
     setSelectionFilter(type);
     if (type === "all") {
-      setSelectedPatients(patients?.map((x) => x.CaseId));
+      setSelectedPatients(patients.map((x) => x.CaseId));
     } else {
       setSelectedPatients([]);
     }
@@ -36,23 +38,27 @@ const CaseWiseLab = () => {
     }
 
     // filter selected patients
-    const selectedData = patients?.filter((p) =>
+    const selectedData = patients.filter((p) =>
       selectedPatients.includes(p.CaseId)
     );
 
     let innerHTML = `
     <div class="container">
-      <h5 class="mt-2 mb-2"><b>Selected Case Wise Lab Report</b></h5>
+      
       <table class="table table-bordered">
         <thead>
           <tr>
-            <th style="width: 60px">Sl No</th>
+            <th >Sl</th>
             <th>Patient ID</th>
-            <th>Patient Name</th>
+            <th >Patient Name</th>
+            <th>Date</th>
             <th>Age</th>
             <th>Sex</th>
-            <th>Date</th>
+            <th>Total</th>
+            <th>ReceiptAmt</th>
+            <th>Due</th>
             <th>Tests</th>
+
           </tr>
         </thead>
         <tbody>
@@ -62,17 +68,18 @@ const CaseWiseLab = () => {
       innerHTML += `
       <tr>
         <td>${index + 1}</td>
-        <td>${p.PatientId}</td>
+        <td>${p.CaseNo}</td>
         <td>${p.PatientName}</td>
-<td>${p.Age}</td>
-
-<td>${p.Sex}</td>
-
         <td>${new Date(p.CaseDate).toLocaleDateString()}</td>
-        <td>
-          <ul style="padding-left: 16px; margin: 0;list-style: none;">
-            ${p.tests.map((test, idx) => `<li>${idx + 1}. ${test.TestName}</li>`).join("")} </ul>
-        </td>
+        <td>${p.Age}</td>
+        <td>${p.Sex}</td>
+        <td>${p.Total}</td>
+        <td>${p.ReceiptAmt}</td>
+        <td>${p.DueBillPrint}</td>
+        <td>${p.tests.map(t => t.TestName).join(", ")}</td>
+        
+
+
       </tr>
     `;
     });
@@ -83,21 +90,29 @@ const CaseWiseLab = () => {
     </div>
   `;
 
-    const printWindow = window.open("", "", "width=900,height=700");
+    const printWindow = window.open("", "", "width=900,height=800");
 
     printWindow.document.write(`
     <html>
       <head>
-        <title>Case Wise Lab Report</title>
+        <title>Test Schedule Report</title>
 
         <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 
-        <style>
+       <style>
           body {
             font-family: 'Segoe UI', sans-serif;
             padding: 20px;
           }
+
+          .total-row td{
+  background:#e1c1c1 !important;
+  color:# !important;
+  font-weight:bold;
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
 
           .report-header {
             text-align: center;
@@ -115,18 +130,24 @@ const CaseWiseLab = () => {
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 10px;
+  overflow: hidden;
           }
 
           th, td {
-            border: 1px solid #000 !important;
-            padding: 8px !important;
-            font-size: 14px;
+            border-left: none !important;
+  border-right: none !important;
+            padding: 2px !important;
+            font-size: 10px;
+            
           }
 
-          thead {
-            background-color: #343a40;
-            color: #fff;
-          }
+         thead th {
+  background: #f3b9b9 !important;
+  color: black !important;
+}
 
           .footer {
             border-top: 2px solid #000;
@@ -141,8 +162,8 @@ const CaseWiseLab = () => {
 
       <body>
         <div class="report-header">
-          <div class="report-title">Case Wise Lab Report</div>
-          <div class="sub-title">Generated List Based on Selection</div>
+          <div class="report-title">Test Schedule Report</div>
+          <div class="sub-title">Lords Health Care</div>
         </div>
 
         ${innerHTML}
@@ -162,7 +183,7 @@ const CaseWiseLab = () => {
     <div className="container mt-2">
       {/* ============= Header ============= */}
       <nav className="navbar navbar-dark bg-primary rounded shadow mb-2">
-        <span className="navbar-brand ms-2 h5">Case Wise Lab Report</span>
+        <span className="navbar-brand ms-2 h5">Test Schedule Report</span>
       </nav>
 
       {/* ============= Date Filters ============= */}
@@ -243,9 +264,9 @@ const CaseWiseLab = () => {
                   <th>Patient Name</th>
                 </tr>
               </thead>
-
+{loading && <ZLoader/>}
               <tbody>
-                {patients?.map((patient) => (
+                {patients.map((patient) => (
                   <tr key={patient.CaseId}>
                     <td>
                       <input
@@ -284,4 +305,4 @@ const CaseWiseLab = () => {
   );
 };
 
-export default CaseWiseLab;
+export default TestScheduleReport;

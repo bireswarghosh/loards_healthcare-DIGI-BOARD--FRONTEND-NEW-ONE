@@ -1417,7 +1417,7 @@ const MoneyReceipt = () => {
           receipt.paymentMethods.length > 0
         ) {
           const loadedMethods = receipt.paymentMethods.map((pm) => ({
-            type: pm.method === "Cash" ? "0" : pm.method === "UPI" ? "1" : "2",
+            type: pm.method === "Cash" ? "0" : pm.method === "UPI" || pm.method === "UPI/PHONE PE" ? "1" : "2",
             amount: pm.amount || "",
             upiApp: pm.upiApp || "",
             utrNumber: pm.utrNumber || "",
@@ -1602,6 +1602,22 @@ const MoneyReceipt = () => {
   // handle save------
   const handleSave = async () => {
     try {
+      // Validation
+      if (!formData.ReffId) {
+        toast.error("Please select a patient");
+        return;
+      }
+
+      const totalPaidAmount = paymentMethods.reduce(
+        (sum, p) => sum + parseFloat(p.amount || 0),
+        0,
+      );
+
+      if (totalPaidAmount <= 0) {
+        toast.error("Please enter payment amount");
+        return;
+      }
+
       // Prepare paymentMethods array
       const formattedPaymentMethods = paymentMethods.map((p) => ({
         method: p.type === "0" ? "Cash" : p.type === "1" ? "UPI" : "Cheque",
@@ -1657,7 +1673,7 @@ const MoneyReceipt = () => {
           BillAmount: formData.BillAmount || 0,
           Desc: formData.Desc || 0,
           DiscAmt: formData.DiscAmt || 0,
-          Amount: formData.Amount || 0,
+          Amount: totalReceivedAmount,
           CBalAmt: formData.CBalAmt || 0,
           BalanceAmt: formData.BalanceAmt || 0,
           Remarks: formData.Remarks || "",
@@ -1694,7 +1710,7 @@ const MoneyReceipt = () => {
           BillAmount: formData.BillAmount,
           Desc: formData.Desc,
           DiscAmt: formData.DiscAmt,
-          Amount: formData.Amount,
+          Amount: totalReceivedAmount,
           CBalAmt: formData.CBalAmt,
           BalanceAmt: formData.BalanceAmt,
           Remarks: formData.Remarks,
@@ -1843,14 +1859,30 @@ const MoneyReceipt = () => {
     newMethods[index][field] = value;
     setPaymentMethods(newMethods);
   };
-  const totalPaid = paymentMethods.reduce(
-    (sum, p) => sum + parseFloat(p.amount || 0),
-    0,
-  );
+  // const totalPaid = paymentMethods.reduce(
+  //   (sum, p) => sum + parseFloat(p.amount || 0),
+  //   0,
+  // );
+  // const billAmount = parseFloat(formData.BillAmount || 0);
+  // const previousPaid = parseFloat(formData.Amount || 0) - totalPaid;
+  // const totalReceivedAmount = previousPaid + totalPaid;
+
+  // const calculatedDueAmount = billAmount - totalReceivedAmount;
+ 
+
   const billAmount = parseFloat(formData.BillAmount || 0);
 
-  const calculatedDueAmount = billAmount - totalPaid;
-  const isDueAmountPositive = calculatedDueAmount > 0;
+const previousPaid = parseFloat(formData.Amount || 0);
+
+const currentPayment = paymentMethods.reduce(
+  (sum, p) => sum + parseFloat(p.amount || 0),
+  0
+);
+
+const totalReceivedAmount =  currentPayment;
+
+const calculatedDueAmount = billAmount - totalReceivedAmount;
+ const isDueAmountPositive = calculatedDueAmount > 0;
   return (
     <div className="main-content">
       <ToastContainer />
@@ -2447,43 +2479,57 @@ const MoneyReceipt = () => {
 
                   {/* Payment Summary */}
                   <div className="row g-3 mb-3">
-                    <div className="col-md-3">
+                    <div className="col-md-2">
                       <label className="form-label">Total Bill Amount</label>
                       <input
                         type="number"
                         className="form-control"
-                        value={formData.BillAmount}
+                        value={formData.BillAmount || 0}
                         disabled
                       />
                     </div>
-                    <div className="col-md-3">
-                      <label className="form-label">Total Paid Amount</label>
+                    <div className="col-md-2">
+                      <label className="form-label">Previous Paid</label>
                       <input
                         type="number"
                         className="form-control"
-                        value={paymentMethods.reduce(
-                          (sum, p) => sum + parseFloat(p.amount || 0),
-                          0,
-                        )}
+                        value={previousPaid.toFixed(2)}
                         readOnly
                       />
                     </div>
-                    <div className="col-md-3">
-                      <label className="form-label">Due Amount</label>
+                    <div className="col-md-2">
+                      <label className="form-label">Current Payment</label>
                       <input
                         type="number"
                         className="form-control"
+                        value={currentPayment.toFixed(2)}
+                        readOnly
+                      />
+                    </div>
+                    <div className="col-md-2">
+                      <label className="form-label">Total Received</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={totalReceivedAmount.toFixed(2)}
+                        readOnly
+                      />
+                    </div>
+                    <div className="col-md-2">
+                      <label className="form-label">Due Amount</label>
+                      <input
+                        type="number"
+                        className="form-control text-danger fw-bold"
                         value={calculatedDueAmount.toFixed(2)}
                         readOnly
                       />
                     </div>
-                    <div className="col-md-3">
-                      <label className="form-label d-block">&nbsp;</label>{" "}
-                      {/* Placeholder label for alignment */}
-                      {isDueAmountPositive && (
+                    <div className="col-md-2">
+                      <label className="form-label d-block">&nbsp;</label>
+                      {isDueAmountPositive && modalType !== "view" && (
                         <button
                           type="button"
-                          className="btn btn-sm btn-success"
+                          className="btn btn-sm btn-success w-100"
                           onClick={addPaymentMethod}
                         >
                           + Add Payment
@@ -2499,7 +2545,7 @@ const MoneyReceipt = () => {
                         <small className="mb-0 fw-bold">
                           Payment #{index + 1}
                         </small>
-                        {paymentMethods.length > 1 && (
+                        {paymentMethods.length > 1 && modalType !== "view" && (
                           <button
                             type="button"
                             className="btn btn-sm btn-danger"
@@ -2523,6 +2569,7 @@ const MoneyReceipt = () => {
                                   e.target.value,
                                 )
                               }
+                              disabled={modalType === "view"}
                             >
                               <option value="0">CASH</option>
                               <option value="1">UPI/PHONE PE</option>
@@ -2542,6 +2589,7 @@ const MoneyReceipt = () => {
                                   e.target.value,
                                 )
                               }
+                              disabled={modalType === "view"}
                             />
                           </div>
 
@@ -2561,6 +2609,7 @@ const MoneyReceipt = () => {
                                       e.target.value,
                                     )
                                   }
+                                  disabled={modalType === "view"}
                                 />
                               </div>
                               <div className="col-md-2">
@@ -2576,6 +2625,7 @@ const MoneyReceipt = () => {
                                       e.target.value,
                                     )
                                   }
+                                  disabled={modalType === "view"}
                                 />
                               </div>
                             </>
@@ -2595,6 +2645,7 @@ const MoneyReceipt = () => {
                                       e.target.value,
                                     )
                                   }
+                                  disabled={modalType === "view"}
                                 />
                               </div>
                               <div className="col-md-2">
@@ -2611,6 +2662,7 @@ const MoneyReceipt = () => {
                                       e.target.value,
                                     )
                                   }
+                                  disabled={modalType === "view"}
                                 />
                               </div>
                             </>
