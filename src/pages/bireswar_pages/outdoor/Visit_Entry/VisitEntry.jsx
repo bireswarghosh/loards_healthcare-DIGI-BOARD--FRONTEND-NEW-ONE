@@ -1515,7 +1515,7 @@ const VisitEntry = () => {
                     <input
                       name="PhoneNo"
                       className="form-control"
-                      maxLength="10"
+                      maxLength="12"
                       value={formData.PhoneNo || ""}
                       onChange={handleChange}
                     />

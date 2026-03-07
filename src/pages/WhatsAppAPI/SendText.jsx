@@ -67,7 +67,7 @@ const SendText = () => {
               <label className="form-label">Footer</label>
               <input type="text" name="footer" className="form-control" value={formData.footer} onChange={handleChange} />
             </div>
-            <div className="col-md-6">
+            <div className="col-md-6">  
               <label className="form-label">Message ID (Reply)</label>
               <input type="text" name="msgid" className="form-control" value={formData.msgid} onChange={handleChange} />
             </div>

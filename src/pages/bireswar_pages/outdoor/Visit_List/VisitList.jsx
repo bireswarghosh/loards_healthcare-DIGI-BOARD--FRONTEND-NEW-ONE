@@ -38,6 +38,41 @@ const VisitList = () => {
   const [showDropdownIndex, setShowDropdownIndex] = useState(null); // Added for Emr dropdown style
 
   const [pvisitData, setPvisitData] = useState({});
+  const [whatsappModal, setWhatsappModal] = useState({ open: false, patient: null });
+  const [senderNumber, setSenderNumber] = useState(() => localStorage.getItem('whatsappSender') || '');
+
+  const handleSendWhatsApp = (patient) => {
+    setWhatsappModal({ open: true, patient });
+  };
+
+  const sendWhatsAppMessage = async () => {
+    if (!senderNumber) {
+      alert('Please enter sender number');
+      return;
+    }
+    localStorage.setItem('whatsappSender', senderNumber);
+    setLoading(true);
+    try {
+      const patient = whatsappModal.patient;
+      const message = `Hello ${patient.PatientName},\n\nYour appointment details:\nRegistration ID: ${patient.RegistrationId}\nDoctor: ${patient.DoctorName}\nDate: ${patient.RegDate}\nTime: ${patient.RegTime}\n\nThank you for choosing Lords Health Care.`;
+      const response = await fetch('https://lords-backend.onrender.com/api/v1/whatsapp/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ api_key: 'aelMphcuLP4caCCC4dlnWGsFaMinEs', sender: senderNumber, number: patient.PhoneNo, message })
+      });
+      const data = await response.json();
+      if (data.status) {
+        alert('WhatsApp message sent successfully!');
+        setWhatsappModal({ open: false, patient: null });
+      } else {
+        throw new Error(data.msg || 'Failed to send message');
+      }
+    } catch (error) {
+      alert('Failed: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Original fetchVisits logic - PRESERVED
   const fetchVisits = useCallback(
@@ -1098,33 +1133,21 @@ const VisitList = () => {
                       </a>
                     </li>
                     <li>
-                      <a
-                        href='#'
-                        className='dropdown-item'
-                        onClick={(e) => {
-                          e.preventDefault();
-                          generateVisitEntryPDF(data.PVisitId);
-                        }}
-                      >
-                        <button
-                          className='btn btn-sm btn-outline-warning'
-                          data-toggle='tooltip'
-                          data-placement='bottom'
-                          title='Dr Press PDF'
-                        >
+                      <a href='#' className='dropdown-item' onClick={(e) => { e.preventDefault(); generateVisitEntryPDF(data.PVisitId); }}>
+                        <button className='btn btn-sm btn-outline-warning' title='Dr Press PDF'>
                           <i className='fa-light fa-file-pdf'></i>
                         </button>
                       </a>
                     </li>
                     <li>
-                      <a
-                        href='#'
-                        className='dropdown-item'
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleDelete(data);
-                        }}
-                      >
+                      <a href='#' className='dropdown-item' onClick={(e) => { e.preventDefault(); handleSendWhatsApp(data); }}>
+                        <button className='btn btn-sm btn-outline-success' title='Send WhatsApp'>
+                          <i className='fa-brands fa-whatsapp'></i>
+                        </button>
+                      </a>
+                    </li>
+                    <li>
+                      <a href='#' className='dropdown-item' onClick={(e) => { e.preventDefault(); handleDelete(data); }}>
                         <button className='btn btn-sm btn-outline-danger'>
                           <i className='fa-light fa-trash-can'></i>
                         </button>
@@ -1312,74 +1335,67 @@ const VisitList = () => {
         </div>
       </div>
 
-      {/* Edit Modal (Sidebar style from Emr.jsx) */}
+      {/* Edit Modal */}
       {editDialog.open && (
         <>
-          <div
-            className='modal-backdrop fade show'
-            onClick={() => setEditDialog({ open: false, patient: null })}
-            style={{ zIndex: 9998 }}
-          ></div>
-          <div
-            className={`profile-right-sidebar active`}
-            style={{
-              zIndex: 9999,
-              width: "100%",
-              maxWidth: "500px",
-              right: "0",
-              top: "70px",
-              // CSS Fix: Use fixed position and bottom: 0 for proper viewport sizing
-              position: "fixed",
-              bottom: "0",
-            }}
-          >
-            <button
-              className='right-bar-close'
-              onClick={() => setEditDialog({ open: false, patient: null })}
-            >
+          <div className='modal-backdrop fade show' onClick={() => setEditDialog({ open: false, patient: null })} style={{ zIndex: 9998 }}></div>
+          <div className={`profile-right-sidebar active`} style={{ zIndex: 9999, width: "100%", maxWidth: "500px", right: "0", top: "70px", position: "fixed", bottom: "0" }}>
+            <button className='right-bar-close' onClick={() => setEditDialog({ open: false, patient: null })}>
               <i className='fa-light fa-angle-right'></i>
             </button>
-            <div
-              className='top-panel'
-              style={{ height: "100%", paddingTop: "10px" }}
-            >
-              <div
-                className='dropdown-txt'
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 10,
-                  backgroundColor: "#0a1735",
-                }}
-              >
+            <div className='top-panel' style={{ height: "100%", paddingTop: "10px" }}>
+              <div className='dropdown-txt' style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "#0a1735" }}>
                 ✏️ Edit Patient - {editDialog.patient?.PatientName}
               </div>
-              <OverlayScrollbarsComponent
-                style={{ height: "calc(100% - 70px)" }}
-              >
+              <OverlayScrollbarsComponent style={{ height: "calc(100% - 70px)" }}>
                 <div className='p-3'>
                   {renderForm()}
                   <div className='d-flex gap-2 mt-3'>
-                    <button
-                      type='button'
-                      className='btn btn-secondary w-50'
-                      onClick={() =>
-                        setEditDialog({ open: false, patient: null })
-                      }
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type='button'
-                      className='btn btn-primary w-50'
-                      onClick={handleUpdatePatient}
-                      disabled={loading}
-                    >
-                      {loading ? "Updating..." : "Update Patient"}
-                    </button>
+                    <button type='button' className='btn btn-secondary w-50' onClick={() => setEditDialog({ open: false, patient: null })}>Cancel</button>
+                    <button type='button' className='btn btn-primary w-50' onClick={handleUpdatePatient} disabled={loading}>{loading ? "Updating..." : "Update Patient"}</button>
                   </div>
                 </div>
               </OverlayScrollbarsComponent>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* WhatsApp Modal */}
+      {whatsappModal.open && (
+        <>
+          <div className='modal-backdrop fade show' onClick={() => setWhatsappModal({ open: false, patient: null })} style={{ zIndex: 9998 }}></div>
+          <div className='modal fade show d-block' style={{ zIndex: 9999 }}>
+            <div className='modal-dialog modal-dialog-centered'>
+              <div className='modal-content'>
+                <div className='modal-header'>
+                  <h5 className='modal-title'>📱 Send WhatsApp Message</h5>
+                  <button type='button' className='btn-close' onClick={() => setWhatsappModal({ open: false, patient: null })}></button>
+                </div>
+                <div className='modal-body'>
+                  <div className='mb-3'>
+                    <label className='form-label'>Patient Name</label>
+                    <input type='text' className='form-control' value={whatsappModal.patient?.PatientName || ''} disabled />
+                  </div>
+                  <div className='mb-3'>
+                    <label className='form-label'>Patient Phone</label>
+                    <input type='text' className='form-control' value={whatsappModal.patient?.PhoneNo || ''} disabled />
+                  </div>
+                  <div className='mb-3'>
+                    <label className='form-label'>Sender Number *</label>
+                    <input type='text' className='form-control' placeholder='Enter your WhatsApp number' value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} required />
+                    <small className='text-muted'>Enter the WhatsApp number you want to send from</small>
+                  </div>
+                  <div className='mb-3'>
+                    <label className='form-label'>Message Preview</label>
+                    <textarea className='form-control' rows='6' value={`Hello ${whatsappModal.patient?.PatientName},\n\nYour appointment details:\nRegistration ID: ${whatsappModal.patient?.RegistrationId}\nDoctor: ${whatsappModal.patient?.DoctorName}\nDate: ${whatsappModal.patient?.RegDate}\nTime: ${whatsappModal.patient?.RegTime}\n\nThank you for choosing Lords Health Care.`} disabled />
+                  </div>
+                </div>
+                <div className='modal-footer'>
+                  <button type='button' className='btn btn-secondary' onClick={() => setWhatsappModal({ open: false, patient: null })}>Cancel</button>
+                  <button type='button' className='btn btn-success' onClick={sendWhatsAppMessage} disabled={loading || !senderNumber}>{loading ? 'Sending...' : '📤 Send WhatsApp'}</button>
+                </div>
+              </div>
             </div>
           </div>
         </>
