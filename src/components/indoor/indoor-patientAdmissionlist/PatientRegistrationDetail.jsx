@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
@@ -292,6 +293,7 @@ const PatientAdmission = () => {
   const fetcheBed = async () => {
     try {
       const res = await axiosInstance.get("/bedMaster");
+      // const res = await axiosInstance.get("/bedMaster/Vacant");
       if (res.data.success) setBed(res.data.data);
     } catch (error) {
       console.error("Error fetching bed:", error);
@@ -310,7 +312,7 @@ const PatientAdmission = () => {
 
   const fetchDrawerBeds = async (page = 1, search = "") => {
     try {
-      let url = `/bedMaster?page=${page}&limit=${bedsPerPage}`;
+      let url = `/bedMaster/Vacant/byDeptId?page=${page}&limit=${bedsPerPage}`;
       if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
       if (formData.DepartmentId)
         url += `&DepartmentId=${formData.DepartmentId}`;
@@ -759,6 +761,9 @@ const PatientAdmission = () => {
           };
 
           const res = await axiosInstance.post("/admitionbeds", bedTransData);
+          await axiosInstance.patch(`/bedMaster/Vacant/${cleanData?.BedId}`, {
+            Vacant: "N",
+          });
         }
 
         toast.success(
@@ -1948,6 +1953,7 @@ window.onload = function () {
                         value={formData.DepartmentId}
                         onChange={handleInputChange}
                         style={inputStyle}
+                        disabled={mode != "create"}
                       >
                         <option value={""}>---</option>
                         {department.map((d, i) => (
@@ -2250,7 +2256,7 @@ window.onload = function () {
                           ""
                         }
                         onClick={async () => {
-                          if (mode !== "view" && formData.DepartmentId) {
+                          if (mode == "create" && formData.DepartmentId) {
                             setShowBedDrawer(true);
                             setCurrentBedPage(1);
                             setBedSearchQuery("");
@@ -2269,6 +2275,7 @@ window.onload = function () {
                         value={formData.BedRate}
                         onChange={handleInputChange}
                         style={inputStyle}
+                        disabled={mode != "create"}
                       />
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">

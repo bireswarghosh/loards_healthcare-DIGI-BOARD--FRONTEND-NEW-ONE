@@ -1,4 +1,3 @@
-/** @format */
 
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -34,9 +33,9 @@ const BedTransfer = () => {
     ReleaseDate: "",
     Release: "",
     AdmitionTime: new Date().toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
     ReleaseTime: "",
     ToDayRate: 0,
     Rate: 0,
@@ -177,11 +176,11 @@ const BedTransfer = () => {
   const fetchBedByDeptId = async () => {
     try {
       setShowDrop(false);
-      const res = await axiosInstance.get("/bedMaster?currentPage=1&limit=1");
+      const res = {data:{success:true}}
       if (res.data.success) {
-        const limit = res.data.pagination.totalItems;
+        
         const response = await axiosInstance.get(
-          `/bedMaster?currentPage=1&limit=${limit}`,
+          `/bedMaster/Vacant?currentPage=1&limit=999999`,
         );
         const data = response.data.data;
         // console.log("selected dept : ", selectedDeptOrginal);
@@ -207,6 +206,10 @@ const BedTransfer = () => {
       }
       setLoadBtn(true);
       const res = await axiosInstance.post("/admitionbeds", formData);
+      console.log("form: ", formData);
+      await axiosInstance.patch(`/bedMaster/Vacant/${formData.BedId}`, {
+        Vacant: "N",
+      });
       let res1;
       const ele = bedTransfers[bedTransfers.length - 1];
       if (ele) {
@@ -223,9 +226,15 @@ const BedTransfer = () => {
             }),
           },
         );
+        if (res1.data.success) {
+          // console.log("ele:",ele)
+          await axiosInstance.patch(`/bedMaster/Vacant/${ele.BedId}`, {
+            Vacant: "Y",
+          });
+        }
       } else {
         // res1.data.success = true;
-        res1={data:{success:true}}
+        res1 = { data: { success: true } };
       }
 
       // console.log("save res: ", res);
@@ -646,7 +655,8 @@ const BedTransfer = () => {
                               console.log("Error fetching bed master: ", error);
                             }
                           }}
-                          disabled={bed.SlNo==1}
+                          // disabled={bed.SlNo==1}
+                          disabled={true}
                         >
                           <i className="fa-light fa-pen-to-square"></i>
                         </button>
@@ -656,7 +666,8 @@ const BedTransfer = () => {
                             setSlNo(bed.SlNo);
                             setShowConfirm(true);
                           }}
-                          disabled={bed.SlNo==1}
+                          // disabled={bed.SlNo==1}
+                          disabled={true}
                         >
                           <i className="fa-light fa-trash-can"></i>
                         </button>
@@ -831,3 +842,4 @@ const BedTransfer = () => {
 };
 
 export default BedTransfer;
+

@@ -373,9 +373,14 @@ import CaseWiseLab from "./templates/DiagnosisMaster/report/CaseWiseLab.jsx";
 import DoctorList from "./templates/DiagnosisMaster/report/DoctorList.jsx";
 import MonthlyBill from "./templates/DiagnosisMaster/report/MonthlyBill.jsx";
 import CancelTest from "./templates/DiagnosisMaster/report/CancelTest.jsx";
+import DateWiseFinalBillReg from "./templates/IPD_REPORT/DateWiseFinalBillRegPdf.jsx";
+import DateWiseOtherChargesReg from "./templates/IPD_REPORT/DateWiseOtherChargesReg.jsx";
+import DateWiseDrChargesDetailPdf from "./templates/IPD_REPORT/DateWiseDrChargesDetailPdf.jsx";
+import DateWiseBedChargesPdf from "./templates/IPD_REPORT/DateWiseBedChargesPdf.jsx";
+import DateWiseFinalBillOtherChargesReg from "./templates/IPD_REPORT/DateWiseFinalBillOtherChargesReg.jsx";
 
 
-
+import NurseStation from "./pages/NurseStation.jsx"
 
 
 
@@ -553,13 +558,32 @@ function App() {
           <Route path="/fina-bill-list2" element={<FinalBillingListB />} />
 
 
+
+
+<Route
+            path="/dateWiseFinalBillRegPdf"
+            element={
+              <>
+                <DateWiseFinalBillReg />
+              </>
+            }
+          />
+
+
+
+
+<Route path="/dateWiseOtherChargesReg" element={ <> <DateWiseOtherChargesReg/> </> } /> 
+
+
+
+<Route path="/dateWiseDrChargesDetailPdf" element={ <> <DateWiseDrChargesDetailPdf/> </> } />
           {/* indoor route end---------------------------------  */}
 
+<Route path="/dateWiseBedChargesPdf" element={ <> <DateWiseBedChargesPdf/> </> } />
 
+<Route path="/dateWiseFinalBillOtherChargesReg" element={ <> <DateWiseFinalBillOtherChargesReg/> </> } />
 
-
-
-
+<Route path="/nurseStation" element={ <> <NurseStation/> </> } /> 
 {/* master */}
 
 
