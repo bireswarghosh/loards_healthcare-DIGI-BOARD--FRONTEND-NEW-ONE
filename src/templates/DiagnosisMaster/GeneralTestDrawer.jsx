@@ -120,6 +120,29 @@ const GeneralTestDrawer = ({
       toast.error("Failed to create all properties");
     }
   };
+  const getReferenceRange = (prop) => {
+    if (prop.ComMin != "" || prop.ComMax != "") {
+      return `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`;
+    }
+
+    if ((prop.MaleMin != "" || prop.MaleMax != "") &&(formData2?.Sex=="M")) {
+      return `${prop.MaleMin ?? ""} - ${prop.MaleMax ?? ""}`;
+    }
+
+    if ((prop.FemaleMin != "" || prop.FemaleMax != "" && formData2?.Sex) &&(formData2?.Sex=="F")) {
+      return `${prop.FemaleMin ?? ""} - ${prop.FemaleMax ?? ""}`;
+    }
+
+    if (prop.ChildMin != "" || prop.ChildMax != "") {
+      return `${prop.ChildMin ?? ""} - ${prop.ChildMax ?? ""}`;
+    }
+
+    if (prop.Others) {
+      return prop.Others;
+    }
+
+    return "";
+  };
   const handlePrint = () => {
     const doc = new jsPDF("p", "mm", "a4");
 
@@ -156,7 +179,7 @@ const GeneralTestDrawer = ({
     doc.text(formData2?.CaseNo || "", valueX, baseY + 5);
     doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
 
-    doc.text("Referred By", labelX, baseY + 10);
+    // doc.text("Referred By", labelX, baseY + 10);
     doc.text(":", colonX, baseY + 10);
     doc.text(formData2?.RefBy || "", valueX, baseY + 10);
 
@@ -215,7 +238,8 @@ const GeneralTestDrawer = ({
           pv?.value ?? "",
           prop.Uom || "",
           // pv?.lis ?? "-",
-          `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`,
+          getReferenceRange(prop),
+          ,
         ];
       }),
 
@@ -247,6 +271,7 @@ const GeneralTestDrawer = ({
 
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
   };
+
 
   return (
     <>

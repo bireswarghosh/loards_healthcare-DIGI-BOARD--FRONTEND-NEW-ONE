@@ -70,6 +70,15 @@ Diagnosis
           </li>
         )}
 
+
+         {(isSuperAdmin || permissions?.diagnosis_laboratoryQuery !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/PathologistLogin" className="sidebar-link">
+              Path Login
+            </NavLink>
+          </li>
+        )}
+
         {(isSuperAdmin || permissions?.diagnosis_download !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/lab_query" className="sidebar-link">

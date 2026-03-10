@@ -5,16 +5,8 @@ import Barcode from "react-barcode";
 import axios from "axios";
 import Select from "react-select";
 import axiosInstance from "../../../../axiosInstance";
-import useAxiosFetch from "../../../../templates/Fetch";
-
-
-
-
-
-
-
-
-
+// import SubDeptSelector from "./SubDeptSelector";
+import useAxiosFetch from "../../../../templates/DiagnosisMaster/Fetch";
 
 const CaseEntry = () => {
   const { data: depertments } = useAxiosFetch("/subdepartment");
@@ -47,6 +39,8 @@ const CaseEntry = () => {
   const [agentData, setAgentData] = useState([]);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [isSearchingAgent, setIsSearchingAgent] = useState(false);
+
+  const [isLoaded, setIsLoaded] = useState(false); // add this by chat gpt
 
   // form data state
   const [formData, setFormData] = useState({
@@ -181,13 +175,11 @@ const CaseEntry = () => {
     setIsSearching(true);
 
     try {
-      console.log("Indoor searching: ", searchTerm);
       const res = await axiosInstance.get(
-        `/admissions?page=1&limit=20&search=${encodeURIComponent(searchTerm)}`
+        `/admissions?page=1&limit=20&search=${encodeURIComponent(searchTerm)}`,
       );
       setSearchResults(res.data.data || []);
     } catch (err) {
-      console.error("IPD search error:", err);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -204,18 +196,16 @@ const CaseEntry = () => {
     try {
       const res = await axiosInstance.get(
         `/patient-visits?page=1&limit=20&patientName=${encodeURIComponent(
-          searchTerm
-        )}`
+          searchTerm,
+        )}`,
       );
       setSearchResultsOPD(res.data.data || []);
     } catch (err) {
-      console.error("OPD search error:", err);
       setSearchResultsOPD([]);
     } finally {
       setIsSearchingOPD(false);
     }
   };
-  
 
   // fetch company type-d
   const fetchCompany = async () => {
@@ -232,9 +222,7 @@ const CaseEntry = () => {
         ];
         setCompanyData(newArr);
       }
-    } catch (error) {
-      console.log("Error fetching company data: ", error);
-    }
+    } catch (error) {}
   };
 
   // fetch booking
@@ -257,9 +245,7 @@ const CaseEntry = () => {
         { bookingId: 1, booking: "hello" },
       ];
       setBookingData(arr);
-    } catch (error) {
-      console.log("Error fetching booking data: ", error);
-    }
+    } catch (error) {}
   };
   const calculateServiceTotal = () => {
     return services
@@ -303,9 +289,7 @@ const CaseEntry = () => {
         { opdId: 1, opdValue: "hwllo" },
       ];
       setOpdData(arr);
-    } catch (error) {
-      console.log("Error fetching OPD data: ", error);
-    }
+    } catch (error) {}
   };
 
   // will fetch data when ordgId is available
@@ -314,18 +298,22 @@ const CaseEntry = () => {
       if (orgId) {
         const res = await axiosInstance.get(`/case01/search?CaseId=${orgId}`);
         if (res.data.success) {
-          console.log(res.data.data[0]);
           const caseData = res.data.data[0];
-          
+          console.log("Case Data: ", caseData);
+
           // Calculate ReceiptAmt = GrossAmt - Balance (from DB)
           const grossAmt = parseFloat(caseData.GrossAmt || 0);
           const balance = parseFloat(caseData.Balance || 0);
           const receiptAmt = grossAmt - balance;
-          
+          // console.log("Due Bal: ", balance);
+          // console.log("Receipt Adv:", caseData.Advance);
+
           setFormData({
             ...caseData,
-            ReceiptAmt: receiptAmt.toFixed(2)
+            // ReceiptAmt: receiptAmt.toFixed(2),
           });
+
+          setIsLoaded(true); // add this by chat gpt
 
           // if company id present it should be Y
           if (caseData.CompanyId) {
@@ -378,7 +366,7 @@ const CaseEntry = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log(`name: ${name}, value: ${value}`);
+    // console.log(`name: ${name}, value: ${value}`);
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -429,7 +417,7 @@ const CaseEntry = () => {
     setIsSearchingAgent(true);
     try {
       const res = await axiosInstance.get(
-        `/agents?page=1&limit=50&Agent=${encodeURIComponent(searchTerm)}`
+        `/agents?page=1&limit=50&Agent=${encodeURIComponent(searchTerm)}`,
       );
       setAgentData(res.data.data || []);
     } catch (err) {
@@ -444,7 +432,7 @@ const CaseEntry = () => {
   const fetchTestMaster = async () => {
     try {
       const res = await axiosInstance.get(
-        "/tests/search/advanced?page=1&limit=50"
+        "/tests/search/advanced?page=1&limit=50",
       );
       if (res.data.success) {
         setTestMasterData(res.data.data || []);
@@ -463,7 +451,7 @@ const CaseEntry = () => {
     setIsSearchingTest(true);
     try {
       const res = await axiosInstance.get(
-        `/tests/search/advanced?test=${encodeURIComponent(searchTerm)}&page=1&limit=50`
+        `/tests/search/advanced?test=${encodeURIComponent(searchTerm)}&page=1&limit=50`,
       );
       setTestSearchResults(res.data.data || []);
     } catch (err) {
@@ -493,6 +481,7 @@ const CaseEntry = () => {
       DeliveryTime: "07:00 PM",
       Profile: "N",
       ComYN: "Y",
+      CancelTast: 0,
     };
 
     setTests([...tests, newTest]);
@@ -507,39 +496,108 @@ const CaseEntry = () => {
     calculateTotal(updatedTests);
   };
 
+  // cancel test----------------
+  const handleCancelTest = (id) => {
+    const updatedTests = tests.map((t) =>
+      t.id === id
+        ? { ...t, CancelTast: Number(t.CancelTast) === 1 ? 0 : 1 }
+        : t,
+    );
+
+    setTests(updatedTests);
+    calculateTotal(updatedTests);
+  };
+
   // Calculate total amount and sync with Money Receipt
   const calculateTotal = async (testList) => {
-    const total = testList.reduce(
-      (sum, test) => sum + parseFloat(test.NetRate || 0),
-      0
-    );
-    
-    // Calculate total received from all money receipts for this case
+    const list = Array.isArray(testList)
+      ? testList
+      : Object.values(testList).flat();
+
+    let total = 0;
+    let cancelTotal = 0;
+
+    list.forEach((test) => {
+      const rate = parseFloat(test.NetRate || 0);
+
+      total += rate;
+
+      if (Number(test.CancelTast) === 1) {
+        cancelTotal += rate; // ⭐ cancel test amount
+      }
+    });
+
     let totalReceived = 0;
+
     if (orgId && orgId !== "undefined") {
       try {
         const mrRes = await axiosInstance.get(`/moneyreceipt/case/${orgId}`);
+
         if (mrRes.data.success && mrRes.data.data) {
-          totalReceived = mrRes.data.data.reduce((sum, mr) => sum + parseFloat(mr.Amount || 0), 0);
+          totalReceived = mrRes.data.data.reduce(
+            (sum, mr) => sum + parseFloat(mr.Amount || 0),
+            0,
+          );
         }
       } catch (err) {
         console.log("Error fetching money receipts:", err);
       }
     }
-    
-    const balance = total - totalReceived;
-    
-    setFormData((prev) => ({
-      ...prev,
-      Total: total,
-      Amount: total,
-      GrossAmt: total,
-      Balance: balance,
-      ReceiptAmt: prev.ReceiptAmt
-    }));
+
+    // remove for chatGpt
+    // const balance = total - formData.Advance;
+    // setFormData((prev) => ({
+    //   ...prev,
+    //   Total: total,
+    //   // Amount:ReceiptAmt ,
+    //   GrossAmt: total,
+    //   CTestAmt: cancelTotal,
+    //   Balance: balance,
+    //   // ReceiptAmt: prev.ReceiptAmt,
+    // }));
+
+    // add by chatGpt
+    // setFormData((prev) => {
+    //   const advance = parseFloat(prev.Advance || 0);
+
+    //   const gross = total;
+    //   const balance = gross - advance;
+
+    //   // edit mode e DB value overwrite korbe na
+    //   if (mode === "edit") {
+    //     return {
+    //       ...prev,
+    //       CTestAmt: cancelTotal,
+    //       Total: total,
+    //     };
+    //   }
+
+    //   return {
+    //     ...prev,
+    //     Total: total,
+    //     GrossAmt: gross,
+    //     CTestAmt: cancelTotal,
+    //     Balance: balance,
+    //   };
+    // });
+
+    // add by chatGpt
+    setFormData((prev) => {
+      const advance = parseFloat(prev.Advance || 0);
+      const discAmt = parseFloat(prev.DescAmt || 0);
+
+      const gross = total - discAmt - cancelTotal;
+      const balance = gross - advance;
+
+      return {
+        ...prev,
+        Total: total,
+        CTestAmt: cancelTotal,
+        GrossAmt: gross,
+        Balance: balance,
+      };
+    });
   };
-
-
 
   // Fetch tests for existing case
   const fetchCaseTests = async (caseId) => {
@@ -572,8 +630,9 @@ const CaseEntry = () => {
               DeliveryTime: t.DeliveryTime || "07:00 PM",
               Profile: t.Profile || "N",
               ComYN: t.ComYN || "Y",
+              CancelTast: t.CancelTast || 0,
             };
-          })
+          }),
         );
         setTests(testsData);
         await calculateTotal(testsData);
@@ -601,15 +660,15 @@ const CaseEntry = () => {
 
         // Step 1: Create Case
         const caseCreateData = { ...formData };
-        
+
         // Convert empty strings to null
         const cleanedData = Object.fromEntries(
           Object.entries(caseCreateData).map(([key, value]) => [
             key,
-            value === "" ? null : value
-          ])
+            value === "" ? null : value,
+          ]),
         );
-        
+
         const caseRes = await axiosInstance.post("/case01", cleanedData);
         if (caseRes.data.success) {
           const newCaseId = caseRes.data.data.CaseId;
@@ -629,7 +688,7 @@ const CaseEntry = () => {
               ValueEntry: null,
               Delivery: null,
               DeliveryDt: null,
-              CancelTast: null,
+              CancelTast: test.CancelTast || 0,
               Profile: test.Profile || null,
               SlNo: null,
               NetRate: test.NetRate || null,
@@ -650,7 +709,8 @@ const CaseEntry = () => {
               ValueEntry: null,
               Delivery: null,
               DeliveryDt: null,
-              CancelTast: null,
+              // CancelTast: null,
+              CancelTast: test.CancelTast || 0,
               LabId: null,
               Profile: null,
               SlNo: null,
@@ -676,18 +736,22 @@ const CaseEntry = () => {
           }
 
           // Step 3: Create Money Receipt
-          // const receiptAmt = parseFloat(formData?.GrossAmt) - parseFloat(formData?.Balance );
-          
-          
+          // const receiptAmt = parseFloat(formData?.receiptAmt)
+          // const receiptAmt =
+          // parseFloat(formData.GrossAmt || 0) - parseFloat(formData.Balance || 0);
+
           const receiptData = {
             ReffId: newCaseId,
             ReceiptDate: new Date().toISOString().slice(0, 10),
             BillAmount: parseFloat(formData.GrossAmt || 0),
             Desc: parseFloat(formData.Desc || 0),
             DiscAmt: parseFloat(formData.DescAmt || 0),
-            Amount: receiptAmt,
+            Amount: parseFloat(formData.Advance || 0),
             CBalAmt: 0,
-            BalanceAmt: parseFloat(formData.Balance || 0),
+            // BalanceAmt: parseFloat(formData.Balance || 0),
+            BalanceAmt:
+              parseFloat(formData.GrossAmt || 0) -
+              parseFloat(formData.Advance || 0),
             Remarks: formData.Remarks || null,
             UserId: 1,
             TypeofReceipt: 1,
@@ -707,21 +771,31 @@ const CaseEntry = () => {
             CaseId: newCaseId,
             paymentMethods: [
               {
-                method: formData.PaymentType === "C" ? "Cash" : formData.PaymentType === "B" ? "Bank" : "Card",
-                amount: receiptAmt,
+                method:
+                  formData.PaymentType === "C"
+                    ? "Cash"
+                    : formData.PaymentType === "B"
+                      ? "Bank"
+                      : "Card",
+                amount: parseFloat(formData.Advance || 0),
               },
             ],
           };
 
           try {
             await axiosInstance.post("/money-receipt01", receiptData);
-            console.log("Money receipt created successfully");
+            // console.log("Money receipt created successfully");
           } catch (err) {
             console.error("Error creating money receipt:", err);
-            alert("Case created but money receipt failed: " + (err.response?.data?.message || err.message));
+            alert(
+              "Case created but money receipt failed: " +
+                (err.response?.data?.message || err.message),
+            );
           }
 
-          alert(`Case + Money Receipt Created Successfully! Case ID: ${newCaseId}`);
+          alert(
+            `Case + Money Receipt Created Successfully! Case ID: ${newCaseId}`,
+          );
           navigate("/CaseList");
         }
       } else if (mode === "edit" && orgId && orgId !== "undefined") {
@@ -754,13 +828,14 @@ const CaseEntry = () => {
               ValueEntry: null,
               Delivery: null,
               DeliveryDt: null,
-              CancelTast: null,
+              CancelTast: test.CancelTast || 0,
               Profile: test.Profile || null,
               SlNo: null,
               NetRate: test.NetRate || null,
               ComYN: test.ComYN || null,
             });
 
+          
             // Create Test Detail
             await axiosInstance.post("/case-dtl-01", {
               CaseId: orgId,
@@ -774,7 +849,8 @@ const CaseEntry = () => {
               ValueEntry: null,
               Delivery: null,
               DeliveryDt: null,
-              CancelTast: null,
+              // CancelTast: null,
+              CancelTast:test.CancelTast || 0,
               LabId: null,
               Profile: null,
               SlNo: null,
@@ -808,7 +884,7 @@ const CaseEntry = () => {
       console.error("Error saving case:", error);
       alert(
         "Failed to save case: " +
-          (error.response?.data?.message || error.message)
+          (error.response?.data?.message || error.message),
       );
     } finally {
       setLoading(false);
@@ -834,7 +910,7 @@ const CaseEntry = () => {
         console.error("Error deleting case:", error);
         alert(
           "Failed to delete case: " +
-            (error.response?.data?.message || error.message)
+            (error.response?.data?.message || error.message),
         );
       } finally {
         setLoading(false);
@@ -980,7 +1056,7 @@ const CaseEntry = () => {
     },
     { label: "Bill", variant: "info" },
     { label: "Com Bill", variant: "info" },
-    { label: "Dep Print", variant: "info"  },
+    { label: "Dep Print", variant: "info" },
     { label: "Exit", variant: "secondary", onClick: () => navigate(-1) },
   ];
 
@@ -1007,7 +1083,7 @@ const CaseEntry = () => {
         ...prev,
         AdmitionId: id,
       }));
-      console.log("IPD changed", selectedTest);
+      // console.log("IPD changed", selectedTest);
     }
   }, [selectedTest]);
 
@@ -1019,7 +1095,7 @@ const CaseEntry = () => {
         ...prev,
         PatientId: id,
       }));
-      console.log("OPD changed", selectedTestOPD);
+      // console.log("OPD changed", selectedTestOPD);
     }
   }, [selectedTestOPD]);
 
@@ -1103,154 +1179,187 @@ const CaseEntry = () => {
     padding: "0 4px",
   };
 
-const fetchIndoorDetails = async (admId) => {
-  try {
-    const res = await axiosInstance.get(`/admissions/${admId}`);
+  const fetchIndoorDetails = async (admId) => {
+    try {
+      const res = await axiosInstance.get(`/admissions/${admId}`);
 
-    if (res.data.success) {
-      const p = res.data.data.admission;
+      if (res.data.success) {
+        const p = res.data.data.admission;
 
-      setFormData((prev) => ({
-        ...prev,
-        // BASIC INFO
-        AdmitionId: p.AdmitionId || "",
-        PatientName: p.PatientName || "",
-        Sex: p.Sex || "",
-        Age: p.Age || "",
-        AgeType: p.AgeType || "Y",
+        setFormData((prev) => ({
+          ...prev,
+          // BASIC INFO
+          AdmitionId: p.AdmitionId || "",
+          PatientName: p.PatientName || "",
+          Sex: p.Sex || "",
+          Age: p.Age || "",
+          AgeType: p.AgeType || "Y",
 
-        // ADDRESS
-        Add1: p.Add1 || "",
-        Add2: p.Add2 || "",
-        Add3: p.Add3 || "",
+          // ADDRESS
+          Add1: p.Add1 || "",
+          Add2: p.Add2 || "",
+          Add3: p.Add3 || "",
 
-        // PHONE / EMAIL
-        MobileNo: p.PhoneNo || "",
-        Phone: p.PhoneNo || "",
-        Email: p.Email || "",
+          // PHONE / EMAIL
+          MobileNo: p.PhoneNo || "",
+          Phone: p.PhoneNo || "",
+          Email: p.Email || "",
 
-        // CARD & EXTRA
-        CardNo: p.CardNo || "",
-        Remarks: p.Remarks || "",
+          // CARD & EXTRA
+          CardNo: p.CardNo || "",
+          Remarks: p.Remarks || "",
 
-        // OPD / INDOOR ID
-        PatientId: p.OPDId || "",
-        OPDID: p.OPDId || "",
+          // OPD / INDOOR ID
+          PatientId: p.OPDId || "",
+          OPDID: p.OPDId || "",
 
-        // ADVANCED AGES
-        AgeD: p.AgeD || "",
-        AgeTypeD: p.AgeTypeD || "",
-      }));
+          // ADVANCED AGES
+          AgeD: p.AgeD || "",
+          AgeTypeD: p.AgeTypeD || "",
+        }));
+      }
+    } catch (err) {
+      console.log("Indoor details fetch error:", err);
     }
-  } catch (err) {
-    console.log("Indoor details fetch error:", err);
-  }
-};
+  };
 
+  const fetchOPDDetails = async (regId) => {
+    try {
+      const res = await axiosInstance.get(
+        `/patient-visits?registrationId=${regId}`,
+      );
 
-const fetchOPDDetails = async (regId) => {
-  try {
-    const res = await axiosInstance.get(
-      `/patient-visits?registrationId=${regId}`
-    );
+      if (res.data.success && res.data.data.length > 0) {
+        const p = res.data.data[0];
 
-    if (res.data.success && res.data.data.length > 0) {
-      const p = res.data.data[0];
+        setFormData((prev) => ({
+          ...prev,
 
-      setFormData((prev) => ({
-        ...prev,
+          // BASIC
+          PatientName: p.PatientName || "",
+          PPr: p.PPr || "",
+          Sex: p.Sex || "",
+          Age: p.Age || "",
+          AgeType: p.AgeType || "Y",
 
-        // BASIC
-        PatientName: p.PatientName || "",
-        PPr: p.PPr || "",
-        Sex: p.Sex || "",
-        Age: p.Age || "",
-        AgeType: p.AgeType || "Y",
+          // ADDRESS
+          Add1: p.PatientAdd1 || "",
+          Add2: p.PatientAdd2 || "",
+          Add3: p.PatientAdd3 || "",
 
-        // ADDRESS
-        Add1: p.PatientAdd1 || "",
-        Add2: p.PatientAdd2 || "",
-        Add3: p.PatientAdd3 || "",
+          // CONTACT
+          MobileNo: p.PhoneNo || "",
+          Phone: p.PhoneNo || "",
+          Email: p.EMailId || "",
 
-        // CONTACT
-        MobileNo: p.PhoneNo || "",
-        Phone: p.PhoneNo || "",
-        Email: p.EMailId || "",
+          // OPD IDs
+          PatientId: p.RegistrationId || "",
+          OPDID: p.RegistrationId || "",
 
-        // OPD IDs
-        PatientId: p.RegistrationId || "",
-        OPDID: p.RegistrationId || "",
+          // ADVANCED AGE FIELDS
+          AgeD: p.AgeD || "",
+          AgeTypeD: p.AgeTypeD || "",
+          AgeN: p.AgeN || "",
+          AgeTypeN: p.AgeTypeN || "",
 
-        // ADVANCED AGE FIELDS
-        AgeD: p.AgeD || "",
-        AgeTypeD: p.AgeTypeD || "",
-        AgeN: p.AgeN || "",
-        AgeTypeN: p.AgeTypeN || "",
-
-        // EXTRA
-        Remarks: p.Remarks || "",
-      }));
+          // EXTRA
+          Remarks: p.Remarks || "",
+        }));
+      }
+    } catch (err) {
+      console.log("OPD details fetch error:", err);
     }
-  } catch (err) {
-    console.log("OPD details fetch error:", err);
-  }
-};
+  };
 
-useEffect(() => {
-  if (selectedTest?.value) {
-    fetchIndoorDetails(selectedTest.value);
-  }
-}, [selectedTest]);
+  useEffect(() => {
+    if (selectedTest?.value) {
+      fetchIndoorDetails(selectedTest.value);
+    }
+  }, [selectedTest]);
 
-useEffect(() => {
-  if (selectedTestOPD?.value) {
-    fetchOPDDetails(selectedTestOPD.value);
-  }
-}, [selectedTestOPD]);
+  useEffect(() => {
+    if (selectedTestOPD?.value) {
+      fetchOPDDetails(selectedTestOPD.value);
+    }
+  }, [selectedTestOPD]);
 
+  // remove this for chatGpt
+  // useEffect(() => {
+  //   const total = parseFloat(formData.Total || 0);
 
+  //   const discPerc = parseFloat(formData.Desc || 0);
+  //   const discAmt = parseFloat(formData.DescAmt || 0);
+  //   const advance = parseFloat(formData.Advance || 0);
+  //   const cancelAmt = parseFloat(formData.CTestAmt || 0);
+  //   // const receiptAmt = parseFloat(formData.ReceiptAmt || 0);
 
-// ======================================
-useEffect(() => {
-  const total = parseFloat(formData.Total || 0);
+  //   let finalDiscAmt = discAmt;
 
-  const discPerc = parseFloat(formData.Desc || 0);
-  const discAmt = parseFloat(formData.DescAmt || 0);
-  const advance = parseFloat(formData.Advance || 0);
-  const cancelAmt = parseFloat(formData.CTestAmt || 0);
-  const receiptAmt = parseFloat(formData.ReceiptAmt || 0);
+  //   // jodi user % diye
+  //   if (discPerc > 0) {
+  //     finalDiscAmt = (total * discPerc) / 100;
+  //   }
 
-  let finalDiscAmt = discAmt;
+  //   const gross = total - finalDiscAmt - cancelAmt;
+  //   // const balance = gross - receiptAmt;
+  //   const balance = gross;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     DescAmt: finalDiscAmt.toFixed(2),
+  //     GrossAmt: gross.toFixed(2),
+  //     Balance: balance.toFixed(2),
+  //   }));
+  // }, [
+  //   formData.Total,
+  //   formData.Desc,
+  //   formData.DescAmt,
+  //   formData.Advance,
+  //   formData.CTestAmt,
+  //   // formData.ReceiptAmt,
+  // ]);
 
-  // jodi user % diye
-  if (discPerc > 0) {
-    finalDiscAmt = (total * discPerc) / 100;
-  }
+  // add this By chatGpt
+  useEffect(() => {
+    console.log("Modex:", Modex);
+    // if (Modex === "edit") return;
+    if (!isLoaded && Modex === "edit") return;
 
-  const gross = total - finalDiscAmt - cancelAmt;
-const balance = gross - receiptAmt;
-  setFormData((prev) => ({
-    ...prev,
-    DescAmt: finalDiscAmt.toFixed(2),
-    GrossAmt: gross.toFixed(2),
-    Balance: balance.toFixed(2),
-  }));
-}, [
-  formData.Total,
-  formData.Desc,
-  formData.DescAmt,
-  formData.Advance,
-  formData.CTestAmt,
-  formData.ReceiptAmt,
-]);
-const groupedTests = tests.reduce((acc, t) => {
+    const total = parseFloat(formData.Total || 0);
+    const discPerc = parseFloat(formData.Desc || 0);
+    const cancelAmt = parseFloat(formData.CTestAmt || 0);
+    const advance = parseFloat(formData.Advance || 0);
+
+    let discAmt = parseFloat(formData.DescAmt || 0);
+
+    if (discPerc > 0) {
+      discAmt = (total * discPerc) / 100;
+    }
+
+    const gross = total - discAmt - cancelAmt;
+    const balance = gross - advance;
+
+    setFormData((prev) => ({
+      ...prev,
+      DescAmt: discAmt.toFixed(2),
+      GrossAmt: gross.toFixed(2),
+      Balance: balance.toFixed(2),
+    }));
+  }, [
+    formData.Total,
+    formData.Desc,
+    formData.DescAmt,
+    formData.CTestAmt,
+    formData.Advance,
+  ]);
+
+  const groupedTests = tests.reduce((acc, t) => {
     if (!acc[t.SubDepartmentId]) acc[t.SubDepartmentId] = [];
     acc[t.SubDepartmentId].push(t);
     return acc;
   }, {});
-  console.log(groupedTests);
+  // console.log(groupedTests);
 
-const handleDepPrint = (selectedDept) => {
+  const handleDepPrint = (selectedDept) => {
     const doctorName =
       doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
 
@@ -1374,7 +1483,7 @@ const handleDepPrint = (selectedDept) => {
                   <td>${t.TestName}</td>
                   <td style="text-align:right;">${t.NetRate}</td>
                 </tr>
-              `
+              `,
               )
               .join("")}
           </tbody>
@@ -1522,7 +1631,7 @@ const handleDepPrint = (selectedDept) => {
 
     <!-- ⭐ TOP HEADER -->
     <div class="top-header-row">
-      
+     
       <div class="top-favicon">
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" />
       </div>
@@ -1544,7 +1653,7 @@ const handleDepPrint = (selectedDept) => {
     </div>
 
     <hr/>
-    
+   
     <!-- MAIN TITLE -->
     <div class="title">CLINICAL PATHOLOGY</div>
 
@@ -1622,12 +1731,12 @@ const handleDepPrint = (selectedDept) => {
           <td>${t.TestName}</td>
           <td>${t.DeliveryDate}</td>
           <td style="text-align:right;">${t.NetRate}</td>
-        </tr>`
+        </tr>`,
                 )
                 .join("")
             : `<tr><td colspan="3" style="text-align:center;">No Test Added</td></tr>`
         }
-      </tbody> 
+      </tbody>
         <tfoot>
         <tr>
         <td/>
@@ -1661,18 +1770,32 @@ const handleDepPrint = (selectedDept) => {
     win.onload = () => win.print();
   };
 
+  // remove this for chatGpt
+  // useEffect(() => {
+  //   console.log("mode: ", Modex);
+  //   const data = Number(formData.GrossAmt) - Number(formData.Advance);
 
-
-
-
-
-
+  //   // let gTotal = formData.GrossAmt + formData.CTestAmt
+  //   if (Modex !== "edit") {
+  //     // console.log("hi");
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       Balance: data,
+  //     }));
+  //   }
+  // }, [
+  //   formData.GrossAmt,
+  //   formData.Advance,
+  //   formData.Desc,
+  //   formData.DescAmt,
+  //   formData.CTestAmt,
+  // ]);
 
   return (
     <div className="main-content">
-      {/* Main Panel 
+      {/* Main Panel
           - height: 100vh ensures full screen
-          - display: flex + flex-column allows header/footer to be fixed height 
+          - display: flex + flex-column allows header/footer to be fixed height
             while body takes remaining space
       */}
       <div
@@ -1838,19 +1961,6 @@ const handleDepPrint = (selectedDept) => {
                           value={selectedTest?.label}
                         />
                       ) : (
-                        // <Select
-                        //   styles={compactSelectStyles}
-                        //   value={selectedTest}
-                        //   onChange={setSelectedTest}
-                        //   onInputChange={searchTests}
-                        //   options={searchResults.map((i) => ({
-                        //     value: i.AdmitionId,
-                        //     label: `${i.PatientName} (${i.AdmitionNo})`,
-                        //   }))}
-                        //   placeholder="Search Indoor..."
-                        //   isClearable
-                        //   isLoading={isSearching}
-                        // />
                         <Select
                           styles={compactSelectStyles}
                           value={selectedTest}
@@ -2502,7 +2612,11 @@ const handleDepPrint = (selectedDept) => {
                   value={formData.BranchName}
                   onChange={(e) => {
                     const newValue = e.target.value;
-                    setFormData((p) => ({ ...p, BranchName: newValue, AgentId: "" }));
+                    setFormData((p) => ({
+                      ...p,
+                      BranchName: newValue,
+                      AgentId: "",
+                    }));
                     if (newValue === "N") {
                       setSelectedAgent(null);
                     }
@@ -2611,43 +2725,53 @@ const handleDepPrint = (selectedDept) => {
                       style={{ top: 0, zIndex: 1 }}
                     >
                       <tr>
-                        <th style={{ ...tableHeaderStyle, width: "30px" }}>
-                          Pr
-                        </th>
+                        <th style={{ ...tableHeaderStyle }}>Del</th>
+                        <th style={{ ...tableHeaderStyle }}>Cancel</th>
+
                         <th style={tableHeaderStyle}>Test Name</th>
-                        <th style={{ ...tableHeaderStyle, width: "50px" }}>
-                          Rate
-                        </th>
+                        <th style={{ ...tableHeaderStyle }}>Rate</th>
                         <th style={tableHeaderStyle}>Delivery Date</th>
                         <th style={tableHeaderStyle}>Delivery Time</th>
                         <th style={tableHeaderStyle}>Net Rate</th>
-                        <th style={{ ...tableHeaderStyle, width: "30px" }}>
-                          IsisDisc
-                        </th>
-                        <th style={{ ...tableHeaderStyle, width: "30px" }}>
-                          Type
-                        </th>
-                        <th style={{ ...tableHeaderStyle, width: "30px" }}>
-                          Del
-                        </th>
+                        <th style={{ ...tableHeaderStyle }}>IsisDisc</th>
+                        <th style={{ ...tableHeaderStyle }}>Type</th>
                       </tr>
                     </thead>
                     <tbody>
+                      {console.log("test: ", tests)}
                       {tests.length > 0 ? (
                         tests.map((test, index) => (
                           <tr
                             key={index}
-                            style={{ backgroundColor: "#ffffcc" }}
+                            style={{
+                              backgroundColor:
+                                test.CancelTast == 1 ? "#f02929" : "#ccffdc",
+                            }}
                           >
-                            <td
-                              style={{
-                                ...tableCellStyle,
-                                color: "black",
-                                textAlign: "center",
-                              }}
-                            >
-                              {index + 1}
+                            <td>
+                              <button
+                                className="btn btn-sm btn-danger"
+                                onClick={() => handleRemoveTest(test.id)}
+                                disabled={mode === "view"}
+                              >
+                                ×
+                              </button>
                             </td>
+                            <td>
+                            {console.log("cancel tast: ", test.CancelTast)}
+                              <div className="form-check form-switch">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  role="switch"
+                                  style={{ cursor: "pointer" }}
+                                  checked={Number(test.CancelTast) == 1}
+                                  onChange={() => handleCancelTest(test.id)}
+                                  
+                                />
+                              </div>
+                            </td>
+
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               {test.TestName}
                             </td>
@@ -2668,16 +2792,6 @@ const handleDepPrint = (selectedDept) => {
                             </td>
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               Test
-                            </td>
-
-                            <td>
-                              <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => handleRemoveTest(test.id)}
-                                disabled={mode === "view"}
-                              >
-                                ×
-                              </button>
                             </td>
                           </tr>
                         ))
@@ -2737,31 +2851,6 @@ const handleDepPrint = (selectedDept) => {
                     style={{ width: "280px" }} // ⬅ search box width increased (change anytime)
                   />
                   <div className="d-flex align-items-start">
-                    {/* <Select
-                      styles={compactSelectStyles}
-                      value={selectedTestMaster}
-                      onChange={setSelectedTestMaster}
-                      onInputChange={(inputValue) => {
-                        searchTestMaster(inputValue);
-                      }}
-                      options={testSearchResults.map((item) => ({
-                        value: item.TestId,
-                        label: `${item.Test} - ₹${item.Rate}`,
-                        ...item,
-                      }))}
-                      placeholder="Search test..."
-                      isSearchable
-                      isClearable
-                      isLoading={isSearchingTest}
-                      isDisabled={mode === "view"}
-                      noOptionsMessage={({ inputValue }) =>
-                        inputValue.length < 2
-                          ? "Type at least 2 characters"
-                          : "No test found"
-                      }
-                      className="react-select-container"
-                      classNamePrefix="react-select"
-                    /> */}
                     <button
                       className="btn btn-success btn-sm py-1 px-1"
                       onClick={handleAddTest}
@@ -2770,15 +2859,6 @@ const handleDepPrint = (selectedDept) => {
                     >
                       Add Test
                     </button>
-
-                    {/* <button
-                      className="btn btn-success btn-sm py-0"
-                      onClick={handleAddTest}
-                      disabled={mode === "view" || !selectedTestMaster}
-                      style={{ fontSize: "11px" }}
-                    >
-                      Add Test (+)
-                    </button> */}
 
                     <div className="flex-grow-1 ms-1">
                       <div className="d-flex justify-content-end align-items-center mb-1">
@@ -2828,15 +2908,23 @@ const handleDepPrint = (selectedDept) => {
                     />
                   </div>
                   <div className="d-flex justify-content-end align-items-center">
-                    <label style={labelStyle}>A dv</label>
-                    <input
+                    {/* <label style={labelStyle}>Adv</label> */}
+                    {/* <input
+                      type="text"
+                      name="Advance"
+                      // value={formData.Advance}
+                      value={0}
+                      onChange={handleInputChange}
+                      className="text-end ms-1"
+                      style={{ ...inputStyle, width: "40px" }}
+                    /> */}
+                    {/* <input
                       type="text"
                       name="Advance"
                       value={formData.Advance}
                       onChange={handleInputChange}
-                      className="text-end ms-1"
-                      style={{ ...inputStyle, width: "40px" }}
-                    />
+                    /> */}
+
                     <label style={{ ...labelStyle, marginLeft: "4px" }}>
                       G Total
                     </label>
@@ -2855,8 +2943,9 @@ const handleDepPrint = (selectedDept) => {
                     </label>
                     <input
                       type="text"
-                      name="ReceiptAmt"
-                      value={formData.ReceiptAmt}
+                      name="Advance"
+                      // value={formData.ReceiptAmt}
+                      value={formData.Advance}
                       onChange={handleInputChange}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
@@ -2911,7 +3000,7 @@ const handleDepPrint = (selectedDept) => {
                                 handleServiceChange(
                                   index,
                                   "serviceType",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               onKeyDown={(e) => handleServiceKeyDown(e, index)}
@@ -2926,7 +3015,7 @@ const handleDepPrint = (selectedDept) => {
                                 handleServiceChange(
                                   index,
                                   "serviceRate",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               onKeyDown={(e) => handleServiceKeyDown(e, index)}
@@ -2947,48 +3036,46 @@ const handleDepPrint = (selectedDept) => {
             <div className="row g-1 text-black">
               {/* SECTION 11 & 12 */}
               <div className="row g-2 mb-1">
-                    <div className="col-md-2">
-                      <label className="form-label">Mode of Payment</label>
-                      <select
-                      name="PaymentType"
-                        className="form-control form-control-sm"
-                        disabled={mode === "view"}
-                        
-                        value={formData.PaymentType}
-                        onChange={handleInputChange}
-                      >
-                        <option value="">Select</option>
-                        <option value="C">Cash</option>
-                        <option value="B">Bank</option>
-                        <option value="D">Credit Card</option>
-                        <option value="W">W</option>
-                      </select>
-                    </div>
+                <div className="col-md-2">
+                  <label className="form-label">Mode of Payment</label>
+                  <select
+                    name="PaymentType"
+                    className="form-control form-control-sm"
+                    disabled={mode === "view"}
+                    value={formData.PaymentType}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">Select</option>
+                    <option value="C">Cash</option>
+                    <option value="B">Bank</option>
+                    <option value="D">Credit Card</option>
+                    <option value="W">W</option>
+                  </select>
+                </div>
 
-                    <div className="col-md-5">
-                      <label className="form-label">Bank</label>
-                      <input
-                      name="BankName"
-                        type="text"
-                        className="form-control form-control-sm"
-                        
-                        value={formData.BankName}
-                        onChange={handleInputChange}
-                        disabled={mode === "view"}
-                      />
-                    </div>
-                    <div className="col-md-5">
-                      <label className="form-label">Cheque / Card No</label>
-                      <input
-                        name="ChequeNo"
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={formData.ChequeNo}
-                        disabled={mode === "view"}
-                      onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
+                <div className="col-md-5">
+                  <label className="form-label">Bank</label>
+                  <input
+                    name="BankName"
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={formData.BankName}
+                    onChange={handleInputChange}
+                    disabled={mode === "view"}
+                  />
+                </div>
+                <div className="col-md-5">
+                  <label className="form-label">Cheque / Card No</label>
+                  <input
+                    name="ChequeNo"
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={formData.ChequeNo}
+                    disabled={mode === "view"}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
               <div className="col-12 col-md-8">
                 <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
                   <label style={{ ...labelStyle, width: "auto" }}>
@@ -3182,17 +3269,15 @@ const handleDepPrint = (selectedDept) => {
             Dep Print
           </button> */}
 
-{/* dev  */}
+          {/* dev  */}
 
-<button
+          <button
             className="btn btn-sm btn-light border shadow-sm"
             style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
             onClick={() => setShowSubDeptPopup(true)}
           >
             Dep Print
           </button>
-
-
 
           <button
             onClick={() => navigate(-1)}
@@ -3247,25 +3332,4 @@ const handleDepPrint = (selectedDept) => {
   );
 };
 
-
-
-
-
-
-
 export default CaseEntry;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

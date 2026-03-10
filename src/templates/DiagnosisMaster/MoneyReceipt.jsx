@@ -1276,7 +1276,10 @@ const MoneyReceipt = () => {
 
   useEffect(() => {
     fetchReceipts(page);
-    fetchPatients();
+
+    if(searchTerm.trim()){
+      fetchPatients();
+    }
     fetchUsers();
   }, [page, startDate, endDate, searchTerm]);
 
@@ -2272,7 +2275,10 @@ const calculatedDueAmount = billAmount - totalReceivedAmount;
                           <button
                             type="button"
                             className="btn btn-sm btn-outline-primary"
-                            onClick={() => setShowPatientModal(true)}
+                            onClick={() => {setShowPatientModal(true)
+
+                              fetchPatients()
+                            }}
                           >
                             <i className="fa fa-search"></i>
                           </button>

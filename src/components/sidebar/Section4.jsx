@@ -9,21 +9,69 @@ const Section4 = () => {
   return (
     <li className="sidebar-item" ref={layoutPosition.horizontal ? mainSection4Ref : null}>
       <Link role="button" className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`} onClick={toggleMainSection4Dropdown}>
-Section 4
+dia  report
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.section4 ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
-     <li className="sidebar-dropdown-item">
-          <NavLink to="/section4-item1" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-diamond"></i></span>{" "}
-            <span className="sidebar-txt">Item 1</span>
-          </NavLink>
-        </li>
-     <li className="sidebar-dropdown-item">
-          <NavLink to="/section4-item2" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-diamond"></i></span>{" "}
-            <span className="sidebar-txt">Item 2</span>
-          </NavLink>
-        </li>
+
+
+<li className="sidebar-dropdown-item">
+  <NavLink to="/PatientIdReport" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Patient Id Report</span>
+  </NavLink>
+</li>
+
+<li className="sidebar-dropdown-item">
+  <NavLink to="/TestScheduleReport" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Test Schedule Report</span>
+  </NavLink>
+</li>
+
+<li className="sidebar-dropdown-item">
+  <NavLink to="/caseWiseLab" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Case Wise Lab</span>
+  </NavLink>
+</li>
+
+<li className="sidebar-dropdown-item">
+  <NavLink to="/DoctorList" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Doctor List</span>
+  </NavLink>
+</li>
+
+<li className="sidebar-dropdown-item">
+  <NavLink to="/MonthlyBill" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Monthly Bill</span>
+  </NavLink>
+</li>
+
+<li className="sidebar-dropdown-item">
+  <NavLink to="/CancelTest" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Cancel Test</span>
+  </NavLink>
+</li>
+
+
+
+
+
       </ul>
     </li>
   );

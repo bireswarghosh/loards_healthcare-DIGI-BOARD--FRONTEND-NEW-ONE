@@ -96,6 +96,7 @@ const MainSidebar = () => {
              <Section3/>
             <Section1/>
             <DiagnosisMaster/>
+            <Section4/>
             <BookingApp/>
             <Doctor/>
             <Marketing/>
@@ -124,6 +125,7 @@ const MainSidebar = () => {
           <Section3/>
             <Section1/>
             <DiagnosisMaster/>
+            <Section4/>
             <BookingApp/>
             <Doctor/>
             <Marketing/>

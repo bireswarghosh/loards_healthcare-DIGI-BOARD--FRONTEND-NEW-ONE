@@ -373,11 +373,16 @@ import CaseWiseLab from "./templates/DiagnosisMaster/report/CaseWiseLab.jsx";
 import DoctorList from "./templates/DiagnosisMaster/report/DoctorList.jsx";
 import MonthlyBill from "./templates/DiagnosisMaster/report/MonthlyBill.jsx";
 import CancelTest from "./templates/DiagnosisMaster/report/CancelTest.jsx";
+import DateWiseFinalBillReg from "./templates/IPD_REPORT/DateWiseFinalBillRegPdf.jsx";
+import DateWiseOtherChargesReg from "./templates/IPD_REPORT/DateWiseOtherChargesReg.jsx";
+import DateWiseDrChargesDetailPdf from "./templates/IPD_REPORT/DateWiseDrChargesDetailPdf.jsx";
+import DateWiseBedChargesPdf from "./templates/IPD_REPORT/DateWiseBedChargesPdf.jsx";
+import DateWiseFinalBillOtherChargesReg from "./templates/IPD_REPORT/DateWiseFinalBillOtherChargesReg.jsx";
 
 
-
-
-
+import NurseStation from "./pages/NurseStation.jsx"
+import PathologyDashboard from "./pages/dashboardpages/PathologyDashboard.jsx";
+import PathologistLogin from "..//src/components/indoor/loginPathologist/PathologistLogin.jsx";
 
 
 function App() {
@@ -458,6 +463,28 @@ function App() {
 
 
 {/* indoor route start---------------------------------  */}
+
+
+<Route
+            path="/PathologyDashboard"
+            element={
+              <ProtectedRoute>
+                <PathologyDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pathologistlogin"
+            element={
+              <ProtectedRoute>
+                <PathologistLogin />
+              </ProtectedRoute>
+            }
+          />
+
+
+
+
           <Route path="/PatientRegistrationList" element={<ProtectedRoute><AdmissionList /></ProtectedRoute>} />
           <Route path="/PatientAdmissionDetail" element={<ProtectedRoute><PatientAdmissionDetail /></ProtectedRoute>}/>
 
@@ -553,13 +580,32 @@ function App() {
           <Route path="/fina-bill-list2" element={<FinalBillingListB />} />
 
 
+
+
+<Route
+            path="/dateWiseFinalBillRegPdf"
+            element={
+              <>
+                <DateWiseFinalBillReg />
+              </>
+            }
+          />
+
+
+
+
+<Route path="/dateWiseOtherChargesReg" element={ <> <DateWiseOtherChargesReg/> </> } /> 
+
+
+
+<Route path="/dateWiseDrChargesDetailPdf" element={ <> <DateWiseDrChargesDetailPdf/> </> } />
           {/* indoor route end---------------------------------  */}
 
+<Route path="/dateWiseBedChargesPdf" element={ <> <DateWiseBedChargesPdf/> </> } />
 
+<Route path="/dateWiseFinalBillOtherChargesReg" element={ <> <DateWiseFinalBillOtherChargesReg/> </> } />
 
-
-
-
+<Route path="/nurseStation" element={ <> <NurseStation/> </> } /> 
 {/* master */}
 
 

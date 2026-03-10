@@ -9,16 +9,10 @@ const Section3 = () => {
   return (
     <li className="sidebar-item" ref={layoutPosition.horizontal ? mainSection3Ref : null}>
       <Link role="button" className={`sidebar-link-group-title has-sub ${isMainDropdownOpen ? 'show' : ''}`} onClick={toggleMainSection3Dropdown}>
-Section 3
+Indoor Report
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.section3 ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
-     <li className="sidebar-dropdown-item">
-          <NavLink to="/" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
-            <span className="sidebar-txt">Admission Register
-</span>
-          </NavLink>
-        </li>
+
      <li className="sidebar-dropdown-item">
           <NavLink to="/date-wise-registration-charge
 
@@ -46,9 +40,33 @@ Section 3
           </NavLink>
         </li>
      <li className="sidebar-dropdown-item">
-          <NavLink to="/section3-item2" className="sidebar-link">
+          <NavLink to="/dateWiseFinalBillRegPdf" className="sidebar-link">
             <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
-            <span className="sidebar-txt">Item 2</span>
+            <span className="sidebar-txt">Final Bill Register</span>
+          </NavLink>
+        </li>
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/dateWiseOtherChargesReg" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Other Charges Register</span>
+          </NavLink>
+        </li>
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/dateWiseFinalBillOtherChargesReg" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Other Charges Detail</span>
+          </NavLink>
+        </li>
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/dateWiseDrChargesDetailPdf" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Dr.Charges Detail</span>
+          </NavLink>
+        </li>
+     <li className="sidebar-dropdown-item">
+          <NavLink to="/dateWiseBedChargesPdf" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Bed Charges</span>
           </NavLink>
         </li>
       </ul>
