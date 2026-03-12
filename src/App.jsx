@@ -381,13 +381,8 @@ import DateWiseFinalBillOtherChargesReg from "./templates/IPD_REPORT/DateWiseFin
 
 
 import NurseStation from "./pages/NurseStation.jsx"
-<<<<<<< HEAD
 import PathologyDashboard from "./pages/dashboardpages/PathologyDashboard.jsx";
 import PathologistLogin from "..//src/components/indoor/loginPathologist/PathologistLogin.jsx";
-=======
-
-
->>>>>>> 91964d856d15b8767522bea6046d40797231c54f
 
 
 function App() {

@@ -7,6 +7,7 @@ import Select from "react-select";
 import axiosInstance from "../../../../axiosInstance";
 // import SubDeptSelector from "./SubDeptSelector";
 import useAxiosFetch from "../../../../templates/DiagnosisMaster/Fetch";
+import ReceiptDetailModal from "./ReceiptDetailModal";
 
 const CaseEntry = () => {
   const { data: depertments } = useAxiosFetch("/subdepartment");
@@ -166,6 +167,9 @@ const CaseEntry = () => {
     ? selectedTestMaster?.BRate
     : selectedTestMaster?.Rate;
 
+  const [show, setShow] = useState(false);
+  const [receiptDetailData, setReceiptDetailData] = useState([]);
+
   // this function is only for searching the IPD (Admission)
   const searchTests = async (searchTerm) => {
     if (!searchTerm || searchTerm.length < 2) {
@@ -299,7 +303,7 @@ const CaseEntry = () => {
         const res = await axiosInstance.get(`/case01/search?CaseId=${orgId}`);
         if (res.data.success) {
           const caseData = res.data.data[0];
-          console.log("Case Data: ", caseData);
+          // console.log("Case Data: ", caseData);
 
           // Calculate ReceiptAmt = GrossAmt - Balance (from DB)
           const grossAmt = parseFloat(caseData.GrossAmt || 0);
@@ -459,6 +463,33 @@ const CaseEntry = () => {
       setTestSearchResults([]);
     } finally {
       setIsSearchingTest(false);
+    }
+  };
+
+  // this will fetch receipt details
+  const fetchReceiptDetailData = async (id) => {
+    try {
+      const res = await axiosInstance.get(
+        `/money-receipt01/search?ReffId=${id}`,
+      );
+      if (res.data.success) {
+        // console.log("History data: ", res.data.data);
+        const data = res.data.data;
+
+        let newData = data.map((item) => ({
+          no: item.ReceiptNo,
+          date:
+            item.ReceiptDate.split("T")[0]?.split("-")?.reverse()?.join("/") ||
+            "",
+          type: item.Remarks || "",
+          disc: item.Desc || 0,
+          amount: item.Amount || 0,
+        }));
+
+        setReceiptDetailData(newData);
+      }
+    } catch (error) {
+      console.log("Error fetching history:", error);
     }
   };
 
@@ -752,7 +783,8 @@ const CaseEntry = () => {
             BalanceAmt:
               parseFloat(formData.GrossAmt || 0) -
               parseFloat(formData.Advance || 0),
-            Remarks: formData.Remarks || null,
+            // Remarks: formData.Remarks || null,
+            Remarks: "Receipt",
             UserId: 1,
             TypeofReceipt: 1,
             DiscOtherId: 1,
@@ -835,7 +867,6 @@ const CaseEntry = () => {
               ComYN: test.ComYN || null,
             });
 
-          
             // Create Test Detail
             await axiosInstance.post("/case-dtl-01", {
               CaseId: orgId,
@@ -850,7 +881,7 @@ const CaseEntry = () => {
               Delivery: null,
               DeliveryDt: null,
               // CancelTast: null,
-              CancelTast:test.CancelTast || 0,
+              CancelTast: test.CancelTast || 0,
               LabId: null,
               Profile: null,
               SlNo: null,
@@ -1320,7 +1351,7 @@ const CaseEntry = () => {
 
   // add this By chatGpt
   useEffect(() => {
-    console.log("Modex:", Modex);
+    // console.log("Modex:", Modex);
     // if (Modex === "edit") return;
     if (!isLoaded && Modex === "edit") return;
 
@@ -2738,7 +2769,6 @@ const CaseEntry = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {console.log("test: ", tests)}
                       {tests.length > 0 ? (
                         tests.map((test, index) => (
                           <tr
@@ -2758,7 +2788,6 @@ const CaseEntry = () => {
                               </button>
                             </td>
                             <td>
-                            {console.log("cancel tast: ", test.CancelTast)}
                               <div className="form-check form-switch">
                                 <input
                                   className="form-check-input"
@@ -2767,7 +2796,6 @@ const CaseEntry = () => {
                                   style={{ cursor: "pointer" }}
                                   checked={Number(test.CancelTast) == 1}
                                   onChange={() => handleCancelTest(test.id)}
-                                  
                                 />
                               </div>
                             </td>
@@ -3105,12 +3133,20 @@ const CaseEntry = () => {
                   className="d-flex flex-wrap border border-secondary p-0"
                   style={{ backgroundColor: "#dcd6fc" }}
                 >
-                  <div
+                  <button
                     className="bg-success text-white small fw-bold p-1 d-flex align-items-center"
                     style={{ width: "60px", lineHeight: 1.1 }}
+                    onClick={async () => {
+                      if (Modex == "edit" || Modex == "view") {
+                        await fetchReceiptDetailData(formData.CaseId);
+
+                        setShow((c) => !c);
+                      }
+                    }}
                   >
                     Receipt Detail
-                  </div>
+                  </button>
+
                   <div className="d-flex flex-grow-1 flex-wrap align-items-center gap-1 p-1">
                     <label
                       style={{ ...labelStyle, width: "auto", color: "red" }}
@@ -3328,6 +3364,11 @@ const CaseEntry = () => {
           </div>
         </div>
       </div>
+      <ReceiptDetailModal
+        show={show}
+        setShow={setShow}
+        data={receiptDetailData}
+      />
     </div>
   );
 };
