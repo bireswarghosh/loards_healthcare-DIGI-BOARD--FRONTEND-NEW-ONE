@@ -5,9 +5,10 @@ import Barcode from "react-barcode";
 import axios from "axios";
 import Select from "react-select";
 import axiosInstance from "../../../../axiosInstance";
-// import SubDeptSelector from "./SubDeptSelector";
+import SubDeptSelector from "./SubDeptSelector";
 import useAxiosFetch from "../../../../templates/DiagnosisMaster/Fetch";
 import ReceiptDetailModal from "./ReceiptDetailModal";
+import { toast } from "react-toastify";
 
 const CaseEntry = () => {
   const { data: depertments } = useAxiosFetch("/subdepartment");
@@ -40,6 +41,8 @@ const CaseEntry = () => {
   const [agentData, setAgentData] = useState([]);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [isSearchingAgent, setIsSearchingAgent] = useState(false);
+
+const [showAddTest, setShowAddTest] = useState(true)
 
   const [isLoaded, setIsLoaded] = useState(false); // add this by chat gpt
 
@@ -145,6 +148,8 @@ const CaseEntry = () => {
     DueBillPrint: "",
     PrintYN: "0",
   });
+
+  const [barcodeCopies, setBarcodeCopies] = useState(1);
 
   // thess states are only for searching of IPD (admission)
   const [searchResults, setSearchResults] = useState([]);
@@ -314,6 +319,7 @@ const CaseEntry = () => {
 
           setFormData({
             ...caseData,
+            CaseDate: caseData?.CaseDate?.split("T")[0] || "",
             // ReceiptAmt: receiptAmt.toFixed(2),
           });
 
@@ -502,17 +508,33 @@ const CaseEntry = () => {
     const rate = indoor
       ? Number(selectedTestMaster?.BRate ?? 0)
       : Number(selectedTestMaster?.Rate ?? 0);
+
+    // const newTest = {
+    //   id: Date.now(),
+    //   TestId: selectedTestMaster.TestId,
+    //   TestName: selectedTestMaster.Test,
+    //   Rate: rate,
+    //   NetRate: rate,
+    //   DeliveryDate: new Date().toISOString().slice(0, 10),
+    //   DeliveryTime: "07:00 PM",
+    //   Profile: "N",
+    //   ComYN: "Y",
+    //   CancelTast: 0,
+    // };
+
     const newTest = {
       id: Date.now(),
       TestId: selectedTestMaster.TestId,
       TestName: selectedTestMaster.Test,
+      SubDepartmentId: selectedTestMaster.SubDepartmentId, // ⭐ ADD THIS
       Rate: rate,
       NetRate: rate,
       DeliveryDate: new Date().toISOString().slice(0, 10),
       DeliveryTime: "07:00 PM",
       Profile: "N",
       ComYN: "Y",
-      CancelTast: 0,
+      // CancelTast: 0,
+      CancelTast: 2,
     };
 
     setTests([...tests, newTest]);
@@ -531,7 +553,7 @@ const CaseEntry = () => {
   const handleCancelTest = (id) => {
     const updatedTests = tests.map((t) =>
       t.id === id
-        ? { ...t, CancelTast: Number(t.CancelTast) === 1 ? 0 : 1 }
+        ? { ...t, CancelTast: Number(t.CancelTast) === 1 ? 2 : 1 }
         : t,
     );
 
@@ -649,10 +671,41 @@ const CaseEntry = () => {
                 console.log("Error fetching test name:", err);
               }
             }
+            // return {
+            //   id: t.CaseBillDtlId || index,
+            //   TestId: t.TestId,
+            //   TestName: testName,
+            //   Rate: t.Rate || 0,
+            //   NetRate: t.NetRate || t.Rate || 0,
+            //   DeliveryDate: t.DeliveryDate
+            //     ? new Date(t.DeliveryDate).toISOString().slice(0, 10)
+            //     : new Date().toISOString().slice(0, 10),
+            //   DeliveryTime: t.DeliveryTime || "07:00 PM",
+            //   Profile: t.Profile || "N",
+            //   ComYN: t.ComYN || "Y",
+            //   CancelTast: t.CancelTast || 0,
+            // };
+
+            let subDeptId = null;
+
+            if (t.TestId) {
+              try {
+                const testRes = await axiosInstance.get(`/tests/${t.TestId}`);
+
+                if (testRes.data.success && testRes.data.data) {
+                  testName = testRes.data.data.Test;
+                  subDeptId = testRes.data.data.SubDepartmentId; // ⭐ IMPORTANT
+                }
+              } catch (err) {
+                console.log("Error fetching test name:", err);
+              }
+            }
+
             return {
               id: t.CaseBillDtlId || index,
               TestId: t.TestId,
               TestName: testName,
+              SubDepartmentId: subDeptId, // ⭐ ADD THIS LINE
               Rate: t.Rate || 0,
               NetRate: t.NetRate || t.Rate || 0,
               DeliveryDate: t.DeliveryDate
@@ -661,7 +714,8 @@ const CaseEntry = () => {
               DeliveryTime: t.DeliveryTime || "07:00 PM",
               Profile: t.Profile || "N",
               ComYN: t.ComYN || "Y",
-              CancelTast: t.CancelTast || 0,
+              // CancelTast: t.CancelTast || 0,
+              CancelTast: t.CancelTast || 2,
             };
           }),
         );
@@ -719,7 +773,8 @@ const CaseEntry = () => {
               ValueEntry: null,
               Delivery: null,
               DeliveryDt: null,
-              CancelTast: test.CancelTast || 0,
+              // CancelTast: test.CancelTast || 0,
+              CancelTast: test.CancelTast || 2,
               Profile: test.Profile || null,
               SlNo: null,
               NetRate: test.NetRate || null,
@@ -741,7 +796,8 @@ const CaseEntry = () => {
               Delivery: null,
               DeliveryDt: null,
               // CancelTast: null,
-              CancelTast: test.CancelTast || 0,
+              // CancelTast: test.CancelTast || 0,
+              CancelTast: test.CancelTast || 2,
               LabId: null,
               Profile: null,
               SlNo: null,
@@ -860,7 +916,8 @@ const CaseEntry = () => {
               ValueEntry: null,
               Delivery: null,
               DeliveryDt: null,
-              CancelTast: test.CancelTast || 0,
+              // CancelTast: test.CancelTast || 0,
+              CancelTast: test.CancelTast || 2,
               Profile: test.Profile || null,
               SlNo: null,
               NetRate: test.NetRate || null,
@@ -881,7 +938,8 @@ const CaseEntry = () => {
               Delivery: null,
               DeliveryDt: null,
               // CancelTast: null,
-              CancelTast: test.CancelTast || 0,
+              // CancelTast: test.CancelTast || 0,
+              CancelTast: test.CancelTast || 2,
               LabId: null,
               Profile: null,
               SlNo: null,
@@ -1091,6 +1149,121 @@ const CaseEntry = () => {
     { label: "Exit", variant: "secondary", onClick: () => navigate(-1) },
   ];
 
+  const handleBarcodePrint = () => {
+    if (!formData.CaseNo) {
+      toast.warning("Case No not available");
+      return;
+    }
+
+    const copies = barcodeCopies || 1;
+
+    const qrHTML = Array.from({ length: copies })
+      .map(
+        (_, i) => `
+    <div class="qr-item">
+      <div id="qrcode${i}" class="qr"></div>
+      <div class="code-text">${formData.CaseNo}</div>
+    </div>
+  `,
+      )
+      .join("");
+
+    const printContent = `
+<html>
+<head>
+<title>QR Code Print</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+
+@page{
+  margin:10mm;
+}
+
+body{
+  font-family:Arial;
+}
+
+.qr-container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.qr-item{
+  
+  padding:8px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  border:2px dashed #000;   /* ✂️ scissor cutting border */
+  box-sizing:border-box;
+  position:relative;
+}
+
+.qr{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.qr canvas{
+  display:block;
+  margin:0 auto;
+}
+
+.code-text{
+  font-size:8px;
+  
+  margin-top:4px;
+  text-align:center;
+  width:100%;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="qr-container">
+${qrHTML}
+</div>
+
+<script>
+
+const caseNo = "${formData.CaseNo}";
+const copies = ${copies};
+
+for(let i=0;i<copies;i++){
+  new QRCode(document.getElementById("qrcode"+i), {
+      text: caseNo,
+      width: 40,
+      height: 40
+  });
+}
+
+window.onload = function(){
+  window.print();
+}
+
+</script>
+
+</body>
+</html>
+`;
+
+    const win = window.open("", "_blank");
+
+    win.document.open();
+    win.document.write(printContent);
+    win.document.close();
+  };
+
   useEffect(() => {
     fetchCompany();
     fetchBooking();
@@ -1226,6 +1399,8 @@ const CaseEntry = () => {
           Age: p.Age || "",
           AgeType: p.AgeType || "Y",
 
+          DoctorId: p.UCDoctor1Id || p.UCDoctor2Id || p.UCDoctor3Id || "",
+
           // ADDRESS
           Add1: p.Add1 || "",
           Add2: p.Add2 || "",
@@ -1314,6 +1489,20 @@ const CaseEntry = () => {
     }
   }, [selectedTestOPD]);
 
+
+useEffect(() => {
+ if(formData.CaseId){
+  fetchReceiptDetailData(formData.CaseId)
+ }
+}, [formData.CaseId])
+
+useEffect(() => {
+ if(receiptDetailData.length > 1){
+  setShowAddTest(false)
+ }
+}, [receiptDetailData])
+
+
   // remove this for chatGpt
   // useEffect(() => {
   //   const total = parseFloat(formData.Total || 0);
@@ -1365,7 +1554,6 @@ const CaseEntry = () => {
     if (discPerc > 0) {
       discAmt = (total * discPerc) / 100;
     }
-
     const gross = total - discAmt - cancelAmt;
     const balance = gross - advance;
 
@@ -1390,13 +1578,173 @@ const CaseEntry = () => {
   }, {});
   // console.log(groupedTests);
 
+  const subDeptList = Object.keys(groupedTests);
+
+  // const handleDepPrint = (selectedDept) => {
+  //   const doctorName =
+  //     doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
+
+  //   // Filter only selected sub departments
+  //   const filteredGroups = Object.keys(groupedTests)
+  //     // .filter((key) => selectedDept.includes(key))
+  //     .filter((key) => selectedDept.includes(Number(key)))
+  //     .reduce((acc, key) => {
+  //       acc[key] = groupedTests[key];
+  //       return acc;
+  //     }, {});
+
+  //   if (Object.keys(filteredGroups).length === 0) {
+  //     alert("Select at least one Sub-Department!");
+  //     return;
+  //   }
+
+  //   setShowSubDeptPopup(false); // Close popup
+
+  //   const printContent = `
+  // <html>
+  // <head>
+  //   <title>Department Print</title>
+
+  //   <style>
+  //     body { font-family: Arial; padding: 20px; font-size: 13px; }
+
+  //     .page-break { page-break-after: always; }
+
+  //     .top-header-row {
+  //       display: flex; justify-content: space-between; align-items: center;
+  //     }
+  //     .top-favicon img { width: 80px; }
+  //     .header { text-align: center; flex-grow: 1; }
+  //     .hospital-name { font-size: 20px; font-weight: bold; }
+  //     .address, .contact-info { font-size:12px; line-height:1.4; }
+
+  //     .title { font-size: 16px; text-align:center; font-weight:bold; margin-top:15px; }
+
+  //     .patient-block {
+  //       margin-top: 15px; display:flex; justify-content:space-between;
+  //       gap:40px; border:1px solid #000; padding:12px; background:#fafafa;
+  //     }
+  //     .patient-col { width: 48%; }
+
+  //     table { width:100%; border-collapse: collapse; margin-top:15px; }
+  //     th, td { border:1px solid #333; padding:6px; font-size:13px; }
+  //     th { background:#f0f0f0; }
+
+  //     .footer { text-align:center; margin-top:20px; font-size:12px; }
+  //   </style>
+  // </head>
+
+  // <body>
+
+  // ${Object.entries(filteredGroups)
+  //   .map(([subDeptId, list]) => {
+  //     return `
+  //     <div class="subdept-section">
+
+  //       <!-- Header -->
+  //       <div class="top-header-row">
+  //         <div class="top-favicon">
+  //           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" />
+  //         </div>
+
+  //         <div class="header">
+  //           <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
+  //           <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+
+  //           <div class="address">
+  //            13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+  //            Shibpur. Howrah-711102, W.B.
+  //           </div>
+
+  //           <div class="contact-info">
+  //             E-mail: patientdesk@lordshealthcare.org<br/>
+  //             Phone: 8272904444 | Toll Free: 1800-309-0895
+  //           </div>
+  //         </div>
+  //       </div>
+
+  //       <hr/>
+
+  //       <div class="title">CLINICAL PATHOLOGY — SubDept: ${depMap[subDeptId]}</div>
+
+  //       <!-- Patient Details -->
+  //       <div class="patient-block">
+  //         <div class="patient-col">
+  //           <p><b>Patient Name:</b> ${formData.PatientName}</p>
+  //           <p><b>Case No:</b> ${formData.CaseNo}</p>
+  //           <p><b>Phone:</b> ${formData.MobileNo}</p>
+  //           <p><b>Address:</b> ${formData.Add1} ${formData.Add2} ${formData.Add3}</p>
+  //         </div>
+
+  //         <div class="patient-col">
+  //           <p><b>Age:</b> ${formData.Age} ${formData.AgeType}</p>
+  //           <p><b>Sex:</b> ${formData.Sex}</p>
+  //           <p><b>Date:</b> ${new Date().toISOString().slice(0, 10)}</p>
+  //           <p><b>Doctor:</b> ${doctorName}</p>
+  //         </div>
+  //       </div>
+
+  //       <hr/>
+
+  //       <!-- Table -->
+  //       <table>
+  //         <thead>
+  //           <tr>
+  //             <th>Sl No</th>
+  //             <th>Test Name</th>
+  //             <th style="text-align:right;">Net Rate</th>
+  //           </tr>
+  //         </thead>
+
+  //         <tbody>
+  //           ${list
+  //             .map(
+  //               (t, i) => `
+  //               <tr>
+  //                 <td style="text-align:center;">${i + 1}</td>
+  //                 <td>${t.TestName} ${Number(t.CancelTast) === 1 ? "(Cancel)" : ""}</td>
+  //                 <td style="text-align:right;">${Number(t.CancelTast) === 1 ? 0 : t.NetRate}</td>
+  //               </tr>
+  //             `,
+  //             )
+  //             .join("")}
+  //         </tbody>
+
+  //         <tfoot>
+  //           <tr>
+  //             <td colspan="2" style="text-align:right;font-weight:bold;">Subtotal:</td>
+  //             <td style="text-align:right;font-weight:bold;">
+  //               ${list.reduce((sum, x) => sum + Number(Number(x.CancelTast) === 1 ? 0 : x.NetRate), 0)}
+  //             </td>
+  //           </tr>
+  //         </tfoot>
+  //       </table>
+
+  //       <div class="footer">** End of Report — This is a computer-generated document **</div>
+
+  //     </div>
+
+  //     <div class="page-break"></div>
+  //     `;
+  //   })
+  //   .join("")}
+
+  // </body>
+  // </html>
+  // `;
+
+  //   const win = window.open("", "_blank");
+  //   win.document.write(printContent);
+  //   win.document.close();
+  //   win.onload = () => win.print();
+  // };
+
   const handleDepPrint = (selectedDept) => {
     const doctorName =
       doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
 
-    // Filter only selected sub departments
     const filteredGroups = Object.keys(groupedTests)
-      .filter((key) => selectedDept.includes(key))
+      .filter((key) => selectedDept.includes(Number(key)))
       .reduce((acc, key) => {
         acc[key] = groupedTests[key];
         return acc;
@@ -1407,399 +1755,762 @@ const CaseEntry = () => {
       return;
     }
 
-    setShowSubDeptPopup(false); // Close popup
+    setShowSubDeptPopup(false);
 
     const printContent = `
-  <html>
-  <head>
-    <title>Department Print</title>
+<html>
+<head>
+<title>Department Print</title>
 
-    <style>
-      body { font-family: Arial; padding: 20px; font-size: 13px; }
+<style>
 
-      .page-break { page-break-after: always; }
+@page {
 
-      .top-header-row {
-        display: flex; justify-content: space-between; align-items: center;
-      }
-      .top-favicon img { width: 80px; }
-      .header { text-align: center; flex-grow: 1; }
-      .hospital-name { font-size: 20px; font-weight: bold; }
-      .address, .contact-info { font-size:12px; line-height:1.4; }
+  margin: 10mm;
+}
 
-      .title { font-size: 16px; text-align:center; font-weight:bold; margin-top:15px; }
+body{
+  font-family: Arial;
+  font-size:11px;
+  margin:0;
+  padding:0;
+}
 
-      .patient-block {
-        margin-top: 15px; display:flex; justify-content:space-between;
-        gap:40px; border:1px solid #000; padding:12px; background:#fafafa;
-      }
-      .patient-col { width: 48%; }
+.page-break{
+  page-break-after:always;
+}
 
-      table { width:100%; border-collapse: collapse; margin-top:15px; }
-      th, td { border:1px solid #333; padding:6px; font-size:13px; }
-      th { background:#f0f0f0; }
+.container{
+  width:100%;
+}
 
-      .footer { text-align:center; margin-top:20px; font-size:12px; }
-    </style>
-  </head>
+.top-header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-  <body>
+.top-favicon img{
+  width:55px;
+}
 
-  ${Object.entries(filteredGroups)
-    .map(([subDeptId, list]) => {
-      return `
-      <div class="subdept-section">
+.header{
+  text-align:center;
+  flex-grow:1;
+}
 
-        <!-- Header -->
-        <div class="top-header-row">
-          <div class="top-favicon">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" />
-          </div>
+.hospital-name{
+  font-size:15px;
+  font-weight:bold;
+}
 
-          <div class="header">
-            <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
-            <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+.address,.contact-info{
+  font-size:10px;
+  line-height:1.3;
+}
 
-            <div class="address">
-             13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
-             Shibpur. Howrah-711102, W.B.
-            </div>
+.title{
+  font-size:13px;
+  text-align:center;
+  font-weight:bold;
+  margin-top:8px;
+}
 
-            <div class="contact-info">
-              E-mail: patientdesk@lordshealthcare.org<br/>
-              Phone: 8272904444 | Toll Free: 1800-309-0895
-            </div>
-          </div>
-        </div>
+.patient-block{
+  margin-top:10px;
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  border:1px solid #000;
+  padding:8px;
+  background:#fafafa;
+}
 
-        <hr/>
+.patient-col{
+  width:48%;
+}
 
-        <div class="title">CLINICAL PATHOLOGY — SubDept: ${depMap[subDeptId]}</div>
+.patient-col p{
+  margin:2px 0;
+}
 
-        <!-- Patient Details -->
-        <div class="patient-block">
-          <div class="patient-col">
-            <p><b>Patient Name:</b> ${formData.PatientName}</p>
-            <p><b>Case No:</b> ${formData.CaseNo}</p>
-            <p><b>Phone:</b> ${formData.MobileNo}</p>
-            <p><b>Address:</b> ${formData.Add1} ${formData.Add2} ${formData.Add3}</p>
-          </div>
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
 
-          <div class="patient-col">
-            <p><b>Age:</b> ${formData.Age} ${formData.AgeType}</p>
-            <p><b>Sex:</b> ${formData.Sex}</p>
-            <p><b>Date:</b> ${new Date().toISOString().slice(0, 10)}</p>
-            <p><b>Doctor:</b> ${doctorName}</p>
-          </div>
-        </div>
+th,td{
+  border:1px solid #333;
+  padding:4px;
+  font-size:10px;
+}
 
-        <hr/>
+th{
+  background:#f0f0f0;
+}
 
-        <!-- Table -->
-        <table>
-          <thead>
-            <tr>
-              <th>Sl No</th>
-              <th>Test Name</th>
-              <th style="text-align:right;">Net Rate</th>
-            </tr>
-          </thead>
+.footer{
+  text-align:center;
+  margin-top:10px;
+  font-size:9px;
+}
 
-          <tbody>
-            ${list
-              .map(
-                (t, i) => `
-                <tr>
-                  <td style="text-align:center;">${i + 1}</td>
-                  <td>${t.TestName}</td>
-                  <td style="text-align:right;">${t.NetRate}</td>
-                </tr>
-              `,
-              )
-              .join("")}
-          </tbody>
+hr{
+  margin:6px 0;
+}
 
-          <tfoot>
-            <tr>
-              <td colspan="2" style="text-align:right;font-weight:bold;">Subtotal:</td>
-              <td style="text-align:right;font-weight:bold;">
-                ${list.reduce((sum, x) => sum + Number(x.NetRate), 0)}
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+</style>
+</head>
 
-        <div class="footer">** End of Report — This is a computer-generated document **</div>
+<body>
 
-      </div>
+${Object.entries(filteredGroups)
+  .map(([subDeptId, list]) => {
+    return `
 
-      <div class="page-break"></div>
-      `;
-    })
-    .join("")}
+<div class="container">
 
-  </body>
-  </html>
-  `;
+<div class="top-header-row">
+  <div class="top-favicon">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
+  </div>
+
+  <div class="header">
+    <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
+    <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+
+    <div class="address">
+      13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+      Shibpur. Howrah-711102, W.B.
+    </div>
+
+    <div class="contact-info">
+      E-mail: patientdesk@lordshealthcare.org<br/>
+      Phone: 8272904444 | Toll Free: 1800-309-0895
+    </div>
+  </div>
+</div>
+
+<hr/>
+
+<div class="title">
+CLINICAL PATHOLOGY — SubDept: ${depMap[subDeptId] || ""}
+</div>
+
+<div class="patient-block">
+
+  <div class="patient-col">
+    <p><b>Patient Name:</b> ${formData.PatientName}</p>
+    <p><b>Case No:</b> ${formData.CaseNo}</p>
+    <p><b>Phone:</b> ${formData.MobileNo}</p>
+    <p><b>Address:</b> ${formData.Add1} ${formData.Add2} ${formData.Add3}</p>
+  </div>
+
+  <div class="patient-col">
+    <p><b>Age:</b> ${formData.Age} ${formData.AgeType}</p>
+    <p><b>Sex:</b> ${formData.Sex}</p>
+    <p><b>Date:</b> ${new Date().toISOString().slice(0, 10)}</p>
+    <p><b>Doctor:</b> ${doctorName}</p>
+  </div>
+
+</div>
+
+<hr/>
+
+<table>
+
+<thead>
+<tr>
+<th>Sl No</th>
+<th>Test Name</th>
+<!-- <th style="text-align:right;">Net Rate</th> -->
+</tr>
+</thead>
+
+<tbody>
+
+${list
+  .map(
+    (t, i) => `
+<tr>
+<td style="text-align:center;">${i + 1}</td>
+<td>${t.TestName} ${Number(t.CancelTast) === 1 ? "(Cancel)" : ""}</td>
+<!--<td style="text-align:right;">${Number(t.CancelTast) === 1 ? 0 : t.NetRate}</td>-->
+</tr>
+`,
+  )
+  .join("")}
+
+</tbody>
+
+<tfoot>
+<!--  <tr>
+<td colspan="2" style="text-align:right;font-weight:bold;">Subtotal</td>
+
+<td style="text-align:right;font-weight:bold;">
+${list.reduce(
+  (sum, x) => sum + Number(Number(x.CancelTast) === 1 ? 0 : x.NetRate),
+  0,
+)}
+</td>
+
+</tr>  -->
+</tfoot>
+
+</table>
+
+<div class="footer">
+** End of Report — This is a computer-generated document **
+</div>
+
+</div>
+
+<div class="page-break"></div>
+
+`;
+  })
+  .join("")}
+
+</body>
+</html>
+`;
 
     const win = window.open("", "_blank");
     win.document.write(printContent);
     win.document.close();
+
     win.onload = () => win.print();
   };
 
   const handleBillPrint = () => {
     const logoUrl = "/assets/images/logo-small.png";
+
     const doctorName =
       doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
+
     const printContent = `
-  <html>
-  <head>
-    <title>Department Print</title>
+<html>
+<head>
+<title>Bill Print</title>
 
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        padding: 20px;
-        font-size: 13px;
-      }
+<style>
 
-      .top-header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+@page{
+  
+  margin:10mm;
+}
 
-      .top-favicon img {
-        width: 80px;
-        height: auto;
-      }
+body{
+  font-family:Arial, sans-serif;
+  font-size:11px;
+  margin:0;
+}
 
-      .header {
-        text-align: center;
-        flex-grow: 1;
-      }
+.top-header-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-      .hospital-name {
-        font-size: 20px;
-        font-weight: bold;
-        margin: 2px 0;
-      }
+.top-favicon img{
+  width:60px;
+}
 
-      .address, .contact-info {
-        font-size: 12px;
-        line-height: 1.4;
-        margin-top: 3px;
-      }
+.header{
+  text-align:center;
+  flex-grow:1;
+}
 
-      .title {
-        text-align: center;
-        font-weight: bold;
-        font-size: 16px;
-        margin-top: 15px;
-      }
+.hospital-name{
+  font-size:15px;
+  font-weight:bold;
+  margin:2px 0;
+}
 
-      /* ⭐ PATIENT DETAILS STYLE */
-      .patient-block {
-        margin-top: 15px;
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        gap: 40px;
-        border: 1px solid #000;
-        padding: 12px;
-        border-radius: 4px;
-        background: #fafafa;
-      }
+.address,.contact-info{
+  font-size:10px;
+  line-height:1.3;
+}
 
-      .patient-col {
-        width: 48%;
-        font-size: 13px;
-        line-height: 1.5;
-      }
+.title{
+  text-align:center;
+  font-weight:bold;
+  font-size:13px;
+  margin-top:8px;
+}
 
-      .patient-row {
-        display: flex;
-        margin-bottom: 6px;
-      }
+.patient-block{
+  margin-top:10px;
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  border:1px solid #000;
+  padding:8px;
+  background:#fafafa;
+}
 
-      .patient-label {
-        font-weight: bold;
-        width: 120px;
-        display: inline-block;
-      }
+.patient-col{
+  width:48%;
+  font-size:10px;
+}
 
-      .patient-value {
-        flex-grow: 1;
-      }
+.patient-row{
+  display:flex;
+  margin-bottom:3px;
+}
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-      }
+.patient-label{
+  font-weight:bold;
+  width:85px;
+}
 
-      th, td {
-        border: 1px solid #333;
-        padding: 6px;
-        font-size: 13px;
-      }
+.patient-value{
+  flex-grow:1;
+}
 
-      th {
-        background-color: #f0f0f0;
-      }
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
 
-      .footer {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 12px;
-        color: #555;
-      }
-    </style>
-  </head>
+th,td{
+  border:1px solid #333;
+  padding:4px;
+  font-size:10px;
+}
 
-  <body>
+th{
+  background:#f0f0f0;
+}
 
-    <!-- ⭐ TOP HEADER -->
-    <div class="top-header-row">
-     
-      <div class="top-favicon">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" />
-      </div>
+.footer{
+  text-align:center;
+  margin-top:10px;
+  font-size:9px;
+}
 
-      <div class="header">
-        <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
-        <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+hr{
+  margin:6px 0;
+}
 
-        <div class="address">
-          13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
-          (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
-        </div>
+</style>
 
-        <div class="contact-info">
-          E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
-          Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
-        </div>
-      </div>
-    </div>
+</head>
 
-    <hr/>
-   
-    <!-- MAIN TITLE -->
-    <div class="title">CLINICAL PATHOLOGY</div>
+<body>
 
-    <!-- ⭐ PATIENT DETAILS BLOCK -->
-    <div class="patient-block">
+<div class="top-header-row">
 
-      <div class="patient-col">
-        <div class="patient-row">
-          <span class="patient-label">Patient Name</span>
-          <span class="patient-value">${formData.PatientName}</span>
-        </div>
+<div class="top-favicon">
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
+</div>
 
-        <div class="patient-row">
-          <span class="patient-label">Case No</span>
-          <span class="patient-value">${formData.CaseNo}</span>
-        </div>
+<div class="header">
 
-        <div class="patient-row">
-          <span class="patient-label">Phone</span>
-          <span class="patient-value">${formData.MobileNo}</span>
-        </div>
+<div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
+<div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
 
-        <div class="patient-row">
-          <span class="patient-label">Address</span>
-          <span class="patient-value">${formData.Add1} ${formData.Add2} ${formData.Add3}</span>
-        </div>
-      </div>
+<div class="address">
+13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.
+</div>
 
-      <div class="patient-col">
-        <div class="patient-row">
-          <span class="patient-label">Age</span>
-          <span class="patient-value">${formData.Age} ${formData.AgeType}</span>
-        </div>
+<div class="contact-info">
+E-mail: patientdesk@lordshealthcare.org<br/>
+Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+</div>
 
-        <div class="patient-row">
-          <span class="patient-label">Sex</span>
-          <span class="patient-value">${formData.Sex}</span>
-        </div>
+</div>
 
-        <div class="patient-row">
-          <span class="patient-label">Date</span>
-          <span class="patient-value">${new Date().toISOString().slice(0, 10)}</span>
-        </div>
+</div>
 
-         <div class="patient-row">
-          <span class="patient-label">Doctor</span>
-           <span class="patient-value">${doctorName}</span>
-         
-        </div>
-      </div>
+<hr/>
 
-    </div>
+<div class="title">${formData.Balance == 0 ? "Money Receipt" : "BILL"}</div>
 
-    <hr/>
+<div class="patient-block">
 
-    <!-- ⭐ TABLE -->
-    <table>
-      <thead>
-        <tr>
-          <th style="width:60px;">Sl No</th>
-          <th>Test Name</th>
-          <th>Delivery Date</th>
-          <th style="width:120px; text-align:right;">Net Rate</th>
-        </tr>
-      </thead>
+<div class="patient-col">
 
-      <tbody>
-        ${
-          tests.length
-            ? tests
-                .map(
-                  (t, i) => `
-        <tr>
-          <td style="text-align:center;">${i + 1}</td>
-          <td>${t.TestName}</td>
-          <td>${t.DeliveryDate}</td>
-          <td style="text-align:right;">${t.NetRate}</td>
-        </tr>`,
-                )
-                .join("")
-            : `<tr><td colspan="3" style="text-align:center;">No Test Added</td></tr>`
-        }
-      </tbody>
-        <tfoot>
-        <tr>
-        <td/>
-          <td colspan="2" style="text-align:right; font-weight:bold;">Total Test Amount :</td>
-          <td style="text-align:right; font-weight:bold;">${formData.Total}</td>
-        </tr>
-         <tr>
-         <td/>
-          <td colspan="2" style="text-align:right; font-weight:bold;">Paid Amount :</td>
-          <td style="text-align:right; font-weight:bold;">${formData.ReceiptAmt}</td>
-        </tr>
-         <tr>
-         <td/>
-          <td colspan="2" style="text-align:right; font-weight:bold;">Due Amount :</td>
-          <td style="text-align:right; font-weight:bold;">${formData.Balance}</td>
-        </tr>
-      </tfoot>
-    </table>
+<div class="patient-row">
+<span class="patient-label">Patient</span>
+<span class="patient-value">${formData.PatientName}</span>
+</div>
 
-    <div class="footer">** End of Report — This is a computer-generated document **</div>
+<div class="patient-row">
+<span class="patient-label">Case No</span>
+<span class="patient-value">${formData.CaseNo}</span>
+</div>
 
-  </body>
-  </html>
-  `;
+<div class="patient-row">
+<span class="patient-label">Phone</span>
+<span class="patient-value">${formData.MobileNo}</span>
+</div>
+
+<div class="patient-row">
+<span class="patient-label">Address</span>
+<span class="patient-value">${formData.Add1} ${formData.Add2} ${formData.Add3}</span>
+</div>
+
+</div>
+
+<div class="patient-col">
+
+<div class="patient-row">
+<span class="patient-label">Age</span>
+<span class="patient-value">${formData.Age} ${formData.AgeType}</span>
+</div>
+
+<div class="patient-row">
+<span class="patient-label">Sex</span>
+<span class="patient-value">${formData.Sex}</span>
+</div>
+
+<div class="patient-row">
+<span class="patient-label">Date</span>
+<span class="patient-value">${new Date().toISOString().slice(0, 10)}</span>
+</div>
+
+<div class="patient-row">
+<span class="patient-label">Doctor</span>
+<span class="patient-value">${doctorName}</span>
+</div>
+
+</div>
+
+</div>
+
+<hr/>
+
+<table>
+
+<thead>
+
+<tr>
+<th style="width:40px;">Sl</th>
+<th>Test Name</th>
+<th style="width:90px;">Delivery</th>
+<th style="width:80px;text-align:right;">Net</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+${
+  tests.length
+    ? tests
+        .map(
+          (t, i) => `
+<tr>
+<td style="text-align:center;">${i + 1}</td>
+<td>${t.TestName} ${t.CancelTast == 1 ? "(Cancel)" : ""}</td>
+<td>${t.DeliveryDate}</td>
+<td style="text-align:right;">${t.CancelTast == 1 ? 0 : t.NetRate}</td>
+</tr>
+`,
+        )
+        .join("")
+    : `<tr><td colspan="4" style="text-align:center;">No Test Added</td></tr>`
+}
+
+</tbody>
+
+<tfoot>
+
+<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Total Test Amount</td>
+<td style="text-align:right;font-weight:bold;">${formData.GrossAmt}</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Paid Amount</td>
+<td style="text-align:right;font-weight:bold;">${formData.Advance}</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Due Amount</td>
+<td style="text-align:right;font-weight:bold;">${formData.Balance}</td>
+</tr>
+
+</tfoot>
+
+</table>
+
+<div class="footer">
+** End of Report — This is a computer-generated document **
+</div>
+
+</body>
+</html>
+`;
 
     const win = window.open("", "_blank");
+
     win.document.open();
     win.document.write(printContent);
     win.document.close();
 
     win.onload = () => win.print();
   };
+
+  // const handleBillPrint = () => {
+  //   const logoUrl = "/assets/images/logo-small.png";
+  //   const doctorName =
+  //     doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
+  //   const printContent = `
+  // <html>
+  // <head>
+  //   <title>Department Print</title>
+
+  //   <style>
+  //     body {
+  //       font-family: Arial, sans-serif;
+  //       padding: 20px;
+  //       font-size: 13px;
+  //     }
+
+  //     .top-header-row {
+  //       display: flex;
+  //       justify-content: space-between;
+  //       align-items: center;
+  //     }
+
+  //     .top-favicon img {
+  //       width: 80px;
+  //       height: auto;
+  //     }
+
+  //     .header {
+  //       text-align: center;
+  //       flex-grow: 1;
+  //     }
+
+  //     .hospital-name {
+  //       font-size: 20px;
+  //       font-weight: bold;
+  //       margin: 2px 0;
+  //     }
+
+  //     .address, .contact-info {
+  //       font-size: 12px;
+  //       line-height: 1.4;
+  //       margin-top: 3px;
+  //     }
+
+  //     .title {
+  //       text-align: center;
+  //       font-weight: bold;
+  //       font-size: 16px;
+  //       margin-top: 15px;
+  //     }
+
+  //     /* ⭐ PATIENT DETAILS STYLE */
+  //     .patient-block {
+  //       margin-top: 15px;
+  //       display: flex;
+  //       justify-content: space-between;
+  //       width: 100%;
+  //       gap: 40px;
+  //       border: 1px solid #000;
+  //       padding: 12px;
+  //       border-radius: 4px;
+  //       background: #fafafa;
+  //     }
+
+  //     .patient-col {
+  //       width: 48%;
+  //       font-size: 13px;
+  //       line-height: 1.5;
+  //     }
+
+  //     .patient-row {
+  //       display: flex;
+  //       margin-bottom: 6px;
+  //     }
+
+  //     .patient-label {
+  //       font-weight: bold;
+  //       width: 120px;
+  //       display: inline-block;
+  //     }
+
+  //     .patient-value {
+  //       flex-grow: 1;
+  //     }
+
+  //     table {
+  //       width: 100%;
+  //       border-collapse: collapse;
+  //       margin-top: 15px;
+  //     }
+
+  //     th, td {
+  //       border: 1px solid #333;
+  //       padding: 6px;
+  //       font-size: 13px;
+  //     }
+
+  //     th {
+  //       background-color: #f0f0f0;
+  //     }
+
+  //     .footer {
+  //       text-align: center;
+  //       margin-top: 20px;
+  //       font-size: 12px;
+  //       color: #555;
+  //     }
+  //   </style>
+  // </head>
+
+  // <body>
+
+  //   <!-- ⭐ TOP HEADER -->
+  //   <div class="top-header-row">
+
+  //     <div class="top-favicon">
+  //       <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s" />
+  //     </div>
+
+  //     <div class="header">
+  //       <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
+  //       <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+
+  //       <div class="address">
+  //         13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+  //         (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
+  //       </div>
+
+  //       <div class="contact-info">
+  //         E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
+  //         Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+  //       </div>
+  //     </div>
+  //   </div>
+
+  //   <hr/>
+
+  //   <!-- MAIN TITLE -->
+  //   <div class="title">CLINICAL PATHOLOGY</div>
+
+  //   <!-- ⭐ PATIENT DETAILS BLOCK -->
+  //   <div class="patient-block">
+
+  //     <div class="patient-col">
+  //       <div class="patient-row">
+  //         <span class="patient-label">Patient Name</span>
+  //         <span class="patient-value">${formData.PatientName}</span>
+  //       </div>
+
+  //       <div class="patient-row">
+  //         <span class="patient-label">Case No</span>
+  //         <span class="patient-value">${formData.CaseNo}</span>
+  //       </div>
+
+  //       <div class="patient-row">
+  //         <span class="patient-label">Phone</span>
+  //         <span class="patient-value">${formData.MobileNo}</span>
+  //       </div>
+
+  //       <div class="patient-row">
+  //         <span class="patient-label">Address</span>
+  //         <span class="patient-value">${formData.Add1} ${formData.Add2} ${formData.Add3}</span>
+  //       </div>
+  //     </div>
+
+  //     <div class="patient-col">
+  //       <div class="patient-row">
+  //         <span class="patient-label">Age</span>
+  //         <span class="patient-value">${formData.Age} ${formData.AgeType}</span>
+  //       </div>
+
+  //       <div class="patient-row">
+  //         <span class="patient-label">Sex</span>
+  //         <span class="patient-value">${formData.Sex}</span>
+  //       </div>
+
+  //       <div class="patient-row">
+  //         <span class="patient-label">Date</span>
+  //         <span class="patient-value">${new Date().toISOString().slice(0, 10)}</span>
+  //       </div>
+
+  //        <div class="patient-row">
+  //         <span class="patient-label">Doctor</span>
+  //          <span class="patient-value">${doctorName}</span>
+
+  //       </div>
+  //     </div>
+
+  //   </div>
+
+  //   <hr/>
+
+  //   <!-- ⭐ TABLE -->
+  //   <table>
+  //     <thead>
+  //       <tr>
+  //         <th style="width:60px;">Sl No</th>
+  //         <th>Test Name</th>
+  //         <th>Delivery Date</th>
+  //         <th style="width:120px; text-align:right;">Net Rate</th>
+  //       </tr>
+  //     </thead>
+
+  //     <tbody>
+  //       ${
+  //         tests.length
+  //           ? tests
+  //               .map(
+  //                 (t, i) => `
+  //       <tr>
+  //         <td style="text-align:center;">${i + 1}</td>
+  //         <td>${t.TestName}</td>
+  //         <td>${t.DeliveryDate}</td>
+  //         <td style="text-align:right;">${t.NetRate}</td>
+  //       </tr>`,
+  //               )
+  //               .join("")
+  //           : `<tr><td colspan="3" style="text-align:center;">No Test Added</td></tr>`
+  //       }
+  //     </tbody>
+  //       <tfoot>
+  //       <tr>
+  //       <td/>
+  //         <td colspan="2" style="text-align:right; font-weight:bold;">Total Test Amount :</td>
+  //         <td style="text-align:right; font-weight:bold;">${formData.Total}</td>
+  //       </tr>
+  //        <tr>
+  //        <td/>
+  //         <td colspan="2" style="text-align:right; font-weight:bold;">Paid Amount :</td>
+  //         <td style="text-align:right; font-weight:bold;">${formData.ReceiptAmt}</td>
+  //       </tr>
+  //        <tr>
+  //        <td/>
+  //         <td colspan="2" style="text-align:right; font-weight:bold;">Due Amount :</td>
+  //         <td style="text-align:right; font-weight:bold;">${formData.Balance}</td>
+  //       </tr>
+  //     </tfoot>
+  //   </table>
+
+  //   <div class="footer">** End of Report — This is a computer-generated document **</div>
+
+  // </body>
+  // </html>
+  // `;
+
+  //   const win = window.open("", "_blank");
+  //   win.document.open();
+  //   win.document.write(printContent);
+  //   win.document.close();
+
+  //   win.onload = () => win.print();
+  // };
 
   // remove this for chatGpt
   // useEffect(() => {
@@ -2850,7 +3561,7 @@ const CaseEntry = () => {
               {/* SECTION 9: BILL SUMMARY */}
               <div className="col-12 col-md-3">
                 <div className="p-1 h-100 d-flex flex-column gap-1">
-                  <Select
+                 {showAddTest&& <Select
                     key={indoor}
                     styles={compactSelectStyles}
                     value={selectedTestMaster}
@@ -2877,16 +3588,24 @@ const CaseEntry = () => {
                     className="react-select-container"
                     classNamePrefix="react-select"
                     style={{ width: "280px" }} // ⬅ search box width increased (change anytime)
-                  />
+                  />}
                   <div className="d-flex align-items-start">
-                    <button
+                  {showAddTest &&  <button
                       className="btn btn-success btn-sm py-1 px-1"
-                      onClick={handleAddTest}
+                      onClick={() => {
+                        console.log("show add test",showAddTest)
+                        if(showAddTest){
+
+                          handleAddTest()
+                        }
+                      }
+                      
+                      }
                       disabled={mode === "view" || !selectedTestMaster}
                       style={{ fontSize: "11px" }}
                     >
                       Add Test
-                    </button>
+                    </button>}
 
                     <div className="flex-grow-1 ms-1">
                       <div className="d-flex justify-content-end align-items-center mb-1">
@@ -2919,7 +3638,15 @@ const CaseEntry = () => {
                       type="text"
                       name="DescAmt"
                       value={formData.DescAmt}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        let discPerc = (e.target.value * 100) / formData.Total;
+
+                        setFormData((prev) => ({
+                          ...prev,
+                          Desc: discPerc,
+                        }));
+                      }}
                       className="text-end fw-bold ms-1"
                       style={{ ...inputStyle, width: "80px" }}
                     />
@@ -3197,9 +3924,19 @@ const CaseEntry = () => {
                       <label style={{ ...labelStyle, width: "auto" }}>
                         No of Copy
                       </label>
-                      <input
+                      {/* <input
                         type="text"
                         defaultValue="0"
+                        style={{ ...inputStyle, width: "40px" }}
+                      /> */}
+
+                      <input
+                        type="number"
+                        value={barcodeCopies}
+                        min="1"
+                        onChange={(e) =>
+                          setBarcodeCopies(Number(e.target.value))
+                        }
                         style={{ ...inputStyle, width: "40px" }}
                       />
 
@@ -3212,6 +3949,7 @@ const CaseEntry = () => {
                           fontWeight: "bold",
                           border: "1px solid #cc8400",
                         }}
+                        onClick={handleBarcodePrint}
                       >
                         BarCode Print
                       </button>
@@ -3369,6 +4107,81 @@ const CaseEntry = () => {
         setShow={setShow}
         data={receiptDetailData}
       />
+
+      {/* {showSubDeptPopup && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "rgba(0,0,0,0.4)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+    }}
+  >
+    <div
+      style={{
+        background: "#fff",
+        padding: 20,
+        width: 350,
+        borderRadius: 5,
+      }}
+    >
+      <h6>Select Sub Department</h6>
+
+      {subDeptList.map((id) => (
+        <div key={id}>
+          <input
+            type="checkbox"
+            checked={selectedSubDept.includes(Number(id))}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedSubDept([...selectedSubDept, Number(id)]);
+              } else {
+                setSelectedSubDept(
+                  selectedSubDept.filter((x) => x !== Number(id)),
+                );
+              }
+            }}
+          />
+          <label className="ms-2">{depMap[id]}</label>
+        </div>
+      ))}
+
+      <div className="mt-3 d-flex justify-content-end gap-2">
+        <button
+          className="btn btn-sm btn-secondary"
+          onClick={() => setShowSubDeptPopup(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn btn-sm btn-primary"
+          onClick={() => handleDepPrint(selectedSubDept)}
+        >
+          Print
+        </button>
+      </div>
+    </div>
+  </div>
+)} */}
+      {console.log("Grouped tests: ", groupedTests)}
+      {/* {console.log("Grouped tests: ",groupedTests)} */}
+      {showSubDeptPopup && (
+        <SubDeptSelector
+          groupedTests={groupedTests}
+          selectedSubDept={selectedSubDept}
+          setSelectedSubDept={setSelectedSubDept}
+          depMap={depMap}
+          onClose={() => setShowSubDeptPopup(false)}
+          onPrint={() => handleDepPrint(selectedSubDept)}
+        />
+      )}
     </div>
   );
 };

@@ -48,17 +48,20 @@ const SubDeptSelector = ({
           >
             <input
               type="checkbox"
-              checked={selectedSubDept.includes(key)}
+              //   checked={selectedSubDept.includes(key)}
+              checked={selectedSubDept.includes(Number(key))}
               onChange={() => {
+                const id = Number(key);
+
                 setSelectedSubDept((prev) =>
-                  prev.includes(key)
-                    ? prev.filter((x) => x !== key)
-                    : [...prev, key]
+                  prev.includes(id)
+                    ? prev.filter((x) => x !== id)
+                    : [...prev, id],
                 );
               }}
               style={{ marginRight: "8px" }}
             />
-            SubDept :{depMap[key]}
+            SubDept :{depMap[key] || key}{" "}
           </label>
         ))}
       </div>

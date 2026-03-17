@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useContext } from "react";
 import axiosInstance from "../../axiosInstance";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
@@ -5,8 +6,14 @@ import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DigiContext } from "../../context/DigiContext";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
+import { createPortal } from "react-dom";
+
+const PortalModal = ({ children }) => {
+  return createPortal(children, document.body);
+};
 
 const TestMaster = () => {
   const { isBelowLg } = useContext(DigiContext);
@@ -85,27 +92,36 @@ const TestMaster = () => {
   const drawerRef = useRef(null);
 
   const [showHtmlEditor, setShowHtmlEditor] = useState(false);
-  const [htmlContent, setHtmlContent] = useState('');
+  const [htmlContent, setHtmlContent] = useState("");
   const [currentTestForHtml, setCurrentTestForHtml] = useState(null);
   const [isEditingHtml, setIsEditingHtml] = useState(false);
 
   const handleViewHtml = async (test) => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/tests/${test.TestId}`);
-      
+      // This API auto-converts from R2 if html_content is empty
+      const response = await axiosInstance.get(`/tests/${test.TestId}/html-content`);
+
       if (response.data.success && response.data.data) {
-        const content = response.data.data.html_content || '';
-        setHtmlContent(content);
+        const { htmlContent: content, source } = response.data.data;
+        setHtmlContent(content || "");
         setCurrentTestForHtml(test);
-        setIsEditingHtml(false); // Start with visual editor
+        setIsEditingHtml(false);
         setShowHtmlEditor(true);
+
+        if (source === 'converted') {
+          toast.success("DOCX converted to HTML successfully!");
+        } else if (source === 'r2_not_found') {
+          toast.warn("No DOCX file found in R2 for this test");
+        } else if (source === 'empty') {
+          toast.info("No file linked to this test");
+        }
       } else {
-        toast.error('Failed to load test data');
+        toast.error("Failed to load test data");
       }
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to load HTML content');
+      console.error("Error:", error);
+      toast.error("Failed to load HTML content");
     } finally {
       setLoading(false);
     }
@@ -113,68 +129,85 @@ const TestMaster = () => {
 
   const handleSaveHtmlContent = async () => {
     if (!currentTestForHtml?.TestId) return;
-    
+
     try {
       setLoading(true);
-      await axiosInstance.put(`/tests/${currentTestForHtml.TestId}`, {
-        html_content: htmlContent
+      await axiosInstance.put(`/tests/${currentTestForHtml.TestId}/html-content`, {
+        htmlContent: htmlContent,
       });
-      toast.success('HTML content updated successfully!');
+      toast.success("HTML content updated successfully!");
       setShowHtmlEditor(false);
       fetchTests(page);
     } catch (error) {
-      console.error('Error saving HTML:', error);
-      toast.error('Failed to save HTML content');
+      console.error("Error saving HTML:", error);
+      toast.error("Failed to save HTML content");
     } finally {
       setLoading(false);
     }
   };
 
+  // Force re-convert from R2 (even if html already exists)
+  const handleReconvert = async () => {
+    if (!currentTestForHtml?.TestId) return;
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post(`/tests/${currentTestForHtml.TestId}/convert-existing-file`);
+      if (res.data.success) {
+        setHtmlContent(res.data.data.htmlContent || "");
+        toast.success("Re-converted from DOCX!");
+      } else {
+        toast.error(res.data.message || "Re-convert failed");
+      }
+    } catch (error) {
+      console.error("Re-convert error:", error);
+      toast.error("Failed to re-convert from DOCX");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   //// for search-------
   const [searchText, setSearchText] = useState("");
-const [isSearching, setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
-// search api fetch ---------
-const handleSearch = async () => {
-  if (!searchText.trim()) {
-    toast.info("Enter test name to search");
-    return;
-  }
+  // search api fetch ---------
+  const handleSearch = async () => {
+    if (!searchText.trim()) {
+      toast.info("Enter test name to search");
+      return;
+    }
 
-  setIsSearching(true);
-  setLoading(true);
+    setIsSearching(true);
+    setLoading(true);
 
-  try {
-    const res = await axiosInstance.get(
-      `/tests/search/advanced?test=${encodeURIComponent(searchText)}&page=1&limit=${limit}`
-    );
+    try {
+      const res = await axiosInstance.get(
+        `/tests/search/advanced?test=${encodeURIComponent(searchText)}&page=1&limit=${limit}`,
+      );
 
-    setTests(res.data.data || []);
-    const pag = res.data.pagination || {};
-    setPage(pag.currentPage ?? 1);
-    setTotalPages(pag.totalPages ?? 1);
-
-  } catch (err) {
-    console.error("Search error:", err);
-    toast.error("Search failed");
-  } finally {
-    setLoading(false);
-  }
-};
-// clear search----- 
-const clearSearch = () => {
-  setSearchText("");
-  setIsSearching(false);
-  fetchTests(1);   // back to normal list
-};
-// onkey press search--- 
-const onKeyPressSearch = (e) => {
-  if (e.key === "Enter") {
-    handleSearch();
-  }
-};
-
+      setTests(res.data.data || []);
+      const pag = res.data.pagination || {};
+      setPage(pag.currentPage ?? 1);
+      setTotalPages(pag.totalPages ?? 1);
+    } catch (err) {
+      console.error("Search error:", err);
+      toast.error("Search failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+  // clear search-----
+  const clearSearch = () => {
+    setSearchText("");
+    setIsSearching(false);
+    fetchTests(1); // back to normal list
+  };
+  // onkey press search---
+  const onKeyPressSearch = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   // helper
   const toNumberOrNull = (v) => {
@@ -210,8 +243,10 @@ const onKeyPressSearch = (e) => {
   const fetchTests = async (pageNumber = 1) => {
     setLoading(true);
     try {
-      const endpoint = showInactive ? '/tests/inactive' : '/tests';
-      const res = await axiosInstance.get(`${endpoint}?page=${pageNumber}&limit=${limit}`);
+      const endpoint = showInactive ? "/tests/inactive" : "/tests";
+      const res = await axiosInstance.get(
+        `${endpoint}?page=${pageNumber}&limit=${limit}`,
+      );
       const data = res.data.data || [];
       setTests(data);
 
@@ -227,7 +262,6 @@ const onKeyPressSearch = (e) => {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     fetchSubDepartments();
@@ -249,7 +283,7 @@ const onKeyPressSearch = (e) => {
     setFormData({
       ...emptyForm,
       ...item,
-       NABLTag: item.NABLTag === 1 ? true : false,
+      NABLTag: item.NABLTag === 1 ? true : false,
     });
     setEditingItem(item);
     setModalType("edit");
@@ -260,7 +294,7 @@ const onKeyPressSearch = (e) => {
     setFormData({
       ...emptyForm,
       ...item,
-       NABLTag: item.NABLTag === 1 ? true : false,
+      NABLTag: item.NABLTag === 1 ? true : false,
     });
     setEditingItem(item);
     setModalType("view");
@@ -390,7 +424,7 @@ const onKeyPressSearch = (e) => {
 
   const getSubDeptName = (id) => {
     const it = subDepartments.find(
-      (d) => Number(d.SubDepartmentId) === Number(id)
+      (d) => Number(d.SubDepartmentId) === Number(id),
     );
     return it ? it.SubDepartment : "N/A";
   };
@@ -411,9 +445,7 @@ const onKeyPressSearch = (e) => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-
-
-    return (
+  return (
     <div className="main-content">
       <ToastContainer />
 
@@ -421,27 +453,30 @@ const onKeyPressSearch = (e) => {
       <div className="panel">
         <div className="panel-header d-flex justify-content-between align-items-center">
           <h5>🧪 Test Master</h5>
-<div className="d-flex gap-2">
-  <input
-    type="text"
-    className="form-control form-control-sm"
-    placeholder="🔍 Search Test Name"
-    value={searchText}
-    onChange={(e) => setSearchText(e.target.value)}
-    onKeyDown={onKeyPressSearch}
-    style={{ width: 220 }}
-  />
+          <div className="d-flex gap-2">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              placeholder="🔍 Search Test Name"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={onKeyPressSearch}
+              style={{ width: 220 }}
+            />
 
-  <button className="btn btn-sm btn-info" onClick={handleSearch}>
-    <i className="fa fa-search"></i>
-  </button>
+            <button className="btn btn-sm btn-info" onClick={handleSearch}>
+              <i className="fa fa-search"></i>
+            </button>
 
-  {isSearching && (
-    <button className="btn btn-sm btn-secondary" onClick={clearSearch}>
-      Clear
-    </button>
-  )}
-</div>
+            {isSearching && (
+              <button
+                className="btn btn-sm btn-secondary"
+                onClick={clearSearch}
+              >
+                Clear
+              </button>
+            )}
+          </div>
 
           <div className="d-flex gap-2">
             <button
@@ -463,7 +498,13 @@ const onKeyPressSearch = (e) => {
             </div>
           ) : (
             <OverlayScrollbarsComponent>
-              <div style={{ height: isBelowLg ? "calc(100vh - 250px)" : "calc(100vh - 200px)" }}>
+              <div
+                style={{
+                  height: isBelowLg
+                    ? "calc(100vh - 250px)"
+                    : "calc(100vh - 200px)",
+                }}
+              >
                 <table className="table table-sm table-striped table-hover table-dashed">
                   <thead className="sticky-top">
                     <tr>
@@ -554,7 +595,9 @@ const onKeyPressSearch = (e) => {
           </li>
 
           <li className="page-item disabled">
-            <button className="page-link">{page}/{totalPages}</button>
+            <button className="page-link">
+              {page}/{totalPages}
+            </button>
           </li>
 
           <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
@@ -598,29 +641,30 @@ const onKeyPressSearch = (e) => {
 
             <div className="top-panel" style={{ height: "100%" }}>
               <div className="d-flex justify-content-between me-3 ">
-                 <div
-                className="dropdown-txt"
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 10,
-                  // backgroundColor: "#0a1735",
-                  // color: "#fff",
-                  padding: "10px",
-                }}
-              >
-                {modalType === "add"
-                  ? "➕ Add Test"
-                  : modalType === "edit"
-                  ? "✏️ Edit Test"
-                  : "👁️ View Test"}
+                <div
+                  className="dropdown-txt"
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 10,
+                    // backgroundColor: "#0a1735",
+                    // color: "#fff",
+                    padding: "10px",
+                  }}
+                >
+                  {modalType === "add"
+                    ? "➕ Add Test"
+                    : modalType === "edit"
+                      ? "✏️ Edit Test"
+                      : "👁️ View Test"}
+                </div>
+                <div
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setShowDrawer(false)}
+                >
+                  X
+                </div>
               </div>
-              <div style={{cursor:"pointer"}} onClick={() => setShowDrawer(false)}>
-                X
-              </div>
-              </div>
-             
-              
 
               <OverlayScrollbarsComponent
                 style={{ height: "calc(100% - 50px)" }}
@@ -652,7 +696,7 @@ const onKeyPressSearch = (e) => {
                             type="radio"
                             name="nablRadio"
                             id="nablYes"
-                            checked={formData.NABLTag === true }
+                            checked={formData.NABLTag === true}
                             onChange={() => handleInput("NABLTag", true)}
                             disabled={modalType === "view"}
                           />
@@ -669,7 +713,7 @@ const onKeyPressSearch = (e) => {
                             type="radio"
                             name="nablRadio"
                             id="nablNo"
-                            checked={formData.NABLTag === false }
+                            checked={formData.NABLTag === false}
                             onChange={() => handleInput("NABLTag", false)}
                             disabled={modalType === "view"}
                           />
@@ -751,9 +795,7 @@ const onKeyPressSearch = (e) => {
                         <input
                           className="form-control form-control-sm"
                           value={formData.Test}
-                          onChange={(e) =>
-                            handleInput("Test", e.target.value)
-                          }
+                          onChange={(e) => handleInput("Test", e.target.value)}
                           disabled={modalType === "view"}
                           required
                         />
@@ -786,7 +828,7 @@ const onKeyPressSearch = (e) => {
                           disabled={modalType === "view"}
                         />
                       </div>
-                       <div className="col-md-2">
+                      <div className="col-md-2">
                         <label className="form-label fw-bold small">
                           Method
                         </label>
@@ -841,18 +883,14 @@ const onKeyPressSearch = (e) => {
                         >
                           <option value="">Select</option>
                           {sampleTypes.map((s) => (
-                            <option
-                              key={s.SampleTypeId}
-                              value={s.SampleTypeId}
-                            >
+                            <option key={s.SampleTypeId} value={s.SampleTypeId}>
                               {s.SampleType}
                               {s.Colour ? ` (${s.Colour})` : ""}
                             </option>
                           ))}
                         </select>
-                        
                       </div>
- <div className="col-md-2">
+                      <div className="col-md-2">
                         <label className="form-label fw-bold small">
                           Delivery After
                         </label>
@@ -867,13 +905,10 @@ const onKeyPressSearch = (e) => {
                           disabled={modalType === "view"}
                         />
                       </div>
-                     
                     </div>
 
                     {/* Delivery / DescFormat / Rate / ARate / BRate / ICU */}
                     <div className="row mt-1">
-                     
-
                       {/* <div className="col-md-2">
                         <label className="form-label fw-bold small">
                           Format ID
@@ -890,16 +925,12 @@ const onKeyPressSearch = (e) => {
                       </div> */}
 
                       <div className="col-md-2">
-                        <label className="form-label fw-bold small">
-                          Rate
-                        </label>
+                        <label className="form-label fw-bold small">Rate</label>
                         <input
                           type="number"
                           className="form-control form-control-sm"
                           value={formData.Rate ?? ""}
-                          onChange={(e) =>
-                            handleInput("Rate", e.target.value)
-                          }
+                          onChange={(e) => handleInput("Rate", e.target.value)}
                           disabled={modalType === "view"}
                         />
                       </div>
@@ -927,9 +958,7 @@ const onKeyPressSearch = (e) => {
                           type="number"
                           className="form-control form-control-sm"
                           value={formData.BRate ?? ""}
-                          onChange={(e) =>
-                            handleInput("BRate", e.target.value)
-                          }
+                          onChange={(e) => handleInput("BRate", e.target.value)}
                           disabled={modalType === "view"}
                         />
                       </div>
@@ -948,7 +977,7 @@ const onKeyPressSearch = (e) => {
                           disabled={modalType === "view"}
                         />
                       </div>
-                       <div className="col-md-2">
+                      <div className="col-md-2">
                         <label className="form-label fw-bold small">
                           CAB Rate
                         </label>
@@ -962,7 +991,7 @@ const onKeyPressSearch = (e) => {
                           disabled={modalType === "view"}
                         />
                       </div>
-                        <div className="col-md-2">
+                      <div className="col-md-2">
                         <label className="form-label fw-bold small">
                           SUIT Rate
                         </label>
@@ -976,24 +1005,17 @@ const onKeyPressSearch = (e) => {
                           disabled={modalType === "view"}
                         />
                       </div>
-                        <div className="col-md-2">
-                        <label className="form-label fw-bold small">
-                          Cost
-                        </label>
+                      <div className="col-md-2">
+                        <label className="form-label fw-bold small">Cost</label>
                         <input
                           type="number"
                           className="form-control form-control-sm"
                           value={formData.cost ?? ""}
-                          onChange={(e) =>
-                            handleInput("cost", e.target.value)
-                          }
+                          onChange={(e) => handleInput("cost", e.target.value)}
                           disabled={modalType === "view"}
                         />
                       </div>
                     </div>
-
-                 
-                    
 
                     {/* Profile Tag + BloodFormat */}
                     <div className="row mt-1">
@@ -1362,8 +1384,6 @@ const onKeyPressSearch = (e) => {
                       />
                     </div>
 
-
-
                     {/* Footer buttons */}
                     <div className="d-flex gap-2 mt-1">
                       <button
@@ -1383,8 +1403,8 @@ const onKeyPressSearch = (e) => {
                           {loading
                             ? "Saving..."
                             : modalType === "edit"
-                            ? "Update Test"
-                            : "Save Test"}
+                              ? "Update Test"
+                              : "Save Test"}
                         </button>
                       )}
                     </div>
@@ -1398,94 +1418,120 @@ const onKeyPressSearch = (e) => {
 
       {/* ---------- HTML Editor Modal ---------- */}
       {showHtmlEditor && (
-        <>
-          <div
-            className="modal-backdrop fade show"
-            style={{ zIndex: 99999 }}
-            onClick={() => setShowHtmlEditor(false)}
-          ></div>
-          <div
-            className="modal d-block"
-            style={{ zIndex: 100000 }}
-            onClick={() => setShowHtmlEditor(false)}
-          >
+        <PortalModal>
+          <>
             <div
-              className="modal-dialog modal-xl modal-dialog-centered"
-              style={{ maxWidth: '95%', height: '95vh' }}
-              onClick={(e) => e.stopPropagation()}
+              className="modal-backdrop fade show"
+              style={{ zIndex: 99999 }}
+              onClick={() => setShowHtmlEditor(false)}
+            ></div>
+            <div
+              className="modal d-block"
+              style={{ zIndex: 100000 }}
+              onClick={() => setShowHtmlEditor(false)}
             >
-              <div className="modal-content" style={{ height: '100%' }}>
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    <i className="fa-light fa-file-lines me-2"></i>
-                    HTML Content - {currentTestForHtml?.Test}
-                  </h5>
-                  <button
-                    className="btn-close"
-                    onClick={() => setShowHtmlEditor(false)}
-                  ></button>
-                </div>
-
-                <div className="modal-body" style={{ height: 'calc(100% - 120px)', display: 'flex', flexDirection: 'column' }}>
-                  {isEditingHtml ? (
-                    <textarea
-                      className="form-control"
-                      style={{ height: '100%', fontFamily: 'monospace', fontSize: '14px' }}
-                      value={htmlContent}
-                      onChange={(e) => setHtmlContent(e.target.value)}
-                      placeholder="Enter HTML content here..."
-                    />
-                  ) : (
-                    <ReactQuill
-                      theme="snow"
-                      value={htmlContent}
-                      onChange={setHtmlContent}
-                      style={{ height: 'calc(100% - 50px)' }}
-                      modules={{
-                        toolbar: [
-                          [{ 'header': [1, 2, 3, false] }],
-                          ['bold', 'italic', 'underline', 'strike'],
-                          [{ 'color': [] }, { 'background': [] }],
-                          [{ 'align': [] }],
-                          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                          ['link', 'image'],
-                          ['clean']
-                        ]
-                      }}
-                    />
-                  )}
-                </div>
-
-                <div className="modal-footer d-flex justify-content-between">
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setIsEditingHtml(!isEditingHtml)}
-                  >
-                    <i className={`fa-light fa-${isEditingHtml ? 'eye' : 'code'} me-2`}></i>
-                    {isEditingHtml ? 'Visual Editor' : 'View HTML Code'}
-                  </button>
-                  
-                  <div className="d-flex gap-2">
+              <div
+                className="modal-dialog modal-xl modal-dialog-centered"
+                style={{ maxWidth: "95%", height: "95vh" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-content" style={{ height: "100%" }}>
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <i className="fa-light fa-file-lines me-2"></i>
+                      HTML Content - {currentTestForHtml?.Test}
+                    </h5>
                     <button
-                      className="btn btn-secondary"
+                      className="btn-close"
                       onClick={() => setShowHtmlEditor(false)}
-                    >
-                      Close
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      onClick={handleSaveHtmlContent}
-                      disabled={loading}
-                    >
-                      <i className="fa-light fa-save me-2"></i>
-                      {loading ? 'Saving...' : 'Save HTML'}
-                    </button>
+                    ></button>
+                  </div>
+
+                  <div
+                    className="modal-body"
+                    style={{
+                      height: "calc(100% - 120px)",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    {isEditingHtml ? (
+                      <textarea
+                        className="form-control"
+                        style={{
+                          height: "100%",
+                          fontFamily: "monospace",
+                          fontSize: "14px",
+                        }}
+                        value={htmlContent}
+                        onChange={(e) => setHtmlContent(e.target.value)}
+                        placeholder="Enter HTML content here..."
+                      />
+                    ) : (
+                      <ReactQuill
+                        theme="snow"
+                        value={htmlContent}
+                        onChange={setHtmlContent}
+                        style={{ height: "calc(100% - 50px)" }}
+                        modules={{
+                          toolbar: [
+                            [{ header: [1, 2, 3, false] }],
+                            ["bold", "italic", "underline", "strike"],
+                            [{ color: [] }, { background: [] }],
+                            [{ align: [] }],
+                            [{ list: "ordered" }, { list: "bullet" }],
+                            ["link", "image"],
+                            ["clean"],
+                          ],
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="modal-footer d-flex justify-content-between">
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setIsEditingHtml(!isEditingHtml)}
+                      >
+                        <i
+                          className={`fa-light fa-${isEditingHtml ? "eye" : "code"} me-2`}
+                        ></i>
+                        {isEditingHtml ? "Visual Editor" : "View HTML Code"}
+                      </button>
+                      <button
+                        className="btn btn-warning"
+                        onClick={handleReconvert}
+                        disabled={loading}
+                        title="Re-download DOCX from R2 and convert again"
+                      >
+                        <i className="fa-light fa-rotate me-2"></i>
+                        {loading ? "Converting..." : "Re-convert DOCX"}
+                      </button>
+                    </div>
+
+                    <div className="d-flex gap-2">
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowHtmlEditor(false)}
+                      >
+                        Close
+                      </button>
+                      <button
+                        className="btn btn-primary"
+                        onClick={handleSaveHtmlContent}
+                        disabled={loading}
+                      >
+                        <i className="fa-light fa-save me-2"></i>
+                        {loading ? "Saving..." : "Save HTML"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </>
+          </>
+        </PortalModal>
       )}
 
       {/* ---------- Delete Confirm Modal ---------- */}
@@ -1550,3 +1596,4 @@ const onKeyPressSearch = (e) => {
 };
 
 export default TestMaster;
+

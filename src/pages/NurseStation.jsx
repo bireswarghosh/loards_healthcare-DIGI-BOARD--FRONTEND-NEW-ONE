@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import NurseStationFinalBilling from './NurseStationFinalBilling';
+import React, { useState } from "react";
+import NurseStationFinalBilling from "./NurseStationFinalBilling";
+import { useNavigate } from "react-router-dom";
 
 const NurseStation = () => {
-  const [selectedBed, setSelectedBed] = useState('01 ICU');
+  const [selectedBed, setSelectedBed] = useState("01 ICU");
   const [isBedListOpen, setIsBedListOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   // --- MODERN THEME STYLES (Based on MoneyReceipt) ---
   const styles = `
@@ -279,7 +282,7 @@ const NurseStation = () => {
         flex-shrink: 0;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
-        max-height: ${isBedListOpen ? '40vh' : '40px'};
+        max-height: ${isBedListOpen ? "40vh" : "40px"};
         transition: max-height 0.3s ease;
       }
       .bed-header { padding: 8px 15px; height: 40px; }
@@ -332,54 +335,129 @@ const NurseStation = () => {
   `;
 
   // --- MOCK DATA ---
-  const bedList = ["01 ICU", "0100", "0100-2", "1", "1 ICU", "10 GWF", "11 GWF", "110 GWM A/C", "115 GWM A/C", "12 GWM A/C", "12 ICU", "134 GWM", "136 GWM", "141 GWM"];
+  const bedList = [
+    "01 ICU",
+    "0100",
+    "0100-2",
+    "1",
+    "1 ICU",
+    "10 GWF",
+    "11 GWF",
+    "110 GWM A/C",
+    "115 GWM A/C",
+    "12 GWM A/C",
+    "12 ICU",
+    "134 GWM",
+    "136 GWM",
+    "141 GWM",
+  ];
 
   return (
     <>
       <style>{styles}</style>
       <div className="nurse-station-layout">
-        
         {/* === LEFT SIDEBAR: BED LIST === */}
         <div className="bed-panel">
-          <div className="bed-header bg-primary" onClick={() => setIsBedListOpen(!isBedListOpen)}>
+          <div
+            className="bed-header bg-primary"
+            onClick={() => setIsBedListOpen(!isBedListOpen)}
+          >
             <span>🛏️ Bed List</span>
-            <span style={{fontSize:'12px'}}>{isBedListOpen ? '▲' : '▼'}</span>
+            <span style={{ fontSize: "12px" }}>
+              {isBedListOpen ? "▲" : "▼"}
+            </span>
           </div>
-          
+
           <div className="bed-list-scroll">
             {bedList.map((bed, i) => (
-                <div key={i} className={`bed-item ${selectedBed === bed ? 'bg-primary text-white' : ''}`} onClick={() => setSelectedBed(bed)}>
-                    {bed}
-                </div>
+              <div
+                key={i}
+                className={`bed-item ${selectedBed === bed ? "bg-primary text-white" : ""}`}
+                onClick={() => setSelectedBed(bed)}
+              >
+                {bed}
+              </div>
             ))}
           </div>
 
           <div className="bed-footer">
             <div className="form-check form-switch">
-                <input className="form-check-input" type="checkbox" id="cashlessOnly" />
-                <label className="form-check-label" htmlFor="cashlessOnly" style={{fontSize: '11px', fontWeight: '600', color: '#dc3545'}}>Only Cashless</label>
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="cashlessOnly"
+              />
+              <label
+                className="form-check-label"
+                htmlFor="cashlessOnly"
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  color: "#dc3545",
+                }}
+              >
+                Only Cashless
+              </label>
             </div>
           </div>
         </div>
 
         {/* === CENTER PANEL: MAIN CONTENT === */}
-        <NurseStationFinalBilling/>
+        <NurseStationFinalBilling />
 
         {/* === RIGHT PANEL: ACTIONS (BECOMES FOOTER ON MOBILE) === */}
         <div className="action-panel">
-            <button className="btn-action">Diagnosis Case Entry</button>
-            <button className="btn-action">Diagnosis Requisition</button>
-            <button className="btn-action">Medicine Requisition</button>
-            <button className="btn-action">Issue To Indoor</button>
-            <button className="btn-action">Others Service</button>
-            <button className="btn-action">Discharge And Advice</button>
-            <button className="btn-action">Doctor Visit</button>
-            <button className="btn-action">Diagnosis Query</button>
-            <button className="btn-action">Medicine Return</button>
-            <button className="btn-action">Money Receipt</button>
-            <button className="btn-action">Final Bill</button>
+          <button
+            className="btn-action"
+            onClick={() => {
+              navigate("/CaseList");
+            }}
+          >
+            Diagnosis Case Entry
+          </button>
+          <button className="btn-action">Diagnosis Requisition</button>
+          <button className="btn-action">Medicine Requisition</button>
+          <button className="btn-action">Issue To Indoor</button>
+          <button
+            className="btn-action"
+            onClick={() => {
+              navigate("/othercharges");
+            }}
+          >
+            Others Service
+          </button>
+          <button className="btn-action"
+          onClick={() => {
+            navigate('/discharge')
+          }
+          }
+          >Discharge And Advice</button>
+          <button className="btn-action"
+          onClick={() => {
+            navigate('/DoctorVisit')
+          }
+          }
+          >Doctor Visit</button>
+          <button className="btn-action"
+          onClick={() => {
+            navigate('/LaboratoryQuery')
+          }
+          }
+          >Diagnosis Query</button>
+          <button className="btn-action">Medicine Return</button>
+          <button className="btn-action"
+          onClick={() => {
+            navigate('/sampleReceipts')
+          }
+          }
+          >Money Receipt</button>
+          <button className="btn-action"
+          onClick={() => {
+            navigate('/fina-bill-list2')
+          }
+          }
+          >Final Bill</button>
         </div>
-
       </div>
     </>
   );

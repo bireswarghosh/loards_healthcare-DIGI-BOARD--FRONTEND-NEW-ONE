@@ -243,13 +243,27 @@ const LaboratoryQuery = () => {
             WINDOW HEADER
             ------------------------------------------------ */}
         <div className='panel-header d-flex justify-content-between align-items-center py-1 px-2 border-bottom'>
-          <div className='d-flex align-items-center gap-2'>
-            {/* Legacy Icon Placeholder */}
-            <i className='fa fa-e me-1 text-danger'></i>
-            <h6 className='m-0 fw-bold' style={{ fontSize: "0.9rem" }}>
-              Laboratory Query
-            </h6>
-          </div>
+        <div className="d-flex justify-content-between align-items-center mb-3 px-2 gap-3">
+
+  <div className="d-flex align-items-center gap-2">
+    <i className="fa fa-flask text-danger"></i>
+
+    <h6 className="m-0 fw-bold" style={{ fontSize: "0.9rem" }}>
+      Laboratory Query
+    </h6>
+  </div>
+
+  <button
+    className="btn btn-sm btn-danger"
+    onClick={(e) => {
+      e.preventDefault();
+      navigate(-1);
+    }}
+  >
+    Back
+  </button>
+
+</div>
         </div>
 
         <div className='panel-body p-1 d-flex flex-column flex-grow-1  bg----rt-color-dark'>

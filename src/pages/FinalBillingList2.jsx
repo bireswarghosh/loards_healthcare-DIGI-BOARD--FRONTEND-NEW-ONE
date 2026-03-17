@@ -103,12 +103,21 @@ const handleDelte = async (id) => {
             <div className="panel-title fw-bold">Final Billing</div>
             <div>
               <button
-                className="btn btn-sm btn-primary"
+                className="btn btn-sm btn-primary me-2"
                 // onClick={() => navigate("/fina-bill-add")}
                 onClick={() => navigate("/fina-bill-add-copy")}
               >
                 New
               </button>
+              <button
+                    className="btn btn-sm btn-danger"
+                    onClick={(e) => {
+                      e.preventDefault()
+                     navigate(-1)
+                    }}
+                  >
+                    Back
+                  </button>
               {/* <button className="btn btn-sm btn-warning ms-1"> Refresh </button> */}
             </div>
           </div>
@@ -288,7 +297,7 @@ const handleDelte = async (id) => {
                             ?.join("/") || "N/A"}
                         </td>
                         <td>{admission.BillTime || "N/A"}</td>
-                        <td>{admission.AdmissionNo || "N/A"}</td>
+                        <td>{admission.ReffId ? `A-${admission.ReffId}`:""|| "N/A"}</td>
                         <td>{admission.PatientName || "N/A"}</td>
                         <td>{admission.BillType || "N/A"}</td>
                         <td>{admission.ReciptAmt || 0}</td>

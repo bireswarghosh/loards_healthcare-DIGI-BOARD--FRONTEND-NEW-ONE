@@ -5,7 +5,7 @@ import autoTable from "jspdf-autotable";
 import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
 import JsBarcode from "jsbarcode";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const GeneralTestDrawer = ({
   formData2,
@@ -27,6 +27,22 @@ const GeneralTestDrawer = ({
     });
     return canvas.toDataURL("image/png");
   }, [formData2?.CaseNo]);
+
+const [pathologistId, setPathologistId] = useState(null);
+const [pathologistName, setPathologistName] = useState("");
+
+
+
+const [pathologistList, setPathologistList] = useState([]);
+
+useEffect(() => {
+  fetch("https://lords-backend.onrender.com/api/v1/pathologist")
+    .then((res) => res.json())
+    .then((data) => {
+      setPathologistList(Array.isArray(data) ? data : data.data || []);
+    });
+}, []);
+
 
   const saveProperty = async (prop) => {
     const pv = propertyValueMap[prop.TestPropertyId];
@@ -144,6 +160,11 @@ const GeneralTestDrawer = ({
     return "";
   };
   const handlePrint = () => {
+
+
+
+
+
     const doc = new jsPDF("p", "mm", "a4");
 
     doc.setFont("times", "normal");
@@ -179,9 +200,9 @@ const GeneralTestDrawer = ({
     doc.text(formData2?.CaseNo || "", valueX, baseY + 5);
     doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
 
-    // doc.text("Referred By", labelX, baseY + 10);
+    doc.text("Referred By", labelX, baseY + 10);
     doc.text(":", colonX, baseY + 10);
-    doc.text(formData2?.RefBy || "", valueX, baseY + 10);
+    doc.text(pathologistName , valueX, baseY + 10);
 
     // ===== RIGHT SIDE =====
     const rLabelX = R;
@@ -200,11 +221,11 @@ const GeneralTestDrawer = ({
     // Dates (same rows as Case No / Referred By)
     doc.text("Collection Date", rLabelX, baseY + 5);
     doc.text(":", rColonX, baseY + 5);
-    doc.text(formData2?.CollectionDate || "", rValueX, baseY + 5);
+    doc.text(tests?.[0]?.DeliveryDate || "", rValueX, baseY + 5);
 
-    doc.text("Reporting Date", rLabelX, baseY + 10);
-    doc.text(":", rColonX, baseY + 10);
-    doc.text(formData2?.ReportDate || "", rValueX, baseY + 10);
+    // doc.text("Reporting Date", rLabelX, baseY + 10);
+    // doc.text(":", rColonX, baseY + 10);
+    // doc.text(formData2?.ReportDate || "", rValueX, baseY + 10);
 
     // ===== MOVE CURSOR AFTER BOTH SIDES =====
     y = baseY + 18;
@@ -317,7 +338,16 @@ const GeneralTestDrawer = ({
             api="https://lords-backend.onrender.com/api/v1/pathologist"
             labelKey="Pathologist"
             valueKey="PathologistId"
-            placeholder="Select Pathologist"
+            value={pathologistId}
+            onChange={(val) => {
+              setPathologistId(val);
+
+              const selected = pathologistList.find(
+                (p) => p.PathologistId === val
+              );
+
+              setPathologistName(selected?.Pathologist || "");
+            }}
           />
         </div>
       </div>

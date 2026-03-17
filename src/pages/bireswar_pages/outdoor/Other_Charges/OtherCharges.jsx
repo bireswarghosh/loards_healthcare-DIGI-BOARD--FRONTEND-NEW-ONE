@@ -310,15 +310,33 @@ const OtherCharges = () => {
                     setDate(e.target.value);
                   }}
                 />
+
+                 {/* <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => {
+                     navigate(-1)
+                    }}
+                  >
+                    Back
+                  </button> */}
               </div>
-              {/* <div className="btn-box d-flex flex-wrap gap-2">
-                <button
+              <div className="btn-box d-flex flex-wrap gap-2">
+                {/* <button
                   className="btn btn-sm btn-primary"
                   // onClick={handleAddNew}
                 >
                   <i className="fa-light fa-plus"></i> Add New
-                </button>
-              </div> */}
+                </button> */}
+
+                 <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => {
+                     navigate(-1)
+                    }}
+                  >
+                    Back
+                  </button>
+              </div>
             </div>
 
             <div className="panel-body">

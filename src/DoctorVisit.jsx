@@ -7,6 +7,7 @@ import AsyncApiSelect from "./components/indoor/PatientAdmissionDetail/Money-Rec
 import axiosInstance from "./axiosInstance";
 import useAxiosFetch from "./templates/DiagnosisMaster/Fetch";
 import ApiSelect from "./templates/DiagnosisMaster/ApiSelect";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -17,7 +18,7 @@ const DoctorVisit = () => {
     const [deleteId, setDeleteId] = useState(null);
       const [showConfirm, setShowConfirm] = useState(false);
     
-
+const navigate  = useNavigate()
 
   const {
     register,
@@ -272,7 +273,25 @@ toast.error("Something went wrong");
           {/* BODY */}
           <div className="panel-body">
             {/* BILL DETAIL */}
-            <h6 className="text-primary fw-bold mb-2">Bill Detail</h6>
+           <div className="row mb-3">
+  <div className="col-12 d-flex justify-content-between align-items-center">
+    
+    <h6 className="text-primary fw-bold m-0">
+      Bill Detail
+    </h6>
+
+    <button
+      className="btn btn-sm btn-danger"
+      onClick={(e) => {
+        e.preventDefault();
+        navigate(-1);
+      }}
+    >
+      Back
+    </button>
+
+  </div>
+</div>
             <div className="row g-2 mb-3">
               {/* Admission No */}
               <div className="col-md-4">

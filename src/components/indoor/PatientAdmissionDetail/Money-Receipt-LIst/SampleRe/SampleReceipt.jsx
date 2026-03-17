@@ -96,6 +96,15 @@ const SampleReceipt = () => {
 }><i class="fa-solid fa-plus"></i>Add</button>
           <button className="btn btn-sm btn-primary">List</button>
           <button className="btn btn-sm btn-outline-light">Detail</button>
+          <button
+                    className="btn btn-sm btn-danger"
+                    onClick={(e) => {
+                      e.preventDefault()
+                     navigate(-1)
+                    }}
+                  >
+                    Back
+                  </button>
         </div>
       </div>
 

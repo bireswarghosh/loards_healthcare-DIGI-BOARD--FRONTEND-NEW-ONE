@@ -14,6 +14,10 @@ const CaseList = () => {
   const [searchPatientName, setSearchPatientName] = useState("");
   const [searchDate, setSearchDate] = useState("");
   const [searchRegistrationId, setSearchRegistrationId] = useState("");
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [driveFiles, setDriveFiles] = useState([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
 
   // Set default limit to 20 as requested
   const [paginationModel, setPaginationModel] = useState({
@@ -93,6 +97,37 @@ const CaseList = () => {
     );
   };
 
+  const fetchDriveFiles = async (caseId) => {
+    try {
+      setLoadingFiles(true);
+      
+      // Call backend API to get files
+      const response = await axiosInstance.get(`/case-files/${encodeURIComponent(caseId)}`);
+      
+      if (response.data?.success && response.data.files) {
+        setDriveFiles(response.data.files);
+      } else {
+        setDriveFiles([]);
+      }
+    } catch (error) {
+      console.error("Error fetching case files:", error);
+      setDriveFiles([]);
+    } finally {
+      setLoadingFiles(false);
+    }
+  };
+
+  const handleOpenFiles = (caseId) => {
+    setSelectedCaseId(caseId);
+    setShowFileModal(true);
+    fetchDriveFiles(caseId);
+  };
+
+  const handleCloseModal = () => {
+    setShowFileModal(false);
+    setSelectedCaseId(null);
+  };
+
   const renderTable = () => {
     return (
       <table className="table table-dashed table-hover digi-dataTable table-striped">
@@ -115,7 +150,7 @@ const CaseList = () => {
           {visits.map((data, index) => (
             <tr key={data.CaseId}>
               <td>
-                <div className="d-flex">
+                <div className="d-flex gap-1">
                   <button
                     className="btn btn-sm text-primary"
                     title="View"
@@ -132,6 +167,14 @@ const CaseList = () => {
                     }}
                   >
                     <i className="fa-light fa-pen-to-square"></i>
+                  </button>
+
+                  <button 
+                    className="btn btn-sm text-info" 
+                    title="Open Files"
+                    onClick={() => handleOpenFiles(data.CaseId)}
+                  >
+                    <i className="fa-light fa-file"></i>
                   </button>
 
                   <button 
@@ -238,6 +281,15 @@ const CaseList = () => {
                   >
                     Clear
                   </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => {
+                     navigate(-1)
+                    }}
+                  >
+                    Back
+                  </button>
+
                 </div>
               </div>
 
@@ -317,6 +369,82 @@ const CaseList = () => {
         </div>
       </div>
       <Footer />
+
+      {/* File Modal */}
+      {showFileModal && (
+        <>
+          <div
+            className="modal-backdrop fade show"
+            onClick={handleCloseModal}
+            style={{ zIndex: 9998 }}
+          ></div>
+          <div
+            className="modal fade show d-block"
+            style={{ zIndex: 9999 }}
+            tabIndex="-1"
+          >
+            <div className="modal-dialog modal-lg modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">📄 Files for Case: {selectedCaseId}</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={handleCloseModal}
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  {loadingFiles ? (
+                    <div className="text-center py-5">
+                      <div className="spinner-border text-primary" role="status"></div>
+                      <p className="mt-2">Loading files...</p>
+                    </div>
+                  ) : driveFiles.length > 0 ? (
+                    <div className="row">
+                      {driveFiles.map((file, index) => (
+                        <div key={index} className="col-md-6 mb-3">
+                          <div className="card h-100">
+                            <div className="card-body">
+                              <h6 className="card-title text-truncate" title={file.name}>
+                                <i className="fa-light fa-file-pdf me-2"></i>
+                                {file.name}
+                              </h6>
+                              <div className="d-flex gap-2 mt-3">
+                                <a
+                                  href={file.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="btn btn-sm btn-primary flex-fill"
+                                >
+                                  <i className="fa-light fa-eye me-1"></i>View
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="alert alert-info text-center">
+                      <i className="fa-light fa-folder-open fa-3x mb-3"></i>
+                      <p className="mb-0">No files found for this case</p>
+                    </div>
+                  )}
+                </div>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleCloseModal}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

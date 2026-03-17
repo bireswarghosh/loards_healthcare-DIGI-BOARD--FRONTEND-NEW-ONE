@@ -832,8 +832,6 @@ const [idX, setIdX] = useState(id)
                   ).toFixed(2);
                   setFormData((prev) => ({
                     ...prev,
-
-
                     PCV: (Number(e.target.value) * 0.3).toFixed(2),
                     Himoglobin3: val,
                     MCH:
@@ -845,7 +843,7 @@ const [idX, setIdX] = useState(id)
                         : 0,
                   }));
                 }}
-                value={formData.Himoglobin1}
+                value={formData.Himoglobin1 || 14.50}
               />
               <span className="label" style={{ ...labelStyle }}>
                 in 100% ]

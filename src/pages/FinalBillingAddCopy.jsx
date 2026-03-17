@@ -1354,9 +1354,9 @@ const res1 = await axiosInstance.put(
           Number(newBedArr[j].ToDayRate) *
           (Number(serviceCharge) / 100);
       }
-
+totalBedServiceChrg=  Number(totalBedServiceChrg).toFixed(2)
 // console.log("Final bed service charge: ", totalBedServiceChrg)
- setServiceChrgCalculated((prev) => prev + totalBedServiceChrg);
+ setServiceChrgCalculated((prev) => Number(prev) + totalBedServiceChrg);
 
     } catch (err) {
       console.error("Error while fetching bed data:", err);
@@ -1394,15 +1394,15 @@ const res1 = await axiosInstance.put(
       (item) => item.ServiceCh === "Y",
     );
 
-    const ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
+   let ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
       (sum, item) => sum + Number(item.Rate) * (Number(serviceCharge) / 100),
       0,
     );
 
     // console.log("filterd oc with service charge on: ", ocWithServiceChrgOn);
     // console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
-
-    setServiceChrgCalculated((prev) => prev + ocServiceChargeCalculated);
+ocServiceChargeCalculated  = Number(ocServiceChargeCalculated).toFixed(2)
+    setServiceChrgCalculated((prev) => Number(prev) + ocServiceChargeCalculated);
     return otherChargesByAdmId.map((item, index) => {
       // const matched = allOtherCharges.find(
       //   (oc) => oc.OtherChargesId == item.OtherChargesId,
@@ -2158,7 +2158,7 @@ const res1 = await axiosInstance.put(
                       <input
                         type="text"
                         style={styles.input}
-                        value={netBal || 0}
+                        value={netBal.toFixed(2) || 0}
                       />
                     </div>
                   </div>
