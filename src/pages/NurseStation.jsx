@@ -1,12 +1,99 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import NurseStationFinalBilling from "./NurseStationFinalBilling";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../axiosInstance";
 
 const NurseStation = () => {
-  const [selectedBed, setSelectedBed] = useState("01 ICU");
+  const [selectedBed, setSelectedBed] = useState("");
   const [isBedListOpen, setIsBedListOpen] = useState(false);
 
+  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
+  const [searchBed, setSearchBed] = useState("");
+
+  const [bedList, setBedList] = useState([]);
+  const [depMap, setDepMap] = useState({});
+  const [admId, setAdmId] = useState("");
+
   const navigate = useNavigate();
+
+  const fetchDep = async () => {
+    try {
+      const res = await axiosInstance.get("/departmentIndoor");
+      if (res.data.success) {
+        const data = res.data.data;
+        let dataMap = {};
+        for (let i = 0; i < data.length; i++) {
+          dataMap[data[i].DepartmentId || ""] = data[i].Department || "";
+        }
+        setDepMap(dataMap);
+      } else {
+        setDepMap({});
+      }
+    } catch (error) {
+      console.log("error fetching dep:", error);
+    }
+  };
+
+  const fetchAllBeds = async () => {
+    try {
+      let res;
+      if (searchBed.trim()) {
+        res = await axiosInstance(
+          `/bedMaster?search=${searchBed.trim()}&limit=9999999`,
+        );
+      } else {
+        res = await axiosInstance(`/bedMaster?page=${page}&limit=${limit}`);
+      }
+
+      if (res.data.success) {
+        setBedList(res.data.data);
+        setTotalPage(res.data.pagination.totalPages || 1);
+        if (searchBed.trim()) {
+          setPage(res.data.pagination.currentPage);
+        }
+      } else {
+        setBedList([]);
+        setTotalPage(1);
+      }
+    } catch (error) {
+      console.log("error fetching beds:", error);
+    }
+  };
+
+  const fetchAdmitionBedByBedId = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/admitionbeds/${id}`);
+      if (res.data.success) {
+        const { AdmitionId } = res.data.data.len !=0 ? res.data.data[0]:"";
+        setAdmId(AdmitionId);
+      }
+    } catch (error) {
+      setAdmId("");
+      console.log("error fetching admission bed: ", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDep();
+  }, []);
+
+  useEffect(() => {
+    fetchAllBeds();
+  }, [page]);
+
+  useEffect(() => {
+    if (selectedBed) {
+      fetchAdmitionBedByBedId(selectedBed);
+    }
+  }, [selectedBed]);
+
+
+useEffect(() => {
+ console.log("admid: ",admId)
+}, [admId])
+
 
   // --- MODERN THEME STYLES (Based on MoneyReceipt) ---
   const styles = `
@@ -334,33 +421,20 @@ const NurseStation = () => {
     }
   `;
 
-  // --- MOCK DATA ---
-  const bedList = [
-    "01 ICU",
-    "0100",
-    "0100-2",
-    "1",
-    "1 ICU",
-    "10 GWF",
-    "11 GWF",
-    "110 GWM A/C",
-    "115 GWM A/C",
-    "12 GWM A/C",
-    "12 ICU",
-    "134 GWM",
-    "136 GWM",
-    "141 GWM",
-  ];
-
   return (
     <>
       <style>{styles}</style>
       <div className="nurse-station-layout">
         {/* === LEFT SIDEBAR: BED LIST === */}
-        <div className="bed-panel">
+        <div
+          className="card h-100 shadow-sm border-0"
+          style={{ minWidth: "220px" }}
+        >
+          {/* Header */}
           <div
-            className="bed-header bg-primary"
+            className="card-header bg-warning text-dark d-flex justify-content-between align-items-center"
             onClick={() => setIsBedListOpen(!isBedListOpen)}
+            style={{ cursor: "pointer", fontWeight: "600" }}
           >
             <span>🛏️ Bed List</span>
             <span style={{ fontSize: "12px" }}>
@@ -368,42 +442,117 @@ const NurseStation = () => {
             </span>
           </div>
 
-          <div className="bed-list-scroll">
-            {bedList.map((bed, i) => (
-              <div
-                key={i}
-                className={`bed-item ${selectedBed === bed ? "bg-primary text-white" : ""}`}
-                onClick={() => setSelectedBed(bed)}
-              >
-                {bed}
-              </div>
-            ))}
-          </div>
+          {/* Collapsible Content */}
+          {/* {!isBedListOpen && ( */}
+          {(
+            <>
+              <div className="card-body p-2 d-flex flex-column gap-3">
+                {/* Search Bar */}
+                <div className="input-group input-group-sm">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search bed..."
+                    value={searchBed}
+                    onChange={(e) => setSearchBed(e.target.value)}
+                  />
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={fetchAllBeds}
+                  >
+                    Search
+                  </button>
+                </div>
 
-          <div className="bed-footer">
-            <div className="form-check form-switch">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="cashlessOnly"
-              />
-              <label
-                className="form-check-label"
-                htmlFor="cashlessOnly"
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "600",
-                  color: "#dc3545",
-                }}
-              >
-                Only Cashless
-              </label>
-            </div>
-          </div>
+                {/* Pagination */}
+                <div className="d-flex justify-content-between align-items-center px-1">
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    disabled={page === 1}
+                    onClick={() => setPage((c) => c - 1)}
+                  >
+                    &laquo; Prev
+                  </button>
+                  <span className="small text-muted fw-bold">
+                    {page} / {totalPage}
+                  </span>
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    disabled={page === totalPage}
+                    onClick={() => setPage((c) => c + 1)}
+                  >
+                    Next &raquo;
+                  </button>
+                </div>
+
+                {/* Bed List Items */}
+                <div
+                  className="list-group list-group-flush overflow-auto border-top"
+                  style={{ maxHeight: "55vh" }}
+                >
+                  {bedList.length === 0 ? (
+                    <div className="text-center text-muted small py-3">
+                      No bed found
+                    </div>
+                  ) : (
+                    bedList.map((bed, i) => (
+                      // <button
+                      //   key={i}
+                      //   type="button"
+                      //   className={`list-group-item list-group-item-action text-center py-2 ${
+                      //     selectedBed === bed.BedId
+                      //       ? "active bg-warning border-warning text-dark fw-bold"
+                      //       : ""
+                      //   }`}
+                      //   onClick={() => setSelectedBed(bed.BedId)}
+                      // >
+                      //   Dept:{depMap[bed.DepartmentId]}, Bed:{bed.Bed}
+                      // </button>
+                      <button
+  key={i}
+  type="button"
+  className={`list-group-item list-group-item-action text-center py-2 ${
+    selectedBed === bed.BedId
+      ? "active bg-warning border-warning text-dark"
+      : ""
+  }`}
+  onClick={() => setSelectedBed(bed.BedId)}
+>
+  <span className="fw-bold">Dept:</span>{" "}
+  <span >{depMap[bed.DepartmentId]}</span>,{" "}
+  
+  <span className="fw-bold">Bed:</span>{" "}
+  <span >{bed.Bed}</span>
+</button>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Footer / Toggle */}
+              <div className="card-footer bg-light py-2">
+                <div className="form-check form-switch d-flex justify-content-center align-items-center gap-2 mb-0">
+                  <input
+                    className="form-check-input mt-0"
+                    type="checkbox"
+                    id="cashlessOnly"
+                  />
+                  <label
+                    className="form-check-label fw-bold text-danger"
+                    htmlFor="cashlessOnly"
+                    style={{ fontSize: "12px" }}
+                  >
+                    Only Cashless
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* === CENTER PANEL: MAIN CONTENT === */}
-        <NurseStationFinalBilling />
+        <NurseStationFinalBilling ADMID={admId}/>
 
         {/* === RIGHT PANEL: ACTIONS (BECOMES FOOTER ON MOBILE) === */}
         <div className="action-panel">
@@ -426,37 +575,47 @@ const NurseStation = () => {
           >
             Others Service
           </button>
-          <button className="btn-action"
-          onClick={() => {
-            navigate('/discharge')
-          }
-          }
-          >Discharge And Advice</button>
-          <button className="btn-action"
-          onClick={() => {
-            navigate('/DoctorVisit')
-          }
-          }
-          >Doctor Visit</button>
-          <button className="btn-action"
-          onClick={() => {
-            navigate('/LaboratoryQuery')
-          }
-          }
-          >Diagnosis Query</button>
+          <button
+            className="btn-action"
+            onClick={() => {
+              navigate("/discharge");
+            }}
+          >
+            Discharge And Advice
+          </button>
+          <button
+            className="btn-action"
+            onClick={() => {
+              navigate("/DoctorVisit");
+            }}
+          >
+            Doctor Visit
+          </button>
+          <button
+            className="btn-action"
+            onClick={() => {
+              navigate("/LaboratoryQuery");
+            }}
+          >
+            Diagnosis Query
+          </button>
           <button className="btn-action">Medicine Return</button>
-          <button className="btn-action"
-          onClick={() => {
-            navigate('/sampleReceipts')
-          }
-          }
-          >Money Receipt</button>
-          <button className="btn-action"
-          onClick={() => {
-            navigate('/fina-bill-list2')
-          }
-          }
-          >Final Bill</button>
+          <button
+            className="btn-action"
+            onClick={() => {
+              navigate("/sampleReceipts");
+            }}
+          >
+            Money Receipt
+          </button>
+          <button
+            className="btn-action"
+            onClick={() => {
+              navigate("/fina-bill-list2");
+            }}
+          >
+            Final Bill
+          </button>
         </div>
       </div>
     </>

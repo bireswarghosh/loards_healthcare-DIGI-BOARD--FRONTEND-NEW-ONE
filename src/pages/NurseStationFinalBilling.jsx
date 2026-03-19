@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -176,7 +175,7 @@ const Barcode = ({ value }) => {
   return <svg ref={svgRef}></svg>;
 };
 
-const NurseStationFinalBilling = () => {
+const NurseStationFinalBilling = ({ ADMID }) => {
   // Styles object to strictly enforce legacy look without external CSS files
   const styles = {
     container: {
@@ -499,9 +498,9 @@ const NurseStationFinalBilling = () => {
           setTimeout(resolve, 400);
         });
 
-console.log("all bed details: ", bedChargesData)
-const ele = bedChargesData[bedChargesData.length-1]
-const res1 = await axiosInstance.put(
+        console.log("all bed details: ", bedChargesData);
+        const ele = bedChargesData[bedChargesData.length - 1];
+        const res1 = await axiosInstance.put(
           `/admitionbeds?admitionid=${admData?.AdmitionId}&slno=${ele.SlNo}`,
           {
             ...ele,
@@ -1190,6 +1189,8 @@ const res1 = await axiosInstance.put(
     }
   };
 
+
+
   // fetch ipd dept
   const fetchDept = async () => {
     try {
@@ -1321,8 +1322,6 @@ const res1 = await axiosInstance.put(
 
       // console.log("all bed detai map: ", allBedsDataMap);
 
-     
-
       // this will design the entire bed details according 12.00pm to 11.59 am = 1 day bed count
       const newBedArr = splitBedHistoryDateWise(arr);
       // console.log("Calculated bed array: ", newBedArr)
@@ -1356,9 +1355,8 @@ const res1 = await axiosInstance.put(
           (Number(serviceCharge) / 100);
       }
 
-// console.log("Final bed service charge: ", totalBedServiceChrg)
- setServiceChrgCalculated((prev) => prev + totalBedServiceChrg);
-
+      // console.log("Final bed service charge: ", totalBedServiceChrg)
+      setServiceChrgCalculated((prev) => prev + totalBedServiceChrg);
     } catch (err) {
       console.error("Error while fetching bed data:", err);
       throw err;
@@ -1576,6 +1574,13 @@ const res1 = await axiosInstance.put(
     billedBy: "Admin",
   };
 
+useEffect(() => {
+  if(ADMID){
+    fetchAdm(ADMID)
+  }
+}, [ADMID])
+
+
   useEffect(() => {
     if (Object.keys(admData).length) {
       // console.log("adm data1: ", admData);
@@ -1757,7 +1762,6 @@ const res1 = await axiosInstance.put(
       </div>
       <div className="min-vh-80 container-fluid p-0">
         <div className="row g-1  ms-2">
-         
           <div className=" ">
             {/* 1. BILL DETAIL SECTION */}
             <div style={styles.sectionGroup}>
@@ -1842,19 +1846,27 @@ const res1 = await axiosInstance.put(
                   />
                 </div>
                 <div className="col-md-3 col-6">
-                  {/* <input
-                    type="text"
-                    style={styles.input}
-                    value={admData.PatientName || ""}
-                  /> */}
-
-                  <AsyncApiSelect
-                    api={"https://lords-backend.onrender.com/api/v1/admission"}
-                    searchKey={"name"}
-                    labelKey="PatientName"
-                    valueKey="AdmitionId"
-                    onChange={onChange}
-                  />
+                {admData.PatientName?<input
+                  type="text"
+                  style={styles.input}
+                  value={admData.PatientName || ""}
+                  onChange={(e) => {
+                    setAdmData(prev=>({
+                      ...prev,
+                      PatientName:e.target.value
+                    }))
+                  }
+                  
+                  }
+                />
+:
+                <AsyncApiSelect
+                  api={"https://lords-backend.onrender.com/api/v1/admission"}
+                  searchKey={"name"}
+                  labelKey="PatientName"
+                  valueKey="AdmitionId"
+                  onChange={onChange}
+                />}
                 </div>
 
                 <div className="col-md-1 col-4 text-end">
@@ -2466,8 +2478,6 @@ const res1 = await axiosInstance.put(
               </div>
             </div>
           </div>
-
-         
         </div>
       </div>
       {/* 8. FOOTER BUTTON BAR */}
@@ -2514,4 +2524,3 @@ const res1 = await axiosInstance.put(
 };
 
 export default NurseStationFinalBilling;
-

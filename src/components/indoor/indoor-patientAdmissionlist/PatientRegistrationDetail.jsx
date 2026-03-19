@@ -742,7 +742,7 @@ const PatientAdmission = () => {
             BedId: cleanData?.BedId || "",
             AdmitionDate: cleanData.AdmitionDate + "T00:00:00.000Z",
             ReleaseDate: "",
-            Release: "",
+            Release: "N",
             AdmitionTime: new Date().toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
@@ -812,8 +812,8 @@ const PatientAdmission = () => {
     // 2. Define the HTML content
     const htmlContent = `<!DOCTYPE html>
 <html>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-
+<!-- <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script> -->
+ <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
    <head>
       <title>Admission Form Print</title>
       <style>
@@ -841,7 +841,8 @@ const PatientAdmission = () => {
          .container {
          width: 100%;
          max-width: 900px;
-         margin: 0 auto;
+         margin: 0 0;
+        
          }
          /* Header */
          .header-grid {
@@ -987,8 +988,7 @@ const PatientAdmission = () => {
                </div>
             </div>
             <div class="barcode-box">
-   <svg id="barcode"></svg>
-   <div style="font-size:10px;">${data.meta.barcodeValue}</div>
+   <canvas id="qrcode"></canvas>
 </div>
 
          </div>
@@ -1127,6 +1127,26 @@ const PatientAdmission = () => {
             </div>
          </div>
       </div>
+
+       <script>
+try {
+    const qrText = "${data.meta.admissionNo || "S-008791/25-26"}";
+
+    QRCode.toCanvas(document.getElementById("qrcode"), qrText, {
+      width: 80,
+      margin: 1
+    }, function (error) {
+      if (error) console.error(error);
+    });
+
+  } catch (e) { console.log(e); }
+
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => window.close(), 100);
+  }, 500);
+        </script>
+
       <script>
 window.onload = function () {
    JsBarcode("#barcode", "${data.meta.barcodeValue}", {

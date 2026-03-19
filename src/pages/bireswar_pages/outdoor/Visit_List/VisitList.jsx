@@ -38,8 +38,13 @@ const VisitList = () => {
   const [showDropdownIndex, setShowDropdownIndex] = useState(null); // Added for Emr dropdown style
 
   const [pvisitData, setPvisitData] = useState({});
-  const [whatsappModal, setWhatsappModal] = useState({ open: false, patient: null });
-  const [senderNumber, setSenderNumber] = useState(() => localStorage.getItem('whatsappSender') || '');
+  const [whatsappModal, setWhatsappModal] = useState({
+    open: false,
+    patient: null,
+  });
+  const [senderNumber, setSenderNumber] = useState(
+    () => localStorage.getItem("whatsappSender") || "",
+  );
 
   const handleSendWhatsApp = (patient) => {
     setWhatsappModal({ open: true, patient });
@@ -47,28 +52,39 @@ const VisitList = () => {
 
   const sendWhatsAppMessage = async () => {
     if (!senderNumber) {
-      alert('Please enter sender number');
+      alert("Please enter sender number");
       return;
     }
-    localStorage.setItem('whatsappSender', senderNumber);
+    localStorage.setItem("whatsappSender", senderNumber);
     setLoading(true);
     try {
       const patient = whatsappModal.patient;
       const message = `Hello ${patient.PatientName},\n\nYour appointment details:\nRegistration ID: ${patient.RegistrationId}\nDoctor: ${patient.DoctorName}\nDate: ${patient.RegDate}\nTime: ${patient.RegTime}\n\nThank you for choosing Lords Health Care.`;
-      const response = await fetch('https://lords-backend.onrender.com/api/v1/whatsapp/send-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ api_key: 'aelMphcuLP4caCCC4dlnWGsFaMinEs', sender: senderNumber, number: patient.PhoneNo, message })
-      });
+      const response = await fetch(
+        "https://lords-backend.onrender.com/api/v1/whatsapp/send-message",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            api_key: "aelMphcuLP4caCCC4dlnWGsFaMinEs",
+            sender: senderNumber,
+            number: patient.PhoneNo,
+            message,
+          }),
+        },
+      );
       const data = await response.json();
       if (data.status) {
-        alert('WhatsApp message sent successfully!');
+        alert("WhatsApp message sent successfully!");
         setWhatsappModal({ open: false, patient: null });
       } else {
-        throw new Error(data.msg || 'Failed to send message');
+        throw new Error(data.msg || "Failed to send message");
       }
     } catch (error) {
-      alert('Failed: ' + error.message);
+      alert("Failed: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -103,9 +119,11 @@ const VisitList = () => {
             PhoneNo: item.PhoneNo,
             Age: item.Age,
             Sex:
-              item.Sex === "M" ? "Male"
-              : item.Sex === "F" ? "Female"
-              : item.Sex,
+              item.Sex === "M"
+                ? "Male"
+                : item.Sex === "F"
+                  ? "Female"
+                  : item.Sex,
             Add1: item.PatientAdd1,
             RegDate: item.PVisitDate ? item.PVisitDate.split("T")[0] : "N/A",
             RegTime: item.vTime,
@@ -602,35 +620,35 @@ const VisitList = () => {
   };
 
   // main function for pdf generation
-  const DrPressPrint = ({
-    registrationNo,
-    visitDate,
-    patientName,
-    age,
-    sex,
-    address,
-    phone,
-    visitTime,
-    consultant,
-    doctorRegNo,
-    department,
-    qualification,
-    barcodeValue,
-    pr,
-    rr,
-    bp,
-    temp,
-    height,
-    weight,
-    bmi,
-    nutritionalStatus,
-    drugAllergies,
-  }) => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const printDateTime = new Date().toLocaleString("en-IN");
-    const printWindow = window.open("", "", "width=900,height=800");
+const DrPressPrint = ({
+  registrationNo,
+  visitDate,
+  patientName,
+  age,
+  sex,
+  address,
+  phone,
+  visitTime,
+  consultant,
+  doctorRegNo,
+  department,
+  qualification,
+  barcodeValue,
+  pr,
+  rr,
+  bp,
+  temp,
+  height,
+  weight,
+  bmi,
+  nutritionalStatus,
+  drugAllergies,
+}) => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const printDateTime = new Date().toLocaleString("en-IN");
+  const printWindow = window.open("", "", "width=900,height=800");
 
-    printWindow.document.write(`
+  printWindow.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -653,7 +671,6 @@ const VisitList = () => {
           .hospital-name {
             font-size: 15px;
             font-weight: 800;
-           
             margin: 0;
             letter-spacing: 1px;
           }
@@ -667,18 +684,17 @@ const VisitList = () => {
             font-weight: bold;
           }
 
-
           /* Patient Details Box */
           .details-box {
-            border: 2px solid #000;
+            border: 2px solid #000; 
             width: 100%;
-            border-collapse: collapse;
+            /*border-collapse: collapse;*/
             margin-bottom: 10px;
           }
           .details-box td {
-            padding: 8px;
-            vertical-align: middle;
-            border: 1px solid #000;
+            padding: 3px;
+            /*vertical-align: middle;*/
+           /* border: 1px solid #000; */
           }
           .label {
             font-weight: bold;
@@ -688,26 +704,27 @@ const VisitList = () => {
          
           /* Vitals Section */
           .vitals-container {
-           
-            padding: 5px 0;
+            padding: 2px 0;
             margin-bottom: 20px;
-           
-            gap: 15px;
-            font-size: 11px;
-           
+            font-size: 12px;
           }
+          
+          /* ADDED THIS CLASS TO INCREASE SPACING */
+          .vital-item {
+            margin-bottom: 4px; /* Adjust this number to make the space bigger or smaller */
+          }
+
           .vital-item span {
             font-weight: normal;
             margin-left: 2px;
           }
-
 
           /* Main Body */
           .prescription-title {
             text-align: center;
             font-weight: bold;
             color: red;
-            font-size: 16px;
+            font-size: 18px;
             text-decoration: underline;
             margin: 10px 0 20px 0;
           }
@@ -717,10 +734,9 @@ const VisitList = () => {
             width: 100%;
           }
 
-
           /* Footer */
           .footer {
-            margin-top: 20px;
+            margin-top: 1px;
             text-align: right;
             padding-right: 20px;
           }
@@ -733,33 +749,31 @@ const VisitList = () => {
             font-size: 11px;
           }
 
-
-         .top-header-row {
+          .top-header-row {
             display: grid;
             grid-template-columns: 80px 1fr 120px;
             align-items: center;
             margin-bottom: 10px;
             gap: 10px;
-        }
+          }
 
-        .top-favicon img {
+          .top-favicon img {
             width: 80px;
             height: auto;
-        }
+          }
 
-        .top-barcode {
+          .top-barcode {
             text-align: right;
-        }
-        
-        .print-meta {
+          }
+         
+          .print-meta {
             position: fixed;
             bottom: 10px;
             right: 20px;
             font-size: 9px;
             color: #666;
             text-align: right;
-        }
-
+          }
 
           @media print {
             body { margin: 0; padding: 10px; -webkit-print-color-adjust: exact; }
@@ -768,33 +782,28 @@ const VisitList = () => {
         </style>
       </head>
 
-
       <body>
-<div class="top-header-row">
-        <div class="top-favicon">
-            
-<img src="/assets/images/logo-small.png"/>
-        </div>
- <div class="header">
-          <div class="hospital-name">LORDS HEALTH CARE (Nursing Home)</div>
-          <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
-          <div class="address">
-            13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
-            (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
+        <div class="top-header-row">
+          <div class="top-favicon">
+            <img src="/assets/lords.png"/>
           </div>
-          <div class="contact-info">
-            E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
-            Phone No.: 8272904444 HELPLINE-7003378414. Toll Free No:-1800-309-0895
+          <div class="header">
+            <div class="hospital-name">LORDS HEALTH CARE</div>
+            <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+            <div class="address">
+              13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+              (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
+            </div>
+            <div class="contact-info">
+              E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
+              Phone No.: 8272904444 HELPLINE-7003378414. Toll Free No:-1800-309-0895
+            </div>
+          </div>
+          <div class="top-barcode">
+             <!-- <svg id="barcode"></svg> -->
+             <canvas id="qrcode"></canvas>
           </div>
         </div>
-        <div class="top-barcode">
-            <svg id="barcode"></svg>
-        </div>
-    </div>
-
-
-       
-
 
         <table class="details-box">
           <tr>
@@ -828,16 +837,22 @@ const VisitList = () => {
           <tr>
             <td><span class="label">CONSULTANT</span></td>
             <td>${consultant || ""}</td>
-            <td><span class="label">Qualification</span></td>
-            <td>${qualification || ""}</td>
+             <!--<td><span class="label">Qualification</span></td>
+            <td>${qualification || ""}</td> -->
+            <td><span class="label">Department</span></td>
+            <td>${department || "PEDIATRIC MEDICINE"}</td>
           </tr>
           <tr>
-            <td><span class="label">Department</span></td>
-            <td colspan="3">${department || "PEDIATRIC MEDICINE"}</td>
+          <!--  <td><span class="label">Department</span></td>
+            <td colspan="3">${department || "PEDIATRIC MEDICINE"}</td> -->
+           <td><span class="label">Qualification</span></td>
+            <td colspan="3">${qualification || ""}</td> 
           </tr>
         </table>
-  <div class="prescription-title">PRESCRIPTION</div>
-        <div style="font-weight:bold; margin-bottom:2px;">Vitals</div>
+        
+        <div class="prescription-title">PRESCRIPTION</div>
+        <div style="font-weight:bold; margin-bottom:8px; font-size: 15px;">Vitals</div>
+        
         <div class="vitals-container">
            <div class="vital-item">PR: <span>${pr || ""}</span></div>
            <div class="vital-item">RR: <span>${rr || ""}</span></div>
@@ -850,51 +865,64 @@ const VisitList = () => {
            <div class="vital-item">Drug Allergies: <span>Yes / No</span></div>
         </div>
 
-
-     
-
-
-        <div class="rx-area">
-           </div>
-
+        <div class="rx-area"></div>
 
         <div class="footer">
           <div class="doc-name">${consultant || ""}</div>
           <div class="doc-qual">${qualification || ""}</div>
         </div>
 
-        <div class="print-meta">
+      <!--  <div class="print-meta">
           <div>Printed By: ${user.UserName || "System"}</div>
           <div>Print Date: ${printDateTime}</div>
-        </div>
+        </div> -->
 
-        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+   <!--     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script> -->
+   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
         <script>
-            try {
-                const barcodeText = "${barcodeValue || registrationNo || "S-008791/25-26"}";
-                const cleanBarcode = barcodeText.replace('S-', '');
-                JsBarcode("#barcode", cleanBarcode, {
-                    format: "CODE128",
-                    width: 1.5,
-                    height: 30,
-                    displayValue: true,
-                    fontSize: 9,
-                    margin: 2,
-                    textMargin: 0
-                });
-            } catch (e) { console.log(e); }
+            // try {
+            //     const barcodeText = "${barcodeValue || registrationNo || "S-008791/25-26"}";
+            //     const cleanBarcode = barcodeText.replace('S-', '');
+            //     JsBarcode("#barcode", cleanBarcode, {
+            //         format: "CODE128",
+            //         width: 1.5,
+            //         height: 25,
+            //         displayValue: true,
+            //         fontSize: 9,
+            //         margin: 2,
+            //         textMargin: 0
+            //     });
+            // } catch (e) { console.log(e); }
             
-            setTimeout(() => {
-                window.print();
-                setTimeout(() => window.close(), 100);
-            }, 500);
+            // setTimeout(() => {
+            //     window.print();
+            //     setTimeout(() => window.close(), 100);
+            // }, 500);
+
+
+ try {
+    const qrText = "${barcodeValue || registrationNo || "S-008791/25-26"}";
+
+    QRCode.toCanvas(document.getElementById("qrcode"), qrText, {
+      width: 80,
+      margin: 1
+    }, function (error) {
+      if (error) console.error(error);
+    });
+
+  } catch (e) { console.log(e); }
+
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => window.close(), 100);
+  }, 500);
         </script>
       </body>
     </html>
   `);
 
-    printWindow.document.close();
-  };
+  printWindow.document.close();
+};
 
   // generate visit entry pdf
   const generateVisitEntryPDF = async (data) => {
@@ -926,9 +954,16 @@ const VisitList = () => {
         patientName: fetchedData.PatientName,
         age: fetchedData.Age,
         sex: fetchedData.Sex,
-        address:
-          `${fetchedData?.PatientAdd1}, ${fetchedData?.PatientAdd2}, ${fetchedData?.PatientAdd3}` ||
-          " ",
+        // address:
+        //   `${fetchedData?.PatientAdd1}, ${fetchedData?.PatientAdd2}, ${fetchedData?.PatientAdd3}` ||
+        //   " ",
+        address: fetchedData?.PatientAdd1
+          ? `${fetchedData?.PatientAdd1}`
+          : "" + fetchedData?.PatientAdd2
+            ? `, ${fetchedData?.PatientAdd2}`
+            : "" + fetchedData?.PatientAdd3
+              ? `, ${fetchedData?.PatientAdd3}, `
+              : "",
         phone: fetchedData.PhoneNo,
         visitTime: t,
         // consultant: formData.VisitTypeName,
@@ -962,12 +997,12 @@ const VisitList = () => {
   // JSX for the View/Edit dialog forms (to replace MUI Dialog)
   const renderForm = () => (
     <form>
-      <div className='row'>
-        <div className='col-md-6 mb-3'>
-          <label className='form-label'>Patient Name *</label>
+      <div className="row">
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Patient Name *</label>
           <input
-            type='text'
-            className='form-control'
+            type="text"
+            className="form-control"
             value={editForm.PatientName || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, PatientName: e.target.value })
@@ -976,11 +1011,11 @@ const VisitList = () => {
             required
           />
         </div>
-        <div className='col-md-6 mb-3'>
-          <label className='form-label'>Phone Number *</label>
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Phone Number *</label>
           <input
-            type='tel'
-            className='form-control'
+            type="tel"
+            className="form-control"
             value={editForm.PhoneNo || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, PhoneNo: e.target.value })
@@ -989,45 +1024,45 @@ const VisitList = () => {
             required
           />
         </div>
-        <div className='col-md-6 mb-3'>
-          <label className='form-label'>Age</label>
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Age</label>
           <input
-            type='number'
-            className='form-control'
+            type="number"
+            className="form-control"
             value={editForm.Age || ""}
             onChange={(e) => setEditForm({ ...editForm, Age: e.target.value })}
             disabled={editDialog.open === false}
           />
         </div>
-        <div className='col-md-6 mb-3'>
-          <label className='form-label'>Gender</label>
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Gender</label>
           <select
-            className='form-control'
+            className="form-control"
             value={editForm.Sex || ""}
             onChange={(e) => setEditForm({ ...editForm, Sex: e.target.value })}
             disabled={editDialog.open === false}
           >
-            <option value=''>Select Gender</option>
-            <option value='M'>Male</option>
-            <option value='F'>Female</option>
-            <option value='O'>Other</option>
+            <option value="">Select Gender</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+            <option value="O">Other</option>
           </select>
         </div>
-        <div className='col-md-12 mb-3'>
-          <label className='form-label'>Address</label>
+        <div className="col-md-12 mb-3">
+          <label className="form-label">Address</label>
           <textarea
-            className='form-control'
-            rows='2'
+            className="form-control"
+            rows="2"
             value={editForm.Add1 || ""}
             onChange={(e) => setEditForm({ ...editForm, Add1: e.target.value })}
             disabled={editDialog.open === false}
           />
         </div>
-        <div className='col-md-6 mb-3'>
-          <label className='form-label'>Guardian Name</label>
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Guardian Name</label>
           <input
-            type='text'
-            className='form-control'
+            type="text"
+            className="form-control"
             value={editForm.GurdianName || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, GurdianName: e.target.value })
@@ -1035,11 +1070,11 @@ const VisitList = () => {
             disabled={editDialog.open === false}
           />
         </div>
-        <div className='col-md-6 mb-3'>
-          <label className='form-label'>Email Address</label>
+        <div className="col-md-6 mb-3">
+          <label className="form-label">Email Address</label>
           <input
-            type='email'
-            className='form-control'
+            type="email"
+            className="form-control"
             value={editForm.EMailId || ""}
             onChange={(e) =>
               setEditForm({ ...editForm, EMailId: e.target.value })
@@ -1054,12 +1089,12 @@ const VisitList = () => {
   // Render the table to match Emr.jsx's style
   const renderTable = () => {
     return (
-      <table className='table table-dashed table-hover digi-dataTable table-striped'>
+      <table className="table table-dashed table-hover digi-dataTable table-striped">
         <thead>
           <tr>
-            <th className='no-sort'>
-              <div className='form-check'>
-                <input className='form-check-input' type='checkbox' />
+            <th className="no-sort">
+              <div className="form-check">
+                <input className="form-check-input" type="checkbox" />
               </div>
             </th>
             <th>Action</th>
@@ -1079,8 +1114,8 @@ const VisitList = () => {
           {visits.map((data, index) => (
             <tr key={data.id}>
               <td>
-                <div className='form-check'>
-                  <input className='form-check-input' type='checkbox' />
+                <div className="form-check">
+                  <input className="form-check-input" type="checkbox" />
                 </div>
               </td>
               <td>
@@ -1088,68 +1123,95 @@ const VisitList = () => {
                   <ul className={`d-flex gap-2`}>
                     <li>
                       <a
-                        href='#'
-                        className='dropdown-item'
+                        href="#"
+                        className="dropdown-item"
                         onClick={(e) => {
                           e.preventDefault();
                           handleView(data);
                         }}
                       >
-                        <button className='btn btn-sm btn-outline-info me-1'>
-                          <i className='fa-light fa-eye'></i>
+                        <button className="btn btn-sm btn-outline-info me-1">
+                          <i className="fa-light fa-eye"></i>
                         </button>
                       </a>
                     </li>
                     <li>
                       <a
-                        href='#'
-                        className='dropdown-item'
+                        href="#"
+                        className="dropdown-item"
                         onClick={(e) => {
                           e.preventDefault();
                           handleEdit(data);
                         }}
                       >
-                        <button className='btn btn-sm btn-outline-primary me-1'>
-                          <i className='fa-light fa-pen-to-square'></i>
+                        <button className="btn btn-sm btn-outline-primary me-1">
+                          <i className="fa-light fa-pen-to-square"></i>
                         </button>
                       </a>
                     </li>
                     <li>
                       <a
-                        href='#'
+                        href="#"
                         onClick={(e) => {
                           e.preventDefault();
                           generatePDF(data);
                         }}
                       >
                         <button
-                          className='btn btn-sm btn-outline-success me-1'
-                          data-toggle='tooltip'
-                          data-placement='bottom'
-                          title='Money Receipt PDF'
+                          className="btn btn-sm btn-outline-success me-1"
+                          data-toggle="tooltip"
+                          data-placement="bottom"
+                          title="Money Receipt PDF"
                         >
-                          <i className='fa-solid fa-indian-rupee-sign'></i>
+                          <i className="fa-solid fa-indian-rupee-sign"></i>
                         </button>{" "}
                       </a>
                     </li>
                     <li>
-                      <a href='#' className='dropdown-item' onClick={(e) => { e.preventDefault(); generateVisitEntryPDF(data.PVisitId); }}>
-                        <button className='btn btn-sm btn-outline-warning' title='Dr Press PDF'>
-                          <i className='fa-light fa-file-pdf'></i>
+                      <a
+                        href="#"
+                        className="dropdown-item"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          generateVisitEntryPDF(data.PVisitId);
+                        }}
+                      >
+                        <button
+                          className="btn btn-sm btn-outline-warning"
+                          title="Dr Press PDF"
+                        >
+                          <i className="fa-light fa-file-pdf"></i>
                         </button>
                       </a>
                     </li>
                     <li>
-                      <a href='#' className='dropdown-item' onClick={(e) => { e.preventDefault(); handleSendWhatsApp(data); }}>
-                        <button className='btn btn-sm btn-outline-success' title='Send WhatsApp'>
-                          <i className='fa-brands fa-whatsapp'></i>
+                      <a
+                        href="#"
+                        className="dropdown-item"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSendWhatsApp(data);
+                        }}
+                      >
+                        <button
+                          className="btn btn-sm btn-outline-success"
+                          title="Send WhatsApp"
+                        >
+                          <i className="fa-brands fa-whatsapp"></i>
                         </button>
                       </a>
                     </li>
                     <li>
-                      <a href='#' className='dropdown-item' onClick={(e) => { e.preventDefault(); handleDelete(data); }}>
-                        <button className='btn btn-sm btn-outline-danger'>
-                          <i className='fa-light fa-trash-can'></i>
+                      <a
+                        href="#"
+                        className="dropdown-item"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleDelete(data);
+                        }}
+                      >
+                        <button className="btn btn-sm btn-outline-danger">
+                          <i className="fa-light fa-trash-can"></i>
                         </button>
                       </a>
                     </li>
@@ -1166,7 +1228,7 @@ const VisitList = () => {
               <td>{data.DoctorName}</td>
               <td>{data.SpecialityName}</td>
               <td>
-                <span className='badge bg-success'>
+                <span className="badge bg-success">
                   ₹{data.TotAmount.toFixed(2)}
                 </span>
               </td>
@@ -1179,37 +1241,37 @@ const VisitList = () => {
 
   return (
     <div>
-      <div className='main-content'>
-        <div className='row'>
-          <div className='col-12'>
-            <div className='panel'>
+      <div className="main-content">
+        <div className="row">
+          <div className="col-12">
+            <div className="panel">
               {/* FIXED: Applied d-flex justify-content-between align-items-center for horizontal alignment of title and controls,
                 and restructured the search inputs based on AllEmployeeHeader.jsx reference. */}
-              <div className='panel-header d-flex justify-content-between align-items-center'>
+              <div className="panel-header d-flex justify-content-between align-items-center">
                 <h5>🏥 Patient Visit List</h5>
-                <div className='btn-box d-flex flex-wrap gap-2'>
+                <div className="btn-box d-flex flex-wrap gap-2">
                   {/* Group search inputs under id="tableSearch" */}
-                  <div id='tableSearch' className='d-flex gap-2'>
+                  <div id="tableSearch" className="d-flex gap-2">
                     {/* Search by Phone - compact placeholder */}
                     <input
-                      type='text'
-                      className='form-control form-control-sm'
-                      placeholder='Phone'
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Phone"
                       value={searchPhone}
                       onChange={(e) => setSearchPhone(e.target.value)}
                     />
                     {/* Search by Registration ID - compact placeholder */}
                     <input
-                      type='text'
-                      className='form-control form-control-sm'
-                      placeholder='Reg ID'
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Reg ID"
                       value={searchRegistrationId}
                       onChange={(e) => setSearchRegistrationId(e.target.value)}
                     />
                     {/* Search by Date - explicit width to contain the date picker */}
                     <input
-                      type='date'
-                      className='form-control form-control-sm'
+                      type="date"
+                      className="form-control form-control-sm"
                       value={searchDate}
                       onChange={(e) => setSearchDate(e.target.value)}
                     />
@@ -1217,14 +1279,14 @@ const VisitList = () => {
 
                   {/* Search Button */}
                   <button
-                    className='btn btn-sm btn-primary flex-shrink-0'
+                    className="btn btn-sm btn-primary flex-shrink-0"
                     onClick={handleSearch}
                   >
-                    <i className='fa-light fa-magnifying-glass'></i> Search
+                    <i className="fa-light fa-magnifying-glass"></i> Search
                   </button>
                   {/* Clear Button */}
                   <button
-                    className='btn btn-sm btn-secondary flex-shrink-0'
+                    className="btn btn-sm btn-secondary flex-shrink-0"
                     onClick={() => {
                       setSearchPhone("");
                       setSearchDate("");
@@ -1236,10 +1298,10 @@ const VisitList = () => {
                       fetchVisits("", "", "", 1, paginationModel.pageSize);
                     }}
                   >
-                    <i className='fa-light fa-trash-arrow-up'></i> Clear
+                    <i className="fa-light fa-trash-arrow-up"></i> Clear
                   </button>
                   <button
-                    className='btn btn-sm btn-success flex-shrink-0'
+                    className="btn btn-sm btn-success flex-shrink-0"
                     onClick={() => {
                       navigate("/visit_entry");
                     }}
@@ -1249,31 +1311,27 @@ const VisitList = () => {
                 </div>
               </div>
 
-              <div className='panel-body'>
-                {
-                  loading ?
-                    <div className='text-center py-5'>
-                      <div
-                        className='spinner-border text-primary'
-                        role='status'
-                      >
-                        <span className='visually-hidden'>Loading...</span>
-                      </div>
+              <div className="panel-body">
+                {loading ? (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
                     </div>
-                    // Using OverlayScrollbarsComponent for Emr.jsx style
-                  : <OverlayScrollbarsComponent style={{ height: "500px" }}>
-                      {renderTable()}
-                    </OverlayScrollbarsComponent>
-
-                }
+                  </div>
+                ) : (
+                  // Using OverlayScrollbarsComponent for Emr.jsx style
+                  <OverlayScrollbarsComponent style={{ height: "500px" }}>
+                    {renderTable()}
+                  </OverlayScrollbarsComponent>
+                )}
 
                 {/* Manual Pagination to simulate DataGrid structure */}
-                <div className='d-flex justify-content-between align-items-center mt-3'>
-                  <div className='text-muted'>
+                <div className="d-flex justify-content-between align-items-center mt-3">
+                  <div className="text-muted">
                     Showing{" "}
-                    {visits.length ?
-                      paginationModel.page * paginationModel.pageSize + 1
-                    : 0}{" "}
+                    {visits.length
+                      ? paginationModel.page * paginationModel.pageSize + 1
+                      : 0}{" "}
                     to{" "}
                     {Math.min(
                       (paginationModel.page + 1) * paginationModel.pageSize,
@@ -1282,15 +1340,15 @@ const VisitList = () => {
                     of {rowCount} entries
                   </div>
                   <nav>
-                    <ul className='pagination pagination-sm m-0'>
+                    <ul className="pagination pagination-sm m-0">
                       <li
                         className={`page-item ${
                           paginationModel.page === 0 ? "disabled" : ""
                         }`}
                       >
                         <a
-                          className='page-link'
-                          href='#'
+                          className="page-link"
+                          href="#"
                           onClick={(e) => {
                             e.preventDefault();
                             handlePaginationChange(paginationModel.page - 1);
@@ -1300,24 +1358,22 @@ const VisitList = () => {
                         </a>
                       </li>
                       {/* Simple page button for current page - complex button logic is removed to avoid function alteration */}
-                      <li className='page-item active'>
-                        <a className='page-link' href='#'>
+                      <li className="page-item active">
+                        <a className="page-link" href="#">
                           {paginationModel.page + 1}
                         </a>
                       </li>
                       <li
                         className={`page-item ${
-                          (
-                            paginationModel.page >=
-                            Math.ceil(rowCount / paginationModel.pageSize) - 1
-                          ) ?
-                            "disabled"
-                          : ""
+                          paginationModel.page >=
+                          Math.ceil(rowCount / paginationModel.pageSize) - 1
+                            ? "disabled"
+                            : ""
                         }`}
                       >
                         <a
-                          className='page-link'
-                          href='#'
+                          className="page-link"
+                          href="#"
                           onClick={(e) => {
                             e.preventDefault();
                             handlePaginationChange(paginationModel.page + 1);
@@ -1338,21 +1394,67 @@ const VisitList = () => {
       {/* Edit Modal */}
       {editDialog.open && (
         <>
-          <div className='modal-backdrop fade show' onClick={() => setEditDialog({ open: false, patient: null })} style={{ zIndex: 9998 }}></div>
-          <div className={`profile-right-sidebar active`} style={{ zIndex: 9999, width: "100%", maxWidth: "500px", right: "0", top: "70px", position: "fixed", bottom: "0" }}>
-            <button className='right-bar-close' onClick={() => setEditDialog({ open: false, patient: null })}>
-              <i className='fa-light fa-angle-right'></i>
+          <div
+            className="modal-backdrop fade show"
+            onClick={() => setEditDialog({ open: false, patient: null })}
+            style={{ zIndex: 9998 }}
+          ></div>
+          <div
+            className={`profile-right-sidebar active`}
+            style={{
+              zIndex: 9999,
+              width: "100%",
+              maxWidth: "500px",
+              right: "0",
+              top: "70px",
+              position: "fixed",
+              bottom: "0",
+            }}
+          >
+            <button
+              className="right-bar-close"
+              onClick={() => setEditDialog({ open: false, patient: null })}
+            >
+              <i className="fa-light fa-angle-right"></i>
             </button>
-            <div className='top-panel' style={{ height: "100%", paddingTop: "10px" }}>
-              <div className='dropdown-txt' style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "#0a1735" }}>
+            <div
+              className="top-panel"
+              style={{ height: "100%", paddingTop: "10px" }}
+            >
+              <div
+                className="dropdown-txt"
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                  backgroundColor: "#0a1735",
+                }}
+              >
                 ✏️ Edit Patient - {editDialog.patient?.PatientName}
               </div>
-              <OverlayScrollbarsComponent style={{ height: "calc(100% - 70px)" }}>
-                <div className='p-3'>
+              <OverlayScrollbarsComponent
+                style={{ height: "calc(100% - 70px)" }}
+              >
+                <div className="p-3">
                   {renderForm()}
-                  <div className='d-flex gap-2 mt-3'>
-                    <button type='button' className='btn btn-secondary w-50' onClick={() => setEditDialog({ open: false, patient: null })}>Cancel</button>
-                    <button type='button' className='btn btn-primary w-50' onClick={handleUpdatePatient} disabled={loading}>{loading ? "Updating..." : "Update Patient"}</button>
+                  <div className="d-flex gap-2 mt-3">
+                    <button
+                      type="button"
+                      className="btn btn-secondary w-50"
+                      onClick={() =>
+                        setEditDialog({ open: false, patient: null })
+                      }
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary w-50"
+                      onClick={handleUpdatePatient}
+                      disabled={loading}
+                    >
+                      {loading ? "Updating..." : "Update Patient"}
+                    </button>
                   </div>
                 </div>
               </OverlayScrollbarsComponent>
@@ -1364,36 +1466,85 @@ const VisitList = () => {
       {/* WhatsApp Modal */}
       {whatsappModal.open && (
         <>
-          <div className='modal-backdrop fade show' onClick={() => setWhatsappModal({ open: false, patient: null })} style={{ zIndex: 9998 }}></div>
-          <div className='modal fade show d-block' style={{ zIndex: 9999 }}>
-            <div className='modal-dialog modal-dialog-centered'>
-              <div className='modal-content'>
-                <div className='modal-header'>
-                  <h5 className='modal-title'>📱 Send WhatsApp Message</h5>
-                  <button type='button' className='btn-close' onClick={() => setWhatsappModal({ open: false, patient: null })}></button>
+          <div
+            className="modal-backdrop fade show"
+            onClick={() => setWhatsappModal({ open: false, patient: null })}
+            style={{ zIndex: 9998 }}
+          ></div>
+          <div className="modal fade show d-block" style={{ zIndex: 9999 }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">📱 Send WhatsApp Message</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() =>
+                      setWhatsappModal({ open: false, patient: null })
+                    }
+                  ></button>
                 </div>
-                <div className='modal-body'>
-                  <div className='mb-3'>
-                    <label className='form-label'>Patient Name</label>
-                    <input type='text' className='form-control' value={whatsappModal.patient?.PatientName || ''} disabled />
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Patient Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={whatsappModal.patient?.PatientName || ""}
+                      disabled
+                    />
                   </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Patient Phone</label>
-                    <input type='text' className='form-control' value={whatsappModal.patient?.PhoneNo || ''} disabled />
+                  <div className="mb-3">
+                    <label className="form-label">Patient Phone</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={whatsappModal.patient?.PhoneNo || ""}
+                      disabled
+                    />
                   </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Sender Number *</label>
-                    <input type='text' className='form-control' placeholder='Enter your WhatsApp number' value={senderNumber} onChange={(e) => setSenderNumber(e.target.value)} required />
-                    <small className='text-muted'>Enter the WhatsApp number you want to send from</small>
+                  <div className="mb-3">
+                    <label className="form-label">Sender Number *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter your WhatsApp number"
+                      value={senderNumber}
+                      onChange={(e) => setSenderNumber(e.target.value)}
+                      required
+                    />
+                    <small className="text-muted">
+                      Enter the WhatsApp number you want to send from
+                    </small>
                   </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Message Preview</label>
-                    <textarea className='form-control' rows='6' value={`Hello ${whatsappModal.patient?.PatientName},\n\nYour appointment details:\nRegistration ID: ${whatsappModal.patient?.RegistrationId}\nDoctor: ${whatsappModal.patient?.DoctorName}\nDate: ${whatsappModal.patient?.RegDate}\nTime: ${whatsappModal.patient?.RegTime}\n\nThank you for choosing Lords Health Care.`} disabled />
+                  <div className="mb-3">
+                    <label className="form-label">Message Preview</label>
+                    <textarea
+                      className="form-control"
+                      rows="6"
+                      value={`Hello ${whatsappModal.patient?.PatientName},\n\nYour appointment details:\nRegistration ID: ${whatsappModal.patient?.RegistrationId}\nDoctor: ${whatsappModal.patient?.DoctorName}\nDate: ${whatsappModal.patient?.RegDate}\nTime: ${whatsappModal.patient?.RegTime}\n\nThank you for choosing Lords Health Care.`}
+                      disabled
+                    />
                   </div>
                 </div>
-                <div className='modal-footer'>
-                  <button type='button' className='btn btn-secondary' onClick={() => setWhatsappModal({ open: false, patient: null })}>Cancel</button>
-                  <button type='button' className='btn btn-success' onClick={sendWhatsAppMessage} disabled={loading || !senderNumber}>{loading ? 'Sending...' : '📤 Send WhatsApp'}</button>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() =>
+                      setWhatsappModal({ open: false, patient: null })
+                    }
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-success"
+                    onClick={sendWhatsAppMessage}
+                    disabled={loading || !senderNumber}
+                  >
+                    {loading ? "Sending..." : "📤 Send WhatsApp"}
+                  </button>
                 </div>
               </div>
             </div>

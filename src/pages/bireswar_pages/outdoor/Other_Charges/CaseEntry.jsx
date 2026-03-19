@@ -42,7 +42,7 @@ const CaseEntry = () => {
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [isSearchingAgent, setIsSearchingAgent] = useState(false);
 
-const [showAddTest, setShowAddTest] = useState(true)
+  const [showAddTest, setShowAddTest] = useState(true);
 
   const [isLoaded, setIsLoaded] = useState(false); // add this by chat gpt
 
@@ -541,6 +541,20 @@ const [showAddTest, setShowAddTest] = useState(true)
     setSelectedTestMaster(null);
     calculateTotal([...tests, newTest]);
   };
+
+  // this will change the rate and net rate of the test
+  const handleModifyTest = (idx, val) => {
+// console.log("modex,",mode)
+    let arr = structuredClone(tests);
+    let a = tests[idx];
+    a = { ...a, Rate: val, NetRate: val };
+    arr[idx] = a;
+    // console.log("arr: ", arr);
+    setTests(arr);
+    //  calculateTotal([...tests])
+     calculateTotal([...arr])
+  };
+
 
   // Remove test from list
   const handleRemoveTest = (id) => {
@@ -1489,19 +1503,17 @@ window.onload = function(){
     }
   }, [selectedTestOPD]);
 
+  useEffect(() => {
+    if (formData.CaseId) {
+      fetchReceiptDetailData(formData.CaseId);
+    }
+  }, [formData.CaseId]);
 
-useEffect(() => {
- if(formData.CaseId){
-  fetchReceiptDetailData(formData.CaseId)
- }
-}, [formData.CaseId])
-
-useEffect(() => {
- if(receiptDetailData.length > 1){
-  setShowAddTest(false)
- }
-}, [receiptDetailData])
-
+  useEffect(() => {
+    if (receiptDetailData.length > 1) {
+      setShowAddTest(false);
+    }
+  }, [receiptDetailData]);
 
   // remove this for chatGpt
   // useEffect(() => {
@@ -3515,7 +3527,19 @@ ${
                               {test.TestName}
                             </td>
                             <td style={{ ...tableCellStyle, color: "black" }}>
-                              {test.Rate}
+                              <input
+                              style={{textAlign: "center"}}
+                              disabled={mode != 'create'}
+                                type="number"
+                                value={test.Rate}
+                                onChange={(e) => {
+                                  handleModifyTest(
+                                    index,
+                                    Number(e.target.value),
+                                  );
+                                }}
+                              />
+                              {/* {test.Rate} */}
                             </td>
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               {test.DeliveryDate}
@@ -3524,7 +3548,19 @@ ${
                               {test.DeliveryTime}
                             </td>
                             <td style={{ ...tableCellStyle, color: "black" }}>
-                              {test.NetRate}
+                              <input
+                                type="number"
+                                style={{textAlign: "center"}}
+                                disabled={mode != 'create'}
+                                value={test.NetRate}
+                                onChange={(e) => {
+                                  handleModifyTest(
+                                    index,
+                                    Number(e.target.value),
+                                  );
+                                }}
+                              />
+                              {/* {test.NetRate} */}
                             </td>
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               N
@@ -3561,51 +3597,52 @@ ${
               {/* SECTION 9: BILL SUMMARY */}
               <div className="col-12 col-md-3">
                 <div className="p-1 h-100 d-flex flex-column gap-1">
-                 {showAddTest&& <Select
-                    key={indoor}
-                    styles={compactSelectStyles}
-                    value={selectedTestMaster}
-                    onChange={setSelectedTestMaster}
-                    onInputChange={(inputValue) => {
-                      searchTestMaster(inputValue);
-                    }}
-                    options={testSearchResults.map((item) => ({
-                      value: item.TestId,
+                  {showAddTest && (
+                    <Select
+                      key={indoor}
+                      styles={compactSelectStyles}
+                      value={selectedTestMaster}
+                      onChange={setSelectedTestMaster}
+                      onInputChange={(inputValue) => {
+                        searchTestMaster(inputValue);
+                      }}
+                      options={testSearchResults.map((item) => ({
+                        value: item.TestId,
 
-                      label: `${item.Test} - ₹${indoor ? item.BRate : item.Rate}`,
-                      ...item,
-                    }))}
-                    placeholder="Search test..."
-                    isSearchable
-                    isClearable
-                    isLoading={isSearchingTest}
-                    isDisabled={mode === "view"}
-                    noOptionsMessage={({ inputValue }) =>
-                      inputValue.length < 2
-                        ? "Type at least 2 characters"
-                        : "No test found"
-                    }
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                    style={{ width: "280px" }} // ⬅ search box width increased (change anytime)
-                  />}
+                        label: `${item.Test} - ₹${indoor ? item.BRate : item.Rate}`,
+                        ...item,
+                      }))}
+                      placeholder="Search test..."
+                      isSearchable
+                      isClearable
+                      isLoading={isSearchingTest}
+                      isDisabled={mode === "view"}
+                      noOptionsMessage={({ inputValue }) =>
+                        inputValue.length < 2
+                          ? "Type at least 2 characters"
+                          : "No test found"
+                      }
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      style={{ width: "280px" }} // ⬅ search box width increased (change anytime)
+                    />
+                  )}
                   <div className="d-flex align-items-start">
-                  {showAddTest &&  <button
-                      className="btn btn-success btn-sm py-1 px-1"
-                      onClick={() => {
-                        console.log("show add test",showAddTest)
-                        if(showAddTest){
-
-                          handleAddTest()
-                        }
-                      }
-                      
-                      }
-                      disabled={mode === "view" || !selectedTestMaster}
-                      style={{ fontSize: "11px" }}
-                    >
-                      Add Test
-                    </button>}
+                    {showAddTest && (
+                      <button
+                        className="btn btn-success btn-sm py-1 px-1"
+                        onClick={() => {
+                          console.log("show add test", showAddTest);
+                          if (showAddTest) {
+                            handleAddTest();
+                          }
+                        }}
+                        disabled={mode === "view" || !selectedTestMaster}
+                        style={{ fontSize: "11px" }}
+                      >
+                        Add Test
+                      </button>
+                    )}
 
                     <div className="flex-grow-1 ms-1">
                       <div className="d-flex justify-content-end align-items-center mb-1">

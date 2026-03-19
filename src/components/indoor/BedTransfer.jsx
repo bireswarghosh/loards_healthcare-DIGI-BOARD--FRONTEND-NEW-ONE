@@ -31,7 +31,7 @@ const BedTransfer = () => {
     BedId: 0,
     AdmitionDate: new Date().toISOString().split("T")[0] + "T00:00:00.000Z",
     ReleaseDate: "",
-    Release: "",
+    Release: "N",
     AdmitionTime: new Date().toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",

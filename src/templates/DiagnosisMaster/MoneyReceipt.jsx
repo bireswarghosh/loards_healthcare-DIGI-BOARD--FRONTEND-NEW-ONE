@@ -171,8 +171,8 @@ const MoneyReceipt = () => {
         if (data[0].ReceiptId == ReceiptId) {
           setShowDisc(true);
         }
-
-        if (data[0].ReceiptId == ReceiptId) {
+console.log("data",data[0])
+        if (data[0].ReceiptId == ReceiptId && calculatedDueAmount!=0) {
           setShowSaveBtnEdit(true);
         } else {
           setShowSaveBtnEdit(false);
@@ -678,7 +678,7 @@ const MoneyReceipt = () => {
       setRefundMode(0);
       setShowDrawer(false);
       setShowDisc(false);
-      fetchReceipts(page);
+      fetchReceipts(page,showRec);
     } catch (err) {
       console.error("Save error:", err);
       console.error("Error response:", err?.response?.data);
@@ -721,7 +721,7 @@ const MoneyReceipt = () => {
     try {
       await axiosInstance.delete(`/moneyreceipt/${id}`);
       toast.success("Deleted successfully");
-      fetchReceipts(page);
+      fetchReceipts(page, showRec);
     } catch {
       toast.error("Delete failed");
     }
@@ -729,7 +729,7 @@ const MoneyReceipt = () => {
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
-      fetchReceipts(1);
+      fetchReceipts(1,showRec);
       return;
     }
 
@@ -2508,23 +2508,35 @@ ${pagesHtml}
                     {modalType !== "view" && (
                       <>
                         {modalType == "add" &&
-                          (refundMode === 0 ? (
-                            calculatedDueAmount != 0 && (
-                              <button
-                                onClick={handleSave}
-                                className="btn btn-primary w-50"
-                              >
-                                Save
-                              </button>
-                            )
-                          ) : (
-                            <button
+
+
+                          // (refundMode === 0 ? (
+                          //   calculatedDueAmount != 0 && (
+                          //     <button
+                          //       onClick={handleSave}
+                          //       className="btn btn-primary w-50"
+                          //     >
+                          //       Save
+                          //     </button>
+                          //   )
+                          // ) : (
+                          //   <button
+                          //     onClick={handleSave}
+                          //     className="btn btn-primary w-50"
+                          //   >
+                          //     Save
+                          //   </button>
+                          // ))
+
+                 (         <button
                               onClick={handleSave}
                               className="btn btn-primary w-50"
                             >
                               Save
-                            </button>
-                          ))}
+                            </button>)
+                          
+                          
+                          }
 
                         {modalType == "edit" && showSaveBtnEdit && (
                           <button
@@ -2602,7 +2614,14 @@ ${pagesHtml}
                                   signatory: "OFFICE MANAGER",
                                 },
                               };
-                              handleRefundPdf(receiptData);
+                              setTimeout(
+                                () => {
+                                  handleRefundPdf(receiptData);
+                                }
+                                
+,1000
+                              )
+                              
                             }
                           }}
                           className="btn btn-warning w-50"
