@@ -25,17 +25,17 @@ const MainBackgroundSection = () => {
               <i className="fa-light fa-xmark"></i>
             </span>
           </button>
-          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('assets/images/main-bg-1.jpg')}>
-            <img src="assets/images/main-bg-1.jpg" height={60} width={100} alt="Background 1" />
+          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('/assets/images/main-bg-1.jpg')}>
+            <img src="/assets/images/main-bg-1.jpg" height={60} width={100} alt="Background 1" />
           </button>
-          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('assets/images/main-bg-2.jpg')}>
-            <img src="assets/images/main-bg-2.jpg" height={60} width={100} alt="Background 2" />
+          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('/assets/images/main-bg-2.jpg')}>
+            <img src="/assets/images/main-bg-2.jpg" height={60} width={100} alt="Background 2" />
           </button>
-          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('assets/images/main-bg-3.jpg')}>
-            <img src="assets/images/main-bg-3.jpg" height={60} width={100} alt="Background 3" />
+          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('/assets/images/main-bg-3.jpg')}>
+            <img src="/assets/images/main-bg-3.jpg" height={60} width={100} alt="Background 3" />
           </button>
-          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('assets/images/main-bg-4.jpg')}>
-            <img src="assets/images/main-bg-4.jpg" height={60} width={100} alt="Background 4" />
+          <button className="main-content-bg-btn" onClick={() => handleBackgroundChange('/assets/images/main-bg-4.jpg')}>
+            <img src="/assets/images/main-bg-4.jpg" height={60} width={100} alt="Background 4" />
           </button>
         </div>
       </div>

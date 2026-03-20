@@ -9,6 +9,11 @@ const DigiContextProvider = ({ children }) => {
   const [isNotificationDropdownOpen, setNotificationDropdownOpen] =
     useState(false);
 
+// show alert component
+const [showConfirm, setShowConfirm] = useState(false)
+// handle confirm yes/no
+const [confirmYN, setConfirmYN] = useState(false)
+
   const toggleChatDropdown = () => {
     setChatDropdownOpen((prevState) => !prevState);
     setNotificationDropdownOpen(false);
@@ -58,11 +63,16 @@ const DigiContextProvider = ({ children }) => {
 
   //theme button
   // Theme Selection
+  // const [themeSelection, setThemeSelection] = useState({
+  //   default: true,
+  //   light: false,
+  //   dark: false,
+  // });
   const [themeSelection, setThemeSelection] = useState({
-    default: true,
-    light: false,
-    dark: false,
-  });
+  default: false,
+  light: true,
+  dark: false,
+});
 
   const handleThemeSelection = (selectedTheme) => {
     setThemeSelection((prevThemeSelection) => ({
@@ -160,6 +170,19 @@ const DigiContextProvider = ({ children }) => {
     closeAllDropdown();
   };
 
+useEffect(() => {
+  const bodyElement = document.body;
+  const divElement = document.querySelector(".body-padding");
+
+  // remove previous theme
+  bodyElement.classList.remove("dark-theme");
+  divElement?.classList.remove("dark-theme", "blue-theme");
+
+  // apply light theme
+  bodyElement.classList.add("light-theme");
+  divElement?.classList.add("light-theme");
+}, []);
+
   useEffect(() => {
     localStorage.setItem("navState", JSON.stringify(isNavExpanded));
   }, [isNavExpanded]);
@@ -220,8 +243,6 @@ const DigiContextProvider = ({ children }) => {
     section8: false,
     section9: false,
     section10: false,
-    ai: false,
-    whatsapp: false,
   });
 
   const handleDropdownClick = (dropdown) => {
@@ -234,8 +255,8 @@ const DigiContextProvider = ({ children }) => {
     }));
   };
 
-  // Light Theme
-  const [isLightTheme, setIsLightTheme] = useState(false);
+ // Light Theme
+const [isLightTheme, setIsLightTheme] = useState(true);
   const bodyElement = document.body;
   const divElement = document.querySelector(".body-padding");
   const handleLightThemeToggle = () => {
@@ -263,7 +284,7 @@ const DigiContextProvider = ({ children }) => {
   };
 
   // Dark Theme
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
+const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   const handleDarkThemeToggle = () => {
     setIsLightTheme(false);
@@ -1464,67 +1485,6 @@ const DigiContextProvider = ({ children }) => {
   const section9 = createSectionState(9);
   const section10 = createSectionState(10);
 
-  // WhatsApp API Part
-  const initialWhatsappState = { isMainDropdownOpen: false };
-  const [whatsappState, setWhatsappState] = useState(
-    localStorage.getItem("whatsappState") ? JSON.parse(localStorage.getItem("whatsappState")) : initialWhatsappState
-  );
-  useEffect(() => { localStorage.setItem("whatsappState", JSON.stringify(whatsappState)); }, [whatsappState]);
-  const toggleWhatsAppDropdown = () => {
-    setWhatsappState((prevState) => ({ ...prevState, isMainDropdownOpen: !prevState.isMainDropdownOpen }));
-    handleDropdownClick("whatsapp");
-  };
-  const whatsappRef = useRef(null);
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (whatsappRef.current && !whatsappRef.current.contains(event.target)) {
-        setDropdownOpen((prev) => ({ ...prev, whatsapp: false }));
-      }
-    };
-    if (dropdownOpen.whatsapp) { document.addEventListener("mousedown", handleClickOutside); }
-    return () => { document.removeEventListener("mousedown", handleClickOutside); };
-  }, [dropdownOpen.whatsapp]);
-
-  // AI Part
-  const initialAiState = { isMainDropdownOpen: false };
-  const [aiState, setAiState] = useState(
-    localStorage.getItem("aiState") ? JSON.parse(localStorage.getItem("aiState")) : initialAiState
-  );
-  useEffect(() => { localStorage.setItem("aiState", JSON.stringify(aiState)); }, [aiState]);
-  const toggleAiDropdown = () => {
-    setAiState((prevState) => ({ ...prevState, isMainDropdownOpen: !prevState.isMainDropdownOpen }));
-    handleDropdownClick("ai");
-  };
-  const mainAiRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (mainAiRef.current && !mainAiRef.current.contains(event.target)) {
-        setDropdownOpen((prev) => ({ ...prev, ai: false }));
-      }
-    };
-    if (dropdownOpen.ai) { document.addEventListener("mousedown", handleClickOutside); }
-    return () => { document.removeEventListener("mousedown", handleClickOutside); };
-  }, [dropdownOpen.ai]);
-
-  // AI Settings
-  const [aiSettings, setAiSettings] = useState({
-    apiKey: "",
-    model: "gpt-4o-mini",
-    maxTokens: 2000,
-    temperature: 0.7,
-    systemPrompt: "You are a helpful medical AI assistant.",
-    orgLogoUrl: "",
-    orgName: "",
-    orgAddress: "",
-    orgPhone: "",
-    orgEmail: "",
-  });
-
-  const updateAiSettings = (newSettings) => {
-    setAiSettings((prev) => ({ ...prev, ...newSettings }));
-  };
-
   //nav button
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -2679,15 +2639,8 @@ const DigiContextProvider = ({ children }) => {
         section10State: section10.state,
         toggleMainSection10Dropdown: section10.toggle,
         mainSection10Ref: section10.ref,
-        aiState,
-        toggleAiDropdown,
-        mainAiRef,
-        aiSettings,
-        setAiSettings,
-        updateAiSettings,
-        whatsappState,
-        toggleWhatsAppDropdown,
-        whatsappRef,
+        showConfirm, setShowConfirm,
+        confirmYN, setConfirmYN
       }}
     >
       {children}

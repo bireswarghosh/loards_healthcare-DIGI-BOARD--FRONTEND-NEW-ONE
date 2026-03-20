@@ -21,17 +21,17 @@ const SidebarBackgroundSection = () => {
                 <button id="noBackground" onClick={resetSidebarBackground}>
                     <span><i className="fa-light fa-xmark"></i></span>
                 </button>
-                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('assets/images/nav-bg-1.jpg')}>
-                    <img src='assets/images/nav-bg-1.jpg' height={90} width={50}/>
+                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('/assets/images/nav-bg-1.jpg')}>
+                    <img src='/assets/images/nav-bg-1.jpg' height={90} width={50}/>
                 </button>
-                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('assets/images/nav-bg-2.jpg')}>
-                    <img src='assets/images/nav-bg-2.jpg' height={90} width={50}/>
+                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('/assets/images/nav-bg-2.jpg')}>
+                    <img src='/assets/images/nav-bg-2.jpg' height={90} width={50}/>
                 </button>
-                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('assets/images/nav-bg-3.jpg')}>
-                    <img src='assets/images/nav-bg-3.jpg' height={90} width={50}/>
+                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('/assets/images/nav-bg-3.jpg')}>
+                    <img src='/assets/images/nav-bg-3.jpg' height={90} width={50}/>
                 </button>
-                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('assets/images/nav-bg-4.jpg')}>
-                    <img src='assets/images/nav-bg-4.jpg' height={90} width={50}/>
+                <button className="sidebar-bg-btn" onClick={()=> handleSidebarBackgroundChange('/assets/images/nav-bg-4.jpg')}>
+                    <img src='/assets/images/nav-bg-4.jpg' height={90} width={50}/>
                 </button>
             </div>
         </div>

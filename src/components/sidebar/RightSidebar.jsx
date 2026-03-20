@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { DigiContext } from '../../context/DigiContext';
 import NavPositionSection from './right-sidebar/NavPositionSection';
 import PrimaryColorSection from './right-sidebar/PrimaryColorSection';

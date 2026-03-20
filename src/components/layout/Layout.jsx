@@ -7,6 +7,7 @@ import { Outlet } from "react-router-dom";
 import RightSidebarButton from "../header/RightSidebarButton";
 import ProfileRightSidebar from "../sidebar/right-sidebar/ProfileRightSidebar";
 import { ToastContainer } from "react-toastify";
+import Confirm from "../confirm_component_bootstrap/Confirm";
 
 const Layout = () => {
   const {
@@ -16,6 +17,7 @@ const Layout = () => {
     isNavExpanded,
     isRtl,
     isSmallScreen,
+    showConfirm, setShowConfirm
   } = useContext(DigiContext);
 
   return (
@@ -49,6 +51,7 @@ const Layout = () => {
       <RightSidebarButton />
       <MainSidebar />
       <ToastContainer />
+    {showConfirm && <Confirm/>}
       <Outlet />
     </div>
   );

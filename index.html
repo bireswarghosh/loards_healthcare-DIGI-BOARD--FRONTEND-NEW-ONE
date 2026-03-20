@@ -2,19 +2,54 @@
 
 
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lords Health Care</title>
-    <link rel="icon" href="assets/favicon.png">
-    <link rel="stylesheet" href="assets/css/sweetalert2.min.css">
-    <link rel="stylesheet" href="assets/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" id="primaryColor" href="assets/css/blue-color.css">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lords Health Care</title>
+  <link rel="icon" href="/assets/favicon.png">
+  <!-- <link rel="stylesheet" href="/assets/css/sweetalert2.min.css">
+    <link rel="stylesheet" href="/assets/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" id="primaryColor" href="/assets/css/blue-color.css"> -->
+
+ <link rel="stylesheet" href="/assets/css/all.min.css">
+<link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+<link rel="stylesheet" href="/assets/css/sweetalert2.min.css">
+<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" id="theme-style" href="/assets/css/blue-color.css">
+
+<script>
+  const savedTheme = localStorage.getItem("primaryColor");
+
+  if (savedTheme) {
+    const theme = JSON.parse(savedTheme);
+
+    let css = "blue-color.css";
+
+    if (theme.blue) css = "blue-color.css";
+    if (theme.deep_pink) css = "deep_pink-color.css";
+    if (theme.eagle_green) css = "eagle_green-color.css";
+    if (theme.gold) css = "gold-color.css";
+    if (theme.green) css = "green-color.css";
+    if (theme.orange) css = "orange-color.css";
+    if (theme.pink) css = "pink-color.css";
+    if (theme.purple) css = "purple-color.css";
+    if (theme.tea_green) css = "tea_green-color.css";
+    if (theme.yellow_green) css = "yellow_green-color.css";
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("theme-style").href = "/assets/css/" + css;
+    });
+  }
+</script>
+
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
