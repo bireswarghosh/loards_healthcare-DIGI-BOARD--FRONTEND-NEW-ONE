@@ -867,7 +867,7 @@ function App() {
             }
           />  
           <Route
-            path="/BloodReport/Add/:id"
+            path="/BloodReport/Add/:id/:tID"
             element={ 
               <ProtectedRoute>
                 <BloodReportAdd />
@@ -875,7 +875,7 @@ function App() {
             }
           />  
           <Route
-            path="/BloodReport/:id/:mode"
+            path="/BloodReport/:id/:mode/:tID"
             element={ 
               <ProtectedRoute>
                 <BloodReport />

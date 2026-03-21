@@ -6,6 +6,7 @@ import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
 import JsBarcode from "jsbarcode";
 import { useEffect, useMemo, useState } from "react";
+import useAxiosFetch from "./Fetch";
 
 const GeneralTestDrawer = ({
   formData2,
@@ -15,6 +16,7 @@ const GeneralTestDrawer = ({
   handlePropertyChange,
   fetchPropertyList,
   fetchPropertyValues,
+  fetchTestDetails,
 }) => {
   const barcodeImg = useMemo(() => {
     if (!formData2.CaseNo) return "";
@@ -28,21 +30,33 @@ const GeneralTestDrawer = ({
     return canvas.toDataURL("image/png");
   }, [formData2?.CaseNo]);
 
-const [pathologistId, setPathologistId] = useState(null);
-const [pathologistName, setPathologistName] = useState("");
-
-
-
-const [pathologistList, setPathologistList] = useState([]);
-
-useEffect(() => {
-  fetch("https://lords-backend.onrender.com/api/v1/pathologist")
-    .then((res) => res.json())
-    .then((data) => {
-      setPathologistList(Array.isArray(data) ? data : data.data || []);
+  const { data: doctors } = useAxiosFetch(
+    "/doctormaster?page=1&limit=10000",
+    []
+  );
+  //  console.log("doctors",doctors);
+  const doctorMap = useMemo(() => {
+    const map = {};
+    (doctors || []).forEach((d) => {
+      map[d.DoctorId] = d.Doctor;
     });
-}, []);
+    return map;
+  }, [doctors]);
 
+  const [selectedTest, setSelectedTest] = useState(null);
+
+  const [pathologistId, setPathologistId] = useState(null);
+  const [pathologistName, setPathologistName] = useState("");
+
+  const [pathologistList, setPathologistList] = useState([]);
+
+  useEffect(() => {
+    fetch("https://lords-backend.onrender.com/api/v1/pathologist")
+      .then((res) => res.json())
+      .then((data) => {
+        setPathologistList(Array.isArray(data) ? data : data.data || []);
+      });
+  }, []);
 
   const saveProperty = async (prop) => {
     const pv = propertyValueMap[prop.TestPropertyId];
@@ -50,7 +64,7 @@ useEffect(() => {
 
     const payload = {
       CaseId: formData2.CaseId,
-      TestId: formData2.TestId,
+      TestId: selectedTest?.TestId,
       TestPropertyId: prop.TestPropertyId,
       TestProVal: pv.value,
       BarCodeNo: pv.barcode,
@@ -74,6 +88,10 @@ useEffect(() => {
   };
 
   const saveAllProperties = async () => {
+    if (!selectedTest) {
+      toast.error("Please select a test first");
+      return;
+    }
     if (!propertyList.length) return;
 
     try {
@@ -83,7 +101,7 @@ useEffect(() => {
 
         const payload = {
           CaseId: formData2.CaseId,
-          TestId: formData2.TestId,
+          TestId: selectedTest?.TestId,
           TestPropertyId: prop.TestPropertyId,
           TestProVal: pv.value,
           BarCodeNo: pv.barcode,
@@ -92,7 +110,7 @@ useEffect(() => {
         };
 
         return axiosInstance.put(
-          `/testproval/${formData2.TestId}/${prop.TestPropertyId}/${formData2.CaseId}`,
+          `/testproval/${selectedTest?.TestId}/${prop.TestPropertyId}/${formData2?.CaseId}`,
           payload
         );
       });
@@ -108,6 +126,10 @@ useEffect(() => {
   };
   const createAllProperties = async () => {
     // if (!propertyList.length) return;
+    if (!selectedTest) {
+      toast.error("Please select a test first");
+      return;
+    }
 
     try {
       const requests = propertyList.map((prop) => {
@@ -116,7 +138,7 @@ useEffect(() => {
 
         const payload = {
           CaseId: formData2.CaseId,
-          TestId: formData2.TestId,
+          TestId: selectedTest?.TestId,
           TestPropertyId: prop.TestPropertyId,
           TestProVal: pv.value,
           BarCodeNo: pv.barcode,
@@ -129,6 +151,22 @@ useEffect(() => {
 
       // 🔥 null remove + parallel save
       await Promise.all(requests.filter(Boolean));
+      const now = new Date().toISOString();
+      await axiosInstance.put(
+        `/case-dtl-01/${formData2.CaseId}/${selectedTest?.TestId}`,
+        {
+          ReportDate: now,
+        }
+      );
+      await fetchPropertyList(selectedTest?.TestId);
+      await fetchPropertyValues(formData2?.CaseId, selectedTest?.TestId);
+
+      await fetchTestDetails(formData2?.CaseId); // ⭐ MAIN FIX 
+
+      setSelectedTest((prev) => ({
+        ...prev,
+        ReportDate: now,
+      }));
 
       toast.success("All properties created successfully");
     } catch (err) {
@@ -141,11 +179,14 @@ useEffect(() => {
       return `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`;
     }
 
-    if ((prop.MaleMin != "" || prop.MaleMax != "") &&(formData2?.Sex=="M")) {
+    if ((prop.MaleMin != "" || prop.MaleMax != "") && formData2?.Sex == "M") {
       return `${prop.MaleMin ?? ""} - ${prop.MaleMax ?? ""}`;
     }
 
-    if ((prop.FemaleMin != "" || prop.FemaleMax != "" && formData2?.Sex) &&(formData2?.Sex=="F")) {
+    if (
+      (prop.FemaleMin != "" || (prop.FemaleMax != "" && formData2?.Sex)) &&
+      formData2?.Sex == "F"
+    ) {
       return `${prop.FemaleMin ?? ""} - ${prop.FemaleMax ?? ""}`;
     }
 
@@ -160,10 +201,11 @@ useEffect(() => {
     return "";
   };
   const handlePrint = () => {
-
-
-
-
+    if (!selectedTest) {
+      toast.error("Please select a test first");
+      return;
+    }
+    console.log("hole", selectedTest);
 
     const doc = new jsPDF("p", "mm", "a4");
 
@@ -172,7 +214,7 @@ useEffect(() => {
 
     const L = 15;
     const R = 135;
-    let y = 15;
+    let y = 75;
 
     /* ================= BARCODE PLACEHOLDER ================= */
     doc.setFillColor(230, 230, 230);
@@ -202,7 +244,7 @@ useEffect(() => {
 
     doc.text("Referred By", labelX, baseY + 10);
     doc.text(":", colonX, baseY + 10);
-    doc.text(pathologistName , valueX, baseY + 10);
+    doc.text(`${doctorMap[formData2.DoctorId] || ""}`, valueX, baseY + 10);
 
     // ===== RIGHT SIDE =====
     const rLabelX = R;
@@ -221,11 +263,16 @@ useEffect(() => {
     // Dates (same rows as Case No / Referred By)
     doc.text("Collection Date", rLabelX, baseY + 5);
     doc.text(":", rColonX, baseY + 5);
-    doc.text(tests?.[0]?.DeliveryDate || "", rValueX, baseY + 5);
+    // doc.text(selectedTest?.DeliveryDate || "", rValueX, baseY + 5);
+    doc.text(new Date().toISOString().split("T")[0], rValueX, baseY + 5);
 
-    // doc.text("Reporting Date", rLabelX, baseY + 10);
-    // doc.text(":", rColonX, baseY + 10);
-    // doc.text(formData2?.ReportDate || "", rValueX, baseY + 10);
+    doc.text("Reporting Date", rLabelX, baseY + 10);
+    doc.text(":", rColonX, baseY + 10);
+    doc.text(
+      selectedTest?.ReportDate?.split("T")[0] || "",
+      rValueX,
+      baseY + 10
+    );
 
     // ===== MOVE CURSOR AFTER BOTH SIDES =====
     y = baseY + 18;
@@ -237,7 +284,7 @@ useEffect(() => {
 
     /* ================= TITLE ================= */
     doc.setFont("times", "bold");
-    doc.text("CLINICAL PATHOLOGY.", 105, y, { align: "center" });
+    doc.text(selectedTest.Test, 105, y, { align: "center" });
 
     y += 6;
 
@@ -292,7 +339,6 @@ useEffect(() => {
 
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
   };
-
 
   return (
     <>
@@ -391,13 +437,16 @@ useEffect(() => {
                   key={index}
                   style={{ cursor: "pointer" }}
                   onClick={() => {
+                    setSelectedTest(test);
                     fetchPropertyList(test?.TestId);
                     fetchPropertyValues(formData2?.CaseId, test?.TestId);
                   }}
                 >
                   <td>{test?.Test}</td>
-                  <td>{test?.ReportDate}</td>
-                  <td className="text-primary">Click Here To Enter Result</td>
+                  <td>{test?.ReportDate?.split("T")[0]}</td>
+                  <td className="text-primary">
+                    Click Here Before Print & Enter Result
+                  </td>
                   <td></td>
                   <td></td>
                   <td>{test?.ReportTime}</td>

@@ -94,7 +94,8 @@ export const handlePrint = async (data, Remarks) => {
     rightColumnX,
     rightY,
     "Collection Date",
-    data.ReportDt?.split("T")[0] || new Date().toLocaleDateString("en-GB")
+    // data.ReportDt?.split("T")[0] || new Date().toLocaleDateString("en-GB")
+    new Date().toLocaleDateString("en-GB")
   );
 
   rightY += rowH;
@@ -102,7 +103,8 @@ export const handlePrint = async (data, Remarks) => {
     rightColumnX,
     rightY,
     "Reporting Date",
-    new Date().toLocaleDateString("en-GB")
+    // new Date().toLocaleDateString("en-GB")
+    data.ReportDt?.split("T")[0]?.split("-")?.reverse()?.join("/") || new Date().toLocaleDateString("en-GB")
   );
 
   // --- 3. LEFT SIDE HEADER ---

@@ -11,8 +11,8 @@ import axiosInstance from "../../../axiosInstance";
 const BloodReportAdd = () => {
 
 
-const { id } = useParams()
-console.log("halum id: ", id)
+const { id , tID} = useParams()
+console.log("halum id: ", tID)
 
 
 const [idX, setIdX] = useState(id)
@@ -36,6 +36,16 @@ const [idX, setIdX] = useState(id)
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false);
 
+
+const date = new Date();
+
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, "0");
+const day = String(date.getDate()).padStart(2, "0");
+
+const today = `${year}-${month}-${day}`;
+
+// console.log(today);
 
   const [formData, setFormData] = useState({
     "1StHrsCount": 0,
@@ -78,7 +88,7 @@ const [idX, setIdX] = useState(id)
     ErythrocytesUnit: "million/cumm.",
 
 
-    Himoglobin1: 0,
+    Himoglobin1: 14.5,
     Himoglobin2: 0,
     Himoglobin3: 0,
 
@@ -119,7 +129,8 @@ const [idX, setIdX] = useState(id)
     RDW: 0,
     RDWUnit: "",
     Remarks: "",
-    ReportDt: "",
+  //  ReportDt: `${new Date().toISOString().split("T")[0]}T00:00:00.000Z`,
+   ReportDt: `${today}T00:00:00.000Z`,
     ReportTime: "",
     ReticulocyCount: 0,
     RHType: "",
@@ -267,6 +278,12 @@ const [idX, setIdX] = useState(id)
       const res = await axiosInstance.post(`/bloodformat`, formData);
       console.log("res: ", res.data);
       if (res.data.success) {
+        await axiosInstance.put(
+        `/case-dtl-01/${id}/${tID}`,
+        {
+          ReportDate: new Date(),
+        }
+      );
         setLoading(false);
         toast.success(res.data.message);
         // setFormData(res.data.data);
@@ -640,7 +657,7 @@ const [idX, setIdX] = useState(id)
                 className="m-0 fw-bold"
                 style={{ fontSize: "1.85rem", letterSpacing: "0.5px" }}
               >
-                Blood Report Format
+                Blood Report Format ddd
               </h6>{" "}
             </div>
           </div>
@@ -1506,6 +1523,7 @@ const [idX, setIdX] = useState(id)
                       value={formData.PCVUnit}
                       onChange={onChangeFormData}
                       style={{ width: "30px" }}
+                      disabled={true}
                       className="w-tiny text-end"
                     />
                   </div>
@@ -1595,6 +1613,8 @@ const [idX, setIdX] = useState(id)
                     <input
                       type="text"
                       name="MCHCUnit"
+                                            disabled={true}
+
                       value={formData.MCHCUnit}
                       onChange={onChangeFormData}
                       style={{ width: "50px" }}
@@ -1955,7 +1975,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
             </button> */}
             <button className="btn btn-sm btn-primary"
             onClick={() => {
-              navigate('/LaboratoryQuery')
+              navigate(-1)
             }
             }
             >Exit</button>

@@ -12,6 +12,7 @@ const CaseTestDataModal = ({
   testId,
   PatientName,
   formData2,
+  htmlContent
 }) => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -176,7 +177,7 @@ const CaseTestDataModal = ({
               <label className="fw-bold">Description</label>
               <CKEditor
                 editor={ClassicEditor}
-                data={formData.htmlContent}
+                data={formData.htmlContent || htmlContent || ""}
                 onChange={handleEditorChange}
               />
 

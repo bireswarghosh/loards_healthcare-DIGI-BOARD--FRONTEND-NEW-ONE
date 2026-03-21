@@ -860,46 +860,46 @@ console.log("data",data[0])
   }, [users]);
 
   const handlePrint = () => {
-    const testsPerPage = 9;
+  const testsPerPage =9;
 
-    const pages = [];
-    for (let i = 0; i < tests.length; i += testsPerPage) {
-      pages.push(tests.slice(i, i + testsPerPage));
-    }
+  const pages = [];
+  for (let i = 0; i < tests.length; i += testsPerPage) {
+    pages.push(tests.slice(i, i + testsPerPage));
+  }
 
-    let runningTotal = 0;
+  let runningTotal = 0;
 
-    const pagesHtml = pages
-      .map((pageTests, pageIndex) => {
-        // ⭐ page total
-        const pageTestTotal = pageTests.reduce((sum, t) => {
-          return sum + (Number(t.CancelTast) === 1 ? 0 : Number(t.Rate || 0));
-        }, 0);
+  const pagesHtml = pages
+    .map((pageTests, pageIndex) => {
+      // ⭐ page total
+      const pageTestTotal = pageTests.reduce((sum, t) => {
+        return sum + (Number(t.CancelTast) === 1 ? 0 : Number(t.Rate || 0));
+      }, 0);
 
-        // ⭐ running total
-        runningTotal += pageTestTotal;
+      // ⭐ running total
+      runningTotal += pageTestTotal;
 
-        const rows = pageTests
-          .map(
-            (t, i) => `
+      const rows = pageTests
+        .map(
+          (t, i) => `
 <tr>
 <td style="text-align:center;">${pageIndex * testsPerPage + i + 1}</td>
 <td>${testsMap[t.TestId]}
 ${t.CancelTast == 1 ? "(Cancel)" : ""}
 </td>
 <td>${t.DeliveryDate}</td>
-<td style="text-align:right;">${t.CancelTast == 1 ? 0 : t.Rate}</td>
+<td style="text-align:right;">${t.CancelTast == 1 ? 0 : t.Rate }</td>
 </tr>
-`,
-          )
-          .join("");
+`
+        )
+        .join("");
 
-        return `
+      return `
 
 <div class="page">
 
 <div class="top-header-row">
-     
+      
 <div class="top-favicon">
 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
 </div>
@@ -937,17 +937,17 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 <div class="patient-row">
 <span class="patient-label">Receipt No</span>
-<span class="patient-value">${formData.ReceiptNo}</span>
+<span class="patient-value">${formData.ReceiptNo ||''}</span>
 </div>
 
 <div class="patient-row">
 <span class="patient-label">Case No</span>
-<span class="patient-value">${formData.ReffId}</span>
+<span class="patient-value">${formData.ReffId || ''}</span>
 </div>
 
 <div class="patient-row">
 <span class="patient-label">Patient Name</span>
-<span class="patient-value">${formData.PatientName}</span>
+<span class="patient-value">${formData.PatientName || ''}</span>
 </div>
 
 <div class="patient-row">
@@ -975,16 +975,16 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 </div>
 
 <div class="patient-row">
-<span class="patient-label">Age</span>
-<span class="patient-value">${formData.Age || ""} ${formData.AgeType || ""}</span>
+  <span class="patient-label">Age</span>
+  <span class="patient-value">${formData.Age || ""} ${formData.AgeType || ""}</span>
 
-<span class="patient-label">Sex</span>
-<span class="patient-value">${formData.Sex || ""}</span>
+  <span style="margin-left:30px;font-weight:bold;">Sex</span>
+  <span class="patient-value" style="margin-left:30px">${formData.Sex || ""}</span>
 </div>
 
 <div class="patient-row">
 <span class="patient-label">Phone</span>
-<span class="patient-value">${formData.Phone}</span>
+<span class="patient-value">${formData.Phone || ''}</span>
 </div>
 
 </div>
@@ -1028,7 +1028,7 @@ ${runningTotal}
 Less Discount :
 </td>
 <td style="text-align:right;font-weight:bold;">
-${formData.DiscAmt || ""}
+${formData.DiscAmt || 0}
 </td>
 </tr>
 
@@ -1038,7 +1038,7 @@ ${formData.DiscAmt || ""}
 Paid Amount :
 </td>
 <td style="text-align:right;font-weight:bold;">
-${formData.Amount || ""}
+${formData.Amount || 0}
 </td>
 </tr>
 
@@ -1070,10 +1070,10 @@ ${
 </div>
 
 `;
-      })
-      .join("");
+    })
+    .join("");
 
-    const printContent = `
+  const printContent = `
 <html>
 <head>
 
@@ -1210,16 +1210,16 @@ ${pagesHtml}
 </html>
 `;
 
-    const win = window.open("", "_blank");
+  const win = window.open("", "_blank");
 
-    win.document.open();
-    win.document.write(printContent);
-    win.document.close();
+  win.document.open();
+  win.document.write(printContent);
+  win.document.close();
 
-    setTimeout(() => {
-      win.print();
-    }, 500);
-  };
+  setTimeout(() => {
+    win.print();
+  }, 500);
+};
 
   function handleRefundPdf(data) {
     // Open a new window for printing

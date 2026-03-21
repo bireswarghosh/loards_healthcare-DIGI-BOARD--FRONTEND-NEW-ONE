@@ -3869,7 +3869,7 @@ ${
                 </div>
               </div>
               <div className="col-12 col-md-8">
-                <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
+                {/* <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
                   <label style={{ ...labelStyle, width: "auto" }}>
                     Payment Mode
                   </label>
@@ -3892,7 +3892,7 @@ ${
                   >
                     [C]ash/[C]R[edit]/[B]ank/Card/[P]/Complementary
                   </span>
-                </div>
+                </div> */}
                 <div
                   className="d-flex flex-wrap border border-secondary p-0"
                   style={{ backgroundColor: "#dcd6fc" }}

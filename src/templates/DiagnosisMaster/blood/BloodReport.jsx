@@ -143,7 +143,7 @@ const BloodReport = () => {
     Erythrocytes: 0,
     ErythrocytesUnit: "",
 
-    Himoglobin1: 0,
+    Himoglobin1: 14.5,
     Himoglobin2: 0,
     Himoglobin3: 0,
 
@@ -240,13 +240,32 @@ console.log("id huu: ",finalId)
       );
 
       if (res.data.success) {
-        console.log("Data: ", res.data.data[0]);
+let data = res.data.data[0]
+console.log("data is: ",data)
+const iso = data?.ReportDt;
 
+const date = new Date(iso);
+
+// get local date parts
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, "0");
+const day = String(date.getDate()).padStart(2, "0");
+
+// make midnight ISO (local date)
+const result = `${year}-${month}-${day}T00:00:00.000Z`;
+
+
+let fetchedData = {
+...data,
+ReportDt: result
+}
+
+// console.log("fecthed data is",fetchedData)
         // const caseId = "000003/25-26"; // I use it for testing bcz this id has data 
         const caseId = finalId // here id is case no.
 
-        setFormData(res.data.data[0]);
-        setData(res.data.data[0]);
+        setFormData(fetchedData);
+        setData(fetchedData);
         console.log("caseId : ", caseId);
         if (caseId) {
           const res = await axiosInstance.get(`/case01/${caseId}`);
@@ -1444,6 +1463,8 @@ console.log("id huu: ",finalId)
                     <input
                       type="number"
                       name="PCV"
+                                            disabled={true}
+
                       value={formData.PCV}
                       onChange={onChangeFormData}
                       style={{ width: "80px" }}
@@ -1533,6 +1554,8 @@ console.log("id huu: ",finalId)
                     <input
                       type="number"
                       name="MCHC"
+                                            disabled={true}
+
                       value={formData.MCHC}
                       onChange={onChangeFormData}
                       style={{ width: "80px" }}
@@ -1861,14 +1884,14 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
           style={{ flexShrink: 0, minHeight: "45px", height: "auto" }}
         >
           <div className="d-flex gap-2 flex-wrap justify-content-center">
-            <button
+            {/* <button
               className="btn btn-sm btn-primary"
               onClick={() => {
                 navigate("/BloodReport/add");
               }}
             >
               New
-            </button>
+            </button> */}
 
             {/* <button className="btn btn-sm btn-primary">Edit</button> */}
             <button
@@ -1903,7 +1926,12 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
                 Undo
               </button>
             )}
-            <button className="btn btn-sm btn-primary">Exit</button>
+            <button className="btn btn-sm btn-primary"
+            onClick={() => {
+              navigate(-1)
+            }
+            }
+            >Exit</button>
           </div>
         </div>
       </div>

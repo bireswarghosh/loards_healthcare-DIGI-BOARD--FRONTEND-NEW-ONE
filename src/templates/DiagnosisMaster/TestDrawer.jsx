@@ -13,9 +13,11 @@ const TestDrawer = ({
   handlePropertyChange,
   fetchPropertyList,
   fetchPropertyValues,
+  htmlContent,
+  fetchTestDetails
 }) => {
   if (!open) return null;
-
+console.log("ttttttt", htmlContent)
   return (
     <>
       {/* BACKDROP – SAME */}
@@ -66,6 +68,7 @@ const TestDrawer = ({
                 handlePropertyChange={handlePropertyChange}
                 fetchPropertyList={fetchPropertyList}
                 fetchPropertyValues={fetchPropertyValues}
+                htmlContent={htmlContent}
               />
             )}
 
@@ -78,6 +81,7 @@ const TestDrawer = ({
                 handlePropertyChange={handlePropertyChange}
                 fetchPropertyList={fetchPropertyList}
                 fetchPropertyValues={fetchPropertyValues}
+                fetchTestDetails={fetchTestDetails}
               />
             )}
           </div>

@@ -16,7 +16,10 @@ const DescriptiveTestDrawer = ({
   handlePropertyChange,
   fetchPropertyList,
   fetchPropertyValues,
+  htmlContent
 }) => {
+
+  console.log("hiiidiidiididid")
   // faltu kaj=========================================
   const [showCaseTestModal, setShowCaseTestModal] = useState(false);
   const [activeTest, setActiveTest] = useState(null);
@@ -376,6 +379,7 @@ const DescriptiveTestDrawer = ({
         testId={activeTest?.TestId}
         PatientName={formData2.PatientName}
         formData2={formData2}
+        htmlContent={htmlContent}
       />
     </>
   );

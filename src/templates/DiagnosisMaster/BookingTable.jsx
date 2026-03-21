@@ -50,7 +50,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                   </td>
                   <td>{item.SlipNo}</td>
                   <td>{item.Date}</td>
-
+{console.log("hi:",item)}
                   <td>
                     <div className="d-flex justify-content-between align-items-center">
                       <span>{item.PatientName}</span>
@@ -60,7 +60,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                         onClick={(e) => {
                           e.stopPropagation(); // 👈 row click block
                           // future: open patient preview
-                          navigate("https://loards-healthcare-digi-board-fronte.vercel.app/CaseEntry/000003%2F25-26/edit")
+                          navigate(`/CaseEntry/${encodeURIComponent(item.CaseId)}/edit`)
                         }}
                       >
                         <i className="fa fa-eye"></i>

@@ -19,6 +19,8 @@ const LaboratoryQuery = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [signatory, setSignatory] = useState("NONE");
+const [testHtml, setTestHtml]=useState('')
+
 
   // Mock Data for Grids to visualize layout
   const [cases, setCases] = useState([]);
@@ -75,6 +77,7 @@ const LaboratoryQuery = () => {
               ...t,
               Test: nameRes?.data?.data?.Test || t.TestId,
               DescFormat: nameRes?.data?.data?.DescFormat,
+              htmlContent:nameRes?.data?.data?.html_content || ""
             };
           } catch {
             return { ...t, Test: t.TestId };
@@ -599,6 +602,7 @@ const LaboratoryQuery = () => {
                     </tr>
                   </thead>
                   <tbody>
+                    {console.log("test data for table", tests)}
                     {loading && "loading..."}
                     {tests.length === 0 ? (
                       <tr>
@@ -609,6 +613,7 @@ const LaboratoryQuery = () => {
                     ) : (
                       tests.map((test, index) => (
                         <tr style={{ height: "100%" }} key={index}>
+                          {console.log('test id :',test.TestId)}
                           <td
                             onClick={() => {
                               console.log("test details", test);
@@ -633,6 +638,8 @@ const LaboratoryQuery = () => {
                               fetchPropertyValues(formData.CaseId, test.TestId);
                               // setShowTestModal(true); // ✅ modal open
                               if (test.DescFormat === 1) {
+                                setTestHtml(test.htmlContent)
+                                console.log("test:",test)
                                 setTestDrawerType("descriptive");
                               }
                               if (test.DescFormat === 0) {
@@ -640,7 +647,7 @@ const LaboratoryQuery = () => {
                               }
                               if (test.DescFormat === 2) {
                                 const id = formData?.CaseId;
-                                console.log(" hello id", id);
+                                // console.log(" hello id", id);
 
                                 const fetchBloodFormatByCaseId = async () => {
                                   try {
@@ -653,12 +660,12 @@ const LaboratoryQuery = () => {
                                       if (bloodFormatData.length == 0) {
                                         navigate(`/BloodReport/Add/${encodeURIComponent(
                                             id,
-                                          )}`);
+                                          )}/${test.TestId}`);
                                       } else {
                                         navigate(
                                           `/BloodReport/${encodeURIComponent(
                                             id,
-                                          )}/edit`,
+                                          )}/edit/${test.TestId}`,
                                         );
                                       }
                                     }
@@ -678,8 +685,11 @@ const LaboratoryQuery = () => {
                           >
                             {test.Test}
                           </td>
-                          <td>{test.ReportDate}</td>
-                          <td>{test.DeliveryDate}</td>
+                         <td>{test.ReportDate?.split("T")[0]}</td>
+                          <td> 
+                            {/* {test.DeliveryDate} */}
+                            -
+                            </td>
                           <td>{test.Printed}</td>
                           <td>{test.PrePrntBarCode}</td>
                           <td>{test.User}</td>
@@ -762,6 +772,7 @@ const LaboratoryQuery = () => {
         open={showTestDrawer}
         onClose={() => setShowTestDrawer(false)}
         type={testDrawerType} // "descriptive" | "general"
+        htmlContent = {testHtml || ""}
         tests={selectedTests}
         formData2={formData2}
         propertyList={propertyList}
@@ -769,6 +780,7 @@ const LaboratoryQuery = () => {
         handlePropertyChange={handlePropertyChange}
         fetchPropertyList={fetchPropertyList}
         fetchPropertyValues={fetchPropertyValues}
+        fetchTestDetails={fetchTestDetails}
       />
     </div>
   );
