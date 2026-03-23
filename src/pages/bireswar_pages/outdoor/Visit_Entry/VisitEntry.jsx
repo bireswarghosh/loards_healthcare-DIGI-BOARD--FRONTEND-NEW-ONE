@@ -175,13 +175,14 @@ const VisitEntry = () => {
       console.log("rates in use: ", ratesData);
       if (ratesData.length !== 0) {
         const data = ratesData.find(
-          (item) => item.VisitTypeId == formData.VisitTypeId,
+          (item) => item.VisitTypeId == formData.VisitTypeId
         );
         console.log("fethed fin rate: ", data);
-        setFormData(prev=>({...prev,
-          Rate:data?.Rate,
-          svrCh:data?.ServiceCh
-        }))
+        setFormData((prev) => ({
+          ...prev,
+          Rate: data?.Rate,
+          svrCh: data?.ServiceCh,
+        }));
       }
     }
   }, [formData.VisitTypeId]);
@@ -265,7 +266,7 @@ const VisitEntry = () => {
           "/admission/search?name=${name}&phone=${phone}",
           {
             headers: { Authorization: `Bearer ${token}` },
-          },
+          }
         );
         data = response.data.data;
       }
@@ -283,7 +284,7 @@ const VisitEntry = () => {
                 `/doctormaster/${billData.DoctorId}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                },
+                }
               );
               if (doctorResponse.data && doctorResponse.data.success) {
                 doctorName = doctorResponse.data.data.Doctor;
@@ -299,7 +300,7 @@ const VisitEntry = () => {
                 `/speciality/${billData.department}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                },
+                }
               );
               if (deptResponse.data && deptResponse.data.success) {
                 setDepartmentName(deptResponse.data.data.Speciality);
@@ -309,7 +310,7 @@ const VisitEntry = () => {
                 `/doctormaster/department/${billData.department}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                },
+                }
               );
               if (doctorsResponse.data && doctorsResponse.data.success) {
                 setDoctors(doctorsResponse.data.data || []);
@@ -327,7 +328,7 @@ const VisitEntry = () => {
         if (data.CashLessId) {
           try {
             const cashlessRes = await axiosInstance.get(
-              `/cashless/${data.CashLessId}`,
+              `/cashless/${data.CashLessId}`
             );
             if (cashlessRes.data?.success) {
               cashlessName = cashlessRes.data.data.Cashless;
@@ -341,7 +342,7 @@ const VisitEntry = () => {
           const companyId = data.CompanyId || data.m_CompanyId;
           try {
             const companyRes = await axiosInstance.get(
-              `/acgenled/${companyId}`,
+              `/acgenled/${companyId}`
             );
             if (companyRes.data?.success) {
               companyName = companyRes.data.data.Desc;
@@ -519,7 +520,7 @@ const VisitEntry = () => {
             const lastMonth = new Date(
               regDate.getFullYear(),
               regDate.getMonth(),
-              0,
+              0
             );
             days += lastMonth.getDate();
           }
@@ -597,7 +598,7 @@ const VisitEntry = () => {
           `/doctormaster/department/${value}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          },
+          }
         );
         if (response.data && response.data.success) {
           setDoctors(response.data.data || []);
@@ -611,7 +612,7 @@ const VisitEntry = () => {
     // Update doctor name when doctor is selected
     if (name === "doctorId" && value) {
       const selectedDoctor = doctors.find(
-        (doc) => doc.DoctorId.toString() === value,
+        (doc) => doc.DoctorId.toString() === value
       );
       if (selectedDoctor) {
         setFormData((prev) => ({ ...prev, docName: selectedDoctor.Doctor }));
@@ -634,7 +635,7 @@ const VisitEntry = () => {
       // Calculate total payment and due amount
       const totalPaidAmount = paymentMethods.reduce(
         (sum, p) => sum + parseFloat(p.amount || 0),
-        0,
+        0
       );
       const totalBillAmount = parseFloat(formData.billAmt || 0);
       const dueAmount = totalBillAmount - totalPaidAmount;
@@ -772,7 +773,7 @@ const VisitEntry = () => {
 
         response = await axiosInstance.put(
           `/patient-visits/${visitId}`,
-          visitData,
+          visitData
         );
       } else {
         response = await axiosInstance.post("/patient-visits", visitData);
@@ -859,7 +860,7 @@ const VisitEntry = () => {
     // ⭐ Load doctors for that department
     if (data.SpecialityId) {
       const res = await axiosInstance.get(
-        `/doctormaster/department/${data.SpecialityId}`,
+        `/doctormaster/department/${data.SpecialityId}`
       );
       setDoctors(res.data.data || []);
     }
@@ -904,7 +905,7 @@ const VisitEntry = () => {
         setFormData((prev) => ({ ...prev, DepartmentId: selectedDept }));
 
         const resDept = await axiosInstance.get(
-          `/doctormaster/department/${selectedDept}`,
+          `/doctormaster/department/${selectedDept}`
           // {
           //   headers: { Authorization: `Bearer ${token}` },
           // }
@@ -1355,7 +1356,7 @@ const VisitEntry = () => {
 
   const totalPaid = paymentMethods.reduce(
     (sum, p) => sum + parseFloat(p.amount || 0),
-    0,
+    0
   );
   const billAmount = parseFloat(formData.billAmt || 0);
 
@@ -1822,7 +1823,7 @@ const VisitEntry = () => {
                       value={formData.CashLessId || ""}
                       onChange={(e) => {
                         const selectedCashless = cashlessData.find(
-                          (item) => item.CashlessId == e.target.value,
+                          (item) => item.CashlessId == e.target.value
                         );
                         setFormData((prev) => ({
                           ...prev,
@@ -1862,7 +1863,7 @@ const VisitEntry = () => {
                       value={formData.CompanyId || ""}
                       onChange={(e) => {
                         const selectedCompany = companyData.find(
-                          (item) => item.DescId == e.target.value,
+                          (item) => item.DescId == e.target.value
                         );
                         setFormData((prev) => ({
                           ...prev,
@@ -1967,7 +1968,7 @@ const VisitEntry = () => {
                         value={
                           departmentName ||
                           departments.find(
-                            (d) => d.SpecialityId == formData.DepartmentId,
+                            (d) => d.SpecialityId == formData.DepartmentId
                           )?.Speciality ||
                           ""
                         }
@@ -2212,7 +2213,7 @@ const VisitEntry = () => {
                       className="form-control"
                       value={paymentMethods.reduce(
                         (sum, p) => sum + parseFloat(p.amount || 0),
-                        0,
+                        0
                       )}
                       readOnly
                     />
@@ -2284,7 +2285,7 @@ const VisitEntry = () => {
                               updatePaymentMethod(
                                 index,
                                 "amount",
-                                e.target.value,
+                                e.target.value
                               )
                             }
                           />
@@ -2303,7 +2304,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "upiApp",
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -2318,7 +2319,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "utrNumber",
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -2337,7 +2338,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "bankName",
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -2353,7 +2354,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "chequeNumber",
-                                    e.target.value,
+                                    e.target.value
                                   )
                                 }
                               />
@@ -2416,7 +2417,7 @@ const VisitEntry = () => {
                             department:
                               departmentName ||
                               departments.find(
-                                (d) => d.SpecialityId == formData.DepartmentId,
+                                (d) => d.SpecialityId == formData.DepartmentId
                               )?.Speciality ||
                               "",
                             qualification: docDetail.Qualification,
@@ -2434,8 +2435,9 @@ const VisitEntry = () => {
 
                   {mode !== "view" && (
                     <button
-                      type="submit"
+                      type="button"
                       className="btn btn-primary"
+                      onClick={handleSubmit} 
                       disabled={isSubmitting}
                     >
                       {isSubmitting
@@ -2465,5 +2467,3 @@ const VisitEntry = () => {
 };
 
 export default VisitEntry;
-
-
