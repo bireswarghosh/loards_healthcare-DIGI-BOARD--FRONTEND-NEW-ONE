@@ -557,9 +557,11 @@ toast.error("Something went wrong");
               </div>
               <div className="col-md-2 mt-4 gap-2">
                 <button
-                  type="submit"
+                  type="button"
                   className="btn btn-sm btn-success"
                   disabled={isSubmitting}
+                  onClick={handleSubmit(onSubmit)}
+                  
                 >
                   {isSubmitting && (
                     <span className="spinner-border spinner-border-sm me-2"></span>
