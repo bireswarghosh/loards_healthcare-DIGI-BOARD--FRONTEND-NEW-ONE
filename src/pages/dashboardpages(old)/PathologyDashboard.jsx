@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axiosInstance from "../../axiosInstance";
-
+import useAxiosFetch from "../../templates/DiagnosisMaster/Fetch";
 import CountUp from "react-countup";
 import TestTable from "./TestTable";
 import ZLoader from "../../templates/DiagnosisMaster/ZLoader";
@@ -135,7 +135,6 @@ const PathologyDashboard = () => {
                 </div>
               </div>
             </div>
-            
             <TestTable data={response.data} totalTests={response.totalTests} />
           </div>
         )}

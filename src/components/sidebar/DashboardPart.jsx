@@ -16,37 +16,38 @@ const DashboardPart = () => {
       >
         Dashboard
       </Link>
-      <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.dashboard ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>       
+      <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.dashboard ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>  
+
+
+
        <li className="sidebar-dropdown-item">
-          <NavLink to="/" className="sidebar-link">
+          <NavLink to="/OpdDashboard" className="sidebar-link">
             <span className="nav-icon">
-              <i className="fa-light fa-cart-shopping-fast"></i>
+              <i className="fa-light fa-stethoscope"></i>
             </span>{' '}
-            <span className="sidebar-txt">eCommerce</span>
+            <span className="sidebar-txt">OPD</span>
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink
-            to="/crmDashboard"
-            className="sidebar-link"
-          >
+          <NavLink to="/IpdDashboard" className="sidebar-link">
             <span className="nav-icon">
-              <i className="fa-light fa-user-headset"></i>
+              <i className="fa-light fa-bed"></i>
             </span>{' '}
-            <span className="sidebar-txt">CRM</span>
+            <span className="sidebar-txt">IPD</span>
           </NavLink>
         </li>
         <li className="sidebar-dropdown-item">
-          <NavLink
-            to="/hrmDashboard"
-            className="sidebar-link"
-          >
+          <NavLink to="/DiagnosticDashboard" className="sidebar-link">
             <span className="nav-icon">
-              <i className="fa-light fa-user-tie"></i>
+              <i className="fa-light fa-microscope"></i>
             </span>{' '}
-            <span className="sidebar-txt">HRM</span>
+            <span className="sidebar-txt">Diagnostic</span>
           </NavLink>
         </li>
+
+
+
+        
       </ul>
     </li>
   );

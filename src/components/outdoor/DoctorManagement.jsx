@@ -590,7 +590,7 @@ const DoctorManagement = () => {
             console.error("Error saving doctor rates:", rateErr);
           }
         }
-
+setModalMode("create")
         setSuccess(
           modalMode === "edit"
             ? "Doctor updated successfully!"
@@ -806,23 +806,39 @@ const DoctorManagement = () => {
     }, 500); // Small delay to ensure modal is rendered
   };
 
+
+
+useEffect(() => {
+  if (error) {
+    toast.error(error, { toastId: "error-toast" });
+    setError(""); // clear
+  }
+}, [error]);
+
+useEffect(() => {
+  if (success) {
+    toast.success(success, { toastId: "success-toast" });
+    setSuccess(""); // clear
+  }
+}, [success]);
+  
   return (
     <>
       <Container fluid className="py-4">
-        {error &&
+        {/* {error &&
           // <Alert variant="danger" className="animate__animated animate__fadeIn">
           //   {error}
           // </Alert>
-          toast.error(error)}
+          toast.error(error)} */}
 
-        {success &&
+        {/* {success &&
           // <Alert
           //   variant="success"
           //   className="animate__animated animate__fadeIn"
           // >
           //   {success}
           // </Alert>
-          toast.success(success)}
+          toast.success(success)} */}
 
         <Card className="shadow-lg border-0 rounded-4 overflow-hidden">
           <Card.Header className="bg-gradient-primary text-white p-4">
@@ -1077,11 +1093,11 @@ const DoctorManagement = () => {
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
-            {
+            {/* {
               error && toast.error(error)
 
               // <Alert variant="danger">{error}</Alert>
-            }
+            } */}
 
             <Tabs defaultActiveKey="basic" className="mb-4">
               <Tab eventKey="basic" title="Basic Information">

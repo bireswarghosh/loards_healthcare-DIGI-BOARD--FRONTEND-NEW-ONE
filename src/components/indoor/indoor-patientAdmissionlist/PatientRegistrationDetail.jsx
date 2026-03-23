@@ -615,16 +615,20 @@ const PatientAdmission = () => {
 
         setFormData({
           ...apiData,
-          AdmitionDate:
-            apiData.AdmitionDate ? apiData.AdmitionDate.substring(0, 10) : "",
+          AdmitionDate: apiData.AdmitionDate
+            ? apiData.AdmitionDate.substring(0, 10)
+            : "",
           OPD: apiData.OPD || "Y",
           Dob: calculatedDob,
-          oprationdate:
-            apiData.oprationdate ? apiData.oprationdate.substring(0, 10) : "",
-          packagevalid:
-            apiData.packagevalid ? apiData.packagevalid.substring(0, 10) : "",
-          packagestart:
-            apiData.packagestart ? apiData.packagestart.substring(0, 10) : "",
+          oprationdate: apiData.oprationdate
+            ? apiData.oprationdate.substring(0, 10)
+            : "",
+          packagevalid: apiData.packagevalid
+            ? apiData.packagevalid.substring(0, 10)
+            : "",
+          packagestart: apiData.packagestart
+            ? apiData.packagestart.substring(0, 10)
+            : "",
           refdate: apiData.refdate ? apiData.refdate.substring(0, 10) : "",
         });
 
@@ -731,9 +735,9 @@ const PatientAdmission = () => {
       delete cleanData.State;
 
       const response =
-        mode === "create" ?
-          await axiosInstance.post("/admission", cleanData)
-        : await axiosInstance.put(`/admission/${id}`, cleanData);
+        mode === "create"
+          ? await axiosInstance.post("/admission", cleanData)
+          : await axiosInstance.put(`/admission/${id}`, cleanData);
 
       if (response.data.success) {
         if (mode === "create") {
@@ -936,7 +940,7 @@ const PatientAdmission = () => {
          .signature-row {
          display: flex;
          justify-content: space-between;
-         margin-top: 40px;
+         margin-top: 30px;
          align-items: flex-end;
          }
          .signature-line {
@@ -1124,7 +1128,7 @@ const PatientAdmission = () => {
                <div>Signature of the Front Office Executive : SANJAY ST.</div>
                <div>_____________________________________________________________________</div>
                <div class="text-right">DATE : ${data.meta.admissionDate}</div>
-            </div>
+            </div>case
          </div>
       </div>
 
@@ -1195,9 +1199,9 @@ window.onload = function () {
   };
 
   return (
-    <div className='main-content'>
+    <div className="main-content">
       <div
-        className='panel'
+        className="panel"
         style={{
           height: "100vh",
           display: "flex",
@@ -1209,13 +1213,13 @@ window.onload = function () {
       >
         {/* HEADER */}
         <div
-          className='panel-header d-flex justify-content-between align-items-center px-2 border-bottom'
+          className="panel-header d-flex justify-content-between align-items-center px-2 border-bottom"
           style={{ height: "35px", flexShrink: 0 }}
         >
           {/* Left Side: Title */}
-          <div className='d-flex align-items-center '>
+          <div className="d-flex align-items-center ">
             <h6
-              className='m-0 fw-bold'
+              className="m-0 fw-bold"
               style={{ fontSize: "0.85rem", letterSpacing: "0.5px" }}
             >
               Patient Admission
@@ -1238,7 +1242,7 @@ window.onload = function () {
             {formData.AdmitionId && (
               <Barcode
                 value={formData.AdmitionNo}
-                format='CODE128'
+                format="CODE128"
                 width={1}
                 height={25}
                 displayValue={false} // Match PatientRegistrationDetail-1.jsx
@@ -1248,7 +1252,7 @@ window.onload = function () {
             {"  "}
             {/* Right Side: Button (Moved outside the inner div) */}
             <button
-              className='btn btn-sm btn-primary pb-3 pt-0'
+              className="btn btn-sm btn-primary pb-3 pt-0"
               onClick={() => navigate("/PatientRegistrationList")}
               style={{ fontSize: "0.75rem", height: "26px" }}
             >
@@ -1258,69 +1262,69 @@ window.onload = function () {
         </div>
 
         <div
-          className='panel-body p-0 d-flex flex-column flex-grow-1'
+          className="panel-body p-0 d-flex flex-column flex-grow-1"
           style={{ overflow: "hidden" }}
         >
           {/* MAIN SCROLLABLE CONTENT */}
           <div
-            className='flex-grow-1 bg-rt-color-dark position-relative'
+            className="flex-grow-1 bg-rt-color-dark position-relative"
             style={{ overflow: "hidden" }}
           >
             <OverlayScrollbarsComponent
               style={{ height: "100%", width: "100%" }}
             >
               {/* --- ADMISSION DETAIL --- */}
-              <div className='p-2 border-bottom'>
-                <div className='d-flex flex-wrap gap-2'>
-                  <div className='flex-grow-1'>
+              <div className="p-2 border-bottom">
+                <div className="d-flex flex-wrap gap-2">
+                  <div className="flex-grow-1">
                     {/* Header Line */}
-                    <div className='d-flex align-items-center gap-1 mb-2'>
+                    <div className="d-flex align-items-center gap-1 mb-2">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Admission Detail
                       </label>
-                      <div className='border-bottom flex-grow-1 border-primary'></div>
+                      <div className="border-bottom flex-grow-1 border-primary"></div>
                     </div>
 
                     {/* Fields Row 1 */}
-                    <div className='d-flex flex-wrap align-items-center gap-2 mb-2'>
-                      <div className='d-flex align-items-center gap-1'>
+                    <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle, width: "80px" }}>
                           Admission No
                         </label>
                         <input
-                          type='text'
-                          name='AdmitionNo'
+                          type="text"
+                          name="AdmitionNo"
                           value={formData.AdmitionNo}
                           onChange={handleInputChange}
                           readOnly
                           style={{ ...inputStyle, width: "120px" }}
                         />
                       </div>
-                      <div className='d-flex align-items-center gap-1'>
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle }}>Date</label>
                         <input
-                          type='date'
-                          name='AdmitionDate'
+                          type="date"
+                          name="AdmitionDate"
                           value={formData.AdmitionDate}
                           onChange={handleInputChange}
                           style={{ ...inputStyle, width: "110px" }}
                         />
                       </div>
-                      <div className='d-flex align-items-center gap-1'>
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle }}>Bill Time</label>
                         <input
-                          type='time'
-                          name='BillTime'
+                          type="time"
+                          name="BillTime"
                           value={formData.BillTime}
                           onChange={handleInputChange}
                           style={{ ...inputStyle, width: "80px" }}
                         />
                       </div>
-                      <div className='d-flex align-items-center gap-1'>
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle }}>Adm. Time</label>
                         <input
-                          type='time'
-                          name='AdmitionTime'
+                          type="time"
+                          name="AdmitionTime"
                           value={formData.AdmitionTime}
                           onChange={(e) => {
                             console.log("ddd: ", e.target.value);
@@ -1329,12 +1333,12 @@ window.onload = function () {
                           style={{ ...inputStyle, width: "80px" }}
                         />
                       </div>
-                      <div className='d-flex align-items-center gap-1'>
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle, width: "80px" }}>
                           O.P.D. [Y/N]
                         </label>
                         <select
-                          name='OPD'
+                          name="OPD"
                           value={formData.OPD}
                           onChange={(e) => {
                             handleInputChange(e);
@@ -1351,11 +1355,11 @@ window.onload = function () {
                           }}
                         >
                           <option value={""}>--</option>
-                          <option value='Y'>Y</option>
-                          <option value='N'>N</option>
+                          <option value="Y">Y</option>
+                          <option value="N">N</option>
                         </select>
                         <button
-                          className='btn btn-sm btn-primary rounded-0'
+                          className="btn btn-sm btn-primary rounded-0"
                           style={{
                             height: "24px",
                             fontSize: "0.7rem",
@@ -1373,10 +1377,10 @@ window.onload = function () {
                           ...
                         </button>
                       </div>
-                      <div className='d-flex align-items-center gap-1'>
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle }}>Booking [Y/N]</label>
                         <select
-                          name='Booking'
+                          name="Booking"
                           value={formData.Booking}
                           onChange={handleInputChange}
                           style={{
@@ -1386,32 +1390,32 @@ window.onload = function () {
                           }}
                         >
                           <option value={""}>--</option>
-                          <option value='Y'>Y</option>
-                          <option value='N'>N</option>
+                          <option value="Y">Y</option>
+                          <option value="N">N</option>
                         </select>
                       </div>
-                      <div className='d-flex align-items-center gap-1'>
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle }}>Patient Id</label>
                         <input
-                          type='text'
-                          name='PatientId'
+                          type="text"
+                          name="PatientId"
                           value={formData.PatientId}
                           // onChange={handleInputChange}
                           style={{ ...inputStyle, width: "100px" }}
                         />
                         <button
-                          className='btn btn-sm btn-primary rounded-0'
+                          className="btn btn-sm btn-primary rounded-0"
                           style={{ height: "24px", fontSize: "0.7rem" }}
                         >
                           Detail
                         </button>
                       </div>
-                      <div className='d-flex align-items-center gap-1'>
+                      <div className="d-flex align-items-center gap-1">
                         <label style={{ ...labelStyle, width: "80px" }}>
                           I.P.D. [Y/N]
                         </label>
                         <select
-                          name='IPD'
+                          name="IPD"
                           value={formData.IPD}
                           onChange={(e) => {
                             handleInputChange(e);
@@ -1428,11 +1432,11 @@ window.onload = function () {
                           }}
                         >
                           <option value={""}>--</option>
-                          <option value='Y'>Y</option>
-                          <option value='N'>N</option>
+                          <option value="Y">Y</option>
+                          <option value="N">N</option>
                         </select>
                         <button
-                          className='btn btn-sm btn-primary rounded-0'
+                          className="btn btn-sm btn-primary rounded-0"
                           style={{
                             height: "24px",
                             fontSize: "0.7rem",
@@ -1456,70 +1460,70 @@ window.onload = function () {
               </div>
 
               {/* --- BLUE BODY SECTION --- */}
-              <div className='p-2'>
+              <div className="p-2">
                 {/* PATIENT DETAIL SECTION */}
-                <div className='row g-2 mb-2'>
-                  <div className='col-12 border-bottom border-secondary mb-1'>
+                <div className="row g-2 mb-2">
+                  <div className="col-12 border-bottom border-secondary mb-1">
                     <span style={{ fontSize: "0.75rem" }}>Patient Detail</span>
                   </div>
 
                   {/* Left Column */}
-                  <div className='col-12 col-md-6 col-lg-4'>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                  <div className="col-12 col-md-6 col-lg-4">
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
-                        Patient's Name <span className='text-danger'>*</span>
+                        Patient's Name <span className="text-danger">*</span>
                       </label>
                       <input
-                        type='text'
-                        name='PatientName'
+                        type="text"
+                        name="PatientName"
                         value={formData.PatientName}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
-                        Address <span className='text-danger'>*</span>
+                        Address <span className="text-danger">*</span>
                       </label>
                       <input
-                        type='text'
-                        name='Add1'
+                        type="text"
+                        name="Add1"
                         value={formData.Add1}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Area
                       </label>
                       <input
-                        type='text'
-                        name='Add2'
+                        type="text"
+                        name="Add2"
                         value={formData.Add2}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Pin Code
                       </label>
                       <input
-                        type='text'
-                        name='Add3'
+                        type="text"
+                        name="Add3"
                         value={formData.Add3}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Occupation
                       </label>
                       <input
-                        type='text'
-                        name='Occupation'
+                        type="text"
+                        name="Occupation"
                         value={formData.Occupation}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -1528,24 +1532,24 @@ window.onload = function () {
                   </div>
 
                   {/* Middle Column */}
-                  <div className='col-12 col-md-6 col-lg-4'>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                  <div className="col-12 col-md-6 col-lg-4">
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        DOB <span className='text-danger'>*</span>
+                        DOB <span className="text-danger">*</span>
                       </label>
                       <input
-                        type='date'
-                        name='Dob'
+                        type="date"
+                        name="Dob"
                         value={formData.Dob}
                         onChange={(e) => handleDobChange(e.target.value)}
                         style={{ ...inputStyle, width: "95px" }}
                       />
-                      <div className='d-flex align-items-center gap-1 ms-1'>
+                      <div className="d-flex align-items-center gap-1 ms-1">
                         <label style={{ ...labelStyle }}>Age</label>
                         <input
-                          type='text'
-                          name='Age'
-                          className='form-control form-control-sm rounded-0 text-center'
+                          type="text"
+                          name="Age"
+                          className="form-control form-control-sm rounded-0 text-center"
                           value={formData.Age}
                           onChange={(e) =>
                             handleAgeChange("Age", e.target.value)
@@ -1554,9 +1558,9 @@ window.onload = function () {
                         />{" "}
                         Y
                         <input
-                          type='text'
-                          name='AgeD'
-                          className='form-control form-control-sm rounded-0 text-center'
+                          type="text"
+                          name="AgeD"
+                          className="form-control form-control-sm rounded-0 text-center"
                           value={formData.AgeD}
                           onChange={(e) =>
                             handleAgeChange("AgeD", e.target.value)
@@ -1565,9 +1569,9 @@ window.onload = function () {
                         />{" "}
                         M
                         <input
-                          type='text'
-                          name='AgeN'
-                          className='form-control form-control-sm rounded-0 text-center'
+                          type="text"
+                          name="AgeN"
+                          className="form-control form-control-sm rounded-0 text-center"
                           value={formData.AgeN}
                           onChange={(e) =>
                             handleAgeChange("AgeN", e.target.value)
@@ -1577,48 +1581,48 @@ window.onload = function () {
                         D
                       </div>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        Phone <span className='text-danger'>*</span>
+                        Phone <span className="text-danger">*</span>
                       </label>
                       <input
-                        type='text'
-                        name='PhoneNo'
+                        type="text"
+                        name="PhoneNo"
                         value={formData.PhoneNo}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        ID Proof <span className='text-danger'>*</span>
+                        ID Proof <span className="text-danger">*</span>
                       </label>
                       <input
-                        type='text'
-                        name='IdentNo'
+                        type="text"
+                        name="IdentNo"
                         value={formData.IdentNo}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Aadhaar
                       </label>
                       <input
-                        type='text'
-                        name='CardNo'
+                        type="text"
+                        name="CardNo"
                         value={formData.CardNo}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         District/PS
                       </label>
                       <select
-                        name='AreaId'
+                        name="AreaId"
                         value={formData.AreaId}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -1630,13 +1634,13 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         URN
                       </label>
                       <input
-                        type='text'
-                        name='URN'
+                        type="text"
+                        name="URN"
                         value={formData.URN}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -1645,43 +1649,43 @@ window.onload = function () {
                   </div>
 
                   {/* Right Column */}
-                  <div className='col-12 col-md-6 col-lg-4'>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                  <div className="col-12 col-md-6 col-lg-4">
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
-                        Sex <span className='text-danger'>*</span>
+                        Sex <span className="text-danger">*</span>
                       </label>
                       <select
-                        name='Sex'
+                        name="Sex"
                         value={formData.Sex}
                         onChange={handleInputChange}
                         style={{ ...inputStyle, padding: "0 2px" }}
                       >
-                        <option value=''>--</option>
-                        <option value='M'>M</option>
-                        <option value='F'>F</option>
-                        <option value='O'>O</option>
+                        <option value="">--</option>
+                        <option value="M">M</option>
+                        <option value="F">F</option>
+                        <option value="O">O</option>
                       </select>
                       <label style={{ ...labelStyle, marginLeft: "4px" }}>
                         Status
                       </label>
                       <select
-                        name='MStatus'
+                        name="MStatus"
                         value={formData.MStatus}
                         onChange={handleInputChange}
-                        className='form-select form-select-sm rounded-0 w-25'
+                        className="form-select form-select-sm rounded-0 w-25"
                         style={{ ...inputStyle, padding: "0 2px" }}
                       >
-                        <option value=''>--</option>
-                        <option value='U'>U</option>
-                        <option value='M'>M</option>
+                        <option value="">--</option>
+                        <option value="U">U</option>
+                        <option value="M">M</option>
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         Religion
                       </label>
                       <select
-                        name='ReligionId'
+                        name="ReligionId"
                         value={formData.ReligionId}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -1692,33 +1696,33 @@ window.onload = function () {
                           </option>
                         ))}
                       </select>
-                      <div className='form-check ms-1 m-0 p-0 d-flex align-items-center'>
+                      <div className="form-check ms-1 m-0 p-0 d-flex align-items-center">
                         <input
-                          className='form-check-input m-0'
-                          type='checkbox'
+                          className="form-check-input m-0"
+                          type="checkbox"
                           style={{ width: "12px", height: "12px" }}
                         />
                         <label
-                          className='small fw-bold ms-1'
+                          className="small fw-bold ms-1"
                           style={{ fontSize: "0.7rem" }}
                         >
                           Pkg
                         </label>
                       </div>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         PAN No
                       </label>
                       <input
-                        type='text'
-                        name='PanNo'
+                        type="text"
+                        name="PanNo"
                         value={formData.PanNo}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                       <button
-                        className='btn btn-sm btn-primary rounded-0 py-0 ms-1'
+                        className="btn btn-sm btn-primary rounded-0 py-0 ms-1"
                         style={{
                           height: "24px",
                           fontSize: "0.7rem",
@@ -1728,12 +1732,12 @@ window.onload = function () {
                         EMR
                       </button>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         State
                       </label>
                       <select
-                        name='AreaId'
+                        name="AreaId"
                         value={
                           district.find(
                             (item) => item.AreaId == formData.AreaId,
@@ -1749,25 +1753,25 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         Nationality
                       </label>
                       <input
-                        type='text'
-                        name='Passport'
+                        type="text"
+                        name="Passport"
                         value={formData.Passport}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         Weight
                       </label>
                       <input
-                        type='text'
-                        name='Weight'
+                        type="text"
+                        name="Weight"
                         value={formData.Weight}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -1777,42 +1781,42 @@ window.onload = function () {
                 </div>
 
                 {/* GUARDIAN DETAIL */}
-                <div className='row g-2 mb-2 border-top border-secondary pt-1'>
-                  <div className='col-12'>
+                <div className="row g-2 mb-2 border-top border-secondary pt-1">
+                  <div className="col-12">
                     <span style={{ fontSize: "0.75rem" }}>Guardian Detail</span>
                   </div>
 
-                  <div className='col-12 col-md-6 col-lg-4'>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                  <div className="col-12 col-md-6 col-lg-4">
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         W/O S/O D/O
                       </label>
                       <input
-                        type='text'
-                        name='GurdianName'
+                        type="text"
+                        name="GurdianName"
                         value={formData.GurdianName}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Relative Name
                       </label>
                       <input
-                        type='text'
-                        name='RelativeName'
+                        type="text"
+                        name="RelativeName"
                         value={formData.RelativeName}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1'>
+                    <div className="d-flex align-items-center gap-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Company [Y/N]
                       </label>
                       <select
-                        name='Company'
+                        name="Company"
                         value={formData.Company}
                         onChange={(e) => {
                           handleInputChange(e);
@@ -1830,16 +1834,16 @@ window.onload = function () {
                         }}
                       >
                         <option value={""}>-</option>
-                        <option value='Y'>Y</option>
-                        <option value='N'>N</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
                       </select>
 
-                      {formData.Company == "Y" ?
+                      {formData.Company == "Y" ? (
                         <select
-                          name='CompanyId'
+                          name="CompanyId"
                           value={formData.CompanyId}
                           onChange={handleInputChange}
-                          className='form-select form-select-sm rounded-0 w-50'
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                         >
                           {fetchedInsCompany.map((d, i) => (
@@ -1848,62 +1852,63 @@ window.onload = function () {
                             </option>
                           ))}
                         </select>
-                      : <input
-                          className='form-select form-select-sm rounded-0 w-50'
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                           readOnly
                         ></input>
-                      }
+                      )}
                     </div>
                   </div>
-                  <div className='col-12 col-md-6 col-lg-4'>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                  <div className="col-12 col-md-6 col-lg-4">
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Relation
                       </label>
                       <input
-                        type='text'
-                        name='Relation'
+                        type="text"
+                        name="Relation"
                         value={formData.Relation}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Phone No.
                       </label>
                       <input
-                        type='text'
-                        name='RelativePhoneNo'
+                        type="text"
+                        name="RelativePhoneNo"
                         value={formData.RelativePhoneNo}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1'>
+                    <div className="d-flex align-items-center gap-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        Admn Type <span className='text-danger'>*</span>
+                        Admn Type <span className="text-danger">*</span>
                       </label>
                       <select
-                        name='AdmType'
+                        name="AdmType"
                         value={formData.AdmType}
                         onChange={handleInputChange}
-                        className='form-select form-select-sm rounded-0 w-25'
+                        className="form-select form-select-sm rounded-0 w-25"
                         style={{ ...inputStyle, padding: "0 2px" }}
                       >
-                        <option value='0'>None</option>
-                        <option value='1'>Police Case</option>
-                        <option value='2'>Accident Case</option>
-                        <option value='3'>Born Case</option>
-                        <option value='4'>Suicide Case</option>
-                        <option value='5'>Insurance</option>
-                        <option value='6'>Blood Requition</option>
-                        <option value='7'>Hospital Case</option>
+                        <option value="0">None</option>
+                        <option value="1">Police Case</option>
+                        <option value="2">Accident Case</option>
+                        <option value="3">Born Case</option>
+                        <option value="4">Suicide Case</option>
+                        <option value="5">Insurance</option>
+                        <option value="6">Blood Requition</option>
+                        <option value="7">Hospital Case</option>
                       </select>
                     </div>
                   </div>
-                  <div className='col-12 col-md-6 col-lg-4'>
+                  <div className="col-12 col-md-6 col-lg-4">
                     {/* <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
                         Diet
@@ -1953,19 +1958,19 @@ window.onload = function () {
                 </div>
 
                 {/* OTHERS DETAIL */}
-                <div className='row g-2 border-top border-secondary pt-1'>
-                  <div className='col-12'>
+                <div className="row g-2 border-top border-secondary pt-1">
+                  <div className="col-12">
                     <span style={{ fontSize: "0.75rem" }}>Others Detail</span>
                   </div>
 
                   {/* Col 1 */}
-                  <div className='col-12 col-md-6 col-lg-4'>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                  <div className="col-12 col-md-6 col-lg-4">
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
-                        Department <span className='text-danger'>*</span>
+                        Department <span className="text-danger">*</span>
                       </label>
                       <select
-                        name='DepartmentId'
+                        name="DepartmentId"
                         value={formData.DepartmentId}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -1979,14 +1984,16 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
-                      <label style={{ ...labelStyle, width: "90px" }}>
-                        Under Care Dr <span className='text-danger'>*</span>
-                      </label>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <div>
                         <div>
+                          <label style={{ ...labelStyle, width: "90px" }}>
+                            Under Care Dr 1
+                            <span className="text-danger">*</span>
+                          </label>
                           <input
-                            type='text'
+                            className="ms-2"
+                            type="text"
                             value={
                               doctors.find(
                                 (d) => d.DoctorId == formData.UCDoctor1Id,
@@ -2006,8 +2013,13 @@ window.onload = function () {
                         </div>
 
                         <div>
+                          <label style={{ ...labelStyle, width: "90px" }}>
+                            Under Care Dr 2
+                            <span className="text-danger">*</span>
+                          </label>
                           <input
-                            type='text'
+                            className="ms-2"
+                            type="text"
                             value={
                               doctors.find(
                                 (d) => d.DoctorId == formData.UCDoctor2Id,
@@ -2026,8 +2038,13 @@ window.onload = function () {
                           />
                         </div>
                         <div>
+                          <label style={{ ...labelStyle, width: "90px" }}>
+                            Under Care Dr 3
+                            <span className="text-danger">*</span>
+                          </label>
                           <input
-                            type='text'
+                            className="ms-2"
+                            type="text"
                             value={
                               doctors.find(
                                 (d) => d.DoctorId == formData.UCDoctor3Id,
@@ -2047,12 +2064,12 @@ window.onload = function () {
                         </div>
                       </div>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Referral [Y/N]
                       </label>
                       <select
-                        name='Referral'
+                        name="Referral"
                         value={formData.Referral}
                         onChange={handleInputChange}
                         style={{
@@ -2062,15 +2079,15 @@ window.onload = function () {
                         }}
                       >
                         <option value={""}>--</option>
-                        <option value='Y'>Y</option>
-                        <option value='N'>N</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
                       </select>
-                      {formData.Referral == "Y" ?
+                      {formData.Referral == "Y" ? (
                         <select
-                          name='ReferralId'
+                          name="ReferralId"
                           value={formData.ReferralId}
                           onChange={handleInputChange}
-                          className='form-select form-select-sm rounded-0 w-50'
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                         >
                           {referral.map((d, i) => (
@@ -2079,19 +2096,20 @@ window.onload = function () {
                             </option>
                           ))}
                         </select>
-                      : <input
-                          className='form-select form-select-sm rounded-0 w-50'
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                           readOnly
                         ></input>
-                      }
+                      )}
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Package [Y/N]
                       </label>
                       <select
-                        name='Package'
+                        name="Package"
                         value={formData.Package}
                         onChange={handleInputChange}
                         style={{
@@ -2101,16 +2119,16 @@ window.onload = function () {
                         }}
                       >
                         <option value={""}>--</option>
-                        <option value='Y'>Y</option>
-                        <option value='N'>N</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
                       </select>
 
-                      {formData.Package == "Y" ?
+                      {formData.Package == "Y" ? (
                         <select
-                          name='PackageId'
+                          name="PackageId"
                           value={formData.PackageId}
                           onChange={handleInputChange}
-                          className='form-select form-select-sm rounded-0 w-50'
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                         >
                           {packages.map((d, i) => (
@@ -2119,39 +2137,40 @@ window.onload = function () {
                             </option>
                           ))}
                         </select>
-                      : <input
-                          className='form-select form-select-sm rounded-0 w-50'
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                           readOnly
                         ></input>
-                      }
+                      )}
                     </div>
-                    <div className='d-flex flex-wrap align-items-center gap-1 mb-1'>
+                    <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         valid till
                       </label>
                       <input
-                        type='date'
-                        name='packagevalid'
+                        type="date"
+                        name="packagevalid"
                         value={formData.packagevalid}
                         onChange={handleInputChange}
                         style={{ ...inputStyle, width: "120px" }}
                       />
                       <label style={labelStyle}>Start</label>
                       <input
-                        type='date'
-                        name='packagestart'
+                        type="date"
+                        name="packagestart"
                         value={formData.packagestart}
                         onChange={handleInputChange}
                         style={{ ...inputStyle, width: "120px" }}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         CashLess [Y/N]
                       </label>
                       <select
-                        name='CashLess'
+                        name="CashLess"
                         value={formData.CashLess}
                         onChange={(e) => {
                           handleInputChange(e);
@@ -2170,16 +2189,16 @@ window.onload = function () {
                         }}
                       >
                         <option value={""}>--</option>
-                        <option value='Y'>Y</option>
-                        <option value='N'>N</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
                       </select>
 
-                      {formData.CashLess == "Y" ?
+                      {formData.CashLess == "Y" ? (
                         <select
-                          name='CashLessId'
+                          name="CashLessId"
                           value={formData.CashLessId}
                           onChange={handleInputChange}
-                          className='form-select form-select-sm rounded-0 w-50'
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                         >
                           {fetchedInsCompany.map((d, i) => (
@@ -2188,22 +2207,23 @@ window.onload = function () {
                             </option>
                           ))}
                         </select>
-                      : <input
-                          className='form-select form-select-sm rounded-0 w-50'
+                      ) : (
+                        <input
+                          className="form-select form-select-sm rounded-0 w-50"
                           style={{ ...inputStyle, padding: "0 2px" }}
                           readOnly
                         ></input>
-                      }
+                      )}
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Ins. Comp.
                       </label>
                       <select
-                        name='InsComp'
+                        name="InsComp"
                         value={formData.InsComp}
                         onChange={handleInputChange}
-                        className='form-select form-select-sm rounded-0 w-50'
+                        className="form-select form-select-sm rounded-0 w-50"
                         style={{ ...inputStyle, padding: "0 2px" }}
                       >
                         {fetchedInsCompany.map((d, i) => (
@@ -2213,41 +2233,41 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Notes (PKG)
                       </label>
                       <input
-                        type='text'
-                        name='SpRemarks'
+                        type="text"
+                        name="SpRemarks"
                         value={formData.SpRemarks}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Remarks
                       </label>
                       <input
-                        type='text'
-                        name='Remarks'
+                        type="text"
+                        name="Remarks"
                         value={formData.Remarks}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Admission By
                       </label>
                       <input
-                        type='text'
+                        type="text"
                         value={
-                          localStorage.getItem("user") ?
-                            JSON.parse(localStorage.getItem("user")).name ||
-                            "Admin"
-                          : "Admin"
+                          localStorage.getItem("user")
+                            ? JSON.parse(localStorage.getItem("user")).name ||
+                              "Admin"
+                            : "Admin"
                         }
                         disabled
                         style={inputStyle}
@@ -2256,13 +2276,13 @@ window.onload = function () {
                   </div>
 
                   {/* Col 2 */}
-                  <div className='col-12 col-md-6 col-lg-4'>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                  <div className="col-12 col-md-6 col-lg-4">
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        Bed No. <span className='text-danger'>*</span>
+                        Bed No. <span className="text-danger">*</span>
                       </label>
                       <input
-                        type='text'
+                        type="text"
                         value={
                           selectedBedName ||
                           bed.find((b) => b.BedId == formData.BedId)?.Bed ||
@@ -2282,22 +2302,22 @@ window.onload = function () {
                       />
                       <label style={labelStyle}>Rate</label>
                       <input
-                        className=' w-50 py-1'
-                        type='text'
-                        name='BedRate'
+                        className=" w-50 py-1"
+                        type="text"
+                        name="BedRate"
                         value={formData.BedRate}
                         onChange={handleInputChange}
                         style={inputStyle}
                         disabled={mode != "create"}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Day Care [Y/N]
                       </label>
                       <select
-                        className='  '
-                        name='DayCareYN'
+                        className="  "
+                        name="DayCareYN"
                         value={formData.DayCareYN}
                         onChange={(e) => {
                           handleInputChange(e);
@@ -2312,13 +2332,13 @@ window.onload = function () {
                         }}
                       >
                         <option value={""}>--</option>
-                        <option value='Y'>Y</option>
-                        <option value='N'>N</option>
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
                       </select>
                       <label style={labelStyle}>Particular</label>
-                      {formData.DayCareYN == "Y" ?
+                      {formData.DayCareYN == "Y" ? (
                         <select
-                          name='DayCareId'
+                          name="DayCareId"
                           value={formData.DayCareId}
                           onChange={(e) => {
                             handleInputChange(e);
@@ -2333,18 +2353,19 @@ window.onload = function () {
                             </option>
                           ))}
                         </select>
-                      : <input
+                      ) : (
+                        <input
                           style={{ ...inputStyle, width: "120px" }}
                         ></input>
-                      }
+                      )}
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Day Care Rate
                       </label>
                       <input
-                        type='text'
-                        className='rounded-0   py-0'
+                        type="text"
+                        className="rounded-0   py-0"
                         disabled
                         // value={formData.BedRate || "0"}
                         value={
@@ -2356,20 +2377,20 @@ window.onload = function () {
                       />
                       <label style={labelStyle}>Employee</label>
                       <input
-                        type='text'
-                        name='Nameemp'
+                        type="text"
+                        name="Nameemp"
                         value={formData.Nameemp}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        Disease <span className='text-danger'>*</span>
+                        Disease <span className="text-danger">*</span>
                       </label>
                       <select
-                        className=' py-1'
-                        name='DiseaseId'
+                        className=" py-1"
+                        name="DiseaseId"
                         value={formData.DiseaseId}
                         onChange={(e) => {
                           handleInputChange(e);
@@ -2387,12 +2408,12 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         R.M.O.{" "}
                       </label>
                       <select
-                        name='RMOId'
+                        name="RMOId"
                         value={formData.RMOId}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -2405,15 +2426,15 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
-                        Ref Doctor<span className='text-danger'>*</span>
+                        Ref Doctor<span className="text-danger">*</span>
                       </label>
                       <select
-                        name='RefDoctorId'
+                        name="RefDoctorId"
                         value={formData.RefDoctorId}
                         onChange={handleInputChange}
-                        className=' w-50 py-1'
+                        className=" w-50 py-1"
                         style={inputStyle}
                       >
                         <option value={""}>---</option>
@@ -2425,13 +2446,13 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
-                        Ref Doctor2<span className='text-danger'>*</span>
+                        Ref Doctor2<span className="text-danger">*</span>
                       </label>
                       <select
-                        className=' w-50 py-1'
-                        name='RefDoctorId2'
+                        className=" w-50 py-1"
+                        name="RefDoctorId2"
                         value={formData.RefDoctorId2}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -2445,40 +2466,40 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Pkg Amount
                       </label>
                       <input
-                        type='text'
-                        name='PackageAmount'
+                        type="text"
+                        name="PackageAmount"
                         value={formData.PackageAmount}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Total Pkg
                       </label>
                       <input
-                        type='text'
-                        name='PackageAmount'
+                        type="text"
+                        name="PackageAmount"
                         value={formData.PackageAmount}
                         style={inputStyle}
                       />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Current User
                       </label>
                       <input
-                        type='text'
+                        type="text"
                         value={
-                          localStorage.getItem("user") ?
-                            JSON.parse(localStorage.getItem("user")).name ||
-                            "Admin"
-                          : "Admin"
+                          localStorage.getItem("user")
+                            ? JSON.parse(localStorage.getItem("user")).name ||
+                              "Admin"
+                            : "Admin"
                         }
                         readOnly
                         style={inputStyle}
@@ -2487,7 +2508,7 @@ window.onload = function () {
                   </div>
 
                   {/* Col 3 */}
-                  <div className='col-12 col-md-6 col-lg-4'>
+                  <div className="col-12 col-md-6 col-lg-4">
                     {/* <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Nursing Chg
@@ -2569,26 +2590,26 @@ window.onload = function () {
                       </label>
                       <input type="text" style={inputStyle} />
                     </div> */}
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Final Bill DT
                       </label>
-                      <input type='text' style={inputStyle} />
+                      <input type="text" style={inputStyle} />
                     </div>
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
                         Operat.Date
                       </label>
                       <input
-                        type='date'
-                        name='oprationdate'
+                        type="date"
+                        name="oprationdate"
                         value={formData.oprationdate}
                         onChange={handleInputChange}
                         style={inputStyle}
                       />
                     </div>
 
-                    <div className='d-flex align-items-center gap-1 mb-1'>
+                    <div className="d-flex align-items-center gap-1 mb-1">
                       <label
                         style={{
                           ...labelStyle,
@@ -2599,8 +2620,8 @@ window.onload = function () {
                         Operation Time
                       </label>
                       <input
-                        type='text'
-                        name='optime'
+                        type="text"
+                        name="optime"
                         value={formData.optime}
                         onChange={handleInputChange}
                         style={inputStyle}
@@ -2610,16 +2631,16 @@ window.onload = function () {
                 </div>
 
                 {/* Checkboxes Group */}
-                <div className='d-flex flex-wrap align-items-center gap-3 ms-1 mb-1'>
+                <div className="d-flex flex-wrap align-items-center gap-3 ms-1 mb-1">
                   <div
-                    className='d-flex align-items-center'
+                    className="d-flex align-items-center"
                     style={{ minHeight: "16px" }}
                   >
-                    <div className='me-2'>
+                    <div className="me-2">
                       <label>M Executive:</label>
                       <select
                         value={formData.MEXECUTIVE}
-                        name='MEXECUTIVE'
+                        name="MEXECUTIVE"
                         onChange={handleInputChange}
                         disabled={mode === "view"}
                       >
@@ -2633,8 +2654,8 @@ window.onload = function () {
                     </div>
 
                     <input
-                      type='checkbox'
-                      className='m-0'
+                      type="checkbox"
+                      className="m-0"
                       style={{ width: "12px", height: "12px" }}
                       checked={formData.optdiagoinc}
                       onChange={() => {
@@ -2646,19 +2667,19 @@ window.onload = function () {
                       }}
                     />
                     <label
-                      className='small fw-bold ms-1'
+                      className="small fw-bold ms-1"
                       style={{ fontSize: "0.7rem", lineHeight: "1" }}
                     >
                       Diag inc in pkg
                     </label>
                   </div>
                   <div
-                    className='d-flex align-items-center'
+                    className="d-flex align-items-center"
                     style={{ minHeight: "16px" }}
                   >
                     <input
-                      type='checkbox'
-                      className='m-0'
+                      type="checkbox"
+                      className="m-0"
                       style={{ width: "12px", height: "12px" }}
                       checked={formData.optmediinc}
                       onChange={() => {
@@ -2670,19 +2691,19 @@ window.onload = function () {
                       }}
                     />
                     <label
-                      className='small fw-bold ms-1'
+                      className="small fw-bold ms-1"
                       style={{ fontSize: "0.7rem", lineHeight: "1" }}
                     >
                       Medi inc in pkg
                     </label>
                   </div>
                   <div
-                    className='d-flex align-items-center'
+                    className="d-flex align-items-center"
                     style={{ minHeight: "16px" }}
                   >
                     <input
-                      type='checkbox'
-                      className='m-0'
+                      type="checkbox"
+                      className="m-0"
                       style={{ width: "12px", height: "12px" }}
                       checked={formData.optotherchargeinc}
                       onChange={() => {
@@ -2694,19 +2715,19 @@ window.onload = function () {
                       }}
                     />
                     <label
-                      className='small fw-bold ms-1'
+                      className="small fw-bold ms-1"
                       style={{ fontSize: "0.7rem", lineHeight: "1" }}
                     >
                       OtherCharge inc
                     </label>
                   </div>
                   <div
-                    className='d-flex align-items-center'
+                    className="d-flex align-items-center"
                     style={{ minHeight: "16px" }}
                   >
                     <input
-                      type='checkbox'
-                      className='m-0'
+                      type="checkbox"
+                      className="m-0"
                       style={{ width: "12px", height: "12px" }}
                       checked={formData.optotinc}
                       onChange={() => {
@@ -2718,16 +2739,16 @@ window.onload = function () {
                       }}
                     />
                     <label
-                      className='small fw-bold ms-1'
+                      className="small fw-bold ms-1"
                       style={{ fontSize: "0.7rem", lineHeight: "1" }}
                     >
                       OT IN PKG
                     </label>
                   </div>
-                  <div className='d-flex align-items-center justify-content-end gap-1 mb-1'>
+                  <div className="d-flex align-items-center justify-content-end gap-1 mb-1">
                     <input
-                      type='checkbox'
-                      className='m-0'
+                      type="checkbox"
+                      className="m-0"
                       style={{ width: "12px", height: "12px" }}
                       checked={formData.PackageCHK}
                       onChange={() => {
@@ -2739,7 +2760,7 @@ window.onload = function () {
                       }}
                     />{" "}
                     <label
-                      className='small fw-bold'
+                      className="small fw-bold"
                       style={{ fontSize: "0.7rem", lineHeight: "1" }}
                     >
                       PKG+CONS
@@ -2752,10 +2773,10 @@ window.onload = function () {
 
           {/* FOOTER BUTTON BAR */}
           <div
-            className='panel-footer p-2 border-top bg-rt-color-dark d-flex justify-content-center'
+            className="panel-footer p-2 border-top bg-rt-color-dark d-flex justify-content-center"
             style={{ flexShrink: 0, minHeight: "45px", height: "auto" }}
           >
-            <div className='d-flex gap-2 flex-wrap justify-content-center'>
+            <div className="d-flex gap-2 flex-wrap justify-content-center">
               {/* <button
                 className="btn btn-sm btn-primary"
                 onClick={() => {
@@ -2767,7 +2788,7 @@ window.onload = function () {
                 New
               </button> */}
               <button
-                className='btn btn-sm btn-primary'
+                className="btn btn-sm btn-primary"
                 onClick={() => setMode("edit")}
                 disabled={loading || mode === "create"}
                 style={{ fontSize: "0.75rem", height: "26px" }}
@@ -2775,7 +2796,7 @@ window.onload = function () {
                 Edit
               </button>
               <button
-                className='btn btn-sm btn-primary'
+                className="btn btn-sm btn-primary"
                 onClick={handleSubmit}
                 disabled={loading || mode === "view"}
                 style={{ fontSize: "0.75rem", height: "26px" }}
@@ -2791,7 +2812,7 @@ window.onload = function () {
                 Delete
               </button> */}
               <button
-                className='btn btn-sm btn-primary'
+                className="btn btn-sm btn-primary"
                 onClick={() => {
                   setMode("view");
                   fetchAdmission();
@@ -2802,7 +2823,7 @@ window.onload = function () {
                 Undo
               </button>
               <button
-                className='btn btn-sm btn-primary'
+                className="btn btn-sm btn-primary"
                 style={{ fontSize: "0.75rem", height: "26px" }}
                 onClick={() => {
                   handlePrint({
@@ -2832,9 +2853,11 @@ window.onload = function () {
                       name: formData.PatientName,
                       age: `${formData.Age} Y`,
                       gender:
-                        formData.Sex === "M" ? "MALE"
-                        : formData.Sex === "F" ? "FEMALE"
-                        : "OTHER",
+                        formData.Sex === "M"
+                          ? "MALE"
+                          : formData.Sex === "F"
+                            ? "FEMALE"
+                            : "OTHER",
                       address: [formData.Add1, formData.Add2, formData.Add3]
                         .filter(Boolean)
                         .join(", "),
@@ -2919,12 +2942,12 @@ window.onload = function () {
       {showDoctorDrawer && (
         <>
           <div
-            className='modal-backdrop fade show'
+            className="modal-backdrop fade show"
             onClick={() => setShowDoctorDrawer(false)}
             style={{ zIndex: 9998 }}
           ></div>
           <div
-            className='profile-right-sidebar active'
+            className="profile-right-sidebar active"
             style={{
               zIndex: 9999,
               width: "100%",
@@ -2935,14 +2958,14 @@ window.onload = function () {
             }}
           >
             <button
-              className='right-bar-close'
+              className="right-bar-close"
               onClick={() => setShowDoctorDrawer(false)}
             >
-              <i className='fa-light fa-angle-right'></i>
+              <i className="fa-light fa-angle-right"></i>
             </button>
-            <div className='top-panel' style={{ height: "100%" }}>
+            <div className="top-panel" style={{ height: "100%" }}>
               <div
-                className='dropdown-txt'
+                className="dropdown-txt"
                 style={{
                   backgroundColor: "#0a1735",
                   color: "white",
@@ -2955,19 +2978,19 @@ window.onload = function () {
               </div>
               <div
                 style={{ height: "calc(100% - 70px)", overflowY: "auto" }}
-                className='p-3'
+                className="p-3"
               >
                 <input
-                  type='text'
-                  className='form-control mb-3'
-                  placeholder='Search...'
+                  type="text"
+                  className="form-control mb-3"
+                  placeholder="Search..."
                   value={doctorSearchQuery}
                   onChange={(e) => {
                     setDoctorSearchQuery(e.target.value);
                     setCurrentDoctorPage(1);
                   }}
                 />
-                <div className='row g-2'>
+                <div className="row g-2">
                   {doctors
                     .filter((d) =>
                       d.Doctor.toLowerCase().includes(
@@ -2979,12 +3002,12 @@ window.onload = function () {
                       currentDoctorPage * doctorsPerPage,
                     )
                     .map((doctor, i) => (
-                      <div className='col-12' key={i}>
-                        <div className='form-check'>
+                      <div className="col-12" key={i}>
+                        <div className="form-check">
                           <input
-                            className='form-check-input'
-                            type='radio'
-                            name='doctorSelection'
+                            className="form-check-input"
+                            type="radio"
+                            name="doctorSelection"
                             checked={
                               formData[selectedDoctorField] == doctor.DoctorId
                             }
@@ -2996,7 +3019,7 @@ window.onload = function () {
                               setShowDoctorDrawer(false);
                             }}
                           />
-                          <label className='form-check-label'>
+                          <label className="form-check-label">
                             {doctor.Doctor}
                           </label>
                         </div>
@@ -3004,9 +3027,9 @@ window.onload = function () {
                     ))}
                 </div>
                 {/* Simplified Pagination logic for drawer */}
-                <div className='d-flex justify-content-between mt-3'>
+                <div className="d-flex justify-content-between mt-3">
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() =>
                       setCurrentDoctorPage((p) => Math.max(1, p - 1))
                     }
@@ -3015,7 +3038,7 @@ window.onload = function () {
                     Prev
                   </button>
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() => setCurrentDoctorPage((p) => p + 1)}
                   >
                     Next
@@ -3031,12 +3054,12 @@ window.onload = function () {
       {showBedDrawer && (
         <>
           <div
-            className='modal-backdrop fade show'
+            className="modal-backdrop fade show"
             onClick={() => setShowBedDrawer(false)}
             style={{ zIndex: 9998 }}
           ></div>
           <div
-            className='profile-right-sidebar active'
+            className="profile-right-sidebar active"
             style={{
               zIndex: 9999,
               width: "100%",
@@ -3047,14 +3070,14 @@ window.onload = function () {
             }}
           >
             <button
-              className='right-bar-close'
+              className="right-bar-close"
               onClick={() => setShowBedDrawer(false)}
             >
-              <i className='fa-light fa-angle-right'></i>
+              <i className="fa-light fa-angle-right"></i>
             </button>
-            <div className='top-panel' style={{ height: "100%" }}>
+            <div className="top-panel" style={{ height: "100%" }}>
               <div
-                className='dropdown-txt'
+                className="dropdown-txt"
                 style={{
                   backgroundColor: "#0a1735",
                   color: "white",
@@ -3067,29 +3090,39 @@ window.onload = function () {
               </div>
               <div
                 style={{ height: "calc(100% - 70px)", overflowY: "auto" }}
-                className='p-3'
+                className="p-3"
               >
-                <input
-                  type='text'
-                  className='form-control mb-3'
-                  placeholder='Search bed...'
-                  value={bedSearchQuery}
-                  onChange={(e) => {
-                    setBedSearchQuery(e.target.value);
-                    setCurrentBedPage(1);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") fetchDrawerBeds(1, bedSearchQuery);
-                  }}
-                />
-                <div className='row g-2'>
+                <div className="input-group mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search bed..."
+                    value={bedSearchQuery}
+                    onChange={(e) => {
+                      setBedSearchQuery(e.target.value);
+                      setCurrentBedPage(1);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") fetchDrawerBeds(1, bedSearchQuery);
+                    }}
+                  />
+                  <span
+                    className="input-group-text"
+                    onClick={() => {
+                      fetchDrawerBeds(1, bedSearchQuery);
+                    }}
+                  >
+                    <i className="fa-solid fa-magnifying-glass"></i>
+                  </span>
+                </div>
+                <div className="row g-2">
                   {drawerBeds.map((bedItem, i) => (
-                    <div className='col-12' key={i}>
-                      <div className='form-check'>
+                    <div className="col-12" key={i}>
+                      <div className="form-check">
                         <input
-                          className='form-check-input'
-                          type='radio'
-                          name='bedSelection'
+                          className="form-check-input"
+                          type="radio"
+                          name="bedSelection"
                           checked={formData.BedId == bedItem.BedId}
                           onChange={() => {
                             setFormData((prev) => ({
@@ -3101,16 +3134,16 @@ window.onload = function () {
                             setShowBedDrawer(false);
                           }}
                         />
-                        <label className='form-check-label'>
+                        <label className="form-check-label">
                           {bedItem.Bed}
                         </label>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className='d-flex justify-content-between mt-3'>
+                <div className="d-flex justify-content-between mt-3">
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() => {
                       const n = currentBedPage - 1;
                       setCurrentBedPage(n);
@@ -3121,7 +3154,7 @@ window.onload = function () {
                     Prev
                   </button>
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() => {
                       const n = currentBedPage + 1;
                       setCurrentBedPage(n);
@@ -3142,12 +3175,12 @@ window.onload = function () {
       {showOPDDrawer && (
         <>
           <div
-            className='modal-backdrop fade show'
+            className="modal-backdrop fade show"
             onClick={() => setShowOPDDrawer(false)}
             style={{ zIndex: 9998 }}
           ></div>
           <div
-            className='profile-right-sidebar active'
+            className="profile-right-sidebar active"
             style={{
               zIndex: 9999,
               width: "100%",
@@ -3158,14 +3191,14 @@ window.onload = function () {
             }}
           >
             <button
-              className='right-bar-close'
+              className="right-bar-close"
               onClick={() => setShowOPDDrawer(false)}
             >
-              <i className='fa-light fa-angle-right'></i>
+              <i className="fa-light fa-angle-right"></i>
             </button>
-            <div className='top-panel' style={{ height: "100%" }}>
+            <div className="top-panel" style={{ height: "100%" }}>
               <div
-                className='dropdown-txt'
+                className="dropdown-txt"
                 style={{
                   backgroundColor: "#0a1735",
                   color: "white",
@@ -3178,12 +3211,12 @@ window.onload = function () {
               </div>
               <div
                 style={{ height: "calc(100% - 70px)", overflowY: "auto" }}
-                className='p-3'
+                className="p-3"
               >
                 <input
-                  type='text'
-                  className='form-control mb-3'
-                  placeholder='Search...'
+                  type="text"
+                  className="form-control mb-3"
+                  placeholder="Search..."
                   value={opdSearchQuery}
                   onChange={(e) => {
                     setOPDSearchQuery(e.target.value);
@@ -3193,7 +3226,7 @@ window.onload = function () {
                     if (e.key === "Enter") fetchDrawerOPDs(1, opdSearchQuery);
                   }}
                 />
-                <table className='table table-hover table-sm'>
+                <table className="table table-hover table-sm">
                   <thead>
                     <tr>
                       <th>Select</th>
@@ -3207,9 +3240,9 @@ window.onload = function () {
                       <tr key={i}>
                         <td>
                           <input
-                            className='form-check-input'
-                            type='radio'
-                            name='opdSelection'
+                            className="form-check-input"
+                            type="radio"
+                            name="opdSelection"
                             checked={formData.OPDId === visit.RegistrationId}
                             onChange={async () => {
                               await fetchOPDPatientData(visit.RegistrationId);
@@ -3224,9 +3257,9 @@ window.onload = function () {
                     ))}
                   </tbody>
                 </table>
-                <div className='d-flex justify-content-between mt-3'>
+                <div className="d-flex justify-content-between mt-3">
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() => {
                       const n = currentOPDPage - 1;
                       setCurrentOPDPage(n);
@@ -3237,7 +3270,7 @@ window.onload = function () {
                     Prev
                   </button>
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() => {
                       const n = currentOPDPage + 1;
                       setCurrentOPDPage(n);
@@ -3258,12 +3291,12 @@ window.onload = function () {
       {showIPDDrawer && (
         <>
           <div
-            className='modal-backdrop fade show'
+            className="modal-backdrop fade show"
             onClick={() => setShowIPDDrawer(false)}
             style={{ zIndex: 9998 }}
           ></div>
           <div
-            className='profile-right-sidebar active'
+            className="profile-right-sidebar active"
             style={{
               zIndex: 9999,
               width: "100%",
@@ -3274,14 +3307,14 @@ window.onload = function () {
             }}
           >
             <button
-              className='right-bar-close'
+              className="right-bar-close"
               onClick={() => setShowIPDDrawer(false)}
             >
-              <i className='fa-light fa-angle-right'></i>
+              <i className="fa-light fa-angle-right"></i>
             </button>
-            <div className='top-panel' style={{ height: "100%" }}>
+            <div className="top-panel" style={{ height: "100%" }}>
               <div
-                className='dropdown-txt'
+                className="dropdown-txt"
                 style={{
                   backgroundColor: "#0a1735",
                   color: "white",
@@ -3294,12 +3327,12 @@ window.onload = function () {
               </div>
               <div
                 style={{ height: "calc(100% - 70px)", overflowY: "auto" }}
-                className='p-3'
+                className="p-3"
               >
                 <input
-                  type='text'
-                  className='form-control mb-3'
-                  placeholder='Search...'
+                  type="text"
+                  className="form-control mb-3"
+                  placeholder="Search..."
                   value={ipdSearchQuery}
                   onChange={(e) => {
                     setIPDSearchQuery(e.target.value);
@@ -3309,7 +3342,7 @@ window.onload = function () {
                     if (e.key === "Enter") fetchDrawerIPDs(1, ipdSearchQuery);
                   }}
                 />
-                <table className='table table-hover table-sm'>
+                <table className="table table-hover table-sm">
                   <thead>
                     <tr>
                       <th>Select</th>
@@ -3323,9 +3356,9 @@ window.onload = function () {
                       <tr key={i}>
                         <td>
                           <input
-                            className='form-check-input'
-                            type='radio'
-                            name='opdSelection'
+                            className="form-check-input"
+                            type="radio"
+                            name="opdSelection"
                             checked={formData.IPDId === visit.AdmitionId}
                             onChange={async () => {
                               await fetchIPDPatientData(visit.AdmitionId);
@@ -3340,9 +3373,9 @@ window.onload = function () {
                     ))}
                   </tbody>
                 </table>
-                <div className='d-flex justify-content-between mt-3'>
+                <div className="d-flex justify-content-between mt-3">
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() => {
                       const n = currentIPDPage - 1;
                       setCurrentIPDPage(n);
@@ -3353,7 +3386,7 @@ window.onload = function () {
                     Prev
                   </button>
                   <button
-                    className='btn btn-sm btn-secondary'
+                    className="btn btn-sm btn-secondary"
                     onClick={() => {
                       const n = currentIPDPage + 1;
                       setCurrentIPDPage(n);

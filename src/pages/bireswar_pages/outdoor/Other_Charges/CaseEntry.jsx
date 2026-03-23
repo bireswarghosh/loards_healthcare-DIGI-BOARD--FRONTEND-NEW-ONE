@@ -10,6 +10,169 @@ import useAxiosFetch from "../../../../templates/DiagnosisMaster/Fetch";
 import ReceiptDetailModal from "./ReceiptDetailModal";
 import { toast } from "react-toastify";
 
+
+
+
+const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
+
+  const [selectedTestIds, setSelectedTestIds] = useState([]);
+
+  // আপনার দেওয়া নতুন ডেটা স্ট্রাকচার (html_content সহ)
+  const testList = tests;
+
+  const handleToggle = (testId) => {
+    setSelectedTestIds((prev) =>
+      prev.includes(testId)
+        ? prev.filter((id) => id !== testId)
+        : [...prev, testId]
+    );
+  };
+
+  // 🔥 নতুন প্রিন্ট ফাংশন
+  const handlePrint = () => {
+    // ১. শুধুমাত্র সিলেক্ট করা টেস্টগুলো ফিল্টার করুন যাদের html_content আছে
+    const testsToPrint = testList.filter(
+      (test) => selectedTestIds.includes(test.TestId) && test.html_content && test.html_content.trim() !== ""
+    );
+
+    // ২. যদি এমন কোনো টেস্ট না থাকে, তাহলে ইউজারকে জানিয়ে দিন
+    if (testsToPrint.length === 0) {
+      alert("No HTML report found for the selected tests.");
+      return;
+    }
+
+    // ৩. প্রিন্ট করার জন্য HTML তৈরি করুন (প্রতিটি টেস্টের পর page-break যোগ করা হয়েছে)
+    const printContent = `
+      <html>
+        <head>
+          <title>Print Reports</title>
+          <style>
+            @page { margin: 15mm; }
+            body { 
+              font-family: Arial, sans-serif; 
+              color: #333;
+            }
+            /* এই ক্লাসটি পরের রিপোর্টকে নতুন পেজে নিয়ে যাবে */
+            .page-break { 
+              page-break-after: always; 
+            }
+            .report-header {
+              text-align: center;
+              border-bottom: 2px solid #000;
+              margin-bottom: 20px;
+              padding-bottom: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          ${testsToPrint.map((test, index) => `
+            <div>
+              <div class="report-header">
+                <h2>${test.TestName}</h2>
+                <p>Test ID: ${test.TestId} | Delivery Date: ${test.DeliveryDate || 'N/A'}</p>
+              </div>
+              
+              <div class="report-body">
+                ${test.html_content}
+              </div>
+            </div>
+            
+            ${index < testsToPrint.length - 1 ? '<div class="page-break"></div>' : ''}
+          `).join("")}
+        </body>
+      </html>
+    `;
+
+    // ৪. নতুন উইন্ডো ওপেন করে প্রিন্ট ডায়ালগ কল করুন
+    const printWindow = window.open("", "_blank");
+    printWindow.document.open();
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // উইন্ডোর কন্টেন্ট লোড হওয়ার পর প্রিন্ট পপআপ আসবে
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999
+    }}>
+      <div style={{
+        backgroundColor: '#fff',
+        borderRadius: '8px',
+        width: '100%',
+        maxWidth: '450px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        fontFamily: 'Tahoma, Arial, sans-serif'
+      }}>
+        
+        {/* Header */}
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8f9fa', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
+          <h2 style={{ margin: 0, fontSize: '14px', color: '#333' }}>Department</h2>
+          <span style={{ backgroundColor: '#d4edda', color: '#155724', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', border: '1px solid #c3e6cb' }}>
+            Test Master
+          </span>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: '16px' }}>
+          <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Test</h3>
+          
+          <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+            {testList.map((test) => (
+              <label key={test.id} style={{ display: 'flex', alignItems: 'center', padding: '6px 0', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  style={{ marginRight: '10px' }}
+                  checked={selectedTestIds.includes(test.TestId)}
+                  onChange={() => handleToggle(test.TestId)}
+                />
+                <span style={{ fontSize: '13px', color: '#444' }}>
+                  {test.TestName} 
+                  {/* যাদের HTML আছে তাদের পাশে ছোট করে আইকন বা টেক্সট দেখাতে পারেন */}
+                  {test.html_content ? <span style={{color: 'green', fontSize: '10px', marginLeft: '5px'}}>(Has Report)</span> : <span style={{color: 'red', fontSize: '10px', marginLeft: '5px'}}>(Has No Report)</span>}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '8px', backgroundColor: '#f8f9fa', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}>
+          <button 
+            onClick={handlePrint}
+            className="btn btn-sm btn-light border"
+            style={{ fontWeight: 'bold' }}
+          >
+            Print Reports
+          </button>
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="btn btn-sm btn-danger"
+          >
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+
 const CaseEntry = () => {
   const { data: depertments } = useAxiosFetch("/subdepartment");
 
@@ -20,7 +183,7 @@ const CaseEntry = () => {
     });
     return map;
   });
-
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedSubDept, setSelectedSubDept] = useState([]);
   const [showSubDeptPopup, setShowSubDeptPopup] = useState(false);
   const { id, Modex } = useParams();
@@ -174,6 +337,10 @@ const CaseEntry = () => {
 
   const [show, setShow] = useState(false);
   const [receiptDetailData, setReceiptDetailData] = useState([]);
+
+
+
+const [dWorkTests, setDWorkTests] = useState([])
 
   // this function is only for searching the IPD (Admission)
   const searchTests = async (searchTerm) => {
@@ -535,6 +702,8 @@ const CaseEntry = () => {
       ComYN: "Y",
       // CancelTast: 0,
       CancelTast: 2,
+      DescFormat:selectedTestMaster.DescFormat,
+      html_content:selectedTestMaster.html_content
     };
 
     setTests([...tests, newTest]);
@@ -544,7 +713,7 @@ const CaseEntry = () => {
 
   // this will change the rate and net rate of the test
   const handleModifyTest = (idx, val) => {
-// console.log("modex,",mode)
+    // console.log("modex,",mode)
     let arr = structuredClone(tests);
     let a = tests[idx];
     a = { ...a, Rate: val, NetRate: val };
@@ -552,9 +721,8 @@ const CaseEntry = () => {
     // console.log("arr: ", arr);
     setTests(arr);
     //  calculateTotal([...tests])
-     calculateTotal([...arr])
+    calculateTotal([...arr]);
   };
-
 
   // Remove test from list
   const handleRemoveTest = (id) => {
@@ -701,6 +869,8 @@ const CaseEntry = () => {
             // };
 
             let subDeptId = null;
+            let Descf =null
+            let html = null
 
             if (t.TestId) {
               try {
@@ -709,6 +879,8 @@ const CaseEntry = () => {
                 if (testRes.data.success && testRes.data.data) {
                   testName = testRes.data.data.Test;
                   subDeptId = testRes.data.data.SubDepartmentId; // ⭐ IMPORTANT
+                  Descf = testRes.data.data.DescFormat
+                  html = testRes.data.data.html_content
                 }
               } catch (err) {
                 console.log("Error fetching test name:", err);
@@ -730,6 +902,8 @@ const CaseEntry = () => {
               ComYN: t.ComYN || "Y",
               // CancelTast: t.CancelTast || 0,
               CancelTast: t.CancelTast || 2,
+              DescFormat: Descf,
+              html_content:html
             };
           }),
         );
@@ -1582,6 +1756,15 @@ window.onload = function(){
     formData.CTestAmt,
     formData.Advance,
   ]);
+
+
+useEffect(() => {
+
+  let filteredTests = tests.filter(item => item.DescFormat == 1)
+  console.log("filteredTests:", filteredTests)
+ setDWorkTests(filteredTests)
+}, [tests])
+
 
   const groupedTests = tests.reduce((acc, t) => {
     if (!acc[t.SubDepartmentId]) acc[t.SubDepartmentId] = [];
@@ -3492,6 +3675,7 @@ ${
                       </tr>
                     </thead>
                     <tbody>
+                      {console.log("tests:",tests)}
                       {tests.length > 0 ? (
                         tests.map((test, index) => (
                           <tr
@@ -3528,8 +3712,8 @@ ${
                             </td>
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               <input
-                              style={{textAlign: "center"}}
-                              disabled={mode != 'create'}
+                                style={{ textAlign: "center" }}
+                                disabled={mode != "create"}
                                 type="number"
                                 value={test.Rate}
                                 onChange={(e) => {
@@ -3550,8 +3734,8 @@ ${
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               <input
                                 type="number"
-                                style={{textAlign: "center"}}
-                                disabled={mode != 'create'}
+                                style={{ textAlign: "center" }}
+                                disabled={mode != "create"}
                                 value={test.NetRate}
                                 onChange={(e) => {
                                   handleModifyTest(
@@ -4109,6 +4293,11 @@ ${
                 whiteSpace: "normal",
                 lineHeight: 1,
               }}
+              onClick={() => {
+                if (btn == "D-Work Sheet" && mode != "create") {
+                  setIsOpen(true);
+                }
+              }}
             >
               {btn}
             </button>
@@ -4219,6 +4408,8 @@ ${
           onPrint={() => handleDepPrint(selectedSubDept)}
         />
       )}
+
+   { dWorkTests.length!=0 &&  <DepartmentModal isOpen={isOpen} setIsOpen={setIsOpen} tests={dWorkTests} />}
     </div>
   );
 };

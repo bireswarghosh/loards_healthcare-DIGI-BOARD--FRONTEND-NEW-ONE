@@ -384,6 +384,9 @@ import DateWiseFinalBillOtherChargesReg from "./templates/IPD_REPORT/DateWiseFin
 import NurseStation from "./pages/NurseStation.jsx"
 import PathologyDashboard from "./pages/dashboardpages/PathologyDashboard.jsx";
 import PathologistLogin from "..//src/components/indoor/loginPathologist/PathologistLogin.jsx";
+import OpdDashboard from "./pages/dashboardpages/OpdDashboard.jsx";
+import IpdDashboard from "./pages/dashboardpages/IpdDashboard.jsx";
+import DiagnosticDashboard from "./pages/dashboardpages/DiagnosticDashboard.jsx";
 
 
 function App() {
@@ -392,6 +395,30 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+           <Route
+            path="/DiagnosticDashboard"
+            element={
+              <ProtectedRoute>
+                <DiagnosticDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/IpdDashboard"
+            element={
+              <ProtectedRoute>
+                <IpdDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/OpdDashboard"
+            element={
+              <ProtectedRoute>
+                <OpdDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/fileManager" element={<FileManager />} />
           <Route path="/crmDashboard" element={<CrmDashboard />} />
           <Route path="/hrmDashboard" element={<HrmDashboard />} />

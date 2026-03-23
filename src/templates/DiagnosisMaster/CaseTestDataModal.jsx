@@ -39,16 +39,37 @@ const CaseTestDataModal = ({
   /* ================= FETCH ================= */
   useEffect(() => {
     if (open && caseId && testId) {
-      fetchRecords();
-      resetForm();
+      fetchAndLoad();
     }
   }, [open, caseId, testId]);
 
-  const fetchRecords = async (id) => {
+  const fetchAndLoad = async () => {
     try {
       const res = await axiosInstance.get(
         `/case-test-data?caseId=${caseId}&testId=${testId}`
-        // `case-test-data/{id}`
+      );
+      const list = res.data.data || [];
+      setRecords(list);
+
+      if (list.length > 0) {
+        const latest = list[list.length - 1];
+        setEditId(latest.id);
+        setFormData({ htmlContent: latest.html_content || "" });
+      } else {
+        setEditId(null);
+        setFormData({ htmlContent: htmlContent || "" });
+      }
+    } catch {
+      toast.error("Failed to load data");
+      setEditId(null);
+      setFormData({ htmlContent: htmlContent || "" });
+    }
+  };
+
+  const fetchRecords = async () => {
+    try {
+      const res = await axiosInstance.get(
+        `/case-test-data?caseId=${caseId}&testId=${testId}`
       );
       setRecords(res.data.data || []);
     } catch {
@@ -59,11 +80,6 @@ const CaseTestDataModal = ({
   /* ================= FORM ================= */
   const handleEditorChange = (_, editor) => {
     setFormData({ htmlContent: editor.getData() });
-  };
-
-  const resetForm = () => {
-    setFormData({ htmlContent: "" });
-    setEditId(null);
   };
 
   /* ================= SAVE ================= */
@@ -84,12 +100,13 @@ const CaseTestDataModal = ({
         await axiosInstance.put(`/case-test-data/${editId}`, fd);
         toast.success("Updated successfully");
       } else {
-        await axiosInstance.post(`/case-test-data`, fd);
+        const res = await axiosInstance.post(`/case-test-data`, fd);
         toast.success("Saved successfully");
+        const newId = res.data?.data?.id;
+        if (newId) setEditId(newId);
       }
 
       fetchRecords();
-      resetForm();
     } catch {
       toast.error("Save failed");
     } finally {
