@@ -282,6 +282,7 @@ toast.error("Something went wrong");
 
     <button
       className="btn btn-sm btn-danger"
+      type="button"
       onClick={(e) => {
         e.preventDefault();
         navigate(-1);
