@@ -36,12 +36,43 @@ const CaseTestDataModal = ({
     return canvas.toDataURL("image/png");
   }, [formData2?.CaseNo]);
 
+  const [doctorsMap, setDoctorsMap] = useState({})
+
+  const fetchDoctors = async () => {
+    try {
+      const res = await axiosInstance.get('/doctors')
+      if (res.data.success){
+
+        let data = res.data.data
+        if(data.length==0){setDoctorsMap({})}
+        let hashMap ={}
+        for(let i=0; i<data.length;i++){
+          hashMap[data[i].DoctorId]= data[i].Doctor
+        }
+setDoctorsMap(hashMap)
+      }
+      else{
+        setDoctorsMap({})
+      }
+    } catch (error) {
+      console.log("Error fetching doctors:",error)
+    }
+  }
+  
+
+
   /* ================= FETCH ================= */
+  useEffect(() => {
+fetchDoctors()
+}, [])
+
   useEffect(() => {
     if (open && caseId && testId) {
       fetchAndLoad();
     }
   }, [open, caseId, testId]);
+
+
 
   const fetchAndLoad = async () => {
     try {
@@ -128,13 +159,16 @@ const CaseTestDataModal = ({
   };
 
   /* ================= PRINT ================= */
-  const handlePrint = () => {
-    if (!records?.[0]?.html_content) {
-      toast.warn("No content to print");
-      return;
-    }
+const handlePrint = () => {
+  if (!records?.[0]?.html_content) {
+    toast.warn("No content to print");
+    return;
+  }
+
+  setTimeout(() => {
     window.print();
-  };
+  }, 300);
+};
 
   if (!open) return null;
 
@@ -258,35 +292,106 @@ const CaseTestDataModal = ({
       </div>
 
       {/* ================= PRINT CONTENT ================= */}
-      <div id="print-wrapper">
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <img src={barcodeImg} alt="barcode" />
-          <div>
-            <div>
-              <b>Patient:</b> {formData2?.PatientName}
-            </div>
-            <div>
-              <b>Case No:</b> {formData2?.CaseNo}
-            </div>
-            <div>
-              <b>Age / Sex:</b> {formData2?.Age} / {formData2?.Sex}
-            </div>
-            <div>
-              <b>Ref By:</b> {formData2?.RefBy}
-            </div>
-          </div>
+
+      {open &&
+       <div id="print-wrapper" style={{ color: "black" }}>
+        {/* --- Barcode Section --- */}
+        <div
+          style={{ marginTop: "10px", textAlign: "right", marginBottom: "10px" }}
+        >
+          <img src={barcodeImg} alt="barcode" style={{ maxHeight: "60px" }} />
         </div>
 
-        <hr />
+        {/* --- Patient Info Table (Borders Removed) --- */}
+        <table
+          style={{
+            width: "100%",
+            border: "1px solid #000",
+            borderCollapse: "collapse",
+            fontSize: "12px",
+          }}
+        >
+          <tbody>
+            <tr>
+              <td style={{ border: "none", width: "15%", padding: "2px 4px" }}>
+                <b>Patient</b>
+              </td>
+              <td style={{ border: "none", width: "35%", padding: "2px 4px" }}>
+                : {formData2?.PatientName || PatientName}
+              </td>
+              <td style={{ border: "none", width: "15%", padding: "2px 4px" }}>
+                <b>Age</b>
+              </td>
+              <td style={{ border: "none", width: "35%", padding: "2px 4px" }}>
+                : {formData2?.Age || ""}
+                {formData2?.AgeType || ""}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                <b>Case No</b>
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                : {formData2?.CaseNo || ""}
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                <b>Sex</b>
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                : {formData2?.Sex || ""}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                <b>Ref. By</b>
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                : {doctorsMap[formData2?.DoctorId||""] || ""}
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                <b>Billing Date</b>
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                : {new Date().toISOString().split("T")[0]}
+              </td>
+            </tr>
+            <tr>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                <b>Address</b>
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                :{" "}
+                {formData2?.Add1
+                  ? `${formData2?.Add1}`
+                  : "" + formData2?.Add2
+                    ? `, ${formData2?.Add2}`
+                    : "" + formData2?.Add3
+                      ? `, ${formData2?.Add3}`
+                      : "" || ""}
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                <b>Report Date</b>
+              </td>
+                <td style={{ border: "none", padding: "2px 4px" }}>
+                : {records[0]?.created_at?.split("T")[0] || ""}
+              </td>
+              <td style={{ border: "none", padding: "2px 4px" }}>
+                : {formData2?.RefBy || ""}
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-        <h4 style={{ textAlign: "center" }}>CLINICAL PATHOLOGY</h4>
+        <hr style={{ border: "0.5px solid #000", marginTop: "15px" }} />
 
+        {/* --- Clinical Content --- */}
         <div
+          style={{ marginTop: "20px" }}
           dangerouslySetInnerHTML={{
             __html: records?.at(-1)?.html_content || "",
           }}
         />
-      </div>
+      </div>}
     </>
   );
 };
