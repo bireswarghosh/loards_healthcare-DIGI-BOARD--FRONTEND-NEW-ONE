@@ -226,11 +226,13 @@ const handlePrint = () => {
 
             <div className="modal-body">
               <label className="fw-bold">Description</label>
+              <div style={{ height: "700px" }}>
               <CKEditor
                 editor={ClassicEditor}
                 data={formData.htmlContent || htmlContent || ""}
                 onChange={handleEditorChange}
               />
+              </div>
 
               <button
                 className="btn btn-success mt-3"
