@@ -1355,8 +1355,8 @@ const res1 = await axiosInstance.put(
           (Number(serviceCharge) / 100);
       }
 totalBedServiceChrg=  Number(totalBedServiceChrg).toFixed(2)
-// console.log("Final bed service charge: ", totalBedServiceChrg)
- setServiceChrgCalculated((prev) => Number(prev) + totalBedServiceChrg);
+console.log("Final bed service charge: ", totalBedServiceChrg)
+ setServiceChrgCalculated((prev) => Number(prev) + Number(totalBedServiceChrg));
 
     } catch (err) {
       console.error("Error while fetching bed data:", err);
@@ -1400,9 +1400,9 @@ totalBedServiceChrg=  Number(totalBedServiceChrg).toFixed(2)
     );
 
     // console.log("filterd oc with service charge on: ", ocWithServiceChrgOn);
-    // console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
+    console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
 ocServiceChargeCalculated  = Number(ocServiceChargeCalculated).toFixed(2)
-    setServiceChrgCalculated((prev) => Number(prev) + ocServiceChargeCalculated);
+    setServiceChrgCalculated((prev) => Number(prev) + Number(ocServiceChargeCalculated));
     return otherChargesByAdmId.map((item, index) => {
       // const matched = allOtherCharges.find(
       //   (oc) => oc.OtherChargesId == item.OtherChargesId,
