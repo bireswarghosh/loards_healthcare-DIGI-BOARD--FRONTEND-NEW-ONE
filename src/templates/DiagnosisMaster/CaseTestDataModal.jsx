@@ -361,16 +361,12 @@ const handlePrint = () => {
               <td style={{ border: "none", padding: "2px 4px" }}>
                 <b>Address</b>
               </td>
-              <td style={{ border: "none", padding: "2px 4px" }}>
-                :{" "}
-                {formData2?.Add1
-                  ? `${formData2?.Add1}`
-                  : "" + formData2?.Add2
-                    ? `, ${formData2?.Add2}`
-                    : "" + formData2?.Add3
-                      ? `, ${formData2?.Add3}`
-                      : "" || ""}
-              </td>
+             <td style={{ border: "none", padding: "2px 4px" }}>
+  :
+  {[formData2?.Add1, formData2?.Add2, formData2?.Add3]
+    .filter(Boolean)
+    .join(", ")}
+</td>
               <td style={{ border: "none", padding: "2px 4px" }}>
                 <b>Report Date</b>
               </td>
