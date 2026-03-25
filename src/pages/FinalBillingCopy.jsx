@@ -1227,16 +1227,22 @@ const FinalBilling = () => {
   }, [fbData]);
 
   useEffect(() => {
+    console.log("bill head data: ", billHeadData.find((item) => item.SlNo == 9)?.Amount1 || 0)
+let val =
+      Number(netBal) -
+      Number(formData.Approval) -
+      Number(billHeadData.find((item) => item.SlNo == 9)?.Amount1 || 0);
+
     setFbData((prev) => ({
       ...prev,
-      PatiectPartyAmt: netBal - fbData.Approval,
+      PatiectPartyAmt: val,
     }));
 
     setFbData((prev) => ({
       ...prev,
       ReciptAmt: netBal - fbData.Approval - fbData.Discount,
     }));
-  }, [fbData.Approval, netBal]);
+  }, [fbData.Approval, netBal, billHeadData]);
 
   useEffect(() => {
     setFbData((prev) => ({
@@ -1648,8 +1654,10 @@ const FinalBilling = () => {
                         type="text"
                         style={styles.input}
                         // value={totalReceipt}
-                        value={billHeadData.find(item=>item.SlNo==9)?.Amount1}
-                        
+                        value={
+                          billHeadData.find((item) => item.SlNo == 9)
+                            ?.Amount1 || 0
+                        }
                       />
                     </div>
                   </div>
@@ -1850,10 +1858,12 @@ const FinalBilling = () => {
                       <span style={styles.label}>Approval amt</span>
                     </div>
                     <div className="col-4">
-                      <input
-                        type="text"
+                       <input
+                        type="number"
                         style={styles.input}
-                        value={fbData?.Approval || 0}
+                        value={Number(fbData?.Approval) || 0}
+                        name="Approval"
+                        onChange={handleChange}
                       />
                     </div>
                   </div>

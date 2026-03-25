@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
@@ -227,11 +226,13 @@ const handlePrint = () => {
 
             <div className="modal-body">
               <label className="fw-bold">Description</label>
+              <div style={{ height: "700px" }}>
               <CKEditor
                 editor={ClassicEditor}
                 data={formData.htmlContent || htmlContent || ""}
                 onChange={handleEditorChange}
               />
+              </div>
 
               <button
                 className="btn btn-success mt-3"
@@ -360,16 +361,12 @@ const handlePrint = () => {
               <td style={{ border: "none", padding: "2px 4px" }}>
                 <b>Address</b>
               </td>
-              <td style={{ border: "none", padding: "2px 4px" }}>
-                :{" "}
-                {formData2?.Add1
-                  ? `${formData2?.Add1}`
-                  : "" + formData2?.Add2
-                    ? `, ${formData2?.Add2}`
-                    : "" + formData2?.Add3
-                      ? `, ${formData2?.Add3}`
-                      : "" || ""}
-              </td>
+             <td style={{ border: "none", padding: "2px 4px" }}>
+  :
+  {[formData2?.Add1, formData2?.Add2, formData2?.Add3]
+    .filter(Boolean)
+    .join(", ")}
+</td>
               <td style={{ border: "none", padding: "2px 4px" }}>
                 <b>Report Date</b>
               </td>

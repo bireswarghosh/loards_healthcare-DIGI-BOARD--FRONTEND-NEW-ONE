@@ -132,7 +132,7 @@ const DescriptiveTestDrawer = ({
 
   // ====================================
   return (
-    <>
+    <div>
       {/* BASIC INFO */}
       <div className="row g-2 mb-2 align-items-end">
         <div className="col-md-2">
@@ -381,7 +381,7 @@ const DescriptiveTestDrawer = ({
         formData2={formData2}
         htmlContent={htmlContent}
       />
-    </>
+    </div>
   );
 };
 
