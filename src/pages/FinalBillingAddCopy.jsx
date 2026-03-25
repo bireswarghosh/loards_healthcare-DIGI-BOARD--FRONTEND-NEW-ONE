@@ -1641,14 +1641,15 @@ ocServiceChargeCalculated  = Number(ocServiceChargeCalculated).toFixed(2)
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
-      PatiectPartyAmt: netBal - formData.Approval,
+      PatiectPartyAmt: netBal - formData.Approval - finalBillDetail.find((item) => item.SlNo == 9)
+                            ?.Amount1 ,
     }));
 
     setFormData((prev) => ({
       ...prev,
       ReciptAmt: netBal - formData.Approval - formData.Discount,
     }));
-  }, [formData.Approval, netBal]);
+  }, [formData.Approval, netBal, finalBillDetail]);
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -2352,9 +2353,11 @@ ocServiceChargeCalculated  = Number(ocServiceChargeCalculated).toFixed(2)
                     </div>
                     <div className="col-4">
                       <input
-                        type="text"
+                        type="number"
                         style={styles.input}
-                        value={formData?.Approval || 0}
+                        value={Number(formData?.Approval) || 0}
+                        name="Approval"
+                        onChange={handleChange}
                       />
                     </div>
                   </div>
