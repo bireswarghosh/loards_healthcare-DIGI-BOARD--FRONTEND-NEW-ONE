@@ -699,15 +699,48 @@ const FinalBillingAdd = () => {
   // fetching diag charge using adm id
   const fetchDiag = async (id) => {
     try {
+      let caseId = "";
       const res = await axiosInstance.get(`/case01/admition/${id}`);
       // console.log("Diag data: ", res.data.data);
 
       res.data.success ? setDiagData(res.data.data) : setDiagData([]);
+      caseId = res.data.data[0]?.CaseId || "";
+
+      let allMrData = [];
+      let totalMr = 0;
+      if (res.data.success && caseId) {
+        console.log("Hi case Id: ", caseId);
+        const mrResult = await axiosInstance.get(
+          `/money-receipt01/search?ReffId=${caseId}`,
+        );
+        if (mrResult.data.success) {
+          allMrData = mrResult.data.data;
+          if (allMrData.length != 0) {
+            totalMr = allMrData.reduce(
+              (acc, item) => acc + Number(item?.Amount || 0),
+              0,
+            );
+          }
+          console.log("total mr : ", totalMr);
+        }
+      }
 
       const arr = res.data.data;
+
       if (arr.length) {
-        // const totalDiag = arr.reduce((sum, item) => sum + item.Total, 0);
-        const totalDiag = arr.reduce((sum, item) => sum + item.Balance, 0);
+
+        const totalCancelTest = arr.reduce((sum, item) => sum + Number(item.CTestAmt || 0), 0)
+console.log("total ctest:",totalCancelTest)
+       let totalDiag = arr.reduce((sum, item) => sum + Number(item.Total || 0), 0);
+       totalDiag = totalDiag - totalCancelTest - totalMr
+        // const totalDiag = arr.reduce(
+        //   (sum, item) =>
+        //     sum +
+        //     (Number(item.Balance || 0) -
+        //       Number(item.CTestAmt || 0) -
+        //       Number(totalMr || 0)),
+        //   0,
+        // );
         // console.log("total diag chrgs; ", totalDiag);
 
         let diagObj = {};
