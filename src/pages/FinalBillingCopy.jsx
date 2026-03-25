@@ -1858,10 +1858,12 @@ let val =
                       <span style={styles.label}>Approval amt</span>
                     </div>
                     <div className="col-4">
-                      <input
-                        type="text"
+                       <input
+                        type="number"
                         style={styles.input}
-                        value={fbData?.Approval || 0}
+                        value={Number(fbData?.Approval) || 0}
+                        name="Approval"
+                        onChange={handleChange}
                       />
                     </div>
                   </div>
