@@ -6,8 +6,8 @@ import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DigiContext } from "../../context/DigiContext";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { CKEditor } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
 import { createPortal } from "react-dom";
 
@@ -1416,7 +1416,7 @@ const TestMaster = () => {
         </>
       )}
 
-      {/* ---------- HTML Editor Modal ---------- */}
+      {/* ---------- HTML Editor Modal (CKEditor + Preview) ---------- */}
       {showHtmlEditor && (
         <PortalModal>
           <>
@@ -1436,7 +1436,7 @@ const TestMaster = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="modal-content" style={{ height: "100%" }}>
-                  <div className="modal-header">
+                  <div className="modal-header py-2">
                     <h5 className="modal-title">
                       <i className="fa-light fa-file-lines me-2"></i>
                       HTML Content - {currentTestForHtml?.Test}
@@ -1448,81 +1448,113 @@ const TestMaster = () => {
                   </div>
 
                   <div
-                    className="modal-body"
+                    className="modal-body p-2"
                     style={{
-                      height: "calc(100% - 120px)",
-                      display: "flex",
-                      flexDirection: "column",
+                      height: "calc(100% - 110px)",
+                      overflow: "hidden",
                     }}
                   >
-                    {isEditingHtml ? (
-                      <textarea
-                        className="form-control"
-                        style={{
-                          height: "100%",
-                          fontFamily: "monospace",
-                          fontSize: "14px",
-                        }}
-                        value={htmlContent}
-                        onChange={(e) => setHtmlContent(e.target.value)}
-                        placeholder="Enter HTML content here..."
-                      />
-                    ) : (
-                      <ReactQuill
-                        theme="snow"
-                        value={htmlContent}
-                        onChange={setHtmlContent}
-                        style={{ height: "calc(100% - 50px)" }}
-                        modules={{
-                          toolbar: [
-                            [{ header: [1, 2, 3, false] }],
-                            ["bold", "italic", "underline", "strike"],
-                            [{ color: [] }, { background: [] }],
-                            [{ align: [] }],
-                            [{ list: "ordered" }, { list: "bullet" }],
-                            ["link", "image"],
-                            ["clean"],
-                          ],
-                        }}
-                      />
-                    )}
+                    <div className="d-flex gap-2" style={{ height: "100%" }}>
+                      {/* LEFT: Editor */}
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+                        <div className="d-flex justify-content-between align-items-center mb-1">
+                          <strong className="small">✏️ Editor</strong>
+                          <button
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => setIsEditingHtml(!isEditingHtml)}
+                          >
+                            <i className={`fa-light fa-${isEditingHtml ? "wand-magic-sparkles" : "code"} me-1`}></i>
+                            {isEditingHtml ? "Visual" : "HTML Code"}
+                          </button>
+                        </div>
+                        <div style={{ flex: 1, overflow: "auto" }}>
+                          {isEditingHtml ? (
+                            <textarea
+                              className="form-control"
+                              style={{
+                                height: "100%",
+                                fontFamily: "monospace",
+                                fontSize: "13px",
+                                resize: "none",
+                              }}
+                              value={htmlContent}
+                              onChange={(e) => setHtmlContent(e.target.value)}
+                              placeholder="Enter HTML content here..."
+                            />
+                          ) : (
+                            <div style={{ height: "100%" }} className="ck-editor-wrapper">
+                              <CKEditor
+                                editor={ClassicEditor}
+                                data={htmlContent}
+                                onChange={(event, editor) => {
+                                  setHtmlContent(editor.getData());
+                                }}
+                                config={{
+                                  toolbar: [
+                                    "heading", "|",
+                                    "bold", "italic", "underline", "strikethrough", "|",
+                                    "bulletedList", "numberedList", "|",
+                                    "outdent", "indent", "|",
+                                    "link", "blockQuote", "insertTable", "|",
+                                    "undo", "redo",
+                                  ],
+                                }}
+                              />
+                              <style>{`
+                                .ck-editor-wrapper .ck-editor { display: flex; flex-direction: column; height: 100%; }
+                                .ck-editor-wrapper .ck-editor__main { flex: 1; overflow: auto; }
+                                .ck-editor-wrapper .ck-editor__editable { min-height: 100%; }
+                              `}</style>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* RIGHT: Preview */}
+                      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+                        <div className="mb-1">
+                          <strong className="small">👁️ Preview</strong>
+                        </div>
+                        <div
+                          style={{
+                            flex: 1,
+                            overflow: "auto",
+                            border: "1px solid #dee2e6",
+                            borderRadius: "4px",
+                            padding: "12px",
+                            backgroundColor: "#fff",
+                          }}
+                          dangerouslySetInnerHTML={{ __html: htmlContent }}
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="modal-footer d-flex justify-content-between">
+                  <div className="modal-footer py-2 d-flex justify-content-between">
                     <div className="d-flex gap-2">
                       <button
-                        className="btn btn-secondary"
-                        onClick={() => setIsEditingHtml(!isEditingHtml)}
-                      >
-                        <i
-                          className={`fa-light fa-${isEditingHtml ? "eye" : "code"} me-2`}
-                        ></i>
-                        {isEditingHtml ? "Visual Editor" : "View HTML Code"}
-                      </button>
-                      <button
-                        className="btn btn-warning"
+                        className="btn btn-sm btn-warning"
                         onClick={handleReconvert}
                         disabled={loading}
                         title="Re-download DOCX from R2 and convert again"
                       >
-                        <i className="fa-light fa-rotate me-2"></i>
+                        <i className="fa-light fa-rotate me-1"></i>
                         {loading ? "Converting..." : "Re-convert DOCX"}
                       </button>
                     </div>
-
                     <div className="d-flex gap-2">
                       <button
-                        className="btn btn-secondary"
+                        className="btn btn-sm btn-secondary"
                         onClick={() => setShowHtmlEditor(false)}
                       >
                         Close
                       </button>
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-sm btn-primary"
                         onClick={handleSaveHtmlContent}
                         disabled={loading}
                       >
-                        <i className="fa-light fa-save me-2"></i>
+                        <i className="fa-light fa-save me-1"></i>
                         {loading ? "Saving..." : "Save HTML"}
                       </button>
                     </div>
