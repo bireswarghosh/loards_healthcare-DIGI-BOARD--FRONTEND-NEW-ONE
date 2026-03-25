@@ -204,6 +204,7 @@ const CaseEntry = () => {
   const [agentData, setAgentData] = useState([]);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [isSearchingAgent, setIsSearchingAgent] = useState(false);
+  const [cashLessId, setCashLessId] = useState(0);
 
   const [showAddTest, setShowAddTest] = useState(true);
 
@@ -932,7 +933,12 @@ const [dWorkTests, setDWorkTests] = useState([])
         }
 
         // Step 1: Create Case
-        const caseCreateData = { ...formData };
+        // Determine OP/IP prefix: Indoor=Y → IP, but if CashLessId=63 → OP, Outdoor → OP
+        let patientType = "OP";
+        if (indoor && cashLessId !== 63) {
+          patientType = "IP";
+        }
+        const caseCreateData = { ...formData, patientType };
 
         // Convert empty strings to null
         const cleanedData = Object.fromEntries(
@@ -1577,6 +1583,9 @@ window.onload = function(){
 
       if (res.data.success) {
         const p = res.data.data.admission;
+
+        // Store CashLessId for OP/IP prefix logic
+        setCashLessId(Number(p.CashLessId || 0));
 
         setFormData((prev) => ({
           ...prev,
