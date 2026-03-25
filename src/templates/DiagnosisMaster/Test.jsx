@@ -1502,15 +1502,24 @@ const TestMaster = () => {
                                 onChange={(event, editor) => {
                                   setHtmlContent(editor.getData());
                                 }}
+                                onReady={(editor) => {
+                                  // Log available toolbar items for debugging
+                                  const items = Array.from(editor.ui.componentFactory.names());
+                                  console.log('Available CKEditor toolbar items:', items);
+                                }}
                                 config={{
-                                  toolbar: [
-                                    "heading", "|",
-                                    "bold", "italic", "underline", "strikethrough", "|",
-                                    "alignment:left", "alignment:center", "alignment:right", "alignment:justify", "|",
-                                    "bulletedList", "numberedList", "|",
-                                    "outdent", "indent", "|",
-                                    "link", "blockQuote", "insertTable",
-                                  ],
+                                  toolbar: {
+                                    items: [
+                                      "heading", "|",
+                                      "bold", "italic", "underline", "strikethrough", "subscript", "superscript", "|",
+                                      "alignment", "|",
+                                      "bulletedList", "numberedList", "todoList", "|",
+                                      "outdent", "indent", "|",
+                                      "link", "blockQuote", "insertTable", "mediaEmbed", "|",
+                                      "imageUpload", "code",
+                                    ],
+                                    shouldNotGroupWhenFull: true,
+                                  },
                                   heading: {
                                     options: [
                                       { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
