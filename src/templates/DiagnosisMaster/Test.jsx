@@ -433,7 +433,24 @@ const TestMaster = () => {
 
   const goToPage = (p) => {
     if (p < 1 || p > totalPages) return;
-    fetchTests(p);
+    if (isSearching && searchText.trim()) {
+      setLoading(true);
+      axiosInstance
+        .get(`/tests/search/advanced?test=${encodeURIComponent(searchText)}&page=${p}&limit=${limit}`)
+        .then((res) => {
+          setTests(res.data.data || []);
+          const pag = res.data.pagination || {};
+          setPage(pag.currentPage ?? p);
+          setTotalPages(pag.totalPages ?? 1);
+        })
+        .catch((err) => {
+          console.error("Search pagination error:", err);
+          toast.error("Failed to fetch search results");
+        })
+        .finally(() => setLoading(false));
+    } else {
+      fetchTests(p);
+    }
   };
 
   // Escape -> close drawer
