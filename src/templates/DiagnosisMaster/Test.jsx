@@ -1430,12 +1430,10 @@ const TestMaster = () => {
             <div
               className="modal-backdrop fade show"
               style={{ zIndex: 99999 }}
-              onClick={() => setShowHtmlEditor(false)}
             ></div>
             <div
               className="modal d-block"
               style={{ zIndex: 100000 }}
-              onClick={() => setShowHtmlEditor(false)}
             >
               <div
                 className="modal-dialog modal-xl modal-dialog-centered"
