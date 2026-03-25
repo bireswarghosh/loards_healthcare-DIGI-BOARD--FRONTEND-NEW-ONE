@@ -528,7 +528,14 @@ const TestMaster = () => {
                       tests.map((t, i) => (
                         <tr key={t.TestId ?? i}>
                           <td>{startSerial + i + 1}</td>
-                          <td>{t.Test}</td>
+                          <td>
+                            {t.Test}
+                            {t.file_name && (
+                              <span className="badge bg-light text-dark ms-1" style={{ fontSize: "10px", fontWeight: "normal" }}>
+                                <i className="fa fa-file-text-o me-1"></i>{t.file_name}
+                              </span>
+                            )}
+                          </td>
                           <td>{getSubDeptName(t.SubDepartmentId)}</td>
                           <td>{t.TestCode}</td>
                           <td>{t.Rate}</td>
