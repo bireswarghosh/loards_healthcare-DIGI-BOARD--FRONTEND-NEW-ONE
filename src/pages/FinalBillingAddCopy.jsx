@@ -498,9 +498,9 @@ const FinalBillingAdd = () => {
           setTimeout(resolve, 400);
         });
 
-console.log("all bed details: ", bedChargesData)
-const ele = bedChargesData[bedChargesData.length-1]
-const res1 = await axiosInstance.put(
+        console.log("all bed details: ", bedChargesData);
+        const ele = bedChargesData[bedChargesData.length - 1];
+        const res1 = await axiosInstance.put(
           `/admitionbeds?admitionid=${admData?.AdmitionId}&slno=${ele.SlNo}`,
           {
             ...ele,
@@ -706,7 +706,8 @@ const res1 = await axiosInstance.put(
 
       const arr = res.data.data;
       if (arr.length) {
-        const totalDiag = arr.reduce((sum, item) => sum + item.Total, 0);
+        // const totalDiag = arr.reduce((sum, item) => sum + item.Total, 0);
+        const totalDiag = arr.reduce((sum, item) => sum + item.Balance, 0);
         // console.log("total diag chrgs; ", totalDiag);
 
         let diagObj = {};
@@ -1320,8 +1321,6 @@ const res1 = await axiosInstance.put(
 
       // console.log("all bed detai map: ", allBedsDataMap);
 
-     
-
       // this will design the entire bed details according 12.00pm to 11.59 am = 1 day bed count
       const newBedArr = splitBedHistoryDateWise(arr);
       // console.log("Calculated bed array: ", newBedArr)
@@ -1354,10 +1353,11 @@ const res1 = await axiosInstance.put(
           Number(newBedArr[j].ToDayRate) *
           (Number(serviceCharge) / 100);
       }
-totalBedServiceChrg=  Number(totalBedServiceChrg).toFixed(2)
-console.log("Final bed service charge: ", totalBedServiceChrg)
- setServiceChrgCalculated((prev) => Number(prev) + Number(totalBedServiceChrg));
-
+      totalBedServiceChrg = Number(totalBedServiceChrg).toFixed(2);
+      console.log("Final bed service charge: ", totalBedServiceChrg);
+      setServiceChrgCalculated(
+        (prev) => Number(prev) + Number(totalBedServiceChrg),
+      );
     } catch (err) {
       console.error("Error while fetching bed data:", err);
       throw err;
@@ -1394,15 +1394,17 @@ console.log("Final bed service charge: ", totalBedServiceChrg)
       (item) => item.ServiceCh === "Y",
     );
 
-   let ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
+    let ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
       (sum, item) => sum + Number(item.Rate) * (Number(serviceCharge) / 100),
       0,
     );
 
     // console.log("filterd oc with service charge on: ", ocWithServiceChrgOn);
     console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
-ocServiceChargeCalculated  = Number(ocServiceChargeCalculated).toFixed(2)
-    setServiceChrgCalculated((prev) => Number(prev) + Number(ocServiceChargeCalculated));
+    ocServiceChargeCalculated = Number(ocServiceChargeCalculated).toFixed(2);
+    setServiceChrgCalculated(
+      (prev) => Number(prev) + Number(ocServiceChargeCalculated),
+    );
     return otherChargesByAdmId.map((item, index) => {
       // const matched = allOtherCharges.find(
       //   (oc) => oc.OtherChargesId == item.OtherChargesId,
@@ -1639,10 +1641,18 @@ ocServiceChargeCalculated  = Number(ocServiceChargeCalculated).toFixed(2)
   }, [finalBillDetail]);
 
   useEffect(() => {
+    let val =
+      Number(netBal) -
+      Number(formData.Approval) -
+      Number(finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0);
+
+    // if (val < 0) {
+    //   val = val * -1;
+    // }
+
     setFormData((prev) => ({
       ...prev,
-      PatiectPartyAmt: netBal - formData.Approval - finalBillDetail.find((item) => item.SlNo == 9)
-                            ?.Amount1 ,
+      PatiectPartyAmt: val,
     }));
 
     setFormData((prev) => ({
