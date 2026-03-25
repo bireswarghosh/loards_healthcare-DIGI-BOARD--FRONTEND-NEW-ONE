@@ -200,114 +200,288 @@ const GeneralTestDrawer = ({
 
     return "";
   };
-  const handlePrint = () => {
+  // const handlePrint = () => { 
+  //   if (!selectedTest) {
+  //     toast.error("Please select a test first");
+  //     return;
+  //   }
+  //   console.log("hole", selectedTest);
+
+  //   const doc = new jsPDF("p", "mm", "a4");
+
+  //   doc.setFont("times", "normal");
+  //   doc.setFontSize(9);
+
+  //   const L = 15;
+  //   const R = 135;
+  //   let y = 75;
+
+  //   /* ================= BARCODE PLACEHOLDER ================= */
+  //   doc.setFillColor(230, 230, 230);
+  //   doc.rect(L, y, 60, 14, "F");
+  //   doc.setTextColor(0, 0, 0);
+
+  //   doc.text(formData2?.CaseNo || "", L + 4, y + 10);
+
+  //   /* ================= RIGHT AGE / SEX ================= */
+
+  //   // ================= AFTER BARCODE =================
+  //   const baseY = y + 18; // common baseline for both sides
+
+  //   // ===== LEFT SIDE =====
+  //   const labelX = L;
+  //   const colonX = L + 36;
+  //   const valueX = L + 40;
+
+  //   doc.text("Patient's Name", labelX, baseY);
+  //   doc.text(":", colonX, baseY);
+  //   doc.text(formData2?.PatientName || "", valueX, baseY);
+
+  //   doc.text("Case No.", labelX, baseY + 5);
+  //   doc.text(":", colonX, baseY + 5);
+  //   doc.text(formData2?.CaseNo || "", valueX, baseY + 5);
+  //   doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
+
+  //   doc.text("Referred By", labelX, baseY + 10);
+  //   doc.text(":", colonX, baseY + 10);
+  //   doc.text(`${doctorMap[formData2.DoctorId] || ""}`, valueX, baseY + 10);
+
+  //   // ===== RIGHT SIDE =====
+  //   const rLabelX = R;
+  //   const rColonX = R + 40;
+  //   const rValueX = R + 44;
+
+  //   // Age / Sex (same row as Patient Name)
+  //   doc.text("Age", rLabelX, baseY);
+  //   doc.text(":", rColonX - 28, baseY);
+  //   doc.text(`${formData2?.Age || ""} Y`, rColonX - 24, baseY);
+
+  //   doc.text("Sex", rColonX - 2, baseY);
+  //   doc.text(":", rColonX + 8, baseY);
+  //   doc.text(formData2?.Sex || "", rColonX + 12, baseY);
+
+  //   // Dates (same rows as Case No / Referred By)
+  //   doc.text("Collection Date", rLabelX, baseY + 5);
+  //   doc.text(":", rColonX, baseY + 5);
+  //   // doc.text(selectedTest?.DeliveryDate || "", rValueX, baseY + 5);
+  //   doc.text(new Date().toISOString().split("T")[0], rValueX, baseY + 5);
+
+  //   doc.text("Reporting Date", rLabelX, baseY + 10);
+  //   doc.text(":", rColonX, baseY + 10);
+  //   doc.text(
+  //     selectedTest?.ReportDate?.split("T")[0] || "",
+  //     rValueX,
+  //     baseY + 10
+  //   );
+
+  //   // ===== MOVE CURSOR AFTER BOTH SIDES =====
+  //   y = baseY + 18;
+
+  //   /* ================= SEPARATOR LINE ================= */
+  //   doc.line(L, y, 195, y);
+
+  //   y += 8;
+
+  //   /* ================= TITLE ================= */
+  //   doc.setFont("times", "bold");
+  //   doc.text(selectedTest.Test, 105, y, { align: "center" });
+
+  //   y += 6;
+
+  //   /* ================= TABLE ================= */
+  //   doc.setFont("times", "normal");
+
+  //   autoTable(doc, {
+  //     startY: y,
+  //     theme: "plain",
+  //     styles: {
+  //       fontSize: 9,
+  //       cellPadding: 2,
+  //     },
+  //     head: [["INVESTIGATION", "RESULT", "UNIT", "REFERENCE RANGE"]],
+  //     body: propertyList.map((prop) => {
+  //       const pv = propertyValueMap[prop.TestPropertyId];
+  //       return [
+  //         prop.TestProperty || "",
+  //         pv?.value ?? "",
+  //         prop.Uom || "",
+  //         // pv?.lis ?? "-",
+  //         getReferenceRange(prop),
+  //         ,
+  //       ];
+  //     }),
+
+  //     columnStyles: {
+  //       0: { cellWidth: 70 },
+  //       1: { cellWidth: 25 },
+  //       2: { cellWidth: 20 },
+  //       3: { cellWidth: 60 },
+  //     },
+  //     didDrawPage: () => {
+  //       // header border
+  //       doc.rect(L, y - 1, 180, 8);
+  //     },
+  //   });
+
+  //   const finalY = doc.lastAutoTable.finalY + 10;
+
+  //   /* ================= FOOTER ================= */
+  //   doc.setFontSize(9);
+  //   doc.text("** End of Report **", 105, finalY, { align: "center" });
+
+  //   // doc.save(`${formData2?.CaseNo || "clinical_report"}.pdf`);
+
+  //   /* ====== OPEN AS BLOB ====== */
+  //   const pdfBlob = doc.output("blob");
+  //   const blobUrl = URL.createObjectURL(pdfBlob);
+
+  //   window.open(blobUrl, "_blank");
+
+  //   setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+  // };
+ const handlePrint = () => {
     if (!selectedTest) {
       toast.error("Please select a test first");
       return;
     }
-    console.log("hole", selectedTest);
 
     const doc = new jsPDF("p", "mm", "a4");
 
-    doc.setFont("times", "normal");
-    doc.setFontSize(9);
-
+    // ===== CONFIG =====
+    const pageWidth = 210;
     const L = 15;
-    const R = 135;
-    let y = 75;
+    const marginRight = 35;
+    const R = 110;
 
-    /* ================= BARCODE PLACEHOLDER ================= */
+    let y = 60;
+
+    doc.setFont("times", "normal");
+    doc.setFontSize(10);
+
+    /* ================= BARCODE ================= */
     doc.setFillColor(230, 230, 230);
     doc.rect(L, y, 60, 14, "F");
-    doc.setTextColor(0, 0, 0);
 
+    doc.setFont("times", "bold");
     doc.text(formData2?.CaseNo || "", L + 4, y + 10);
 
-    /* ================= RIGHT AGE / SEX ================= */
+    doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
 
-    // ================= AFTER BARCODE =================
-    const baseY = y + 18; // common baseline for both sides
+    const baseY = y + 18;
 
-    // ===== LEFT SIDE =====
+    /* ================= LEFT SIDE ================= */
     const labelX = L;
     const colonX = L + 36;
     const valueX = L + 40;
 
+    // Patient Name
+    doc.setFont("times", "normal");
     doc.text("Patient's Name", labelX, baseY);
     doc.text(":", colonX, baseY);
+
+    doc.setFont("times", "bold");
     doc.text(formData2?.PatientName || "", valueX, baseY);
 
+    // Case No
+    doc.setFont("times", "normal");
     doc.text("Case No.", labelX, baseY + 5);
     doc.text(":", colonX, baseY + 5);
-    doc.text(formData2?.CaseNo || "", valueX, baseY + 5);
-    doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
 
+    doc.setFont("times", "bold");
+    doc.text(formData2?.CaseNo || "", valueX, baseY + 5);
+
+    // Referred By
+    doc.setFont("times", "normal");
     doc.text("Referred By", labelX, baseY + 10);
     doc.text(":", colonX, baseY + 10);
+
+    doc.setFont("times", "bold");
     doc.text(`${doctorMap[formData2.DoctorId] || ""}`, valueX, baseY + 10);
 
-    // ===== RIGHT SIDE =====
+    /* ================= RIGHT SIDE ================= */
     const rLabelX = R;
     const rColonX = R + 40;
     const rValueX = R + 44;
 
-    // Age / Sex (same row as Patient Name)
+    // Age
+    doc.setFont("times", "normal");
     doc.text("Age", rLabelX, baseY);
     doc.text(":", rColonX - 28, baseY);
+
+    doc.setFont("times", "bold");
     doc.text(`${formData2?.Age || ""} Y`, rColonX - 24, baseY);
 
+    // Sex
+    doc.setFont("times", "normal");
     doc.text("Sex", rColonX - 2, baseY);
     doc.text(":", rColonX + 8, baseY);
+
+    doc.setFont("times", "bold");
     doc.text(formData2?.Sex || "", rColonX + 12, baseY);
 
-    // Dates (same rows as Case No / Referred By)
+    // Collection Date
+    doc.setFont("times", "normal");
     doc.text("Collection Date", rLabelX, baseY + 5);
     doc.text(":", rColonX, baseY + 5);
-    // doc.text(selectedTest?.DeliveryDate || "", rValueX, baseY + 5);
+
+    doc.setFont("times", "bold");
     doc.text(new Date().toISOString().split("T")[0], rValueX, baseY + 5);
 
+    // Reporting Date
+    doc.setFont("times", "normal");
     doc.text("Reporting Date", rLabelX, baseY + 10);
     doc.text(":", rColonX, baseY + 10);
+
+    doc.setFont("times", "bold");
     doc.text(
       selectedTest?.ReportDate?.split("T")[0] || "",
       rValueX,
       baseY + 10
     );
 
-    // ===== MOVE CURSOR AFTER BOTH SIDES =====
+    /* ================= LINE ================= */
     y = baseY + 18;
 
-    /* ================= SEPARATOR LINE ================= */
-    doc.line(L, y, 195, y);
+    doc.line(L, y, pageWidth - marginRight, y);
 
     y += 8;
 
     /* ================= TITLE ================= */
     doc.setFont("times", "bold");
-    doc.text(selectedTest.Test, 105, y, { align: "center" });
+    doc.setFontSize(12);
+    doc.text(selectedTest.Test, pageWidth / 2, y, { align: "center" });
 
     y += 6;
 
     /* ================= TABLE ================= */
     doc.setFont("times", "normal");
+    doc.setFontSize(9);
 
     autoTable(doc, {
       startY: y,
+      margin: { left: L, right: marginRight },
+
       theme: "plain",
+
+      headStyles: {
+        fontStyle: "bold",
+      },
+
       styles: {
         fontSize: 9,
         cellPadding: 2,
       },
+
       head: [["INVESTIGATION", "RESULT", "UNIT", "REFERENCE RANGE"]],
+
       body: propertyList.map((prop) => {
         const pv = propertyValueMap[prop.TestPropertyId];
+
         return [
           prop.TestProperty || "",
           pv?.value ?? "",
           prop.Uom || "",
-          // pv?.lis ?? "-",
           getReferenceRange(prop),
-          ,
         ];
       }),
 
@@ -317,9 +491,9 @@ const GeneralTestDrawer = ({
         2: { cellWidth: 20 },
         3: { cellWidth: 60 },
       },
+
       didDrawPage: () => {
-        // header border
-        doc.rect(L, y - 1, 180, 8);
+        doc.rect(L, y - 1, pageWidth - L - marginRight, 8);
       },
     });
 
@@ -327,19 +501,18 @@ const GeneralTestDrawer = ({
 
     /* ================= FOOTER ================= */
     doc.setFontSize(9);
-    doc.text("** End of Report **", 105, finalY, { align: "center" });
+    doc.text("** End of Report **", pageWidth / 2, finalY, {
+      align: "center",
+    });
 
-    // doc.save(`${formData2?.CaseNo || "clinical_report"}.pdf`);
-
-    /* ====== OPEN AS BLOB ====== */
+    /* ================= OPEN PDF ================= */
     const pdfBlob = doc.output("blob");
     const blobUrl = URL.createObjectURL(pdfBlob);
 
     window.open(blobUrl, "_blank");
 
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
   };
-
   return (
     <>
       {/* ================= BASIC INFO ================= */}
