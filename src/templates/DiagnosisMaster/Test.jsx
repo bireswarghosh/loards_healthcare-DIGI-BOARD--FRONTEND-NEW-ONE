@@ -103,9 +103,9 @@ const TestMaster = () => {
       const response = await axiosInstance.get(`/tests/${test.TestId}/html-content`);
 
       if (response.data.success && response.data.data) {
-        const { htmlContent: content, source } = response.data.data;
+        const { htmlContent: content, fileName, source } = response.data.data;
         setHtmlContent(content || "");
-        setCurrentTestForHtml(test);
+        setCurrentTestForHtml({ ...test, file_name: fileName || test.file_name });
         setIsEditingHtml(false);
         setShowHtmlEditor(true);
 
@@ -1440,6 +1440,12 @@ const TestMaster = () => {
                     <h5 className="modal-title">
                       <i className="fa-light fa-file-lines me-2"></i>
                       HTML Content - {currentTestForHtml?.Test}
+                      {currentTestForHtml?.file_name && (
+                        <span className="ms-2 badge bg-secondary fw-normal" style={{ fontSize: "12px" }}>
+                          <i className="fa-light fa-file me-1"></i>
+                          {currentTestForHtml.file_name}
+                        </span>
+                      )}
                     </h5>
                     <button
                       className="btn-close"
