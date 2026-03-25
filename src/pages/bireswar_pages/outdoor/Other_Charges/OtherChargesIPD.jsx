@@ -5,10 +5,7 @@ import { Modal, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../../axiosInstance";
 
-
 const API_BASE_URL = "https://lords-backend.onrender.com/api/v1";
-
-
 const OtherCharges = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -38,19 +35,14 @@ const OtherCharges = () => {
   const [chargeSearch, setChargeSearch] = useState("");
   const [filteredCharges, setFilteredCharges] = useState([]);
 
-
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-
   const [delId, setDelId] = useState("");
-
 
   const [bedName, setBedName] = useState("");
 
-
   const [company, setCompany] = useState([]);
-
 
   const [selOtherCharges, setSelOtherCharges] = useState({
     Qty: "",
@@ -61,48 +53,56 @@ const OtherCharges = () => {
   });
   const [companyWiseOCdata, setCompanyWiseOCdata] = useState([]);
 
-
   const handleChange = (e, i) => {
     const { name, value } = e.target;
 
+    const updatedCharges = [...otherCharges];
 
-    let data = otherCharges[i];
+    const updatedItem = {
+      ...updatedCharges[i],
+      [name]: value,
+    };
 
+    // 🔥 Amount auto calculate
+    const rate = name === "Rate" ? value : updatedItem.Rate;
+    const qty = name === "Qty" ? value : updatedItem.Qty;
 
-    data[name] = value;
+    updatedItem.Amount = Number(rate) * Number(qty);
 
+    updatedCharges[i] = updatedItem;
 
+    setOtherCharges(updatedCharges);
+
+    // optional (for save)
     setSelOtherCharges({
-      Qty: data.Qty,
-      Rate: data.Rate,
-      Amount: data.Amount,
-      Remarks: data.Remarks,
-      Package: data.Package,
+      Qty: updatedItem.Qty,
+      Rate: updatedItem.Rate,
+      Amount: updatedItem.Amount,
+      Remarks: updatedItem.Remarks,
+      Package: updatedItem.Package,
     });
-
-
-    setOtherCharges((prev) => [...prev]);
   };
 
-
-  const handleSave = async (id) => {
+  const handleSave = async (id, index) => {
     try {
-      const res = axiosInstance.put(
-        `/admissions/${admissionId}/charges/${id}`,
-        selOtherCharges,
-      );
+      setLoading(true)
+      const data = otherCharges[index];
+
+      await axiosInstance.put(`/admissions/${admissionId}/charges/${id}`, data);
+
       fetchOtherCharges();
       toast.success("Updated successfully");
     } catch (error) {
       console.log("error updating: ", error);
+    }finally{
+
+      setLoading(false)
     }
   };
-
 
   const fetchCompany = async () => {
     try {
       const res = await axiosInstance.get(`/cashless`);
-
 
       res.data.success ? setCompany(res.data.data) : null;
     } catch (error) {
@@ -110,19 +110,16 @@ const OtherCharges = () => {
     }
   };
 
-
   const fetchBed = async (id) => {
     try {
       console.log("HD");
       const res = await axiosInstance.get(`/bedMaster/${id}`);
-
 
       res.data.success ? setBedName(res.data.data.Bed) : setBedName("");
     } catch (error) {
       console.log("error fetching bed by id: ", error);
     }
   };
-
 
   useEffect(() => {
     // If coming from AdmissionList, use the passed data
@@ -136,7 +133,6 @@ const OtherCharges = () => {
       }
     }
 
-
     if (admissionId) {
       if (!location.state?.selectedAdmission) {
         fetchAdmissionData();
@@ -146,7 +142,6 @@ const OtherCharges = () => {
     fetchMasterCharges();
     fetchCompany();
   }, [admissionId, location.state]);
-
 
   const fetchCompanyWiseOC = async (id) => {
     try {
@@ -162,7 +157,6 @@ const OtherCharges = () => {
     }
   };
 
-
   useEffect(() => {
     console.log("cashless id: ", admissionData.CashLessId);
     if (admissionData.CashLessId) {
@@ -170,12 +164,10 @@ const OtherCharges = () => {
     }
   }, [admissionData.CashLessId]);
 
-
   useEffect(() => {
     if (companyWiseOCdata.length != 0 && masterCharges.length != 0) {
       console.log("Company wise other charges data: ", companyWiseOCdata);
       console.log("Master charges data: ", masterCharges);
-
 
       const comWOClookUP = {};
       for (let i = 0; i < companyWiseOCdata.length; i++) {
@@ -183,17 +175,13 @@ const OtherCharges = () => {
           companyWiseOCdata[i];
       }
 
-
       const b = masterCharges;
-
 
       for (let i = 0; i < b.length; i++) {
         const id = b[i].OtherChargesId;
 
-
         if (comWOClookUP[id]) {
           const fromComWOClookUP = comWOClookUP[id];
-
 
           b[i].Rate = Number(fromComWOClookUP.rate);
           b[i].ICU = Number(fromComWOClookUP.icu);
@@ -201,11 +189,10 @@ const OtherCharges = () => {
           b[i].SUIT = Number(fromComWOClookUP.suit);
         }
       }
-console.log("bigb: ",b)
-      setMasterCharges(b)
+      console.log("bigb: ", b);
+      setMasterCharges(b);
     }
   }, [companyWiseOCdata, masterCharges.length]);
-
 
   useEffect(() => {
     const filtered = masterCharges.filter(
@@ -217,7 +204,6 @@ console.log("bigb: ",b)
     setFilteredCharges(filtered);
   }, [masterCharges, chargeSearch]);
 
-
   const fetchMasterCharges = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/otherCharges`);
@@ -228,7 +214,6 @@ console.log("bigb: ",b)
       console.error("Error fetching master charges:", error);
     }
   };
-
 
   const fetchAdmissionData = async () => {
     try {
@@ -246,7 +231,6 @@ console.log("bigb: ",b)
     }
   };
 
-
   const fetchOtherCharges = async () => {
     try {
       const response = await axios.get(
@@ -260,18 +244,15 @@ console.log("bigb: ",b)
     }
   };
 
-
   const handleFind = async () => {
     if (!searchValue) return;
     try {
       setLoading(true);
       let url = `${API_BASE_URL}/admissions/search/${searchValue}`;
 
-
       // Add search type parameter
       const params = new URLSearchParams();
       params.append("searchBy", searchBy);
-
 
       const response = await axios.get(`${url}?${params}`);
       if (response.data.success && response.data.data.length > 0) {
@@ -286,7 +267,6 @@ console.log("bigb: ",b)
             (a, b) => new Date(b.AdmitionDate) - new Date(a.AdmitionDate),
           );
         }
-
 
         setSearchResults(sortedResults);
         setShowSearchResults(true);
@@ -303,13 +283,11 @@ console.log("bigb: ",b)
     }
   };
 
-
   const selectPatient = async (admission) => {
     setAdmissionId(admission.AdmitionId);
     setAdmissionData(admission);
     setShowSearchResults(false);
     setSearchValue("");
-
 
     // Fetch charges for selected patient
     try {
@@ -324,7 +302,6 @@ console.log("bigb: ",b)
     }
   };
 
-
   const selectMasterCharge = (charge) => {
     setSelectedCharge(charge);
     setNewCharge({
@@ -333,7 +310,6 @@ console.log("bigb: ",b)
       Rate: charge.Rate || 0,
     });
   };
-
 
   const toggleChargeSelection = (charge) => {
     const isSelected = selectedCharges.find(
@@ -350,7 +326,6 @@ console.log("bigb: ",b)
     }
   };
 
-
   const selectAllCharges = () => {
     if (selectedCharges.length === filteredCharges.length) {
       setSelectedCharges([]);
@@ -358,7 +333,6 @@ console.log("bigb: ",b)
       setSelectedCharges([...filteredCharges]);
     }
   };
-
 
   const addMultipleCharges = async () => {
     try {
@@ -389,7 +363,6 @@ console.log("bigb: ",b)
     }
   };
 
-
   const addNewCharge = async () => {
     try {
       const chargeData = {
@@ -419,10 +392,8 @@ console.log("bigb: ",b)
     }
   };
 
-
   //   const deleteCharge = async (chargeId) => {
   //     // if (!window.confirm("Are you sure you want to delete this charge?")) return;
-
 
   //     setShowConfirm(true);
   //     if (confirmDelete) {
@@ -431,7 +402,6 @@ console.log("bigb: ",b)
   //       setShowConfirm(false);
   //     }
   //   };
-
 
   const deleteChargeById = async (chargeId) => {
     try {
@@ -450,27 +420,15 @@ console.log("bigb: ",b)
     }
   };
 
-
-  // const calculateTotals = () => {
-  //   const total = otherCharges.reduce(
-  //     (sum, charge) => sum + (charge.Amount || 0),
-  //     0,
-  //   );
-  //   return { total, sgst: 0, cgst: 0 };
-  // };
   const calculateTotals = () => {
     const total = otherCharges.reduce(
-      (sum, charge) => sum + (Number(charge.Rate) * Number(charge.Qty)  || 0),
+      (sum, charge) => sum + (charge.Amount || 0),
       0,
     );
     return { total, sgst: 0, cgst: 0 };
   };
-  
-
-  // {Number(charge.Rate) * Number(charge.Qty)}
 
   const totals = calculateTotals();
-
 
   return (
     <>
@@ -547,7 +505,6 @@ console.log("bigb: ",b)
               </div> */}
             </div>
 
-
             {/* Search Options */}
             {/* <div className="row mb-3">
               <div className="col-md-12 d-flex gap-4">
@@ -597,7 +554,6 @@ console.log("bigb: ",b)
                 </div>
               </div>
             </div> */}
-
 
             {/* Search Results Modal */}
             {showSearchResults && (
@@ -654,12 +610,10 @@ console.log("bigb: ",b)
               </div>
             )}
 
-
             {/* Patient Info */}
             {admissionData && (
               <div className="border rounded p-3  mb-4">
                 <h6 className="fw-bold text-primary mb-3">Patient Detail</h6>
-
 
                 <div className="row g-5 mb-3">
                   <div className="col-md-6">
@@ -670,7 +624,6 @@ console.log("bigb: ",b)
                       readOnly
                     />
                   </div>
-
 
                   <div className="col-md-2">
                     <label>Age</label>
@@ -690,7 +643,6 @@ console.log("bigb: ",b)
                   </div>
                 </div>
 
-
                 <div className="row g-5 mb-3">
                   <div className="col-md-4">
                     <label>Phone</label>
@@ -701,7 +653,6 @@ console.log("bigb: ",b)
                     />
                   </div>
 
-
                   <div className="col-md-3">
                     <label>Marital Status[U/M]</label>
                     <input
@@ -710,7 +661,6 @@ console.log("bigb: ",b)
                       readOnly
                     />
                   </div>
-
 
                   <div className="col-md-3">
                     <label>Admission Date</label>
@@ -728,7 +678,6 @@ console.log("bigb: ",b)
                   </div>
                 </div>
 
-
                 <div className="row g-5 mb-3">
                   <div className="col-md-5">
                     <label>Remarks</label>
@@ -738,7 +687,6 @@ console.log("bigb: ",b)
                       readOnly
                     />
                   </div>
-
 
                   <div className="col-md-2">
                     <label>Company</label>
@@ -775,7 +723,6 @@ console.log("bigb: ",b)
                     />
                   </div>
 
-
                   <div className="col-md-2">
                     <label>
                       Package (Need to ask Lords what is the purpose of it)
@@ -789,7 +736,6 @@ console.log("bigb: ",b)
                 </div>
               </div>
             )}
-
 
             {/* Add Button */}
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -806,7 +752,6 @@ console.log("bigb: ",b)
                 </button>
               </div>
             </div>
-
 
             {/* Existing Patient Charges */}
             <div className="border rounded p-3  mb-4">
@@ -841,22 +786,21 @@ console.log("bigb: ",b)
                         const masterCharge = masterCharges.find(
                           (mc) => mc.OtherChargesId === charge.OtherChargesId,
                         );
-                        {
-                          console.log("hi: ", masterCharge);
-                        }
                         return (
                           <tr key={i}>
                             <td className="d-flex">
                               <button
                                 className="btn btn-sm btn-outline-info me-1"
+                                disabled={loading}
                                 onClick={() => {
-                                  handleSave(charge.Id);
+                                  handleSave(charge.Id, i);
                                 }}
                               >
                                 <i className="fa-solid fa-pen"></i>
                               </button>
                               <button
                                 className="btn btn-sm btn-outline-danger"
+                                disabled={loading}
                                 onClick={() => {
                                   setShowConfirm(true);
                                   setDelId(charge.Id);
@@ -893,7 +837,7 @@ console.log("bigb: ",b)
                                 }}
                               />
                             </td>
-                            <td>₹{Number(charge.Rate) * Number(charge.Qty)}</td>
+                            <td>₹{Number(charge.Amount || 0)}</td>
                             <td>
                               <input
                                 type="text"
@@ -932,7 +876,6 @@ console.log("bigb: ",b)
               </div>
             </div>
 
-
             {/* Totals */}
             <div className="row g-3 mb-4">
               <div className="col-md-3 ms-auto">
@@ -961,7 +904,6 @@ console.log("bigb: ",b)
               </div>
             </div>
 
-
             {/* Action Buttons */}
             {/* <div className="d-flex gap-2">
               <button className="btn btn-primary" onClick={fetchOtherCharges}>
@@ -974,7 +916,6 @@ console.log("bigb: ",b)
                 Print
               </button>
             </div> */}
-
 
             {/* Add Charge Modal */}
             <Modal
@@ -998,7 +939,6 @@ console.log("bigb: ",b)
                   />
                 </div>
 
-
                 {/* Select All */}
                 <div className="mb-3">
                   <label className="form-check-label">
@@ -1014,7 +954,6 @@ console.log("bigb: ",b)
                     Select All ({filteredCharges.length} charges)
                   </label>
                 </div>
-
 
                 {/* Selected Charges Display */}
                 {selectedCharges.length > 0 && (
@@ -1036,7 +975,6 @@ console.log("bigb: ",b)
                     </div>
                   </div>
                 )}
-
 
                 <div
                   className="table-responsive"
@@ -1085,7 +1023,6 @@ console.log("bigb: ",b)
                     </tbody>
                   </table>
                 </div>
-
 
                 {selectedCharge && (
                   <div className="mt-4 border-top pt-3">
@@ -1183,7 +1120,6 @@ console.log("bigb: ",b)
         </div>
       </div>
 
-
       {/* Confirm Delete Modal */}
       {showConfirm && (
         <div
@@ -1222,14 +1158,12 @@ console.log("bigb: ",b)
                 ></button>
               </div>
 
-
               <div className="modal-body text-center">
                 <p className="fs-6 mb-1">
                   Are you sure you want to delete this?
                 </p>
                 <p className="text-muted">This cannot be undone.</p>
               </div>
-
 
               <div className="modal-footer d-flex justify-content-center gap-3">
                 <button
@@ -1240,7 +1174,6 @@ console.log("bigb: ",b)
                 >
                   Cancel
                 </button>
-
 
                 <button
                   className="btn btn-danger px-4"
@@ -1259,8 +1192,4 @@ console.log("bigb: ",b)
   );
 };
 
-
 export default OtherCharges;
-
-
-
