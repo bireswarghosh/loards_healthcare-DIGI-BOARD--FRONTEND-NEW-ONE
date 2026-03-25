@@ -1,6 +1,48 @@
+// this will merger conescutive bed data
+function mergeConsecutive(arr) {
+  const result = [];
+
+  let i = 0;
+
+  while (i < arr.length) {
+    let start = arr[i];
+    let j = i + 1;
+
+    let count = 1;
+    let totalAmount = start[4];
+
+    while (
+      j < arr.length &&
+      arr[j][1] === start[1] // same element check
+    ) {
+      count++;
+      totalAmount += arr[j][4];
+      j++;
+    }
+
+    if (count > 1) {
+      result.push([
+        `${start[0]} to ${arr[j - 1][0]}`, // date range
+        start[1],
+        String(count), // count as string
+        start[3],
+        totalAmount,
+      ]);
+    } else {
+      result.push(start);
+    }
+
+    i = j;
+  }
+
+  return result;
+}
+
 
 // this print final bill summary
 export const handlePrint1 = (data) => {
+  let arr = mergeConsecutive(data.bedCharges.rows)
+data.bedCharges.rows = arr
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   const styles = `
     <style>
@@ -71,7 +113,7 @@ export const handlePrint1 = (data) => {
     <table class="header-table">
       <tr>
         <td >        
-          <img src="/public/assets/lords.png" style="width:80px;" />
+          <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
           <h1 class="company-name">${data.hospitalName}</h1>
@@ -85,7 +127,7 @@ export const handlePrint1 = (data) => {
       
      
        <td >        
-          <img src="/public/assets/nabh.png" style="width:120px;" />
+          <img src="/assets/nabh.png" style="width:120px;" />
         </td>
       </tr>
     </table>
@@ -518,6 +560,8 @@ export const handlePrint2 = (invoiceData) => {
 
 // this print final bill patient copy
 export const handlePrint3 = (data) => {
+  let arr = mergeConsecutive(data.bedCharges.rows)
+data.bedCharges.rows = arr
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   const styles = `
     <style>
@@ -588,7 +632,7 @@ export const handlePrint3 = (data) => {
     <table class="header-table">
       <tr>
         <td >        
-          <img src="/public/assets/lords.png" style="width:80px;" />
+          <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
           <h1 class="company-name">${data.hospitalName}</h1>
@@ -602,7 +646,7 @@ export const handlePrint3 = (data) => {
       
      
        <td >        
-          <img src="/public/assets/nabh.png" style="width:120px;" />
+          <img src="/assets/nabh.png" style="width:120px;" />
         </td>
       </tr>
     </table>
@@ -823,6 +867,8 @@ export const handlePrint3 = (data) => {
 
 // this print final bill Indoor Copy
 export const handlePrint4 = (data) => {
+  let arr = mergeConsecutive(data.bedCharges.rows)
+data.bedCharges.rows = arr
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   const styles = `
     <style>
@@ -893,7 +939,7 @@ export const handlePrint4 = (data) => {
     <table class="header-table">
       <tr>
         <td >        
-          <img src="/public/assets/lords.png" style="width:80px;" />
+          <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
           <h1 class="company-name">${data.hospitalName}</h1>
@@ -907,7 +953,7 @@ export const handlePrint4 = (data) => {
       
      
        <td >        
-          <img src="/public/assets/nabh.png" style="width:120px;" />
+          <img src="/assets/nabh.png" style="width:120px;" />
         </td>
       </tr>
     </table>
@@ -1130,6 +1176,12 @@ export const handlePrint4 = (data) => {
 // this print final bill summary
 export const handlePrint5 = (data) => {
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
+console.log("data is : ",data)
+console.log("only bed data is:",data.bedCharges.rows)
+
+let arr = mergeConsecutive(data.bedCharges.rows)
+data.bedCharges.rows = arr
+
   const styles = `
     <style>
       @page { size: A4; margin: 10mm; }
@@ -1199,7 +1251,7 @@ export const handlePrint5 = (data) => {
     <table class="header-table">
       <tr>
         <td >        
-          <img src="/public/assets/lords.png" style="width:80px;" />
+          <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
           <h1 class="company-name">${data.hospitalName}</h1>
@@ -1213,7 +1265,7 @@ export const handlePrint5 = (data) => {
       
      
        <td >        
-          <img src="/public/assets/nabh.png" style="width:120px;" />
+          <img src="/assets/nabh.png" style="width:120px;" />
         </td>
       </tr>
     </table>
@@ -1235,7 +1287,7 @@ export const handlePrint5 = (data) => {
 
     <!-- BILL SUMMARY TEXT -->
     <div style="font-weight:bold; font-size:14px; text-decoration:underline; text-align:center;">
-      BILL SUMMARY
+      Estimate
     </div>
 
   </div>
@@ -1431,4 +1483,3 @@ export const handlePrint5 = (data) => {
     alert("Pop-up blocked. Please allow pop-ups for this website to print.");
   }
 };
-
