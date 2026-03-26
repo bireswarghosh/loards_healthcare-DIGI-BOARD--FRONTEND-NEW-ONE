@@ -1619,7 +1619,7 @@ window.onload = function () {
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        District/PS
+                        PS
                       </label>
                       <select
                         name="AreaId"
@@ -1734,7 +1734,7 @@ window.onload = function () {
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "70px" }}>
-                        State
+                        District 
                       </label>
                       <select
                         name="AreaId"
@@ -2426,7 +2426,7 @@ window.onload = function () {
                         ))}
                       </select>
                     </div>
-                    <div className="d-flex align-items-center gap-1 mb-1">
+                    {/* <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Ref Doctor<span className="text-danger">*</span>
                       </label>
@@ -2465,7 +2465,7 @@ window.onload = function () {
                           </option>
                         ))}
                       </select>
-                    </div>
+                    </div> */}
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Pkg Amount
