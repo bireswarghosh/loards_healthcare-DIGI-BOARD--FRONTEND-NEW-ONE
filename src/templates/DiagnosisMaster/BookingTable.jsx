@@ -99,9 +99,9 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                   <td>{item.Date}</td>
 {console.log("hi:",item)}
                   <td>
-                    <div className="d-flex justify-content-between align-items-center">
+                    <div className="">
                       <span>{item.PatientName}</span>
-                      <button
+                      {/* <button
                         type="button"
                         className="btn btn-sm px-1"
                         onClick={(e) => {
@@ -111,7 +111,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                         }}
                       >
                         <i className="fa fa-eye"></i>
-                      </button>
+                      </button> */}
                     </div>
                   </td>
 
