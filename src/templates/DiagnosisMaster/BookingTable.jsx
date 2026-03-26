@@ -7,7 +7,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
   const navigate = useNavigate();
   return (
     <div
-      className="flex-grow-1 border bg-secondary bg-opacity-25 mb-1"
+      className="flex-grow-1 border  bg-opacity-25 mb-1"
       style={{ minHeight: "150px" }}
     >
       <OverlayScrollbarsComponent style={{ height: "100%", width: "100%" }}>
@@ -20,6 +20,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
             style={{ position: "sticky", top: 0, zIndex: 10 }}
           >
             <tr>
+              <th>Action</th>
               <th>Case No.</th>
               <th>Slip No.</th>
               <th>Date</th>
@@ -43,18 +44,64 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
             ) : (
               bookingList.map((item, index) => (
                 <tr key={index} style={{ cursor: "pointer" }}>
+                  <td>
+                    <div className="d-flex gap-2 justify-content-center">
+                      {/* Money Receipt */}
+                      <button
+                        className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
+                        title="Money Receipt"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/moneyreceipt", {
+                            state: {
+                              openPatientModal: true,
+                              search: item.CaseId,
+                            },
+                          });
+                        }}
+                      >
+                        <i className="fa-solid fa-receipt"></i>
+                      </button>
+
+                      {/* Edit Case */}
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center"
+                        title="Case Entry"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/CaseEntry/${encodeURIComponent(item.CaseId)}/edit`)
+                        }}
+                      >
+                        <i className="fa-solid fa-keyboard"></i>
+                      </button>
+
+                      {/* Test / Lab */}
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
+                        title="View Tests"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRowClick(item);
+                        }}
+                      >
+                        <i className="fa-solid fa-vial"></i>
+                      </button>
+                    </div>
+                  </td>
                   <td onClick={() => onRowClick(item)}>
                     <div className="d-flex justify-content-between align-items-center">
-                      <span>{item.CaseNo}</span>⤵️{" "}
+                      <span>{item.CaseNo}</span>
                     </div>
                   </td>
                   <td>{item.SlipNo}</td>
                   <td>{item.Date}</td>
 {console.log("hi:",item)}
                   <td>
-                    <div className="d-flex justify-content-between align-items-center">
+                    <div className="">
                       <span>{item.PatientName}</span>
-                      <button
+                      {/* <button
                         type="button"
                         className="btn btn-sm px-1"
                         onClick={(e) => {
@@ -64,7 +111,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                         }}
                       >
                         <i className="fa fa-eye"></i>
-                      </button>
+                      </button> */}
                     </div>
                   </td>
 

@@ -6,8 +6,10 @@ import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../../axiosInstance";
 import Footer from "../../components/footer/Footer";
 import useAxiosFetch from "./Fetch";
+import { useLocation } from "react-router-dom";
 
 const MoneyReceipt = () => {
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [findBy, setFindBy] = useState("name"); // name | no
@@ -822,6 +824,17 @@ console.log("data",data[0])
   // const calculatedDueAmount = billAmount - previousPaid - totalReceivedAmount - formData.DiscAmt;
   const isDueAmountPositive = calculatedDueAmount > 0;
 
+
+  useEffect(() => {
+  if (location.state?.openPatientModal) {
+    setModalType("add");        // add mode
+    setShowDrawer(true);        // drawer open
+    setShowPatientModal(true);  // 🔥 patient modal open
+
+    fetchPatients(location.state?.search);            // optional (list load)
+    window.history.replaceState({}, document.title);
+  }
+}, [location.state]);
   //  ==================================================================
   // pdf print deb
   // ==================================================================
