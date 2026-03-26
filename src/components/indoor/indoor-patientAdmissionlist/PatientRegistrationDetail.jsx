@@ -774,7 +774,7 @@ const PatientAdmission = () => {
         // alert(
         //   `Admission ${mode === "create" ? "created" : "updated"} successfully!`
         // );
-        if (mode === "create") navigate("/PatientRegistrationList");
+        if (mode === "create") ;
         else setMode("view");
       }
     } catch (error) {
