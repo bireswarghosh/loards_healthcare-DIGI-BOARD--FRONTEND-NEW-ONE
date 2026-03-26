@@ -379,7 +379,7 @@ const DescriptiveTestDrawer = ({
         testId={activeTest?.TestId}
         PatientName={formData2.PatientName}
         formData2={formData2}
-        htmlContent={htmlContent}
+        htmlContent={activeTest?.htmlContent || htmlContent}
       />
     </div>
   );

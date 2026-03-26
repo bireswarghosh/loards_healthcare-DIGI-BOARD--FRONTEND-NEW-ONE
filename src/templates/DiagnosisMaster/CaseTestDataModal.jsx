@@ -625,8 +625,11 @@ const CaseTestDataModal = ({
 
   return (
     <>
-      {/* ================= PRINT CSS ================= */}
+      {/* ================= PRINT CSS + CKEditor Height Fix ================= */}
       <style>{`
+        .ck-editor__editable {
+          min-height: calc(100vh - 250px) !important;
+        }
         @media print {
           body * {
             visibility: hidden;
@@ -662,85 +665,68 @@ const CaseTestDataModal = ({
         }
       `}</style>
 
+      {/* ================= BACKDROP (click to close) ================= */}
+      <div
+        className="no-print"
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 999998,
+          backgroundColor: "rgba(0,0,0,0.4)",
+        }}
+      />
+
       {/* ================= MODAL ================= */}
-      <div className="modal-backdrop fade show no-print"></div>
+      <div
+        className="no-print"
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "80%",
+          zIndex: 999999,
+          backgroundColor: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          boxShadow: "-2px 0 10px rgba(0,0,0,0.2)",
+        }}
+      >
+        {/* HEADER */}
+        <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+          <h6 className="m-0 fw-bold">
+            Case: {caseId} | Test: {testId} | {PatientName}
+          </h6>
+          <button className="btn-close" onClick={onClose}></button>
+        </div>
 
-      <div className="modal fade show d-block no-print">
-        <div className="modal-dialog modal-xl modal-dialog-scrollable">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5>
-                Case: {caseId} | Test: {testId} | {PatientName}
-              </h5>
-              <button className="btn-close" onClick={onClose}></button>
-            </div>
+        {/* BODY */}
+        <div className="flex-grow-1 overflow-auto p-3">
+          <label className="fw-bold mb-1">Description</label>
+          <CKEditor
+            editor={ClassicEditor}
+            data={formData.htmlContent || htmlContent || ""}
+            onChange={handleEditorChange}
+          />
+        </div>
 
-            <div className="modal-body">
-              <label className="fw-bold">Description</label>
-              <div style={{ height: "700px" }}>
-                <CKEditor
-                  editor={ClassicEditor}
-                  data={formData.htmlContent || htmlContent || ""}
-                  onChange={handleEditorChange}
-                />
-              </div>
-
-              <button
-                className="btn btn-success mt-3"
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {editId ? "Update" : "Save"}
-              </button>
-
-              <hr />
-              {/* 
-              <table className="table table-bordered table-sm">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Content</th>
-                    <th width="120">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.id}</td>
-                      <td
-                        dangerouslySetInnerHTML={{
-                          __html: r.html_content.slice(0, 80) + "...",
-                        }}
-                      />
-                      <td>
-                        <button
-                          className="btn btn-sm btn-warning me-1"
-                          onClick={() => handleEdit(r)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(r.id)}
-                        >
-                          Del
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table> */}
-            </div>
-
-            <div className="modal-footer">
-              <button className="btn btn-primary" onClick={handlePrint}>
-                Print
-              </button>
-              <button className="btn btn-secondary" onClick={onClose}>
-                Close
-              </button>
-            </div>
-          </div>
+        {/* FOOTER */}
+        <div className="d-flex justify-content-end gap-2 px-3 py-2 border-top bg-light">
+          <button
+            className="btn btn-success"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {editId ? "Update" : "Save"}
+          </button>
+          <button className="btn btn-primary" onClick={handlePrint}>
+            Print
+          </button>
+          <button className="btn btn-secondary" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
 

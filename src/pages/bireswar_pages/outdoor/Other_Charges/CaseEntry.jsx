@@ -668,14 +668,25 @@ const [dWorkTests, setDWorkTests] = useState([])
   };
 
   // Add test to list
-  const handleAddTest = () => {
-    if (!selectedTestMaster) {
+  const handleAddTest = (selected) => {
+    const test = selected || selectedTestMaster;
+
+    if (!test) {
       alert("Please select a test");
       return;
     }
+    //  duplicate check
+    const isAlreadyAdded = tests.some((t) => t.TestId === test.TestId);
+
+    if (isAlreadyAdded) {
+      toast.error("Test already added");
+      // alert("");
+      setSelectedTestMaster(null);
+      return;
+    }
     const rate = indoor
-      ? Number(selectedTestMaster?.BRate ?? 0)
-      : Number(selectedTestMaster?.Rate ?? 0);
+      ? Number(test?.BRate ?? 0)
+      : Number(test?.Rate ?? 0);
 
     // const newTest = {
     //   id: Date.now(),
@@ -692,9 +703,9 @@ const [dWorkTests, setDWorkTests] = useState([])
 
     const newTest = {
       id: Date.now(),
-      TestId: selectedTestMaster.TestId,
-      TestName: selectedTestMaster.Test,
-      SubDepartmentId: selectedTestMaster.SubDepartmentId, // ⭐ ADD THIS
+   TestId: test.TestId,
+      TestName: test.Test,
+      SubDepartmentId:test.SubDepartmentId, // ⭐ ADD THIS
       Rate: rate,
       NetRate: rate,
       DeliveryDate: new Date().toISOString().slice(0, 10),
@@ -703,13 +714,16 @@ const [dWorkTests, setDWorkTests] = useState([])
       ComYN: "Y",
       // CancelTast: 0,
       CancelTast: 2,
-      DescFormat:selectedTestMaster.DescFormat,
-      html_content:selectedTestMaster.html_content
+      DescFormat:test.DescFormat,
+      html_content:test.html_content
     };
 
-    setTests([...tests, newTest]);
+    setTests((prev) => {
+      const updated = [...prev, newTest];
+      calculateTotal(updated);
+      return updated;
+    });
     setSelectedTestMaster(null);
-    calculateTotal([...tests, newTest]);
   };
 
   // this will change the rate and net rate of the test
@@ -3795,7 +3809,13 @@ ${
                       key={indoor}
                       styles={compactSelectStyles}
                       value={selectedTestMaster}
-                      onChange={setSelectedTestMaster}
+                   onChange={(selectedOption) => {
+                      setSelectedTestMaster(selectedOption);
+
+                      if (selectedOption) {
+                        handleAddTest(selectedOption); //  auto add
+                      }
+                    }}
                       onInputChange={(inputValue) => {
                         searchTestMaster(inputValue);
                       }}
@@ -3821,7 +3841,7 @@ ${
                     />
                   )}
                   <div className="d-flex align-items-start">
-                    {showAddTest && (
+                    {/* {showAddTest && (
                       <button
                         className="btn btn-success btn-sm py-1 px-1"
                         onClick={() => {
@@ -3835,7 +3855,7 @@ ${
                       >
                         Add Test
                       </button>
-                    )}
+                    )} */}
 
                     <div className="flex-grow-1 ms-1">
                       <div className="d-flex justify-content-end align-items-center mb-1">

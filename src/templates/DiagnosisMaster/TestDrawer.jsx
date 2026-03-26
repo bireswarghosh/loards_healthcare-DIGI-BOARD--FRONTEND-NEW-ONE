@@ -20,40 +20,48 @@ const TestDrawer = ({
 console.log("ttttttt", htmlContent)
   return (
     <>
-      {/* BACKDROP – SAME */}
+      {/* BACKDROP (click to close) */}
       <div
-        className="modal-backdrop fade show"
-        style={{ zIndex: 9998 }}
         onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 99998,
+          backgroundColor: "rgba(0,0,0,0.4)",
+        }}
       />
 
       {/* DRAWER – SAME */}
       <div
-        className="profile-right-sidebar active"
         style={{
-          zIndex: 9999,
-          width: "100%",
-          maxWidth: "900px",
-          top: "70px",
-          height: "calc(100vh - 70px)",
+          zIndex: 99999,
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "80%",
+          backgroundColor: "#fff",
+          overflowY: "auto",
+          boxShadow: "-2px 0 10px rgba(0,0,0,0.2)",
         }}
       >
         {/* CLOSE BUTTON */}
-        <button className="right-bar-close" onClick={onClose}>
-          <i className="fa-light fa-angle-right"></i>
-        </button>
 
         {/* HEADER */}
         <div
-          className="dropdown-txt fw-bold"
+          className="d-flex justify-content-between align-items-center fw-bold border-bottom"
           style={{
             position: "sticky",
             top: 0,
             zIndex: 10,
-            padding: "10px",
+            padding: "10px 16px",
+            backgroundColor: "#fff",
           }}
         >
-          {type === "descriptive" ? "🧪 Descriptive Test" : "🧪 General Test"}
+          <span>{type === "descriptive" ? "🧪 Descriptive Test" : "🧪 General Test"}</span>
+          <button className="btn btn-sm btn-danger" onClick={onClose}>
+            ✕ Close
+          </button>
         </div>
 
         {/* BODY */}
