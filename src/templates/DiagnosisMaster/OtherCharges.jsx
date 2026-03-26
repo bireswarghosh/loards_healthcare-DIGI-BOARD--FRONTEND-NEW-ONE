@@ -172,7 +172,7 @@ const OtherCharges = () => {
     loading: departmentLoading,
     error: departmentError,
     refetch: fetchDepartment,
-  } = useAxiosFetch("/department");
+  } = useAxiosFetch("/speciality");
 
   const {
     data: religion,
@@ -181,11 +181,14 @@ const OtherCharges = () => {
     refetch: fetchreligion,
   } = useAxiosFetch("/religion");
 
+
+
   useEffect(() => {
     fetchCharges(1);
     fetchAllDoctors();
     fetchDepartment();
     fetchreligion();
+
     fetchChargeResponse();
     const shouldOpen = sessionStorage.getItem("openOtherChargesDrawer");
 
@@ -288,6 +291,7 @@ const OtherCharges = () => {
           Sex: data.Sex || "",
           PhoneNo: data.PhoneNo || "",
           department: data.department || "",
+
           DoctorId: data.DoctorId || 1,
           refdoc: data.refdoc || "",
           assdoc: data.assdoc || "",
@@ -406,7 +410,7 @@ const OtherCharges = () => {
   //     return u;
   //   });
   // };
-  const handleChange = (e) => {
+  const handleChange = async (e) => {
     const { name, value } = e.target;
 
     setFormData((prev) => {
@@ -426,6 +430,17 @@ const OtherCharges = () => {
 
       return updated;
     });
+
+    if (name === "department" && value) {
+      try {
+        const res = await axiosInstance.get(`/doctormaster/department/${value}`);
+        if (res.data?.success) {
+          setDoctorList(res.data.data || []);
+        }
+      } catch {
+        setDoctorList([]);
+      }
+    }
   };
   const {
     PatientName,
@@ -439,6 +454,7 @@ const OtherCharges = () => {
     Add3,
     AgeD,
     AgeN,
+    MStatus,
     ...payload
   } = formData;
 
@@ -1060,34 +1076,22 @@ const OtherCharges = () => {
                   <div className="row g-2">
                     <div className="col-md-2">
                       <label className="form-label">Department</label>
-
-                      {/* <input className="form-control" name="department" value={formData.department} onChange={handleChange}/> */}
-                      {/* <AsyncPaginateSelect
-  value={formData.department}
-  onChange={(opt) =>
-    setFormData((p) => ({ ...p, department: opt?.value || "" }))
-  }
-  apiUrl="/api/v1/department"
-  getByIdUrl="/api/v1/department"
-  labelKey="Department"
-  valueKey="DepartmentId"
-  placeholder="Search department..."
-/> */}
-
                       <select
                         name="department"
                         className="form-control"
                         value={formData.department}
                         onChange={handleChange}
+                        disabled={modalType === "view"}
                       >
                         <option value="">Select</option>
                         {department.map((d, idx) => (
-                          <option key={idx} value={d.DepartmentId}>
-                            {d.Department}
+                          <option key={idx} value={d.SpecialityId}>
+                            {d.Speciality}
                           </option>
                         ))}
                       </select>
                     </div>
+
                     {/* <div className="col-md-2"><label className="form-label ">Doctor</label> */}
                     {/* <input className="form-control" name="DoctorId" value={formData.DoctorId} onChange={handleChange} /></div> */}
                     <div className="col-md-2 position-relative" ref={doctorRef}>
