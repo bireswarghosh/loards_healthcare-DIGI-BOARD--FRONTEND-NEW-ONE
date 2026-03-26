@@ -463,6 +463,46 @@ const TestMaster = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+    const handlePrint = () => {
+  const printContent = htmlContent; // already HTML string
+
+  const printWindow = window.open("", "_blank");
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          table, th, td {
+            border: 1px solid #000;
+          }
+          th, td {
+            padding: 6px;
+          }
+        </style>
+      </head>
+      <body>
+        ${printContent}
+      </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+  printWindow.focus();
+
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 500);
+};
   return (
     <div className="main-content">
       <ToastContainer />
@@ -1605,6 +1645,13 @@ const TestMaster = () => {
                       >
                         <i className="fa-light fa-save me-1"></i>
                         {loading ? "Saving..." : "Save HTML"}
+                      </button>
+                         <button
+                        className="btn btn-sm btn-warning"
+                        onClick={handlePrint}
+                      >
+                        <i className="fa fa-print me-1"></i>
+                        Print
                       </button>
                     </div>
                   </div>
