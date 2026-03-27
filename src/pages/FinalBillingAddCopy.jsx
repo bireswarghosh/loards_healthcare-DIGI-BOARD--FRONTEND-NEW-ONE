@@ -8,6 +8,57 @@ import AsyncSelect from "react-select/async";
 import { fi } from "date-fns/locale";
 import { handlePrint5 } from "./FinalBillPrintFunc";
 
+const CustomModal = ({ show = true, setShow, setOk }) => {
+  if (!show) return null; // hide modal if not open
+
+  return (
+    <>
+      <div className="modal fade show d-block" tabIndex="-1">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            {/* Header */}
+            <div className="modal-header">
+              <h5 className="modal-title">Indoor</h5>
+            </div>
+
+            {/* Body */}
+            <div className="modal-body">
+              <p>Bill due Payment Party can not be left Blank</p>
+            </div>
+
+            {/* Footer */}
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setShow(false);
+                  setOk(false);
+                }}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  setOk(true);
+                  setShow(false);
+                }}
+              >
+                Ok
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Backdrop */}
+      <div className="modal-backdrop fade show"></div>
+    </>
+  );
+};
+
 function AsyncApiSelect({
   api,
   value,
@@ -448,6 +499,15 @@ const FinalBillingAdd = () => {
 
   const [allTests, setAllTests] = useState({});
 
+  const [larAlertShow, setLarAlertShow] = useState(false);
+  const [larAlertOk, setLarAlertOk] = useState(false);
+
+  useEffect(() => {
+    if (larAlertOk) {
+      handleSave();
+    }
+  }, [larAlertOk]);
+
   // this will fetch all test data
   const fetchAllTests = async () => {
     try {
@@ -519,6 +579,7 @@ const FinalBillingAdd = () => {
     } catch (error) {
       console.log("error submitting the form data: ", error);
     } finally {
+      setLarAlertOk(false);
       setTimeout(() => {
         setBtnLoading(false);
       }, 3000);
@@ -2635,7 +2696,18 @@ const FinalBillingAdd = () => {
           {fbMode === "final" && (
             <button
               className="btn btn-sm btn-primary"
-              onClick={handleSave}
+              onClick={() => {
+                let totalLar = lessAdvData.reduce(
+                  (acc, item) => acc + Number(item.Amount || 0),
+                  0,
+                );
+                console.log("total lar:", totalLar);
+                if (totalLar == 0) {
+                  setLarAlertShow(true);
+                } else {
+                  handleSave();
+                }
+              }}
               disabled={btnLoading}
             >
               Save
@@ -2665,6 +2737,12 @@ const FinalBillingAdd = () => {
           </button>
         </div>
       </div>
+
+      <CustomModal
+        show={larAlertShow}
+        setShow={setLarAlertShow}
+        setOk={setLarAlertOk}
+      />
     </div>
   );
 };
