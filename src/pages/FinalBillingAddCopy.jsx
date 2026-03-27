@@ -521,7 +521,7 @@ const FinalBillingAdd = () => {
     } finally {
       setTimeout(() => {
         setBtnLoading(false);
-      }, 2000);
+      }, 3000);
     }
   };
 
@@ -701,7 +701,7 @@ const FinalBillingAdd = () => {
     try {
       let caseId = "";
       const res = await axiosInstance.get(`/case01/admition/${id}`);
-      // console.log("Diag data: ", res.data.data);
+      console.log("Diag data or: ", res.data.data);
 
       res.data.success ? setDiagData(res.data.data) : setDiagData([]);
       caseId = res.data.data[0]?.CaseId || "";
@@ -728,11 +728,16 @@ const FinalBillingAdd = () => {
       const arr = res.data.data;
 
       if (arr.length) {
-
-        const totalCancelTest = arr.reduce((sum, item) => sum + Number(item.CTestAmt || 0), 0)
-console.log("total ctest:",totalCancelTest)
-       let totalDiag = arr.reduce((sum, item) => sum + Number(item.Total || 0), 0);
-       totalDiag = totalDiag - totalCancelTest - totalMr
+        const totalCancelTest = arr.reduce(
+          (sum, item) => sum + Number(item.CTestAmt || 0),
+          0,
+        );
+        console.log("total ctest:", totalCancelTest);
+        let totalDiag = arr.reduce(
+          (sum, item) => sum + Number(item.Total || 0),
+          0,
+        );
+        totalDiag = totalDiag - totalCancelTest - totalMr;
         // const totalDiag = arr.reduce(
         //   (sum, item) =>
         //     sum +
@@ -814,18 +819,28 @@ console.log("total ctest:",totalCancelTest)
           .flat();
         // console.log("case dtls: ", caseDtlData);
 
-        const dtls = caseDtlData.map((item) => [
-          diagObj[item.CaseId]?.CaseDate?.split("T")[0]
-            ?.split("-")
-            ?.reverse()
-            ?.join("/") || "",
-          allTests[item.TestId].Test || "",
-          1,
-          item.Rate || 0,
-          item.Rate || 0,
+        // this describes all tests present in the diag
+        // const dtls = caseDtlData.map((item) => [
+        //   diagObj[item.CaseId]?.CaseDate?.split("T")[0]
+        //     ?.split("-")
+        //     ?.reverse()
+        //     ?.join("/") || "",
+        //   allTests[item.TestId].Test || "",
+        //   1,
+        //   item.Rate || 0,
+        //   item.Rate || 0,
+        // ]);
+
+        // this is only breif data
+        console.log("diagData:", arr);
+        const dtls = arr.map((item) => [
+          item.CaseDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+          item.CaseNo || "",
+          // 0,
+          // 0,
+          item.Total || 0,
         ]);
 
-        // console.log("dtl:", dtls);
         setDiagDtl(dtls);
       }
     } catch (error) {
@@ -1419,16 +1434,24 @@ console.log("total ctest:",totalCancelTest)
   ) {
     // filtering other charges which have service charge on
 
-    const ocWithFullDetails = otherChargesByAdmId.map(
-      (item) => allOtherCharges1[item.OtherChargesId],
-    );
+    console.log("otherChargesByAdmId", otherChargesByAdmId);
+    console.log("allOtherCharges", allOtherCharges);
+    console.log("allOtherCharges1", allOtherCharges1);
+
+    const ocWithFullDetails = otherChargesByAdmId.map((item) => ({
+      ...allOtherCharges1[item.OtherChargesId],
+      calAmount: item.Amount,
+    }));
     // const ocWithFullDetails = otherChargesByAdmId
     const ocWithServiceChrgOn = ocWithFullDetails.filter(
       (item) => item.ServiceCh === "Y",
     );
 
+    console.log("oc with service chrg on: ", ocWithServiceChrgOn);
+
     let ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
-      (sum, item) => sum + Number(item.Rate) * (Number(serviceCharge) / 100),
+      (sum, item) =>
+        sum + Number(item.calAmount) * (Number(serviceCharge) / 100),
       0,
     );
 
@@ -1623,7 +1646,7 @@ console.log("total ctest:",totalCancelTest)
 
       setTimeout(() => {
         setBtnLoading(false);
-      }, 8000);
+      }, 9000);
     }
   }, [admData]);
 
