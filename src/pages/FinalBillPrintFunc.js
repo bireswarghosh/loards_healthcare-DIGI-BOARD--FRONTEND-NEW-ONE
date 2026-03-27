@@ -42,6 +42,7 @@ function mergeConsecutive(arr) {
 export const handlePrint1 = (data) => {
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
+  // console.log("data.bedCharges.rows", data.bedCharges.rows)
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   const styles = `
     <style>
@@ -193,7 +194,7 @@ export const handlePrint1 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -442,7 +443,7 @@ export const handlePrint2 = (invoiceData) => {
       tableRows += `
                 <tr>
                     <td></td>
-                    <td><small style="margin-right:3px;">${index + 1}</small>  ${test.TestName}</td>
+                    <td><small style="margin-right:3px;">${index + 1}</small>  ${test.TestName} ${test.CancelTast == 1 ? "(cancel)" : ""}</td>
                     <td>${test.DeliveryDate}</td>
                     <td class="rate-col">${test.Rate || 0}</td>
                     <td class="amount-col"></td>
@@ -451,7 +452,8 @@ export const handlePrint2 = (invoiceData) => {
     });
 
     // calculate subtotal
-    const sum = group.tests.reduce(
+    const nonCancelTests = group.tests.filter((item) => item.CancelTast != 1);
+    const sum = nonCancelTests.reduce(
       (acc, item) => acc + Number(item.Rate || 0),
       0,
     );
@@ -712,7 +714,7 @@ export const handlePrint3 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -1019,7 +1021,7 @@ export const handlePrint4 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -1332,7 +1334,7 @@ export const handlePrint5 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
