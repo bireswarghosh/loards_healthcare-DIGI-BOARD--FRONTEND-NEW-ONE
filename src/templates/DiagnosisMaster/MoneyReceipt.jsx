@@ -69,6 +69,88 @@ const MoneyReceipt = () => {
 
   const [showRec, setShowRec] = useState(true);
 
+  const [allPreviouseReceipts, setAllPreviouseReceipts] = useState([]); // this state will be only used for add form and last mr edit form for the manupulation of due amount by discount
+
+  const [additionalDueAmt, setAdditionalDueAmt] = useState(0); // this will be minus from the calculated due amount
+
+  // useEffect(() => {
+  //   console.log("I am changed:", allPreviouseReceipts);
+
+  // }, [allPreviouseReceipts]);
+
+  // this is used for calculating discount and deduct it from the due the amount
+  useEffect(() => {
+    let n = allPreviouseReceipts.length; // this is the length of the allPreviouseReceipts array
+    if (formData?.ReffId && n != 0) {
+      // console.log("This is modal type", modalType);
+      // console.log("this is changed form data", formData);
+      // console.log("this is changed prev recp:", allPreviouseReceipts);
+
+      // if only one mr present then only 1st mr exists
+      if (n == 1) {
+        setAdditionalDueAmt(0);
+        return;
+      } else if (n > 1) {
+        // console.log("hoooo");
+        let lastEle = allPreviouseReceipts[n - 1]; // this is the last element of allPreviouseReceipts and this is the 1st mr
+
+        // if the selected mr is the 1st mr
+        if (lastEle.ReceiptId == formData.ReceiptId) {
+          setAdditionalDueAmt(0);
+          return;
+        }
+
+        // if the selected mr is not the 1st mr
+
+        // if the selected mr is 2nd mr
+        if (formData.ReceiptId == allPreviouseReceipts[n - 2].ReceiptId) {
+          setAdditionalDueAmt(Number(formData.DiscAmt));
+          return;
+        }
+        // if the selected mr is from 3rd mr to more than that then we will calculate it from 2nd to the selected one in edit mode and 2nd to last mr in add mode
+        else {
+          // if the modal is in edit mode
+          if (modalType == "edit") {
+            let idxSel; // this is the index of the selected mr
+
+            // this loop will find the index of the selected mr from the allPreviouseReceipts array
+            for (let i = 0; i < n; i++) {
+              if (formData.ReceiptId == allPreviouseReceipts[i].ReceiptId) {
+                idxSel = i;
+                break;
+              }
+            }
+
+            // console.log("idx of sel:", idxSel);
+            let sum = 0;
+            // this loop will calculate the sum of the DiscAmt from the seleceted mr to the 2nd mr
+            for (let i = idxSel + 1; i < n - 1; i++) {
+              sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
+            }
+            // console.log("sum is :", sum);
+            setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
+            return;
+          }
+
+          // if the type of the modal is add then we will calculate it from 2nd mr to the last mr
+          let sum = 0;
+          // this loop will calculate the sum of the DiscAmt from the last mr to the 2nd mr
+          for (let i = 0; i < n - 1; i++) {
+            sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
+          }
+          // console.log("sum is :", sum);
+          setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
+          return;
+        }
+      }
+    }
+    // console.log("hello",receipts)
+  }, [formData.ReffId, allPreviouseReceipts, modalType, formData.DiscAmt]);
+
+  // useEffect(() => {
+  //   console.log("additionalDueAmt", additionalDueAmt);
+  // }, [additionalDueAmt]);
+
   useEffect(() => {
     fetchReceipts(page, showRec);
 
@@ -81,6 +163,8 @@ const MoneyReceipt = () => {
   useEffect(() => {
     if (!showDrawer) {
       setHistData([]);
+      setAllPreviouseReceipts([]);
+      setAdditionalDueAmt(0);
     }
   }, [showDrawer]);
 
@@ -150,7 +234,8 @@ const MoneyReceipt = () => {
         // console.log("History data: ", res.data.data);
         const data = res.data.data;
         setAllPrevReceipts(data);
-        console.log("all prev receps:", data);
+        setAllPreviouseReceipts(data); // this will only work add mode
+        // console.log("all prev receps from fetchAllPrevRecep:", data);
       }
     } catch (error) {
       console.log("Erro fetching moneyreceipt", error);
@@ -164,8 +249,10 @@ const MoneyReceipt = () => {
         `/money-receipt01/search?ReffId=${id}`,
       );
       if (res.data.success) {
-        console.log("History data: ", res.data.data);
+        // console.log("History data from fetchHistory fn: ", res.data.data);
+
         setAllMRs(res.data.data);
+        setAllPreviouseReceipts(res.data.data); // this will only work for edit mode
         const data = res.data.data;
         // console.log("prev data old:", data);
         // console.log("current receiptId:", ReceiptId);
@@ -173,8 +260,8 @@ const MoneyReceipt = () => {
         if (data[0].ReceiptId == ReceiptId) {
           setShowDisc(true);
         }
-console.log("data",data[0])
-        if (data[0].ReceiptId == ReceiptId && calculatedDueAmount!=0) {
+        // console.log("data", data[0]);
+        if (data[0].ReceiptId == ReceiptId && calculatedDueAmount != 0) {
           setShowSaveBtnEdit(true);
         } else {
           setShowSaveBtnEdit(false);
@@ -293,17 +380,18 @@ console.log("data",data[0])
             );
             if (res1.data.success) {
               data = res1.data.data;
+              // console.log("this is form fetchReceipt by no: ", data);
             } else {
               data = [];
             }
           }
-          console.log("hist is : ", data);
+          // console.log("hist is : ", data);
           let sum =
             data.length != 0
               ? data.reduce((acc, item) => acc + Number(item.Amount || 0), 0)
               : 0;
 
-          console.log("Sum is : ", sum);
+          // console.log("Sum is : ", sum);
           const defaultMethod = {
             type:
               receipt.MRType === "B" ? "2" : receipt.MRType === "D" ? "1" : "0",
@@ -313,8 +401,8 @@ console.log("data",data[0])
             bankName: receipt.BankName || "",
             chequeNumber: receipt.ChequeNo || "",
           };
-          console.log("hi");
-          console.log("prev data: ", allMRs);
+          // console.log("hi");
+          // console.log("prev data: ", allMRs);
           setPaymentMethods([defaultMethod]);
 
           setFormData({
@@ -528,7 +616,7 @@ console.log("data",data[0])
     setShowDrawer(true);
     setFormData({});
     if (type === "edit" && receipt?.ReceiptNo) {
-      console.log("rec data: ", receipt);
+      // console.log("rec data: ", receipt);
       await fetchHistory(receipt.ReffId, receipt.ReceiptId);
       await fetchReceiptByNo(receipt.ReceiptNo);
     }
@@ -680,7 +768,7 @@ console.log("data",data[0])
       setRefundMode(0);
       setShowDrawer(false);
       setShowDisc(false);
-      fetchReceipts(page,showRec);
+      fetchReceipts(page, showRec);
     } catch (err) {
       console.error("Save error:", err);
       console.error("Error response:", err?.response?.data);
@@ -731,7 +819,7 @@ console.log("data",data[0])
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
-      fetchReceipts(1,showRec);
+      fetchReceipts(1, showRec);
       return;
     }
 
@@ -824,17 +912,16 @@ console.log("data",data[0])
   // const calculatedDueAmount = billAmount - previousPaid - totalReceivedAmount - formData.DiscAmt;
   const isDueAmountPositive = calculatedDueAmount > 0;
 
-
   useEffect(() => {
-  if (location.state?.openPatientModal) {
-    setModalType("add");        // add mode
-    setShowDrawer(true);        // drawer open
-    setShowPatientModal(true);  // 🔥 patient modal open
+    if (location.state?.openPatientModal) {
+      setModalType("add"); // add mode
+      setShowDrawer(true); // drawer open
+      setShowPatientModal(true); // 🔥 patient modal open
 
-    fetchPatients(location.state?.search);            // optional (list load)
-    window.history.replaceState({}, document.title);
-  }
-}, [location.state]);
+      fetchPatients(location.state?.search); // optional (list load)
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   //  ==================================================================
   // pdf print deb
   // ==================================================================
@@ -873,41 +960,41 @@ console.log("data",data[0])
   }, [users]);
 
   const handlePrint = () => {
-  const testsPerPage =9;
+    const testsPerPage = 9;
 
-  const pages = [];
-  for (let i = 0; i < tests.length; i += testsPerPage) {
-    pages.push(tests.slice(i, i + testsPerPage));
-  }
+    const pages = [];
+    for (let i = 0; i < tests.length; i += testsPerPage) {
+      pages.push(tests.slice(i, i + testsPerPage));
+    }
 
-  let runningTotal = 0;
+    let runningTotal = 0;
 
-  const pagesHtml = pages
-    .map((pageTests, pageIndex) => {
-      // ⭐ page total
-      const pageTestTotal = pageTests.reduce((sum, t) => {
-        return sum + (Number(t.CancelTast) === 1 ? 0 : Number(t.Rate || 0));
-      }, 0);
+    const pagesHtml = pages
+      .map((pageTests, pageIndex) => {
+        // ⭐ page total
+        const pageTestTotal = pageTests.reduce((sum, t) => {
+          return sum + (Number(t.CancelTast) === 1 ? 0 : Number(t.Rate || 0));
+        }, 0);
 
-      // ⭐ running total
-      runningTotal += pageTestTotal;
+        // ⭐ running total
+        runningTotal += pageTestTotal;
 
-      const rows = pageTests
-        .map(
-          (t, i) => `
+        const rows = pageTests
+          .map(
+            (t, i) => `
 <tr>
 <td style="text-align:center;">${pageIndex * testsPerPage + i + 1}</td>
 <td>${testsMap[t.TestId]}
 ${t.CancelTast == 1 ? "(Cancel)" : ""}
 </td>
 <td>${t.DeliveryDate}</td>
-<td style="text-align:right;">${t.CancelTast == 1 ? 0 : t.Rate }</td>
+<td style="text-align:right;">${t.CancelTast == 1 ? 0 : t.Rate}</td>
 </tr>
-`
-        )
-        .join("");
+`,
+          )
+          .join("");
 
-      return `
+        return `
 
 <div class="page">
 
@@ -950,17 +1037,17 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 <div class="patient-row">
 <span class="patient-label">Receipt No</span>
-<span class="patient-value">${formData.ReceiptNo ||''}</span>
+<span class="patient-value">${formData.ReceiptNo || ""}</span>
 </div>
 
 <div class="patient-row">
 <span class="patient-label">Case No</span>
-<span class="patient-value">${formData.ReffId || ''}</span>
+<span class="patient-value">${formData.ReffId || ""}</span>
 </div>
 
 <div class="patient-row">
 <span class="patient-label">Patient Name</span>
-<span class="patient-value">${formData.PatientName || ''}</span>
+<span class="patient-value">${formData.PatientName || ""}</span>
 </div>
 
 <div class="patient-row">
@@ -997,7 +1084,7 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 <div class="patient-row">
 <span class="patient-label">Phone</span>
-<span class="patient-value">${formData.Phone || ''}</span>
+<span class="patient-value">${formData.Phone || ""}</span>
 </div>
 
 </div>
@@ -1083,10 +1170,10 @@ ${
 </div>
 
 `;
-    })
-    .join("");
+      })
+      .join("");
 
-  const printContent = `
+    const printContent = `
 <html>
 <head>
 
@@ -1223,16 +1310,16 @@ ${pagesHtml}
 </html>
 `;
 
-  const win = window.open("", "_blank");
+    const win = window.open("", "_blank");
 
-  win.document.open();
-  win.document.write(printContent);
-  win.document.close();
+    win.document.open();
+    win.document.write(printContent);
+    win.document.close();
 
-  setTimeout(() => {
-    win.print();
-  }, 500);
-};
+    setTimeout(() => {
+      win.print();
+    }, 500);
+  };
 
   function handleRefundPdf(data) {
     // Open a new window for printing
@@ -1596,7 +1683,7 @@ ${pagesHtml}
                             <button
                               className="btn btn-sm btn-outline-primary"
                               onClick={() => {
-                                console.log("row is: ", r);
+                                // console.log("row is: ", r);
                                 if (r.Amount < 0) {
                                   setRefundMode(1);
                                   openDrawer(r, "edit");
@@ -2097,10 +2184,16 @@ ${pagesHtml}
                     </div>
                     <div className="col-md-2">
                       <label className="form-label">Due Amount</label>
+
                       <input
                         type="number"
                         className="form-control text-danger fw-bold"
-                        value={calculatedDueAmount.toFixed(2)}
+                        // value={calculatedDueAmount.toFixed(2)}
+
+                        value={
+                          Number(calculatedDueAmount.toFixed(2)) -
+                          additionalDueAmt
+                        }
                         readOnly
                       />
                     </div>
@@ -2520,9 +2613,7 @@ ${pagesHtml}
 
                     {modalType !== "view" && (
                       <>
-                        {modalType == "add" &&
-
-
+                        {modalType == "add" && (
                           // (refundMode === 0 ? (
                           //   calculatedDueAmount != 0 && (
                           //     <button
@@ -2541,15 +2632,13 @@ ${pagesHtml}
                           //   </button>
                           // ))
 
-                 (         <button
-                              onClick={handleSave}
-                              className="btn btn-primary w-50"
-                            >
-                              Save
-                            </button>)
-                          
-                          
-                          }
+                          <button
+                            onClick={handleSave}
+                            className="btn btn-primary w-50"
+                          >
+                            Save
+                          </button>
+                        )}
 
                         {modalType == "edit" && showSaveBtnEdit && (
                           <button
@@ -2630,11 +2719,10 @@ ${pagesHtml}
                               setTimeout(
                                 () => {
                                   handleRefundPdf(receiptData);
-                                }
-                                
-,1000
-                              )
-                              
+                                },
+
+                                1000,
+                              );
                             }
                           }}
                           className="btn btn-warning w-50"
