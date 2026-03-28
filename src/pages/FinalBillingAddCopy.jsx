@@ -1772,10 +1772,8 @@ const FinalBillingAdd = () => {
   }, [finalBillDetail]);
 
   useEffect(() => {
-    let val =
-      Number(netBal) -
-      Number(formData.Approval) -
-      Number(finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0);
+    let val = Number(netBal) - Number(formData.Approval);
+    // -Number(finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0);
 
     // if (val < 0) {
     //   val = val * -1;
