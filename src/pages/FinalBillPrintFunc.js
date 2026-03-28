@@ -38,11 +38,11 @@ function mergeConsecutive(arr) {
   return result;
 }
 
-
 // this print final bill summary
 export const handlePrint1 = (data) => {
-  let arr = mergeConsecutive(data.bedCharges.rows)
-data.bedCharges.rows = arr
+  let arr = mergeConsecutive(data.bedCharges.rows);
+  data.bedCharges.rows = arr;
+  // console.log("data.bedCharges.rows", data.bedCharges.rows)
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   const styles = `
     <style>
@@ -194,7 +194,7 @@ data.bedCharges.rows = arr
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -443,7 +443,7 @@ export const handlePrint2 = (invoiceData) => {
       tableRows += `
                 <tr>
                     <td></td>
-                    <td><small style="margin-right:3px;">${index + 1}</small>  ${test.TestName}</td>
+                    <td><small style="margin-right:3px;">${index + 1}</small>  ${test.TestName} ${test.CancelTast == 1 ? "(cancel)" : ""}</td>
                     <td>${test.DeliveryDate}</td>
                     <td class="rate-col">${test.Rate || 0}</td>
                     <td class="amount-col"></td>
@@ -452,7 +452,8 @@ export const handlePrint2 = (invoiceData) => {
     });
 
     // calculate subtotal
-    const sum = group.tests.reduce(
+    const nonCancelTests = group.tests.filter((item) => item.CancelTast != 1);
+    const sum = nonCancelTests.reduce(
       (acc, item) => acc + Number(item.Rate || 0),
       0,
     );
@@ -560,8 +561,8 @@ export const handlePrint2 = (invoiceData) => {
 
 // this print final bill patient copy
 export const handlePrint3 = (data) => {
-  let arr = mergeConsecutive(data.bedCharges.rows)
-data.bedCharges.rows = arr
+  let arr = mergeConsecutive(data.bedCharges.rows);
+  data.bedCharges.rows = arr;
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   const styles = `
     <style>
@@ -713,7 +714,7 @@ data.bedCharges.rows = arr
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -867,8 +868,8 @@ data.bedCharges.rows = arr
 
 // this print final bill Indoor Copy
 export const handlePrint4 = (data) => {
-  let arr = mergeConsecutive(data.bedCharges.rows)
-data.bedCharges.rows = arr
+  let arr = mergeConsecutive(data.bedCharges.rows);
+  data.bedCharges.rows = arr;
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   const styles = `
     <style>
@@ -1020,7 +1021,7 @@ data.bedCharges.rows = arr
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -1176,11 +1177,11 @@ data.bedCharges.rows = arr
 // this print final bill summary
 export const handlePrint5 = (data) => {
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
-console.log("data is : ",data)
-console.log("only bed data is:",data.bedCharges.rows)
+  console.log("data is : ", data);
+  console.log("only bed data is:", data.bedCharges.rows);
 
-let arr = mergeConsecutive(data.bedCharges.rows)
-data.bedCharges.rows = arr
+  let arr = mergeConsecutive(data.bedCharges.rows);
+  data.bedCharges.rows = arr;
 
   const styles = `
     <style>
@@ -1226,6 +1227,7 @@ data.bedCharges.rows = arr
       table.data-table th, table.data-table td { border: 1px solid #000; padding: 3px 5px; }
       table.data-table th { background-color: #f0f0f0; text-align: left; font-weight: bold; }
       .text-right { text-align: right; }
+      .text-left { text-align: left; }
       .text-center { text-align: center; }
       
       /* Footer Totals */
@@ -1332,7 +1334,7 @@ data.bedCharges.rows = arr
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedNo}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -1347,22 +1349,46 @@ data.bedCharges.rows = arr
   const buildTable = (title, headers, rows, total) => {
     let tHtml = `<div class="section-title">${title}</div>`;
     tHtml += `<table class="data-table"><thead><tr>`;
-    headers.forEach((h) => (tHtml += `<th>${h}</th>`));
-    tHtml += `</tr></thead><tbody>`;
-
-    rows.forEach((row) => {
-      tHtml += `<tr>`;
-      row.forEach((cell, index) => {
-        // Align amounts to right (usually the last columns)
-        const alignClass = index >= row.length - 2 ? "text-right" : "";
-        tHtml += `<td class="${alignClass}">${cell}</td>`;
-      });
-      tHtml += `</tr>`;
-    });
-
-    if (total) {
-      tHtml += `<tr><td colspan="${headers.length - 1}" class="text-right"><b>Total:</b></td><td class="text-right"><b>${total}</b></td></tr>`;
+    if (title != "INVESTIGATION") {
+      headers.forEach((h) => (tHtml += `<th>${h}</th>`));
+    } else {
+      tHtml += `<th>DATE</th>
+      <th class="text-left">SERVICE (PATHOLOGY & RADIOLOGY)</th>
+      <th>AMOUNT)</th>
+      `;
     }
+    tHtml += `</tr></thead><tbody>`;
+    if (title != "INVESTIGATION") {
+      rows.forEach((row) => {
+        tHtml += `<tr>`;
+        row.forEach((cell, index) => {
+          // Align amounts to right (usually the last columns)
+          const alignClass = index >= row.length - 2 ? "text-right" : "";
+          tHtml += `<td class="${alignClass}">${cell}</td>`;
+        });
+        tHtml += `</tr>`;
+      });
+
+      if (total) {
+        tHtml += `<tr><td colspan="${headers.length - 1}" class="text-right"><b>Total:</b></td><td class="text-right"><b>${total}</b></td></tr>`;
+      }
+    } else {
+      rows.forEach((row) => {
+        tHtml += `<tr>`;
+        row.forEach((cell, index) => {
+          // Align amounts to right (usually the last columns)
+          const alignClass =
+            index == row.length - 1 ? "text-right" : "text-left";
+          tHtml += `<td class="${alignClass}">${cell}</td>`;
+        });
+        tHtml += `</tr>`;
+      });
+
+      if (total) {
+        tHtml += `<tr><td colspan="${headers.length - 1}" class="text-right"><b>Total:</b></td><td class="text-right"><b>${total}</b></td></tr>`;
+      }
+    }
+
     tHtml += `</tbody></table>`;
     return tHtml;
   };
@@ -1417,7 +1443,7 @@ data.bedCharges.rows = arr
   // Investigation
   html += buildTable(
     "INVESTIGATION",
-    ["DATE", "SERVICE (PATHOLOGY & RADIOLOGY)", "QTY", "RATE", "AMOUNT"],
+    ["DATE", "SERVICE (PATHOLOGY & RADIOLOGY)", "AMOUNT"],
     // ["DATE", "Case No", "AMOUNT"],
     data.investigations.rows,
     data.investigations.total,

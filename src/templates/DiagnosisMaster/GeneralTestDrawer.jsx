@@ -688,7 +688,7 @@ const GeneralTestDrawer = ({
                       className="btn btn-sm btn-success"
                       onClick={() => saveProperty(prop)}
                     >
-                      Save
+                      Edit & Save
                     </button>
                   </td>
                 </tr>
@@ -712,7 +712,7 @@ const GeneralTestDrawer = ({
               className="btn btn-primary "
               onClick={createAllProperties}
             >
-              create
+              Save All
             </button>
             {/* <button
               type="submit"
