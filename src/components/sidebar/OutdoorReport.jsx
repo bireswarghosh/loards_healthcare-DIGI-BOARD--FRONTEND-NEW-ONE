@@ -141,6 +141,27 @@ const OutdoorReport = () => {
           </li>
         )}
 
+        {(isSuperAdmin || permissions?.outdoorReport_visitTypeReport !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/daterangebillopd" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-chart-pie"></i>
+              </span>
+              <span className="sidebar-txt">Bill Report</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.outdoorReport_visitTypeReport !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/daterangebillother" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-chart-pie"></i>
+              </span>
+              <span className="sidebar-txt">Other charges Bill Report</span>
+            </NavLink>
+          </li>
+        )}
+
       </ul>
     </li>
   );

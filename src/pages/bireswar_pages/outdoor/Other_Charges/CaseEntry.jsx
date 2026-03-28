@@ -656,7 +656,7 @@ const [dWorkTests, setDWorkTests] = useState([])
             item.ReceiptDate.split("T")[0]?.split("-")?.reverse()?.join("/") ||
             "",
           type: item.Remarks || "",
-          disc: item.Desc || 0,
+          disc: item.DiscAmt || 0,
           amount: item.Amount || 0,
         }));
 

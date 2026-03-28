@@ -387,6 +387,9 @@ import PathologistLogin from "..//src/components/indoor/loginPathologist/Patholo
 import OpdDashboard from "./pages/dashboardpages/OpdDashboard.jsx";
 import IpdDashboard from "./pages/dashboardpages/IpdDashboard.jsx";
 import DiagnosticDashboard from "./pages/dashboardpages/DiagnosticDashboard.jsx";
+import DateRangeBillIpd from "./templates/DiagnosisMaster/report/DateRangeBillIpd.jsx";
+import DateRangeBillOpd from "./templates/DiagnosisMaster/report/DateRangeBillOpd.jsx";
+import DateRangeBillOther from "./templates/DiagnosisMaster/report/DateRangeBillOther.jsx";
 
 
 function App() {
@@ -689,6 +692,18 @@ function App() {
             }
           />
           <Route path="/MonthlyBill" element={<MonthlyBill />}></Route>
+           <Route
+            path="/daterangebillopd"
+            element={<DateRangeBillOpd />}
+          ></Route>
+          <Route
+            path="/daterangebillIpd"
+            element={<DateRangeBillIpd />}
+          ></Route>
+          <Route
+            path="/daterangebillOther"
+            element={<DateRangeBillOther />}
+          ></Route>
           <Route
             path="/CancelTest"
             element={

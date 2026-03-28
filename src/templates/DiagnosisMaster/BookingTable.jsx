@@ -1,10 +1,21 @@
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import useAxiosFetch from "./Fetch";
+import { useMemo } from "react";
 
 
 const BookingTable = ({ bookingList = [], onRowClick }) => {
   const navigate = useNavigate();
+
+  const {data:doctors}=useAxiosFetch("/doctormaster?page=1&limit=10000",[])
+ const doctorMap = useMemo(() => {
+   const map = {};
+   (doctors || []).forEach((d) => {
+     map[d.DoctorId] = d.Doctor;
+   });
+   return map;
+ }, [doctors]);
   return (
     <div
       className="flex-grow-1 border  bg-opacity-25 mb-1"
@@ -96,7 +107,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                     </div>
                   </td>
                   <td>{item.SlipNo}</td>
-                  <td>{item.Date}</td>
+                 <td>{item.CaseDate.split("T")[0]}</td>
 {console.log("hi:",item)}
                   <td>
                     <div className="">
@@ -115,7 +126,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                     </div>
                   </td>
 
-                  <td>{item.DoctorId}</td>
+                  <td>{doctorMap[item.DoctorId]}</td>
                   <td>{item.Amount}</td>
                   <td>{item.ClearingDate?.split("T")[0]}</td>
                   <td>{item.AgentId}</td>

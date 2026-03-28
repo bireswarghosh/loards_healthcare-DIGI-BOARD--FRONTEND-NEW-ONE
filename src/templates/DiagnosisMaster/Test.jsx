@@ -266,7 +266,12 @@ const TestMaster = () => {
       setSubDepartments([]);
     }
   };
-
+const getDepartmentName = (subDeptId) => {
+  const item = subDepartments.find(
+    (d) => Number(d.SubDepartmentId) === Number(subDeptId)
+  );
+  return item ? item.Department : "";
+};
   const fetchSampleTypes = async () => {
     try {
       const res = await axiosInstance.get("/sampletypes?page=1&limit=1000");
@@ -946,9 +951,9 @@ const TestMaster = () => {
 
                     {/* SubDept / SampleType / Method */}
                     <div className="row mt-1">
-                      <div className="col-md-4">
+                      <div className="col-md-3">
                         <label className="form-label fw-bold small">
-                          SubDepartment
+                          Sub Department
                         </label>
                         <select
                           className="form-select form-select-sm"
@@ -968,6 +973,16 @@ const TestMaster = () => {
                             </option>
                           ))}
                         </select>
+                      </div>
+                      <div className="col-md-3">
+                        <label className="form-label fw-bold small">
+                          Department
+                        </label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={getDepartmentName(formData.SubDepartmentId)}
+                          disabled
+                        />
                       </div>
 
                       <div className="col-md-4">

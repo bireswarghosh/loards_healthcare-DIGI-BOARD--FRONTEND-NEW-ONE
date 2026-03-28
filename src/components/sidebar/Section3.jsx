@@ -69,6 +69,13 @@ Indoor Report
             <span className="sidebar-txt">Bed Charges</span>
           </NavLink>
         </li>
+
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/daterangebillipd" className="sidebar-link">
+            <span className="nav-icon"><i className="fa-light fa-triangle"></i></span>{" "}
+            <span className="sidebar-txt">Bill Report</span>
+          </NavLink>
+        </li>
       </ul>
     </li>
   );
