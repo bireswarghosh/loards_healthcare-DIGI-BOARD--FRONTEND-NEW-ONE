@@ -82,16 +82,24 @@ const MoneyReceipt = () => {
   useEffect(() => {
     let n = allPreviouseReceipts.length; // this is the length of the allPreviouseReceipts array
     if (formData?.ReffId && n != 0) {
-      // console.log("This is modal type", modalType);
-      // console.log("this is changed form data", formData);
-      // console.log("this is changed prev recp:", allPreviouseReceipts);
+      console.log("This is modal type", modalType);
+      console.log("this is changed form data", formData);
+      console.log("this is changed prev recp:", allPreviouseReceipts);
 
       // if only one mr present then only 1st mr exists
       if (n == 1) {
-        setAdditionalDueAmt(0);
-        return;
+        // if you are editing 1st mr then this will run
+        if (modalType == "edit") {
+          setAdditionalDueAmt(0);
+          return;
+        }
+        // if you are add 2nd mr then this will run
+        else {
+          setAdditionalDueAmt(formData.DiscAmt);
+          return;
+        }
       } else if (n > 1) {
-        // console.log("hoooo");
+        console.log("hoooo");
         let lastEle = allPreviouseReceipts[n - 1]; // this is the last element of allPreviouseReceipts and this is the 1st mr
 
         // if the selected mr is the 1st mr
@@ -121,13 +129,13 @@ const MoneyReceipt = () => {
               }
             }
 
-            // console.log("idx of sel:", idxSel);
+            console.log("idx of sel:", idxSel);
             let sum = 0;
             // this loop will calculate the sum of the DiscAmt from the seleceted mr to the 2nd mr
             for (let i = idxSel + 1; i < n - 1; i++) {
               sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
             }
-            // console.log("sum is :", sum);
+            console.log("sum is :", sum);
             setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
             return;
           }
@@ -138,7 +146,7 @@ const MoneyReceipt = () => {
           for (let i = 0; i < n - 1; i++) {
             sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
           }
-          // console.log("sum is :", sum);
+          console.log("sum is :", sum);
           setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
           return;
         }
@@ -1506,7 +1514,7 @@ ${pagesHtml}
       <div className="panel">
         {/* Header */}
         <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>Sample Receipt</h5>
+          <h5>Sample Receipt222</h5>
           <div className="d-flex gap-2">
             <button
               className="btn btn-sm btn-primary"
@@ -1651,7 +1659,7 @@ ${pagesHtml}
               <table className="table table-striped table-hover table-dashed">
                 <thead>
                   <tr>
-                    <th>Action</th>
+                    <th>Actionkkkk 20.00</th>
                     <th>Sl No</th>
                     <th>Receipt No</th>
                     <th>Receipt Date</th>
@@ -2044,7 +2052,7 @@ ${pagesHtml}
                           className="form-control form-control-sm text-end"
                           value={formData.Amount}
                           onChange={handleChange}
-                          disabled={modalType === "view"}
+                          disabled={true}
                         />
                       </div>
                       {/* <div className="col-md-2">
@@ -2774,7 +2782,7 @@ ${pagesHtml}
                           <th>Case ID</th>
                           <th>Patient Name</th>
                           <th>Age</th>
-                          <th>Action</th>
+                          <th>Actionnn</th>
                         </tr>
                       </thead>
                       <tbody>
