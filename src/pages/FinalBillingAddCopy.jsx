@@ -769,6 +769,7 @@ const FinalBillingAdd = () => {
 
       let allMrData = [];
       let totalMr = 0;
+      let totalDiscount = 0;
       if (res.data.success && caseId) {
         console.log("Hi case Id: ", caseId);
         const mrResult = await axiosInstance.get(
@@ -777,17 +778,24 @@ const FinalBillingAdd = () => {
         if (mrResult.data.success) {
           allMrData = mrResult.data.data;
           if (allMrData.length != 0) {
+            console.log("All mr data:", allMrData);
             totalMr = allMrData.reduce(
               (acc, item) => acc + Number(item?.Amount || 0),
               0,
             );
+            let n = allMrData.length;
+            if (n > 1) {
+              for (let i = 0; i < n - 1; i++) {
+                totalDiscount += Number(allMrData[i].DiscAmt || 0);
+              }
+            }
           }
           console.log("total mr : ", totalMr);
         }
       }
 
       const arr = res.data.data;
-
+      console.log("arr is", arr);
       if (arr.length) {
         const totalCancelTest = arr.reduce(
           (sum, item) => sum + Number(item.CTestAmt || 0),
@@ -795,10 +803,16 @@ const FinalBillingAdd = () => {
         );
         console.log("total ctest:", totalCancelTest);
         let totalDiag = arr.reduce(
-          (sum, item) => sum + Number(item.Total || 0),
+          (sum, item) => sum + Number(item.GrossAmt || 0),
           0,
         );
-        totalDiag = totalDiag - totalCancelTest - totalMr;
+
+        console.log("totalDiag:", totalDiag);
+        console.log("totalCancelTest:", totalCancelTest);
+        console.log("totalMr:", totalMr);
+        console.log("total discount:", totalDiscount);
+
+        totalDiag = totalDiag - totalCancelTest - totalMr - totalDiscount;
         // const totalDiag = arr.reduce(
         //   (sum, item) =>
         //     sum +
@@ -899,7 +913,7 @@ const FinalBillingAdd = () => {
           item.CaseNo || "",
           // 0,
           // 0,
-          item.Total || 0,
+          item.GrossAmt || 0,
         ]);
 
         setDiagDtl(dtls);
@@ -1178,7 +1192,7 @@ const FinalBillingAdd = () => {
                         ?.join("/") || ""}
                     </td>
                     <td>{row.CaseNo || ""}</td>
-                    <td>{row.Total || 0}</td>
+                    <td>{row.GrossAmt || 0}</td>
                   </tr>
                 ))
               ) : (
