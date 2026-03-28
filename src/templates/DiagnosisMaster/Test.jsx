@@ -6,8 +6,8 @@ import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DigiContext } from "../../context/DigiContext";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { RichTextEditorComponent, Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count } from '@syncfusion/ej2-react-richtexteditor';
+import { Inject as RteInject } from '@syncfusion/ej2-react-richtexteditor';
 
     
 import { createPortal } from "react-dom";
@@ -95,7 +95,44 @@ const TestMaster = () => {
   const [showHtmlEditor, setShowHtmlEditor] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
   const [currentTestForHtml, setCurrentTestForHtml] = useState(null);
-  const [isEditingHtml, setIsEditingHtml] = useState(false);
+
+
+  const rteRef = useRef(null);
+
+  const rteToolbarSettings = {
+    items: [
+      'Undo', 'Redo', '|',
+      'ImportWord', 'ExportWord', 'ExportPdf', '|',
+      'Bold', 'Italic', 'Underline', 'StrikeThrough', '|',
+      'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
+      'Formats', 'Alignments', 'Blockquote', '|',
+      'NumberFormatList', 'BulletFormatList', '|',
+      'Outdent', 'Indent', '|',
+      'CreateLink', 'Image', 'CreateTable', '|',
+      'FormatPainter', 'ClearFormat', '|',
+      'EmojiPicker', '|',
+      'SourceCode', 'FullScreen'
+    ],
+  };
+
+  const rteImportWord = {
+    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ImportFromWord',
+  };
+
+  const rteExportWord = {
+    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToDocx',
+    fileName: 'test-report.docx',
+  };
+
+  const rteExportPdf = {
+    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToPdf',
+    fileName: 'test-report.pdf',
+  };
+
+  const rteInsertImageSettings = {
+    saveUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/SaveFile',
+    path: 'https://services.syncfusion.com/react/production/api/RichTextEditor/GetImage',
+  };
 
   const handleViewHtml = async (test) => {
     try {
@@ -107,7 +144,6 @@ const TestMaster = () => {
         const { htmlContent: content, fileName, source } = response.data.data;
         setHtmlContent(content || "");
         setCurrentTestForHtml({ ...test, file_name: fileName || test.file_name });
-        setIsEditingHtml(false);
         setShowHtmlEditor(true);
 
         if (source === 'converted') {
@@ -464,7 +500,7 @@ const TestMaster = () => {
   }, []);
 
     const handlePrint = () => {
-  const printContent = htmlContent; // already HTML string
+  const printContent = rteRef.current ? rteRef.current.value : htmlContent;
 
   const printWindow = window.open("", "_blank");
 
@@ -1523,99 +1559,25 @@ const TestMaster = () => {
                       overflow: "hidden",
                     }}
                   >
-                    <div className="d-flex gap-2" style={{ height: "100%" }}>
-                      {/* LEFT: Editor */}
-                      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-                        <div className="d-flex justify-content-between align-items-center mb-1">
-                          <strong className="small">✏️ Editor</strong>
-                          <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => setIsEditingHtml(!isEditingHtml)}
-                          >
-                            <i className={`fa-light fa-${isEditingHtml ? "wand-magic-sparkles" : "code"} me-1`}></i>
-                            {isEditingHtml ? "Visual" : "HTML Code"}
-                          </button>
-                        </div>
-                        <div style={{ flex: 1, overflow: "auto" }}>
-                          {isEditingHtml ? (
-                            <textarea
-                              className="form-control"
-                              style={{
-                                height: "100%",
-                                fontFamily: "monospace",
-                                fontSize: "13px",
-                                resize: "none",
-                              }}
-                              value={htmlContent}
-                              onChange={(e) => setHtmlContent(e.target.value)}
-                              placeholder="Enter HTML content here..."
-                            />
-                          ) : (
-                            <div style={{ height: "100%" }} className="ck-editor-wrapper">
-                              <CKEditor
-                                editor={ClassicEditor}
-                                data={htmlContent}
-                                onChange={(event, editor) => {
-                                  setHtmlContent(editor.getData());
-                                }}
-                                onReady={(editor) => {
-                                  // Log available toolbar items for debugging
-                                  const items = Array.from(editor.ui.componentFactory.names());
-                                  console.log('Available CKEditor toolbar items:', items);
-                                }}
-                                config={{
-                                  toolbar: {
-                                    items: [
-                                      "heading", "|",
-                                      "bold", "italic", "underline", "strikethrough", "subscript", "superscript", "|",
-                                      "alignment", "|",
-                                      "bulletedList", "numberedList", "todoList", "|",
-                                      "outdent", "indent", "|",
-                                      "link", "blockQuote", "insertTable", "mediaEmbed", "|",
-                                      "imageUpload", "code",
-                                    ],
-                                    shouldNotGroupWhenFull: true,
-                                  },
-                                  heading: {
-                                    options: [
-                                      { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                                      { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-                                      { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-                                      { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' },
-                                      { model: 'heading4', view: 'h4', title: 'Heading 4', class: 'ck-heading_heading4' },
-                                      { model: 'heading5', view: 'h5', title: 'Heading 5', class: 'ck-heading_heading5' },
-                                      { model: 'heading6', view: 'h6', title: 'Heading 6', class: 'ck-heading_heading6' },
-                                    ],
-                                  },
-                                }}
-                              />
-                              <style>{`
-                                .ck-editor-wrapper .ck-editor { display: flex; flex-direction: column; height: 100%; }
-                                .ck-editor-wrapper .ck-editor__main { flex: 1; overflow: auto; }
-                                .ck-editor-wrapper .ck-editor__editable { min-height: 100%; }
-                              `}</style>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* RIGHT: Preview */}
-                      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-                        <div className="mb-1">
-                          <strong className="small">👁️ Preview</strong>
-                        </div>
-                        <div
-                          style={{
-                            flex: 1,
-                            overflow: "auto",
-                            border: "1px solid #dee2e6",
-                            borderRadius: "4px",
-                            padding: "12px",
-                            backgroundColor: "#fff",
-                          }}
-                          dangerouslySetInnerHTML={{ __html: htmlContent }}
-                        />
-                      </div>
+                    <div style={{ height: "100%" }}>
+                      <RichTextEditorComponent
+                        ref={rteRef}
+                        value={htmlContent}
+                        change={() => {
+                          if (rteRef.current) {
+                            setHtmlContent(rteRef.current.value);
+                          }
+                        }}
+                        toolbarSettings={rteToolbarSettings}
+                        importWord={rteImportWord}
+                        exportWord={rteExportWord}
+                        exportPdf={rteExportPdf}
+                        insertImageSettings={rteInsertImageSettings}
+                        height="100%"
+                        enableResize={false}
+                      >
+                        <RteInject services={[Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count]} />
+                      </RichTextEditorComponent>
                     </div>
                   </div>
 
