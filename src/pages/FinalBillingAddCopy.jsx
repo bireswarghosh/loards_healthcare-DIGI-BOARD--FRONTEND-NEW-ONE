@@ -1763,9 +1763,9 @@ const FinalBillingAdd = () => {
       (sum, item) => sum + Number(item.Amount1 || 0),
       0,
     );
-    // console.log("Total final bill is : ", total);
+    console.log("Total final bill is : ", total);
     setNetBal(
-      total - finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
+      total - 2*finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
     );
 
     setTotalReceipt(total);
