@@ -127,7 +127,7 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                   </td>
 
                   <td>{doctorMap[item.DoctorId]}</td>
-                  <td>{item.Amount}</td>
+                  <td>{item.Total}</td>
                   <td>{item.ClearingDate?.split("T")[0]}</td>
                   <td>{item.AgentId}</td>
 

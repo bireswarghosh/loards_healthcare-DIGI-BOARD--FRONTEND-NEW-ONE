@@ -968,7 +968,7 @@ const MoneyReceipt = () => {
   }, [users]);
 
   const handlePrint = () => {
-    const testsPerPage = 9;
+    const testsPerPage = 5;
 
     const pages = [];
     for (let i = 0; i < tests.length; i += testsPerPage) {
