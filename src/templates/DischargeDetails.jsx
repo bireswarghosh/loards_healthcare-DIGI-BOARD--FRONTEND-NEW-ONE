@@ -94,9 +94,11 @@ const DischargeDetails = ({ mode }) => {
 
       // console.log("UPDATE SUCCESS:", response.data);
       // toast.success("Updated Successfully!")
+      let postId ;
       if (mode === "edit") {
         const res = await axiosInstance.put(`/discert/${id}`, payload);
         // toast.success("Updated Successfully!");
+        postId = id;
       } else {
         const postRes = await axiosInstance.post("/discert", payload);
         const postId = await postRes.data.DisCerId;
@@ -126,7 +128,15 @@ const DischargeDetails = ({ mode }) => {
 
       await axiosInstance.post("/emr/bulk", emrPayload);
 
-      toast.success("Navigated to advice!");
+      // ================= NAVIGATION =================
+      navigate(`/discharge/${encodeURIComponent(postId)}/advice`);
+
+      // ================= TOAST =================
+      toast.success(
+        mode === "edit"
+          ? "Updated & Navigated Successfully!"
+          : "Added & Navigated Successfully!"
+      );
     } catch (error) {
       console.error("Update Error:", error);
     }
