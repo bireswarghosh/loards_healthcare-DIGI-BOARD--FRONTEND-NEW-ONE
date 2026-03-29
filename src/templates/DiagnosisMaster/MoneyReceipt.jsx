@@ -1065,7 +1065,7 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 <div class="patient-row">
 <span class="patient-label">Reffered By</span>
-<span class="patient-value">${doctorMap[formData.DoctorId] || ""}</span>
+<span class="patient-value">${doctorMap[formData.DoctorId] ? "Dr. " + doctorMap[formData.DoctorId] : ""}</span>
 </div>
 
 </div>
