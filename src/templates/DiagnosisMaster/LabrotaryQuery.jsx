@@ -28,6 +28,104 @@ const [testHtml, setTestHtml]=useState('')
   // =======================fetchBoookingList====================================================
   const [bookingList, setBookingList] = useState([]);
   const [PatientName, setPatientName] = useState("");
+  const [searchField, setSearchField] = useState("PatientName"); // default
+  const searchFields = [
+    "CaseId",
+    "CaseTime",
+    "CaseDate",
+    "CaseP",
+    "CaseNo",
+    "CaseS",
+    "PatientP",
+    "PatientId",
+    "PatientS",
+    "PatientName",
+    "Add1",
+    "Add2",
+    "Add3",
+    "Phone",
+    "Email",
+    "Age",
+    "AgeType",
+    "Sex",
+    "AgentId",
+    "DoctorId",
+    "BookingId",
+    "UserId",
+    "DeliveryDate",
+    "OnDelivery",
+    "AfterDelivery",
+    "Total",
+    "ServiceChg",
+    "Desc",
+    "DescAmt",
+    "Amount",
+    "GrossAmt",
+    "CTestAmt",
+    "Balance",
+    "PaymentType",
+    "CollectorId",
+    "CompanyId",
+    "ReportDate",
+    "PathologistId",
+    "LabId",
+    "BillId",
+    "Advance",
+    "Clearing",
+    "ClearingDate",
+    "Remarks",
+    "CancelTest",
+    "CancelDate",
+    "CancelR",
+    "PathologistId1",
+    "PathologistId2",
+    "PathologistId3",
+    "AdmitionYN",
+    "AdmitionId",
+    "SlipNo",
+    "BankName",
+    "ChequeNo",
+    "Narration",
+    "Referance",
+    "DispCode",
+    "EmpCode",
+    "SubCompanyId",
+    "AreaId",
+    "AdmDate",
+    "NrHome",
+    "RelsDate",
+    "EmpName",
+    "PPr",
+    "MonthId",
+    "OutSideSmple",
+    "IP",
+    "PatientDisc",
+    "ApprovNo",
+    "ValueEntryBy",
+    "CN",
+    "OPDYN",
+    "OPDID",
+    "CardNo",
+    "FName",
+    "CHM",
+    "CHF",
+    "req",
+    "AddPort",
+    "MobileNo",
+    "CollDt",
+    "CollTime",
+    "AgeD",
+    "AgeTypeD",
+    "Area",
+    "Collector",
+    "CollectorDate",
+    "WFPathologistId1",
+    "WFPathologistId2",
+    "WFPathologistId3",
+    "reportdone",
+    "DueBillPrint",
+    "PrintYN",
+  ];
   /* ================= PAGINATION ================= */
   const [pageNo, setPageNo] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -36,7 +134,7 @@ const [testHtml, setTestHtml]=useState('')
   const fetchBoookingList = async () => {
     try {
       const response = await axiosInstance.get(
-        `case01/search?PatientName=${PatientName}&startDate=${startDate}&endDate=${endDate}&page=${pageNo}&limit=${limit}`,
+       `case01/search?${searchField}=${PatientName}&startDate=${startDate}&endDate=${endDate}&page=${pageNo}&limit=${limit}`
       );
 
       setBookingList(response?.data?.data || []);
@@ -53,7 +151,7 @@ const [testHtml, setTestHtml]=useState('')
         setPageNo(1); // Reset to first page on new search
         fetchBoookingList();
       }, 500), // ⏱️ 500ms debounce
-    [PatientName, startDate, endDate],
+    [PatientName, startDate, endDate,searchField],
   );
   // ================= PAGINATION =================
   const goToPage = (p) => {
@@ -99,7 +197,7 @@ const [testHtml, setTestHtml]=useState('')
     return () => {
       debouncedFetchBookingList.cancel();
     };
-  }, [PatientName, startDate, endDate]);
+  }, [PatientName, startDate, endDate,searchField]);
   useEffect(() => {
     fetchBoookingList();
   }, [pageNo]);
@@ -293,13 +391,22 @@ const [testHtml, setTestHtml]=useState('')
                 onChange={(e) => setPatientName(e.target.value)}
                 type='text'
                 className='form-control form-control-sm'
-                placeholder='Search patient name'
+                {/* placeholder='Search patient name' */}
               />
             </div>
 
-            <button className='btn btn-sm btn-light border shadow-sm fw-bold'>
-              Search patient Name
-            </button>
+           <select
+              className="form-select form-select-sm"
+              style={{ width: "180px" }}
+              value={searchField}
+              onChange={(e) => setSearchField(e.target.value)}
+            >
+              {searchFields.map((field) => (
+                <option key={field} value={field}>
+                  {field}
+                </option>
+              ))}
+            </select>
 
             {/* Signatory */}
             <div className='d-flex align-items-center gap-2 ms-auto'>
