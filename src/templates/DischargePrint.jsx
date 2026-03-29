@@ -41,8 +41,8 @@ const DischargePrint = () => {
   );
   // fetch doctor name===============================
   const { data: doctor2 } = useAxiosFetch(
-    patient?.UCDoctor1Id ? `doctormaster/${patient.UCDoctor2Id}` : null,
-    [patient?.UCDoctor1Id]
+    patient?.UCDoctor2Id ? `doctormaster/${patient.UCDoctor2Id}` : null,
+    [patient?.UCDoctor2Id]
   );
   // fetch bed============================
   const { data: bed } = useAxiosFetch(
