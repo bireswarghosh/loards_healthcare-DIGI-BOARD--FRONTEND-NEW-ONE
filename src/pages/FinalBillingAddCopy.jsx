@@ -1763,19 +1763,17 @@ const FinalBillingAdd = () => {
       (sum, item) => sum + Number(item.Amount1 || 0),
       0,
     );
-    // console.log("Total final bill is : ", total);
+    console.log("Total final bill is : ", total);
     setNetBal(
-      total - finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
+      total - 2*finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
     );
 
     setTotalReceipt(total);
   }, [finalBillDetail]);
 
   useEffect(() => {
-    let val =
-      Number(netBal) -
-      Number(formData.Approval) -
-      Number(finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0);
+    let val = Number(netBal) - Number(formData.Approval);
+    // -Number(finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0);
 
     // if (val < 0) {
     //   val = val * -1;

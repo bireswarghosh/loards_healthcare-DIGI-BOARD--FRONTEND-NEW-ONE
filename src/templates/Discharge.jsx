@@ -194,6 +194,17 @@ const Discharge = () => {
                       >
                         <i className="fa-light fa-trash" />
                       </button>
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() =>
+                          navigate(
+                            `/discharge/${encodeURIComponent(item.DisCerId)}/print`,
+                            "_blank"
+                          )
+                        }
+                      >
+                        🖨 Print
+                      </button>
                     </div>
                   </td>
                   <td>{item.DisCerNo}</td>

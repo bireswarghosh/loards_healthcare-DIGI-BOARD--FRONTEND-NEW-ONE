@@ -36,7 +36,7 @@ const MoneyReceipt = () => {
 
   // filters
   const [startDate, setStartDate] = useState(
-    new Date().toISOString().slice(0, 10),
+    new Date().toISOString().slice(0, 10)
   );
   // const [dateTo, setDateTo] = useState("2025-02-22");
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
@@ -181,7 +181,7 @@ const MoneyReceipt = () => {
     if (allPrevReceipts.length != 0) {
       totalPaid = allPrevReceipts.reduce(
         (acc, item) => acc + Number(item.Amount || 0),
-        0,
+        0
       );
 
       setFormData((prev) => ({
@@ -227,8 +227,8 @@ const MoneyReceipt = () => {
     return latestArr.filter(
       (latestItem) =>
         !prevArr.some(
-          (prevItem) => JSON.stringify(prevItem) === JSON.stringify(latestItem),
-        ),
+          (prevItem) => JSON.stringify(prevItem) === JSON.stringify(latestItem)
+        )
     );
   }
 
@@ -236,7 +236,7 @@ const MoneyReceipt = () => {
   const fetchAllPrevRecep = async (id) => {
     try {
       const res = await axiosInstance.get(
-        `/money-receipt01/search?ReffId=${id}`,
+        `/money-receipt01/search?ReffId=${id}`
       );
       if (res.data.success) {
         // console.log("History data: ", res.data.data);
@@ -254,7 +254,7 @@ const MoneyReceipt = () => {
   const fetchHistory = async (id, ReceiptId) => {
     try {
       const res = await axiosInstance.get(
-        `/money-receipt01/search?ReffId=${id}`,
+        `/money-receipt01/search?ReffId=${id}`
       );
       if (res.data.success) {
         // console.log("History data from fetchHistory fn: ", res.data.data);
@@ -284,7 +284,7 @@ const MoneyReceipt = () => {
           }
           let value = getNewElements(
             data[j - 1].paymentMethods,
-            data[j].paymentMethods,
+            data[j].paymentMethods
           );
           // console.log("value-",j," : ", value )
           let ele = { ...data[j], paymentMethods: value };
@@ -351,7 +351,7 @@ const MoneyReceipt = () => {
       setLoading(true);
 
       const res = await axiosInstance.get(
-        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(receiptNo)}`,
+        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(receiptNo)}`
       );
 
       if (res.data.success && res.data.data?.length) {
@@ -384,7 +384,7 @@ const MoneyReceipt = () => {
 
           if (receipt?.ReffId) {
             const res1 = await axiosInstance.get(
-              `/money-receipt01/search?ReffId=${receipt?.ReffId}`,
+              `/money-receipt01/search?ReffId=${receipt?.ReffId}`
             );
             if (res1.data.success) {
               data = res1.data.data;
@@ -641,7 +641,7 @@ const MoneyReceipt = () => {
 
       const totalPaidAmount = paymentMethods.reduce(
         (sum, p) => sum + parseFloat(p.amount || 0),
-        0,
+        0
       );
 
       // if (totalPaidAmount <= 0) {
@@ -769,7 +769,7 @@ const MoneyReceipt = () => {
 
         await axiosInstance.put(
           `/money-receipt01/${encodeURIComponent(formData.ReceiptId)}`,
-          payload,
+          payload
         );
         toast.success("Updated successfully");
       }
@@ -834,7 +834,7 @@ const MoneyReceipt = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(searchTerm.trim())}&page=1&limit=${limit}`,
+        `/money-receipt01/search?ReceiptNo=${encodeURIComponent(searchTerm.trim())}&page=1&limit=${limit}`
       );
 
       if (response.data.success) {
@@ -935,7 +935,7 @@ const MoneyReceipt = () => {
   // ==================================================================
   const { data: tests } = useAxiosFetch(
     formData?.ReffId ? `case-dtl-01/case/${formData.ReffId}` : null,
-    [formData.ReffId],
+    [formData.ReffId]
   );
 
   const { data: testHash } = useAxiosFetch("tests?limit=9999");
@@ -998,7 +998,7 @@ ${t.CancelTast == 1 ? "(Cancel)" : ""}
 <td>${t.DeliveryDate}</td>
 <td style="text-align:right;">${t.CancelTast == 1 ? 0 : t.Rate}</td>
 </tr>
-`,
+`
           )
           .join("");
 
@@ -1065,7 +1065,7 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 <div class="patient-row">
 <span class="patient-label">Reffered By</span>
-<span class="patient-value">${doctorMap[formData.DoctorId] || ""}</span>
+<span class="patient-value">${doctorMap[formData.DoctorId] ? "Dr. " + doctorMap[formData.DoctorId] : ""}</span>
 </div>
 
 </div>
@@ -1143,10 +1143,31 @@ ${formData.DiscAmt || 0}
 <tr>
 <td></td>
 <td colspan="2" style="text-align:right;font-weight:bold;">
+Advanced Amount :
+</td>
+<td style="text-align:right;font-weight:bold;">
+${formData.Amount || 0}
+</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">
 Paid Amount :
 </td>
 <td style="text-align:right;font-weight:bold;">
 ${formData.Amount || 0}
+</td>
+</tr>
+
+<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">
+Due Amount :
+</td>
+<td style="text-align:right;font-weight:bold;">
+
+${Number((calculatedDueAmount || 0).toFixed(2)) - (additionalDueAmt || 0)}
 </td>
 </tr>
 
@@ -1448,7 +1469,7 @@ ${pagesHtml}
               <td>${test.time}</td>
               <td class="amount">${test.amount}</td>
             </tr>
-          `,
+          `
             )
             .join("")}
         </tbody>
@@ -2252,7 +2273,7 @@ ${pagesHtml}
                                     updatePaymentMethod(
                                       index,
                                       "type",
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                   disabled={modalType === "view"}
@@ -2274,7 +2295,7 @@ ${pagesHtml}
                                       "amount",
                                       refundMode === 1
                                         ? e.target.value * -1
-                                        : e.target.value,
+                                        : e.target.value
                                     );
                                     // console.log("value",e.target.value)
                                   }}
@@ -2297,7 +2318,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "upiApp",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2315,7 +2336,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "utrNumber",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2337,7 +2358,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "bankName",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2354,7 +2375,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "chequeNumber",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2409,7 +2430,7 @@ ${pagesHtml}
                                     updatePaymentMethod(
                                       index,
                                       "type",
-                                      e.target.value,
+                                      e.target.value
                                     )
                                   }
                                   disabled={modalType === "view"}
@@ -2433,7 +2454,7 @@ ${pagesHtml}
                                         ? payment.amount < 0
                                           ? e.target.value
                                           : e.target.value * -1
-                                        : e.target.value,
+                                        : e.target.value
                                     );
                                     //  console.log("value",e.target.value)
                                   }}
@@ -2456,7 +2477,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "upiApp",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2474,7 +2495,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "utrNumber",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2496,7 +2517,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "bankName",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2513,7 +2534,7 @@ ${pagesHtml}
                                         updatePaymentMethod(
                                           index,
                                           "chequeNumber",
-                                          e.target.value,
+                                          e.target.value
                                         )
                                       }
                                       disabled={modalType === "view"}
@@ -2729,7 +2750,7 @@ ${pagesHtml}
                                   handleRefundPdf(receiptData);
                                 },
 
-                                1000,
+                                1000
                               );
                             }
                           }}
