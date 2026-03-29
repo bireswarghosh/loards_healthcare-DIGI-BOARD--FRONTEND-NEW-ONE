@@ -1706,6 +1706,8 @@ const FinalBillingAdd = () => {
     nonPayable: "",
     // nonPayable: "1725", // not found
     billedBy: "Admin",
+    discount:formData?.Discount || 0,
+due:formData?.ReciptAmt || 0
   };
 
   useEffect(() => {

@@ -1326,7 +1326,10 @@ export const handlePrint5 = (data) => {
       <div class="info-row">
        
         <div class="info-col"><span class="label">DISCHARGE TYPE</span>: <span class="value">${data.dischargeType}</span></div>
+        <!--
+        
         <div class="info-col"><span class="label">DISCHARGE DATE</span>: <span class="value">${data.dischargeDate}</span></div>
+        -->
        
       </div>
       <div class="info-row">
@@ -1471,6 +1474,14 @@ export const handlePrint5 = (data) => {
       <div class="total-row">
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
         <span>${data.insuranceApproval}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Discount:</span>
+        <span>${data?.discount || 0}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Due:</span>
+        <span>${data?.due || 0}</span>
       </div>
        <div class="total-row" style="justify-content: flex-start; margin-top: 10px; font-weight: normal;">
         Non Payble Other Chrg: ${data.nonPayable}

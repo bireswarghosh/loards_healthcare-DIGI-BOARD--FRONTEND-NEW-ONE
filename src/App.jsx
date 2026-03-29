@@ -397,7 +397,7 @@ function App() {
     <Router>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><IpdDashboard     /></ProtectedRoute>} />
            <Route
             path="/DiagnosticDashboard"
             element={

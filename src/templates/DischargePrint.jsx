@@ -275,25 +275,28 @@ const DischargePrint = () => {
             </div>
 
             {/* ADVICE / REFERRED / UHID */}
-            <div className="row  text-center">
-              <div className="col-sm-4 text-start">
-                <b>Discharge Advice No :</b> {dischargeData?.DisCerNo}
-              </div>
-
-              <div className="col-sm-3 fw-semibold">
-                {getDischargeText(dischargeData.DiscType)}
-              </div>
-
-              <div className="col-sm-3 text-end">
-                <b>UHID :</b> {patient.UHID}
-              </div>
-            </div>
+            
           </div>
           {/* END HEADER BOX */}
         </div>
 
         {/* BASIC INFO */}
+ <div className="container-fluid border rounded p-2 mb-1">
+          <div className="row  text-center">
+            <div className="col-sm-4 text-start">
+              <b>Discharge Advice No :</b>
+              <div>{dischargeData?.DisCerNo}</div>
+            </div>
 
+            <div className="col-sm-3 fw-semibold">
+              {getDischargeText(dischargeData.DiscType)}
+            </div>
+
+            <div className="col-sm-3 text-end">
+              <b>UHID :</b> {patient.UHID}
+            </div>
+          </div>
+        </div>
         <div className="container-fluid border rounded p-2 mb-1">
           {/* BOX START */}
 
