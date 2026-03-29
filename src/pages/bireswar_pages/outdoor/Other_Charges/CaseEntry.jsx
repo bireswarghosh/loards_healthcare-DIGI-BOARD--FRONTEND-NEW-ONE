@@ -10,11 +10,7 @@ import useAxiosFetch from "../../../../templates/DiagnosisMaster/Fetch";
 import ReceiptDetailModal from "./ReceiptDetailModal";
 import { toast } from "react-toastify";
 
-
-
-
-const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
-
+const DepartmentModal = ({ isOpen, setIsOpen, tests = [] }) => {
   const [selectedTestIds, setSelectedTestIds] = useState([]);
 
   // আপনার দেওয়া নতুন ডেটা স্ট্রাকচার (html_content সহ)
@@ -24,7 +20,7 @@ const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
     setSelectedTestIds((prev) =>
       prev.includes(testId)
         ? prev.filter((id) => id !== testId)
-        : [...prev, testId]
+        : [...prev, testId],
     );
   };
 
@@ -32,7 +28,10 @@ const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
   const handlePrint = () => {
     // ১. শুধুমাত্র সিলেক্ট করা টেস্টগুলো ফিল্টার করুন যাদের html_content আছে
     const testsToPrint = testList.filter(
-      (test) => selectedTestIds.includes(test.TestId) && test.html_content && test.html_content.trim() !== ""
+      (test) =>
+        selectedTestIds.includes(test.TestId) &&
+        test.html_content &&
+        test.html_content.trim() !== "",
     );
 
     // ২. যদি এমন কোনো টেস্ট না থাকে, তাহলে ইউজারকে জানিয়ে দিন
@@ -65,11 +64,13 @@ const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
           </style>
         </head>
         <body>
-          ${testsToPrint.map((test, index) => `
+          ${testsToPrint
+            .map(
+              (test, index) => `
             <div>
               <div class="report-header">
                 <h2>${test.TestName}</h2>
-                <p>Test ID: ${test.TestId} | Delivery Date: ${test.DeliveryDate || 'N/A'}</p>
+                <p>Test ID: ${test.TestId} | Delivery Date: ${test.DeliveryDate || "N/A"}</p>
               </div>
               
               <div class="report-body">
@@ -77,8 +78,10 @@ const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
               </div>
             </div>
             
-            ${index < testsToPrint.length - 1 ? '<div class="page-break"></div>' : ''}
-          `).join("")}
+            ${index < testsToPrint.length - 1 ? '<div class="page-break"></div>' : ""}
+          `,
+            )
+            .join("")}
         </body>
       </html>
     `;
@@ -98,52 +101,114 @@ const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
   if (!isOpen) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999
-    }}>
-      <div style={{
-        backgroundColor: '#fff',
-        borderRadius: '8px',
-        width: '100%',
-        maxWidth: '450px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        fontFamily: 'Tahoma, Arial, sans-serif'
-      }}>
-        
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          width: "100%",
+          maxWidth: "450px",
+          boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+          fontFamily: "Tahoma, Arial, sans-serif",
+        }}
+      >
         {/* Header */}
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8f9fa', borderTopLeftRadius: '8px', borderTopRightRadius: '8px' }}>
-          <h2 style={{ margin: 0, fontSize: '14px', color: '#333' }}>Department</h2>
-          <span style={{ backgroundColor: '#d4edda', color: '#155724', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', border: '1px solid #c3e6cb' }}>
+        <div
+          style={{
+            padding: "12px 16px",
+            borderBottom: "1px solid #eee",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            backgroundColor: "#f8f9fa",
+            borderTopLeftRadius: "8px",
+            borderTopRightRadius: "8px",
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: "14px", color: "#333" }}>
+            Department
+          </h2>
+          <span
+            style={{
+              backgroundColor: "#d4edda",
+              color: "#155724",
+              padding: "2px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              border: "1px solid #c3e6cb",
+            }}
+          >
             Test Master
           </span>
         </div>
 
         {/* Body */}
-        <div style={{ padding: '16px' }}>
-          <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Test</h3>
-          
-          <div style={{ maxHeight: '250px', overflowY: 'auto' }}>
+        <div style={{ padding: "16px" }}>
+          <h3
+            style={{
+              margin: "0 0 10px 0",
+              fontSize: "14px",
+              borderBottom: "1px solid #eee",
+              paddingBottom: "8px",
+            }}
+          >
+            Test
+          </h3>
+
+          <div style={{ maxHeight: "250px", overflowY: "auto" }}>
             {testList.map((test) => (
-              <label key={test.id} style={{ display: 'flex', alignItems: 'center', padding: '6px 0', cursor: 'pointer' }}>
+              <label
+                key={test.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "6px 0",
+                  cursor: "pointer",
+                }}
+              >
                 <input
                   type="checkbox"
-                  style={{ marginRight: '10px' }}
+                  style={{ marginRight: "10px" }}
                   checked={selectedTestIds.includes(test.TestId)}
                   onChange={() => handleToggle(test.TestId)}
                 />
-                <span style={{ fontSize: '13px', color: '#444' }}>
-                  {test.TestName} 
+                <span style={{ fontSize: "13px", color: "#444" }}>
+                  {test.TestName}
                   {/* যাদের HTML আছে তাদের পাশে ছোট করে আইকন বা টেক্সট দেখাতে পারেন */}
-                  {test.html_content ? <span style={{color: 'green', fontSize: '10px', marginLeft: '5px'}}>(Has Report)</span> : <span style={{color: 'red', fontSize: '10px', marginLeft: '5px'}}>(Has No Report)</span>}
+                  {test.html_content ? (
+                    <span
+                      style={{
+                        color: "green",
+                        fontSize: "10px",
+                        marginLeft: "5px",
+                      }}
+                    >
+                      (Has Report)
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        color: "red",
+                        fontSize: "10px",
+                        marginLeft: "5px",
+                      }}
+                    >
+                      (Has No Report)
+                    </span>
+                  )}
                 </span>
               </label>
             ))}
@@ -151,27 +216,36 @@ const DepartmentModal = ({isOpen, setIsOpen, tests=[]}) => {
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '12px 16px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: '8px', backgroundColor: '#f8f9fa', borderBottomLeftRadius: '8px', borderBottomRightRadius: '8px' }}>
-          <button 
+        <div
+          style={{
+            padding: "12px 16px",
+            borderTop: "1px solid #eee",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "8px",
+            backgroundColor: "#f8f9fa",
+            borderBottomLeftRadius: "8px",
+            borderBottomRightRadius: "8px",
+          }}
+        >
+          <button
             onClick={handlePrint}
             className="btn btn-sm btn-light border"
-            style={{ fontWeight: 'bold' }}
+            style={{ fontWeight: "bold" }}
           >
             Print Reports
           </button>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="btn btn-sm btn-danger"
           >
             Close
           </button>
         </div>
-
       </div>
     </div>
   );
 };
-
 
 const CaseEntry = () => {
   const { data: depertments } = useAxiosFetch("/subdepartment");
@@ -207,6 +281,8 @@ const CaseEntry = () => {
   const [cashLessId, setCashLessId] = useState(0);
 
   const [showAddTest, setShowAddTest] = useState(true);
+
+  const [allPrevData, setAllPrevData] = useState([]);
 
   const [isLoaded, setIsLoaded] = useState(false); // add this by chat gpt
 
@@ -339,9 +415,7 @@ const CaseEntry = () => {
   const [show, setShow] = useState(false);
   const [receiptDetailData, setReceiptDetailData] = useState([]);
 
-
-
-const [dWorkTests, setDWorkTests] = useState([])
+  const [dWorkTests, setDWorkTests] = useState([]);
 
   // this function is only for searching the IPD (Admission)
   const searchTests = async (searchTerm) => {
@@ -586,6 +660,20 @@ const [dWorkTests, setDWorkTests] = useState([])
     }
   };
 
+  // fetch agent by id
+  const fetchAgentById = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/agents/${id}`);
+      if (res.data.success) {
+        const agent = res.data.data;
+        setSelectedAgent({ value: agent.AgentId, label: agent.Agent });
+      }
+    } catch (err) {
+      console.error("Error fetching agent by ID:", err);
+      setSelectedAgent(null);
+    }
+  };
+
   // search agents
   const searchAgents = async (searchTerm) => {
     if (!searchTerm || searchTerm.length < 2) {
@@ -649,6 +737,7 @@ const [dWorkTests, setDWorkTests] = useState([])
       if (res.data.success) {
         // console.log("History data: ", res.data.data);
         const data = res.data.data;
+        setAllPrevData(data);
 
         let newData = data.map((item) => ({
           no: item.ReceiptNo,
@@ -684,9 +773,7 @@ const [dWorkTests, setDWorkTests] = useState([])
       setSelectedTestMaster(null);
       return;
     }
-    const rate = indoor
-      ? Number(test?.BRate ?? 0)
-      : Number(test?.Rate ?? 0);
+    const rate = indoor ? Number(test?.BRate ?? 0) : Number(test?.Rate ?? 0);
 
     // const newTest = {
     //   id: Date.now(),
@@ -703,9 +790,9 @@ const [dWorkTests, setDWorkTests] = useState([])
 
     const newTest = {
       id: Date.now(),
-   TestId: test.TestId,
+      TestId: test.TestId,
       TestName: test.Test,
-      SubDepartmentId:test.SubDepartmentId, // ⭐ ADD THIS
+      SubDepartmentId: test.SubDepartmentId, // ⭐ ADD THIS
       Rate: rate,
       NetRate: rate,
       DeliveryDate: new Date().toISOString().slice(0, 10),
@@ -714,8 +801,8 @@ const [dWorkTests, setDWorkTests] = useState([])
       ComYN: "Y",
       // CancelTast: 0,
       CancelTast: 2,
-      DescFormat:test.DescFormat,
-      html_content:test.html_content
+      DescFormat: test.DescFormat,
+      html_content: test.html_content,
     };
 
     setTests((prev) => {
@@ -884,8 +971,8 @@ const [dWorkTests, setDWorkTests] = useState([])
             // };
 
             let subDeptId = null;
-            let Descf =null
-            let html = null
+            let Descf = null;
+            let html = null;
 
             if (t.TestId) {
               try {
@@ -894,8 +981,8 @@ const [dWorkTests, setDWorkTests] = useState([])
                 if (testRes.data.success && testRes.data.data) {
                   testName = testRes.data.data.Test;
                   subDeptId = testRes.data.data.SubDepartmentId; // ⭐ IMPORTANT
-                  Descf = testRes.data.data.DescFormat
-                  html = testRes.data.data.html_content
+                  Descf = testRes.data.data.DescFormat;
+                  html = testRes.data.data.html_content;
                 }
               } catch (err) {
                 console.log("Error fetching test name:", err);
@@ -918,7 +1005,7 @@ const [dWorkTests, setDWorkTests] = useState([])
               // CancelTast: t.CancelTast || 0,
               CancelTast: t.CancelTast || 2,
               DescFormat: Descf,
-              html_content:html
+              html_content: html,
             };
           }),
         );
@@ -952,7 +1039,9 @@ const [dWorkTests, setDWorkTests] = useState([])
         if (indoor && cashLessId !== 63) {
           patientType = "IP";
         }
-        const caseCreateData = { ...formData, patientType };
+
+        let { BranchName, ...rest } = formData;
+        const caseCreateData = { ...rest, patientType };
 
         // Convert empty strings to null
         const cleanedData = Object.fromEntries(
@@ -962,7 +1051,10 @@ const [dWorkTests, setDWorkTests] = useState([])
           ]),
         );
 
+        console.log("Creating case with data cleandata:", cleanedData);
+
         const caseRes = await axiosInstance.post("/case01", cleanedData);
+        // const caseRes = {data:{success:false}} // remove this after testing
         if (caseRes.data.success) {
           const newCaseId = caseRes.data.data.CaseId;
 
@@ -1098,7 +1190,8 @@ const [dWorkTests, setDWorkTests] = useState([])
         // UPDATE existing case
 
         // Step 1: Update case master data (exclude ReceiptAmt and Balance - they're UI only)
-        const caseUpdateData = { ...formData };
+        const { BranchName, ...rest } = formData;
+        const caseUpdateData = { ...rest };
         const res = await axiosInstance.put(`/case01/${orgId}`, caseUpdateData);
         if (res.data.success) {
           // Step 2: Delete existing test records
@@ -1169,6 +1262,93 @@ const [dWorkTests, setDWorkTests] = useState([])
               reported: null,
               ComYN: test.ComYN || null,
             });
+          }
+
+          // this will update the 1st mr
+          let { PatientName, Phone, DoctorId, CaseDate, ReceiptId, ...res } =
+            allPrevData[allPrevData.length - 1];
+
+          const {
+            ReceiptNo,
+            ReffId,
+            ReceiptDate,
+            BillAmount,
+            Desc,
+            DiscAmt,
+            Amount,
+            BalanceAmt,
+            CBalAmt,
+            AdjAmt,
+            AgentDiscId,
+            BankName,
+            ChequeNo,
+            CompName,
+            DiscChk,
+            DiscOtherId,
+            HeadId,
+            MRType,
+            Narration,
+            Remarks,
+            TDS,
+            TypeofReceipt,
+            UserId,
+            ReffType,
+            ReceiptTime,
+          } = allPrevData[allPrevData.length - 1];
+
+          console.log("payement method");
+
+          const receiptData = {
+            ReceiptNo,
+            ReffId,
+            ReceiptDate,
+            BillAmount,
+            Desc,
+            DiscAmt,
+            Amount,
+            BalanceAmt,
+            CBalAmt,
+            AdjAmt,
+            AgentDiscId,
+            BankName,
+            ChequeNo,
+            CompName,
+            DiscChk,
+            DiscOtherId,
+            HeadId,
+            MRType: formData.PaymentType,
+            Narration,
+            Remarks,
+            TDS,
+            TypeofReceipt,
+            UserId,
+            ReffType: formData.PaymentType,
+            ReceiptTime,
+            paymentMethods: [
+              {
+                method:
+                  formData.PaymentType === "C"
+                    ? "Cash"
+                    : formData.PaymentType === "B"
+                      ? "Bank"
+                      : "Card",
+                amount: parseFloat(formData.Advance || 0),
+              },
+            ],
+          };
+
+          try {
+            await axiosInstance.put(
+              `/money-receipt01/${encodeURIComponent(ReceiptId)}`,
+              receiptData,
+            );
+            // console.log("Money receipt created successfully");
+          } catch (err) {
+            console.error("Error updating money receipt:", err);
+            alert(
+              "Case updated but money receipt failed: " +
+                (err.response?.data?.message || err.message),
+            );
           }
 
           alert("Case updated successfully!");
@@ -1471,6 +1651,23 @@ window.onload = function(){
     win.document.write(printContent);
     win.document.close();
   };
+
+  useEffect(() => {
+    console.log("agent id changed: ", formData.AgentId);
+    console.log("Branchname data: ", formData.BranchName);
+    if (formData.AgentId) {
+      fetchAgentById(formData.AgentId);
+      setFormData((prev) => ({
+        ...prev,
+        BranchName: "Y",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        BranchName: "N",
+      }));
+    }
+  }, [formData.AgentId]);
 
   useEffect(() => {
     fetchCompany();
@@ -1780,14 +1977,11 @@ window.onload = function(){
     formData.Advance,
   ]);
 
-
-useEffect(() => {
-
-  let filteredTests = tests.filter(item => item.DescFormat == 1)
-  console.log("filteredTests:", filteredTests)
- setDWorkTests(filteredTests)
-}, [tests])
-
+  useEffect(() => {
+    let filteredTests = tests.filter((item) => item.DescFormat == 1);
+    console.log("filteredTests:", filteredTests);
+    setDWorkTests(filteredTests);
+  }, [tests]);
 
   const groupedTests = tests.reduce((acc, t) => {
     if (!acc[t.SubDepartmentId]) acc[t.SubDepartmentId] = [];
@@ -3276,6 +3470,7 @@ ${
                           onChange={handleInputChange}
                           style={{ ...inputStyle, width: "50px", padding: 0 }}
                         >
+                          <option value="">--</option>
                           <option value="M">M</option>
                           <option value="F">F</option>
                           <option value="T">T</option>
@@ -3583,10 +3778,11 @@ ${
                   }}
                   style={{ ...inputStyle, width: "40px", padding: 0 }}
                 >
+                  <option value="">--</option>
                   <option value="N">N</option>
                   <option value="Y">Y</option>
                 </select>
-                {formData.BranchName === "Y" && (
+                {(formData.BranchName === "Y" || formData.AgentId) && (
                   <div style={{ width: "200px" }}>
                     <Select
                       styles={compactSelectStyles}
@@ -3698,7 +3894,7 @@ ${
                       </tr>
                     </thead>
                     <tbody>
-                      {console.log("tests:",tests)}
+                      {console.log("tests:", tests)}
                       {tests.length > 0 ? (
                         tests.map((test, index) => (
                           <tr
@@ -3809,13 +4005,13 @@ ${
                       key={indoor}
                       styles={compactSelectStyles}
                       value={selectedTestMaster}
-                   onChange={(selectedOption) => {
-                      setSelectedTestMaster(selectedOption);
+                      onChange={(selectedOption) => {
+                        setSelectedTestMaster(selectedOption);
 
-                      if (selectedOption) {
-                        handleAddTest(selectedOption); //  auto add
-                      }
-                    }}
+                        if (selectedOption) {
+                          handleAddTest(selectedOption); //  auto add
+                        }
+                      }}
                       onInputChange={(inputValue) => {
                         searchTestMaster(inputValue);
                       }}
@@ -3867,6 +4063,7 @@ ${
                           onChange={handleInputChange}
                           className="text-end fw-bold ms-1"
                           style={{ ...inputStyle, width: "80px" }}
+                          disabled={!showAddTest}
                         />
                       </div>
                     </div>
@@ -3881,10 +4078,12 @@ ${
                       onChange={handleInputChange}
                       className="text-end ms-1"
                       style={{ ...inputStyle, width: "40px" }}
+                      disabled={!showAddTest}
                     />
                     <span className="text-danger fw-bold mx-1">%</span>
                     <label style={labelStyle}>Amount</label>
                     <input
+                      disabled={!showAddTest}
                       type="text"
                       name="DescAmt"
                       value={formData.DescAmt}
@@ -3904,6 +4103,7 @@ ${
                   <div className="d-flex justify-content-end align-items-center">
                     <label style={labelStyle}>Cancel Test Amount</label>
                     <input
+                      disabled={!showAddTest}
                       type="text"
                       name="CTestAmt"
                       value={formData.CTestAmt}
@@ -3934,6 +4134,7 @@ ${
                       G Total
                     </label>
                     <input
+                      disabled={!showAddTest}
                       type="text"
                       name="GrossAmt"
                       value={formData.GrossAmt}
@@ -3947,6 +4148,7 @@ ${
                       Receipt Amt
                     </label>
                     <input
+                      disabled={!showAddTest}
                       type="text"
                       name="Advance"
                       // value={formData.ReceiptAmt}
@@ -3959,6 +4161,7 @@ ${
                   <div className="d-flex justify-content-end align-items-center">
                     <label style={labelStyle}> Due Balance</label>
                     <input
+                      disabled={!showAddTest}
                       type="text"
                       name="Balance"
                       value={formData.Balance}
@@ -4438,7 +4641,13 @@ ${
         />
       )}
 
-   { dWorkTests.length!=0 &&  <DepartmentModal isOpen={isOpen} setIsOpen={setIsOpen} tests={dWorkTests} />}
+      {dWorkTests.length != 0 && (
+        <DepartmentModal
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          tests={dWorkTests}
+        />
+      )}
     </div>
   );
 };
