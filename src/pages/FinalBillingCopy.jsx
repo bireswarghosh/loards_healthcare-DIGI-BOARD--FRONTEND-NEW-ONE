@@ -821,6 +821,18 @@ const FinalBilling = () => {
     billDate:
       fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
 
+
+otCharges: {
+      rows: otcDetails?.map((row, idx) => [
+        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.SubHead  || "",
+        row.Amount || 0,
+      ]) || [["", "", ""]],
+      total:
+        billHeadData.find((item) => item.HeadName == "O.T. Charges")
+          ?.Amount1 || "0",
+    },
+
     bedCharges: {
       rows: fbData?.details?.finalbillbeddtl.map((row, idx) => [
         row.MyDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
