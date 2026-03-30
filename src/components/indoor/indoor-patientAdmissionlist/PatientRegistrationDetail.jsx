@@ -1251,6 +1251,9 @@ window.onload = function () {
             )}
             {"  "}
             {/* Right Side: Button (Moved outside the inner div) */}
+
+
+            
             <button
               className="btn btn-sm btn-primary pb-3 pt-0"
               onClick={() => navigate("/PatientRegistrationList")}
