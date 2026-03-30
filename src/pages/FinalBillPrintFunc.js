@@ -1352,6 +1352,7 @@ export const handlePrint5 = (data) => {
   const buildTable = (title, headers, rows, total) => {
     let tHtml = `<div class="section-title">${title}</div>`;
     tHtml += `<table class="data-table"><thead><tr>`;
+
     if (title != "INVESTIGATION") {
       headers.forEach((h) => (tHtml += `<th>${h}</th>`));
     } else {
@@ -1417,6 +1418,17 @@ export const handlePrint5 = (data) => {
   // 3. Services (Split into general and medicine/investigation if needed, following PDF flow)
   // Page 1 ends roughly here in original, but we flow continuously for web print
 
+  // this is for ot charges
+  console.log("ot charges data is : ", data.otCharges);
+  if (Number(data.otCharges.total) > 0) {
+    console.log("inside ot charges");
+    html += buildTable(
+      "O.T. CHARGES",
+      ["DATE", "O.T. Bill", "AMOUNT"],
+      data.otCharges.rows,
+      data.otCharges.total,
+    );
+  }
   // AMT IN (Critical Care) section from PDF
   if (data.criticalCare && data.criticalCare.rows.length > 0) {
     html += buildTable(
