@@ -101,7 +101,7 @@ const DischargeDetails = ({ mode }) => {
         postId = id;
       } else {
         const postRes = await axiosInstance.post("/discert", payload);
-        const postId = await postRes.data.DisCerId;
+         postId = await postRes.data.DisCerId;
         console.log(postId);
         navigate(`/discharge/${encodeURIComponent(postId)}/advice`);
         // toast.success("Added Successfully!");
