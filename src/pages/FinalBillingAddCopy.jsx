@@ -545,7 +545,7 @@ const FinalBillingAdd = () => {
 
   const handleSave = async () => {
     // console.log(mode);
-    console.log("add: ", formData);
+    // console.log("add: ", formData);
     setBtnLoading(true);
     try {
       if (mode === "add") {
@@ -558,7 +558,7 @@ const FinalBillingAdd = () => {
           setTimeout(resolve, 400);
         });
 
-        console.log("all bed details: ", bedChargesData);
+        // console.log("all bed details: ", bedChargesData);
         const ele = bedChargesData[bedChargesData.length - 1];
         const res1 = await axiosInstance.put(
           `/admitionbeds?admitionid=${admData?.AdmitionId}&slno=${ele.SlNo}`,
@@ -762,7 +762,7 @@ const FinalBillingAdd = () => {
     try {
       let caseId = "";
       const res = await axiosInstance.get(`/case01/admition/${id}`);
-      console.log("Diag data or: ", res.data.data);
+      // console.log("Diag data or: ", res.data.data);
 
       res.data.success ? setDiagData(res.data.data) : setDiagData([]);
       caseId = res.data.data[0]?.CaseId || "";
@@ -771,14 +771,14 @@ const FinalBillingAdd = () => {
       let totalMr = 0;
       let totalDiscount = 0;
       if (res.data.success && caseId) {
-        console.log("Hi case Id: ", caseId);
+        // console.log("Hi case Id: ", caseId);
         const mrResult = await axiosInstance.get(
           `/money-receipt01/search?ReffId=${caseId}`,
         );
         if (mrResult.data.success) {
           allMrData = mrResult.data.data;
           if (allMrData.length != 0) {
-            console.log("All mr data:", allMrData);
+            // console.log("All mr data:", allMrData);
             totalMr = allMrData.reduce(
               (acc, item) => acc + Number(item?.Amount || 0),
               0,
@@ -790,27 +790,27 @@ const FinalBillingAdd = () => {
               }
             }
           }
-          console.log("total mr : ", totalMr);
+          // console.log("total mr : ", totalMr);
         }
       }
 
       const arr = res.data.data;
-      console.log("arr is", arr);
+      // console.log("arr is", arr);
       if (arr.length) {
         const totalCancelTest = arr.reduce(
           (sum, item) => sum + Number(item.CTestAmt || 0),
           0,
         );
-        console.log("total ctest:", totalCancelTest);
+        // console.log("total ctest:", totalCancelTest);
         let totalDiag = arr.reduce(
           (sum, item) => sum + Number(item.GrossAmt || 0),
           0,
         );
 
-        console.log("totalDiag:", totalDiag);
-        console.log("totalCancelTest:", totalCancelTest);
-        console.log("totalMr:", totalMr);
-        console.log("total discount:", totalDiscount);
+        // console.log("totalDiag:", totalDiag);
+        // console.log("totalCancelTest:", totalCancelTest);
+        // console.log("totalMr:", totalMr);
+        // console.log("total discount:", totalDiscount);
 
         totalDiag = totalDiag - totalCancelTest - totalMr - totalDiscount;
         // const totalDiag = arr.reduce(
@@ -907,7 +907,7 @@ const FinalBillingAdd = () => {
         // ]);
 
         // this is only breif data
-        console.log("diagData:", arr);
+        // console.log("diagData:", arr);
         const dtls = arr.map((item) => [
           item.CaseDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
           item.CaseNo || "",
@@ -1477,7 +1477,7 @@ const FinalBillingAdd = () => {
           (Number(serviceCharge) / 100);
       }
       totalBedServiceChrg = Number(totalBedServiceChrg).toFixed(2);
-      console.log("Final bed service charge: ", totalBedServiceChrg);
+      // console.log("Final bed service charge: ", totalBedServiceChrg);
       setServiceChrgCalculated(
         (prev) => Number(prev) + Number(totalBedServiceChrg),
       );
@@ -1509,9 +1509,9 @@ const FinalBillingAdd = () => {
   ) {
     // filtering other charges which have service charge on
 
-    console.log("otherChargesByAdmId", otherChargesByAdmId);
-    console.log("allOtherCharges", allOtherCharges);
-    console.log("allOtherCharges1", allOtherCharges1);
+    // console.log("otherChargesByAdmId", otherChargesByAdmId);
+    // console.log("allOtherCharges", allOtherCharges);
+    // console.log("allOtherCharges1", allOtherCharges1);
 
     const ocWithFullDetails = otherChargesByAdmId.map((item) => ({
       ...allOtherCharges1[item.OtherChargesId],
@@ -1522,7 +1522,7 @@ const FinalBillingAdd = () => {
       (item) => item.ServiceCh === "Y",
     );
 
-    console.log("oc with service chrg on: ", ocWithServiceChrgOn);
+    // console.log("oc with service chrg on: ", ocWithServiceChrgOn);
 
     let ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
       (sum, item) =>
@@ -1531,7 +1531,7 @@ const FinalBillingAdd = () => {
     );
 
     // console.log("filterd oc with service charge on: ", ocWithServiceChrgOn);
-    console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
+    // console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
     ocServiceChargeCalculated = Number(ocServiceChargeCalculated).toFixed(2);
     setServiceChrgCalculated(
       (prev) => Number(prev) + Number(ocServiceChargeCalculated),
@@ -1621,6 +1621,17 @@ const FinalBillingAdd = () => {
           ?.Amount1 || "0",
     },
 
+    otCharges: {
+      rows: otcDetails?.map((row, idx) => [
+        row.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        row.OtBillNo || "",
+        row.TotalAmt || 0,
+      ]) || [["", "", ""]],
+      total:
+        finalBillDetail.find((item) => item.HeadName == "O.T. Charges")
+          ?.Amount1 || "0",
+    },
+
     doctorVisits: {
       rows: doDetails.map((row) => [
         row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
@@ -1706,9 +1717,13 @@ const FinalBillingAdd = () => {
     nonPayable: "",
     // nonPayable: "1725", // not found
     billedBy: "Admin",
-    discount:formData?.Discount || 0,
-due:formData?.ReciptAmt || 0
+    discount: formData?.Discount || 0,
+    due: formData?.ReciptAmt || 0,
   };
+
+  useEffect(() => {
+    console.log("ot charge:", otcDetails);
+  }, [otcDetails]);
 
   useEffect(() => {
     if (Object.keys(admData).length) {
@@ -1765,9 +1780,9 @@ due:formData?.ReciptAmt || 0
       (sum, item) => sum + Number(item.Amount1 || 0),
       0,
     );
-    console.log("Total final bill is : ", total);
+    // console.log("Total final bill is : ", total);
     setNetBal(
-      total - 2*finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
+      total - 2 * finalBillDetail.find((item) => item.SlNo == 9)?.Amount1 || 0,
     );
 
     setTotalReceipt(total);
@@ -2715,7 +2730,7 @@ due:formData?.ReciptAmt || 0
                   (acc, item) => acc + Number(item.Amount || 0),
                   0,
                 );
-                console.log("total lar:", totalLar);
+                // console.log("total lar:", totalLar);
                 if (totalLar == 0) {
                   setLarAlertShow(true);
                 } else {
