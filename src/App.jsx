@@ -390,6 +390,7 @@ import DiagnosticDashboard from "./pages/dashboardpages/DiagnosticDashboard.jsx"
 import DateRangeBillIpd from "./templates/DiagnosisMaster/report/DateRangeBillIpd.jsx";
 import DateRangeBillOpd from "./templates/DiagnosisMaster/report/DateRangeBillOpd.jsx";
 import DateRangeBillOther from "./templates/DiagnosisMaster/report/DateRangeBillOther.jsx";
+import DeptWiseTestReport from "./templates/DiagnosisMaster/report/DeptWiseTestReport.jsx";
 
 
 function App() {
@@ -680,6 +681,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CaseWiseLab />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/deptwiseTestReport"
+            element={
+              <ProtectedRoute>
+                <DeptWiseTestReport />
               </ProtectedRoute>
             }
           />
