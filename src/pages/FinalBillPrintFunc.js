@@ -794,6 +794,19 @@ export const handlePrint3 = (data) => {
     );
   }
 
+
+// this is for ot charges
+  console.log("ot charges data is : ", data.otCharges);
+  if (Number(data.otCharges.total) > 0) {
+    console.log("inside ot charges");
+    html += buildTable(
+      "O.T. CHARGES",
+      ["DATE", "O.T. Bill", "AMOUNT"],
+      data.otCharges.rows,
+      data.otCharges.total,
+    );
+  }
+
   // General Services (Attendant, O2, etc)
   html += buildTable(
     "OTHER SERVICES & PROCEDURES",
