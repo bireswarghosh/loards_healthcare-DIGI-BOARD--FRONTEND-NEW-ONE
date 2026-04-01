@@ -344,8 +344,10 @@ const DischargeDetails = ({ mode }) => {
                     style={{ ...inputStyle, width: "100px" }}
                     value={`A-${dischargeData?.AdmitionId || ""}`}
                   /> */}
+
+                  {/* hello */}
                     <AsyncApiSelect
-                      api="https://lords-backend.onrender.com/api/v1/admission/search"
+                      api="/admission/search"
                       // value={watch("AdmitionId")}
                       // onChange={(val) => setValue("AdmitionId", val)}
                       value={watch("AdmitionObj")} // 👈 object field
