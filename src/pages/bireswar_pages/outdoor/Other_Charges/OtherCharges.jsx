@@ -155,7 +155,7 @@ const OtherCharges = () => {
                 <td>{charge.Age}</td>
                 <td>{charge.Sex}</td>
                 <td>{charge.Add1}</td>
-                <td>{charge.AdmitionDate.split("T")[0]}</td>
+                <td>{charge.AdmitionDate?.split("T")[0] || ""}</td>
                 <td>{charge.GurdianName}</td>
                 <td>{charge.BedId}</td>
                 <td>{charge.Status}</td>

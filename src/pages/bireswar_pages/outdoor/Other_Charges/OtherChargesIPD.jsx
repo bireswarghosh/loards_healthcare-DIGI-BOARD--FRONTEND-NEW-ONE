@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
@@ -5,7 +6,7 @@ import { Modal, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../../axiosInstance";
 
-const API_BASE_URL = "https://lords-backend.onrender.com/api/v1";
+;
 const OtherCharges = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -206,7 +207,7 @@ const OtherCharges = () => {
 
   const fetchMasterCharges = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/otherCharges`);
+      const response = await axiosInstance.get(`/otherCharges`);
       if (response.data.success) {
         setMasterCharges(response.data.data);
       }
@@ -218,8 +219,8 @@ const OtherCharges = () => {
   const fetchAdmissionData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}/admissions/${admissionId}`,
+      const response = await axiosInstance.get(
+        `/admissions/${admissionId}`,
       );
       if (response.data.success) {
         setAdmissionData(response.data.data.admission);
@@ -233,8 +234,8 @@ const OtherCharges = () => {
 
   const fetchOtherCharges = async () => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/admission-charges/${admissionId}`,
+      const response = await axiosInstance.get(
+        `/admission-charges/${admissionId}`,
       );
       if (response.data.success) {
         setOtherCharges(response.data.data);
@@ -248,13 +249,13 @@ const OtherCharges = () => {
     if (!searchValue) return;
     try {
       setLoading(true);
-      let url = `${API_BASE_URL}/admissions/search/${searchValue}`;
+      let url = `/admissions/search/${searchValue}`;
 
       // Add search type parameter
       const params = new URLSearchParams();
       params.append("searchBy", searchBy);
 
-      const response = await axios.get(`${url}?${params}`);
+      const response = await axiosInstance.get(`${url}?${params}`);
       if (response.data.success && response.data.data.length > 0) {
         // Sort results based on radio selection
         let sortedResults = [...response.data.data];
@@ -291,8 +292,8 @@ const OtherCharges = () => {
 
     // Fetch charges for selected patient
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/admission-charges/${admission.AdmitionId}`,
+      const response = await axiosInstance.get(
+        `/admission-charges/${admission.AdmitionId}`,
       );
       if (response.data.success) {
         setOtherCharges(response.data.data);
@@ -346,8 +347,8 @@ const OtherCharges = () => {
           UserId: 1,
           Remarks: "",
         };
-        await axios.post(
-          `${API_BASE_URL}/admissions/${admissionId}/charges`,
+        await axiosInstance.post(
+          `/admissions/${admissionId}/charges`,
           chargeData,
         );
       }
@@ -369,8 +370,8 @@ const OtherCharges = () => {
         ...newCharge,
         Amount: newCharge.Rate * newCharge.Qty,
       };
-      await axios.post(
-        `${API_BASE_URL}/admissions/${admissionId}/charges`,
+      await axiosInstance.post(
+        `/admissions/${admissionId}/charges`,
         chargeData,
       );
       fetchOtherCharges();
@@ -405,8 +406,8 @@ const OtherCharges = () => {
 
   const deleteChargeById = async (chargeId) => {
     try {
-      await axios.delete(
-        `${API_BASE_URL}/admissions/${admissionId}/charges/${chargeId}`,
+      await axiosInstance.delete(
+        `/admissions/${admissionId}/charges/${chargeId}`,
       );
       fetchOtherCharges();
       setShowConfirm(false);
