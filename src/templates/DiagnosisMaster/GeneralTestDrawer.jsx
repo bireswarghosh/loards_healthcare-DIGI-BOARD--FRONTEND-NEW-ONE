@@ -51,7 +51,7 @@ const GeneralTestDrawer = ({
   const [pathologistList, setPathologistList] = useState([]);
 
   useEffect(() => {
-    fetch("https://lords-backend.onrender.com/api/v1/pathologist")
+    fetch("/pathologist")
       .then((res) => res.json())
       .then((data) => {
         setPathologistList(Array.isArray(data) ? data : data.data || []);
@@ -554,7 +554,7 @@ const GeneralTestDrawer = ({
         <div className="col-md-4">
           <label className="form-label mb-0">Pathologist</label>
           <ApiSelect
-            api="https://lords-backend.onrender.com/api/v1/pathologist"
+            api="/pathologist"
             labelKey="Pathologist"
             valueKey="PathologistId"
             value={pathologistId}

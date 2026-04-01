@@ -242,7 +242,7 @@ const UniversalPReg = ({ RegistrationId, setOpen, setSelectedId }) => {
                 <label className="form-label">Area / P.S.</label>
                 <ApiSelect
                   value={formData.AreaId}
-                  api="https://lords-backend.onrender.com/api/v1/area?page=1&limit=600"
+                  api="/area?page=1&limit=600"
                   labelKey="Area"
                   valueKey="AreaId"
                   onChange={(val) =>

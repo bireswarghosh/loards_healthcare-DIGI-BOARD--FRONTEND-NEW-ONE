@@ -172,7 +172,7 @@ const DescriptiveTestDrawer = ({
         <div className="col-md-4">
           <label className="form-label mb-0">Pathologist</label>
           <ApiSelect
-            api="https://lords-backend.onrender.com/api/v1/pathologist"
+            api="/pathologist"
             labelKey="Pathologist"
             valueKey="PathologistId"
             placeholder="Select Pathologist"
@@ -225,7 +225,7 @@ const DescriptiveTestDrawer = ({
                   <td>{test.Test}</td>
                   <td>
                     <ApiSelect
-                      api="https://lords-backend.onrender.com/api/v1/pathologist"
+                      api="/pathologist"
                       labelKey="Pathologist"
                       valueKey="PathologistId"
                       placeholder="Select"

@@ -900,7 +900,7 @@ const OtherCharges = () => {
                         disabled={modalType !== "add"}
                       /> */}
                       <AsyncApiSelect
-                        api="https://lords-backend.onrender.com/api/v1/patientregistration"
+                        api="/patientregistration"
                         value={selectedPatient}
                         showKey="PatientName"
                         valueKey="RegistrationId"

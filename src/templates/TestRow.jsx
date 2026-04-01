@@ -34,7 +34,7 @@ const TestRow = ({ row, index, onTestChange, onRateUpdate, removeRow }) => {
 
       <td className="col-md-5">
         <AsyncApiSelect
-          api="https://lords-backend.onrender.com/api/v1/tests/search/advanced"
+          api="/tests/search/advanced"
           value={row.testOption}
           onChange={(opt) => onTestChange(index, opt)}
           searchKey="test"
