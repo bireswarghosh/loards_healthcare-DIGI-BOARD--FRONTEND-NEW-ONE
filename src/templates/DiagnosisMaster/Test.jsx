@@ -6,8 +6,8 @@ import Footer from "../../components/footer/Footer";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { DigiContext } from "../../context/DigiContext";
-import { RichTextEditorComponent, Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count } from '@syncfusion/ej2-react-richtexteditor';
-import { Inject as RteInject } from '@syncfusion/ej2-react-richtexteditor';
+import { DocumentEditorContainerComponent, Toolbar as DocToolbar, Inject } from '@syncfusion/ej2-react-documenteditor';
+import '@syncfusion/ej2-react-documenteditor/styles/material.css';
 
     
 import { createPortal } from "react-dom";
@@ -97,47 +97,13 @@ const TestMaster = () => {
   const [currentTestForHtml, setCurrentTestForHtml] = useState(null);
 
 
-  const rteRef = useRef(null);
+  const docEditorRef = useRef(null);
 
-  const rteToolbarSettings = {
-    items: [
-      'Undo', 'Redo', '|',
-      'ImportWord', 'ExportWord', 'ExportPdf', '|',
-      'Bold', 'Italic', 'Underline', 'StrikeThrough', '|',
-      'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
-      'Formats', 'Alignments', 'Blockquote', '|',
-      'NumberFormatList', 'BulletFormatList', '|',
-      'Outdent', 'Indent', '|',
-      'CreateLink', 'Image', 'CreateTable', '|',
-      'FormatPainter', 'ClearFormat', '|',
-      'EmojiPicker', '|',
-      'SourceCode', 'FullScreen'
-    ],
-  };
-
-  const rteImportWord = {
-    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ImportFromWord',
-  };
-
-  const rteExportWord = {
-    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToDocx',
-    fileName: 'test-report.docx',
-  };
-
-  const rteExportPdf = {
-    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToPdf',
-    fileName: 'test-report.pdf',
-  };
-
-  const rteInsertImageSettings = {
-    saveUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/SaveFile',
-    path: 'https://services.syncfusion.com/react/production/api/RichTextEditor/GetImage',
-  };
+  const docServiceUrl = 'https://services.syncfusion.com/react/production/api/documenteditor/';
 
   const handleViewHtml = async (test) => {
     try {
       setLoading(true);
-      // This API auto-converts from R2 if html_content is empty
       const response = await axiosInstance.get(`/tests/${test.TestId}/html-content`);
 
       if (response.data.success && response.data.data) {
@@ -164,13 +130,50 @@ const TestMaster = () => {
     }
   };
 
+  // Load HTML into Document Editor after modal opens
+  useEffect(() => {
+    if (showHtmlEditor && docEditorRef.current && htmlContent) {
+      const editor = docEditorRef.current.documentEditor;
+      // Paste HTML content into the document editor
+      editor.openBlank();
+      editor.editor.insertText('');
+      // Use the service to convert HTML to SFDT and open
+      fetch(docServiceUrl + 'SystemClipboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: htmlContent, type: '.html' }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data !== '') {
+            editor.open(JSON.stringify(data));
+          }
+        })
+        .catch((err) => console.error('Error loading HTML into editor:', err));
+    }
+  }, [showHtmlEditor, htmlContent]);
+
   const handleSaveHtmlContent = async () => {
     if (!currentTestForHtml?.TestId) return;
 
     try {
       setLoading(true);
+      // Get HTML from Document Editor via export
+      const editor = docEditorRef.current?.documentEditor;
+      let exportedHtml = htmlContent;
+      if (editor) {
+        const sfdtContent = editor.serialize();
+        const res = await fetch(docServiceUrl + 'ExportHtml', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: sfdtContent }),
+        });
+        const data = await res.text();
+        if (data) exportedHtml = data;
+      }
+
       await axiosInstance.put(`/tests/${currentTestForHtml.TestId}/html-content`, {
-        htmlContent: htmlContent,
+        htmlContent: exportedHtml,
       });
       toast.success("HTML content updated successfully!");
       setShowHtmlEditor(false);
@@ -505,7 +508,11 @@ const getDepartmentName = (subDeptId) => {
   }, []);
 
     const handlePrint = () => {
-  const printContent = rteRef.current ? rteRef.current.value : htmlContent;
+  if (docEditorRef.current?.documentEditor) {
+    docEditorRef.current.documentEditor.print();
+    return;
+  }
+  const printContent = htmlContent;
 
   const printWindow = window.open("", "_blank");
 
@@ -1575,24 +1582,15 @@ const getDepartmentName = (subDeptId) => {
                     }}
                   >
                     <div style={{ height: "100%" }}>
-                      <RichTextEditorComponent
-                        ref={rteRef}
-                        value={htmlContent}
-                        change={() => {
-                          if (rteRef.current) {
-                            setHtmlContent(rteRef.current.value);
-                          }
-                        }}
-                        toolbarSettings={rteToolbarSettings}
-                        importWord={rteImportWord}
-                        exportWord={rteExportWord}
-                        exportPdf={rteExportPdf}
-                        insertImageSettings={rteInsertImageSettings}
+                      <DocumentEditorContainerComponent
+                        ref={docEditorRef}
                         height="100%"
-                        enableResize={false}
+                        serviceUrl={docServiceUrl}
+                        enableToolbar={true}
+                        showPropertiesPane={false}
                       >
-                        <RteInject services={[Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count]} />
-                      </RichTextEditorComponent>
+                        <Inject services={[DocToolbar]} />
+                      </DocumentEditorContainerComponent>
                     </div>
                   </div>
 

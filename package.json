@@ -19,6 +19,7 @@
     "@fullcalendar/react": "^6.1.8",
     "@fullcalendar/timegrid": "^6.1.8",
     "@syncfusion/ej2-base": "^33.1.45",
+    "@syncfusion/ej2-react-documenteditor": "^33.1.46",
     "@syncfusion/ej2-react-richtexteditor": "^33.1.45",
     "@tanstack/react-table": "^8.9.2",
     "@tanstack/table-core": "^8.9.2",

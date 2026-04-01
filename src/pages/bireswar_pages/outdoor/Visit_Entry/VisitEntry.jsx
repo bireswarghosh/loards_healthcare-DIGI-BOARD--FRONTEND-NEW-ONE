@@ -365,12 +365,11 @@ const VisitEntry = () => {
           PhoneNo: data.PhoneNo || "",
           Age: data.Age?.toString() || "",
           Sex: data.Sex || "",
-          Add1: patientData.PatientAdd1 || patientData.Add1 || "",
-          Add2: patientData.PatientAdd2 || patientData.Add2 || "",
-          Add3: patientData.PatientAdd3 || patientData.Add3 || "",
+          Add1: data.PatientAdd1 || data.Add1 || "",
+          Add2: data.PatientAdd2 || data.Add2 || "",
+          Add3: data.PatientAdd3 || data.Add3 || "",
           fullAddress:
-            `${patientData?.PatientAdd1}, ${patientData?.PatientAdd2}, ${patientData?.PatientAdd3}` ||
-            " ",
+            [data?.PatientAdd1, data?.PatientAdd2, data?.PatientAdd3].filter(Boolean).join(", ") || "",
           PPr: data.PPr || "",
           GurdianName: data.GurdianName || "",
           Relation: data.Relation || "",
@@ -398,7 +397,7 @@ const VisitEntry = () => {
           OutBillDate: data.PVisitDate
             ? data.PVisitDate.split("T")[0]
             : new Date().toISOString().split("T")[0],
-          RegistrationDate: data.RegistrationDate.split("T")[0] || "",
+          RegistrationDate: data.RegistrationDate ? data.RegistrationDate.split("T")[0] : "",
           RegistrationTime: data.vTime || getInitialTime(),
           RegCh: data.RegCh?.toString() || "0.00",
           Rate: data.Rate?.toString() || "0.00",
