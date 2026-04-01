@@ -870,7 +870,7 @@ useEffect(() => {
                         /> */}
                         <AsyncApiSelect
                           // api="https://lords-backend.onrender.com/api/v1/ot-bills/search/admission"
-                          api="https://lords-backend.onrender.com/api/v1/admission/search"
+                          api="/admission/search"
                           // `/admission/search?q=${formData.AdmitionId}`
                           value={admissionOption} // ✅ UI object
                           // searchKey="admissionId"
@@ -967,7 +967,7 @@ useEffect(() => {
       }
     /> */}
                         <ApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/doctormaster?page=1&limit=10000"
+                          api="/doctormaster?page=1&limit=10000"
                           value={formData.AnesthesiaDocId || null}
                           labelKey="Doctor"
                           valueKey="DoctorId"
@@ -1046,7 +1046,7 @@ useEffect(() => {
                         <label className="form-label">Surgeon Doctor</label>
 
                         <ApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/doctormaster?page=1&limit=10000"
+                          api="/doctormaster?page=1&limit=10000"
                           value={formData.SergonDocId || null}
                           labelKey="Doctor"
                           valueKey="DoctorId"
@@ -1082,7 +1082,7 @@ useEffect(() => {
                         <label className="form-label">Under Care Doctor</label>
 
                         <ApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/doctormaster?page=1&limit=10000"
+                          api="/doctormaster?page=1&limit=10000"
                           value={formData.OthersDocId || null}
                           labelKey="Doctor"
                           valueKey="DoctorId"
@@ -1124,7 +1124,7 @@ useEffect(() => {
                         <label className="form-label">OT Name</label>
 
                         <ApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/otMaster"
+                          api="/otMaster"
                           value={formData.OTId || ""}
                           labelKey="OtMaster"
                           valueKey="OtMasterId"
@@ -1142,7 +1142,7 @@ useEffect(() => {
                         <label className="form-label">OT Slot</label>
 
                         <ApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/otSlot"
+                          api="/otSlot"
                           value={formData.OTSlotId || ""}
                           labelKey="OTSlot"
                           valueKey="OTSlotId"
@@ -1160,7 +1160,7 @@ useEffect(() => {
                         <label className="form-label">OT Type</label>
 
                         <ApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/otType"
+                          api="/otType"
                           value={formData.OTType || ""}
                           labelKey="OtType"
                           valueKey="OtType"
