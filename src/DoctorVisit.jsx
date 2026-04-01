@@ -301,7 +301,7 @@ toast.error("Something went wrong");
                 </label>
 
                 <AsyncApiSelect
-                  api="https://lords-backend.onrender.com/api/v1/admission/search"
+                  api="/admission/search"
                   // value={watch("AdmitionId")}
                   // onChange={(val) => setValue("AdmitionId", val)}
                   value={watch("AdmitionObj")} // 👈 object field
@@ -437,7 +437,7 @@ toast.error("Something went wrong");
                 </label>
                 {/* <input className="form-control form-control-sm" {...register("DoctorName")} /> */}
                 <ApiSelect
-                  api="https://lords-backend.onrender.com/api/v1/doctormaster?page=1&limit=10000"
+                  api="/doctormaster?page=1&limit=10000"
                   value={watch("DoctorId")} 
                   labelKey="Doctor" 
                   valueKey="DoctorId" 
