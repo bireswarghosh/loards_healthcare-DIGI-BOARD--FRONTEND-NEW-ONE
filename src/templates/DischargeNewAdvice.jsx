@@ -230,11 +230,11 @@ const DischargeNewAdvice = () => {
       }
       // ---- DISCHARGE MAIN TABLE UPDATE ----
       const dischargePayload = {
-        DisCerDate: new Date().toISOString().split("T")[0],
-        DisCerTime: new Date().toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        // DisCerDate: new Date().toISOString().split("T")[0],
+        // DisCerTime: new Date().toLocaleTimeString("en-GB", {
+        //   hour: "2-digit",
+        //   minute: "2-digit",
+        // }),
         AdmitionId: savedAdmitionId,
         G: formData.significantFindings || "",
         E: formData.followUpDate || "",
