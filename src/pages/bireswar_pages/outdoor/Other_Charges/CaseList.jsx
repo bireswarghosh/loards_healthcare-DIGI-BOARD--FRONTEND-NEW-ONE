@@ -19,6 +19,9 @@ const CaseList = () => {
   const [driveFiles, setDriveFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
 
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10))
+  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
+
   // Set default limit to 20 as requested
   const [paginationModel, setPaginationModel] = useState({
     page: 1,
@@ -27,6 +30,11 @@ const CaseList = () => {
   });
   const [rowCount, setRowCount] = useState(0);
 
+  useEffect(() => {
+    console.log("useEffect Start Date:", startDate);
+    console.log("useEffect End Date:", endDate);
+  }, [startDate, endDate]);
+
   const fetchVisits = useCallback(
     async (
       patientName = "",
@@ -34,17 +42,28 @@ const CaseList = () => {
       date = "",
       registrationId = "",
       page = 1,
-      limit = 20
+      limit = 20,
     ) => {
       setLoading(true);
+
       try {
+        console.log("fetchVisits Start Date:", startDate);
+        console.log("fetchVisits  End Date:", endDate);
+
         const params = new URLSearchParams({
           page: page.toString(),
           limit: limit.toString(),
           ...(patientName && { PatientName: patientName }),
           ...(phone && { Phone: phone }),
           ...(registrationId && { caseNo: registrationId }),
-          ...(date && { date }),
+          ...(!patientName &&
+            !phone &&
+            startDate &&
+            endDate && { startDate: startDate }),
+          ...(!patientName &&
+            !phone &&
+            startDate &&
+            endDate && { endDate: endDate }),
         });
 
         const response = await axiosInstance.get(`/case01/search?${params}`);
@@ -69,7 +88,7 @@ const CaseList = () => {
         setLoading(false);
       }
     },
-    []
+    [startDate, endDate],
   );
 
   useEffect(() => {
@@ -83,27 +102,30 @@ const CaseList = () => {
       searchDate,
       searchRegistrationId,
       1,
-      paginationModel.pageSize
+      paginationModel.pageSize,
     );
   };
 
   const handlePaginationChange = (newPage) => {
     fetchVisits(
+      searchPatientName,
       searchPhone,
       searchDate,
       searchRegistrationId,
       newPage,
-      paginationModel.pageSize
+      paginationModel.pageSize,
     );
   };
 
   const fetchDriveFiles = async (caseId) => {
     try {
       setLoadingFiles(true);
-      
+
       // Call backend API to get files
-      const response = await axiosInstance.get(`/case-files/${encodeURIComponent(caseId)}`);
-      
+      const response = await axiosInstance.get(
+        `/case-files/${encodeURIComponent(caseId)}`,
+      );
+
       if (response.data?.success && response.data.files) {
         setDriveFiles(response.data.files);
       } else {
@@ -155,39 +177,57 @@ const CaseList = () => {
                     className="btn btn-sm text-primary"
                     title="View"
                     onClick={() => {
-                      navigate(`/CaseEntry/${encodeURIComponent(data.CaseId)}/view`);
+                      navigate(
+                        `/CaseEntry/${encodeURIComponent(data.CaseId)}/view`,
+                      );
                     }}
                   >
                     <i className="fa-light fa-eye"></i>
                   </button>
 
-                  <button className="btn btn-sm text-success" title="Edit"
-                   onClick={() => {
-                      navigate(`/CaseEntry/${encodeURIComponent(data.CaseId)}/edit`);
+                  <button
+                    className="btn btn-sm text-success"
+                    title="Edit"
+                    onClick={() => {
+                      navigate(
+                        `/CaseEntry/${encodeURIComponent(data.CaseId)}/edit`,
+                      );
                     }}
                   >
                     <i className="fa-light fa-pen-to-square"></i>
                   </button>
 
-                  <button 
-                    className="btn btn-sm text-info" 
+                  <button
+                    className="btn btn-sm text-info"
                     title="Open Files"
                     onClick={() => handleOpenFiles(data.CaseId)}
                   >
                     <i className="fa-light fa-file"></i>
                   </button>
 
-                  <button 
-                    className="btn btn-sm text-danger" 
+                  <button
+                    className="btn btn-sm text-danger"
                     title="Delete"
                     onClick={async () => {
                       if (window.confirm(`Delete case ${data.CaseNo}?`)) {
                         try {
-                          await axiosInstance.delete(`/case01/${encodeURIComponent(data.CaseId)}`);
-                          alert('Case deleted successfully!');
-                          fetchVisits("", "", "", "", paginationModel.page, paginationModel.pageSize);
+                          await axiosInstance.delete(
+                            `/case01/${encodeURIComponent(data.CaseId)}`,
+                          );
+                          alert("Case deleted successfully!");
+                          fetchVisits(
+                            "",
+                            "",
+                            "",
+                            "",
+                            paginationModel.page,
+                            paginationModel.pageSize,
+                          );
                         } catch (error) {
-                          alert('Failed to delete: ' + (error.response?.data?.message || error.message));
+                          alert(
+                            "Failed to delete: " +
+                              (error.response?.data?.message || error.message),
+                          );
                         }
                       }
                     }}
@@ -230,11 +270,24 @@ const CaseList = () => {
                 <div className="btn-box d-flex flex-wrap gap-2">
                   <button
                     className="btn btn-sm btn-success"
-                    onClick={() => navigate('/CaseEntry')}
+                    onClick={() => navigate("/CaseEntry")}
                   >
                     <i className="fa-light fa-plus me-2"></i> Add New Case
                   </button>
                   <div id="tableSearch" className="d-flex gap-2">
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                    />
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                    />
+
                     <input
                       type="text"
                       className="form-control form-control-sm"
@@ -272,6 +325,8 @@ const CaseList = () => {
                   <button
                     className="btn btn-sm btn-secondary"
                     onClick={() => {
+                      setStartDate(new Date().toISOString().slice(0, 10));
+                      setEndDate(new Date().toISOString().slice(0, 10));
                       setSearchPatientName("");
                       setSearchPhone("");
                       setSearchDate("");
@@ -284,12 +339,11 @@ const CaseList = () => {
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => {
-                     navigate(-1)
+                      navigate(-1);
                     }}
                   >
                     Back
                   </button>
-
                 </div>
               </div>
 
@@ -316,7 +370,7 @@ const CaseList = () => {
                         to{" "}
                         {Math.min(
                           paginationModel.page * paginationModel.pageSize,
-                          rowCount
+                          rowCount,
                         )}{" "}
                         of {rowCount} entries
                       </div>
@@ -386,7 +440,9 @@ const CaseList = () => {
             <div className="modal-dialog modal-lg modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">📄 Files for Case: {selectedCaseId}</h5>
+                  <h5 className="modal-title">
+                    📄 Files for Case: {selectedCaseId}
+                  </h5>
                   <button
                     type="button"
                     className="btn-close"
@@ -396,7 +452,10 @@ const CaseList = () => {
                 <div className="modal-body">
                   {loadingFiles ? (
                     <div className="text-center py-5">
-                      <div className="spinner-border text-primary" role="status"></div>
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      ></div>
                       <p className="mt-2">Loading files...</p>
                     </div>
                   ) : driveFiles.length > 0 ? (
@@ -405,7 +464,10 @@ const CaseList = () => {
                         <div key={index} className="col-md-6 mb-3">
                           <div className="card h-100">
                             <div className="card-body">
-                              <h6 className="card-title text-truncate" title={file.name}>
+                              <h6
+                                className="card-title text-truncate"
+                                title={file.name}
+                              >
                                 <i className="fa-light fa-file-pdf me-2"></i>
                                 {file.name}
                               </h6>
