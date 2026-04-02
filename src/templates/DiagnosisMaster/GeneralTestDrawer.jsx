@@ -174,23 +174,51 @@ const GeneralTestDrawer = ({
       toast.error("Failed to create all properties");
     }
   };
-  const getReferenceRange = (prop) => {
-    if (prop.ComMin != "" || prop.ComMax != "") {
+  // const getReferenceRange = (prop) => {
+  //   if (prop.ComMin != "" || prop.ComMax != "") {
+  //     return `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`;
+  //   }
+
+  //   if ((prop.MaleMin != "" || prop.MaleMax != "") && formData2?.Sex == "M") {
+  //     return `${prop.MaleMin ?? ""} - ${prop.MaleMax ?? ""}`;
+  //   }
+
+  //   if (
+  //     (prop.FemaleMin != "" || (prop.FemaleMax != "" && formData2?.Sex)) &&
+  //     formData2?.Sex == "F"
+  //   ) {
+  //     return `${prop.FemaleMin ?? ""} - ${prop.FemaleMax ?? ""}`;
+  //   }
+
+  //   if (prop.ChildMin != "" || prop.ChildMax != "") {
+  //     return `${prop.ChildMin ?? ""} - ${prop.ChildMax ?? ""}`;
+  //   }
+
+  //   if (prop.Others) {
+  //     return prop.Others;
+  //   }
+
+  //   return "";
+  // };
+
+
+
+const getReferenceRange = (prop) => {
+    if ((prop.ComMin != "" && prop.ComMin != null) || (prop.ComMax != "" && prop.ComMax != null)) {
       return `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`;
     }
 
-    if ((prop.MaleMin != "" || prop.MaleMax != "") && formData2?.Sex == "M") {
-      return `${prop.MaleMin ?? ""} - ${prop.MaleMax ?? ""}`;
+    if ((prop.MaleMin != "" && prop.MaleMin != null) || (prop.MaleMax != "" && prop.MaleMax != null)) {
+      return `${prop.MaleMin ?? ""} - ${prop.MaleMax ?? ""}-${prop.Others ?? ""}`;
     }
 
     if (
-      (prop.FemaleMin != "" || (prop.FemaleMax != "" && formData2?.Sex)) &&
-      formData2?.Sex == "F"
+      (prop.FemaleMin != "" && prop.FemaleMin != null) || (prop.FemaleMax != "" && prop.FemaleMax != null && formData2?.Sex == "F")
     ) {
-      return `${prop.FemaleMin ?? ""} - ${prop.FemaleMax ?? ""}`;
+      return `${prop.FemaleMin ?? ""} - ${prop.FemaleMax ?? ""}-${prop.Others ?? ""}`;
     }
 
-    if (prop.ChildMin != "" || prop.ChildMax != "") {
+    if ((prop.ChildMin != "" && prop.ChildMin != null) || (prop.ChildMax != "" && prop.ChildMax != null)) {
       return `${prop.ChildMin ?? ""} - ${prop.ChildMax ?? ""}`;
     }
 
@@ -200,6 +228,9 @@ const GeneralTestDrawer = ({
 
     return "";
   };
+
+
+
   // const handlePrint = () => { 
   //   if (!selectedTest) {
   //     toast.error("Please select a test first");
@@ -518,7 +549,7 @@ const GeneralTestDrawer = ({
       {/* ================= BASIC INFO ================= */}
       <div className="row g-2 mb-2 align-items-end">
         <div className="col-md-2">
-          <label className="form-label mb-0">Case No.</label>
+          <label className="form-label mb-0">Case No.pppppp</label>
           <input
             value={formData2?.CaseNo || ""}
             readOnly
