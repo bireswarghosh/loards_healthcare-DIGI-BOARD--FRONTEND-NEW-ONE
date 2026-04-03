@@ -204,7 +204,9 @@ const CaseTestDataModal = ({
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:A4;margin:10mm}
+html,body{height:100%;overflow:hidden}
 body{padding:50mm 8mm 60mm 8mm;font-family:"Times New Roman",serif;font-size:13px;color:#000}
+.cc{max-height:calc(297mm - 50mm - 60mm - 20mm);overflow:hidden}
 .bc{text-align:right;margin-bottom:4px}
 .bc img{height:45px}
 .pi{width:100%;border:1px solid #000;border-collapse:collapse;font-size:11px}
