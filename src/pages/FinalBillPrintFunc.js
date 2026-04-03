@@ -1,4 +1,4 @@
-// this will merger conescutive bed data
+
 function mergeConsecutive(arr) {
   const result = [];
 
@@ -321,6 +321,14 @@ export const handlePrint1 = (data) => {
       <div class="total-row">
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
         <span>${data.insuranceApproval}</span>
+      </div>
+         <div class="total-row">
+        <span class="total-label">Discount:</span>
+        <span>${data?.discount || 0}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Due:</span>
+        <span>${data?.due || 0}</span>
       </div>
        <div class="total-row" style="justify-content: flex-start; margin-top: 10px; font-weight: normal;">
         Non Payble Other Chrg: ${data.nonPayable}
@@ -855,6 +863,15 @@ export const handlePrint3 = (data) => {
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
         <span>${data.insuranceApproval}</span>
       </div>
+
+         <div class="total-row">
+        <span class="total-label">Discount:</span>
+        <span>${data?.discount || 0}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Due:</span>
+        <span>${data?.due || 0}</span>
+      </div>
        <div class="total-row" style="justify-content: flex-start; margin-top: 10px; font-weight: normal;">
         Non Payble Other Chrg: ${data.nonPayable}
       </div>
@@ -1162,6 +1179,16 @@ export const handlePrint4 = (data) => {
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
         <span>${data.insuranceApproval}</span>
       </div>
+
+         <div class="total-row">
+        <span class="total-label">Discount:</span>
+        <span>${data?.discount || 0}</span>
+      </div>
+      <div class="total-row">
+        <span class="total-label">Due:</span>
+        <span>${data?.due || 0}</span>
+      </div>
+
        <div class="total-row" style="justify-content: flex-start; margin-top: 10px; font-weight: normal;">
         Non Payble Other Chrg: ${data.nonPayable}
       </div>
@@ -1352,7 +1379,7 @@ export const handlePrint5 = (data) => {
       </div>
       <div class="info-row">
        
-        <div class="info-col"><span class="label">DISCHARGE TYPE</span>: <span class="value">${data.dischargeType}</span></div>
+      <!--  <div class="info-col"><span class="label">DISCHARGE TYPE</span>: <span class="value">${data.dischargeType}</span></div> -->
         <!--
         
         <div class="info-col"><span class="label">DISCHARGE DATE</span>: <span class="value">${data.dischargeDate}</span></div>
@@ -1559,3 +1586,4 @@ export const handlePrint5 = (data) => {
     alert("Pop-up blocked. Please allow pop-ups for this website to print.");
   }
 };
+

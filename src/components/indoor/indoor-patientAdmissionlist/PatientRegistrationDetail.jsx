@@ -302,7 +302,7 @@ const PatientAdmission = () => {
   };
 
   const fetchBedById = async (bedId) => {
-    if (!bedId) return;
+    if (!bedId || bedId == 0) return;
     try {
       const response = await axiosInstance.get(`/bedMaster/${bedId}`);
       if (response.data.success) setSelectedBedName(response.data.data.Bed);
@@ -313,7 +313,7 @@ const PatientAdmission = () => {
 
   const fetchDrawerBeds = async (page = 1, search = "") => {
     try {
-      let url = `/bedMaster/Vacant/byDeptId?page=${page}&limit=${bedsPerPage}`;
+      let url = `/bedMaster/active/byDeptId?page=${page}&limit=${bedsPerPage}`;
       if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
       if (formData.DepartmentId)
         url += `&DepartmentId=${formData.DepartmentId}`;
@@ -584,7 +584,7 @@ const PatientAdmission = () => {
         const apiData = response.data.data;
         console.log("fetched data: ", apiData);
 
-        if (apiData.BedId) {
+        if (apiData.BedId && apiData.BedId != 0) {
           const res = await axiosInstance.get(`/bedMaster/${apiData.BedId}`);
           if (res.data.success) {
             console.log("selected bed: ", res.data.data.Bed);
@@ -650,7 +650,7 @@ const PatientAdmission = () => {
         fetchRMO();
         fetchPackages();
 
-        if (apiData.BedId) fetchBedById(apiData.BedId);
+        if (apiData.BedId && apiData.BedId != 0) fetchBedById(apiData.BedId);
       }
     } catch (error) {
       console.error("Error fetching admission:", error);
@@ -726,6 +726,20 @@ const PatientAdmission = () => {
   };
 
   const handleSubmit = async () => {
+    if (!formData.PatientName?.trim()) return toast.error("Patient Name is required");
+    if (!formData.Add1?.trim()) return toast.error("Address is required");
+    if (!formData.Dob) return toast.error("DOB is required");
+    if (!formData.PhoneNo?.trim()) return toast.error("Phone is required");
+    if (!formData.IdentNo?.trim()) return toast.error("ID Proof is required");
+    if (!formData.Sex) return toast.error("Sex is required");
+    if (!formData.MStatus) return toast.error("Marital Status is required");
+    if (!formData.AdmType && formData.AdmType !== 0) return toast.error("Admission Type is required");
+    if (!formData.DepartmentId || formData.DepartmentId == 0) return toast.error("Department is required");
+    if (!formData.UCDoctor1Id || formData.UCDoctor1Id == 0) return toast.error("Under Care Dr 1 is required");
+    if (!formData.BedId || formData.BedId == 0) return toast.error("Bed No. is required");
+    if (!formData.DiseaseId || formData.DiseaseId == 0) return toast.error("Disease is required");
+    if (!formData.RMOId || formData.RMOId == 0) return toast.error("R.M.O. is required");
+
     try {
       setLoading(true);
       const cleanData = { ...formData };
@@ -1669,7 +1683,7 @@ window.onload = function () {
                         <option value="O">O</option>
                       </select>
                       <label style={{ ...labelStyle, marginLeft: "4px" }}>
-                        Status
+                         Marital Status <span className="text-danger">*</span>
                       </label>
                       <select
                         name="MStatus"
@@ -1979,7 +1993,7 @@ window.onload = function () {
                         style={inputStyle}
                         disabled={mode != "create"}
                       >
-                        <option value={""}>---</option>
+                        <option value={""}>- SELECT ONE  -</option>
                         {department.map((d, i) => (
                           <option key={i} value={d.DepartmentId}>
                             {d.Department}
@@ -2018,7 +2032,7 @@ window.onload = function () {
                         <div>
                           <label style={{ ...labelStyle, width: "90px" }}>
                             Under Care Dr 2
-                            <span className="text-danger">*</span>
+                       
                           </label>
                           <input
                             className="ms-2"
@@ -2043,7 +2057,7 @@ window.onload = function () {
                         <div>
                           <label style={{ ...labelStyle, width: "90px" }}>
                             Under Care Dr 3
-                            <span className="text-danger">*</span>
+                       
                           </label>
                           <input
                             className="ms-2"
@@ -2311,7 +2325,7 @@ window.onload = function () {
                         value={formData.BedRate}
                         onChange={handleInputChange}
                         style={inputStyle}
-                        disabled={mode != "create"}
+                        readOnly={mode === "view"}
                       />
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
@@ -2413,7 +2427,7 @@ window.onload = function () {
                     </div>
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "80px" }}>
-                        R.M.O.{" "}
+                        R.M.O.{" "}<span className="text-danger">*</span>
                       </label>
                       <select
                         name="RMOId"

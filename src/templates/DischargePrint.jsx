@@ -104,6 +104,7 @@ const DischargePrint = () => {
         <thead>
           <tr>
             <th style={{ border: "1px solid #000", padding: "2px" }}>Sl</th>
+            <th style={{ border: "1px solid #000", padding: "2px" }}>Type</th>
             <th style={{ border: "1px solid #000", padding: "2px" }}>
               Medicine
             </th>
@@ -120,6 +121,9 @@ const DischargePrint = () => {
                 <td style={{ border: "1px solid #000", padding: "2px" }}>
                   {m.SlNo}
                 </td>
+               <td style={{ border: "1px solid #000", padding: "2px" }}>
+                  {m.Type}
+                </td> 
                 <td style={{ border: "1px solid #000", padding: "2px" }}>
                   {m.Medicine}
                 </td>

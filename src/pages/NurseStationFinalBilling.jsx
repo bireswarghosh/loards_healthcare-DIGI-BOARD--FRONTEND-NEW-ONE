@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,52 +17,44 @@ function AsyncApiSelect({
   labelKey = "label",
   valueKey = "value",
   searchKey = "admissionId",
-  pageKey = "page",
-  defaultPage = 1,
   isDisabled = false,
 }) {
   const [selectedOption, setSelectedOption] = useState(null);
 
+  // ✅ LOAD SELECTED VALUE (ONLY axios)
   useEffect(() => {
     if (!value) return;
 
-    // 🔥 value can be string OR object
     const q = typeof value === "string" ? value : value?.value;
-
     if (!q) return;
 
-    // fetch(`${api}?${searchKey}=${encodeURIComponent(q)}`)
-    fetch(`${api}?${searchKey}=${q}`)
-      .then((res) => res.json())
+    axiosInstance
+      .get(`${api}?${searchKey}=${q}`)
       .then((res) => {
-        const item = res?.data?.[0];
+        const item = res?.data?.data?.[0];
         if (!item) return;
 
         setSelectedOption({
           value: item[valueKey],
           label: item[labelKey],
-          // label: "d",
         });
-      });
+      })
+      .catch(console.error);
   }, [value]);
 
-  // ------------------------------------------------
-  // 🔹 SEARCH
-  // ------------------------------------------------
+  // ✅ SEARCH OPTIONS
   const loadOptions = async (inputValue) => {
     if (!inputValue) return [];
 
-    const url = `${api}/search?${searchKey}=${inputValue}`;
-
     try {
-      const res = await fetch(url);
-      const result = await res.json();
+      const res = await axiosInstance.get(
+        `${api}/search?${searchKey}=${inputValue}`,
+      );
 
-      const list = result?.data || [];
+      const list = res?.data?.data || [];
 
       return list.map((item) => ({
         value: item[valueKey],
-        // label: item[labelKey],
         label: `${item["PatientName"]} ----- ${item["AdmitionNo"]}`,
       }));
     } catch (err) {
@@ -70,92 +63,23 @@ function AsyncApiSelect({
     }
   };
 
-  const customStyles = {
-    control: (base, state) => ({
-      ...base,
-      minHeight: "23px",
-      height: "23px",
-      fontSize: "2 px",
-      backgroundColor: "rgb(253, 250, 250)",
-
-      borderColor: state.isFocused ? "#86b7fe" : "#ced4da",
-      boxShadow: state.isFocused ? "0 0 0 .2rem rgba(13,110,253,.25)" : "none",
-      "&:hover": {
-        borderColor: "#86b7fe",
-      },
-    }),
-
-    /* 🔥 DROPDOWN MENU */
-    menu: (base) => ({
-      ...base,
-      backgroundColor: "primary", // black dropdown
-      color: "#fff",
-      zIndex: 9999,
-    }),
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 9999,
-    }),
-
-    menuList: (base) => ({
-      ...base,
-      padding: 0,
-      zIndex: 9999,
-    }),
-
-    /* 🔥 EACH OPTION */
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isSelected
-        ? "#0d6efd" // selected = bootstrap blue
-        : state.isFocused
-          ? "#212529" // hover = dark gray
-          : "#000", // normal = black
-      color: "#fff",
-      cursor: "pointer",
-      fontSize: "0.875rem",
-    }),
-
-    valueContainer: (base) => ({
-      ...base,
-      padding: "0 8px",
-    }),
-
-    indicatorsContainer: (base) => ({
-      ...base,
-      height: "31px",
-    }),
-
-    dropdownIndicator: (base) => ({
-      ...base,
-      padding: "2px",
-    }),
-
-    clearIndicator: (base) => ({
-      ...base,
-      padding: "2px",
-    }),
-  };
   return (
     <AsyncSelect
       cacheOptions
       loadOptions={loadOptions}
-      // value={selectedOption}
       value={value ?? selectedOption}
       onChange={(opt) => {
         setSelectedOption(opt);
-        onChange(opt ? opt : null);
+        onChange(opt || null);
       }}
       placeholder={placeholder}
       isClearable
       menuPortalTarget={document.body}
       menuPosition="fixed"
-      styles={customStyles}
       isDisabled={isDisabled}
     />
   );
 }
-
 const Barcode = ({ value }) => {
   const svgRef = useRef(null);
 
@@ -1189,8 +1113,6 @@ const NurseStationFinalBilling = ({ ADMID }) => {
     }
   };
 
-
-
   // fetch ipd dept
   const fetchDept = async () => {
     try {
@@ -1574,12 +1496,11 @@ const NurseStationFinalBilling = ({ ADMID }) => {
     billedBy: "Admin",
   };
 
-useEffect(() => {
-  if(ADMID){
-    fetchAdm(ADMID)
-  }
-}, [ADMID])
-
+  useEffect(() => {
+    if (ADMID) {
+      fetchAdm(ADMID);
+    }
+  }, [ADMID]);
 
   useEffect(() => {
     if (Object.keys(admData).length) {
@@ -1846,27 +1767,27 @@ useEffect(() => {
                   />
                 </div>
                 <div className="col-md-3 col-6">
-                {admData.PatientName?<input
-                  type="text"
-                  style={styles.input}
-                  value={admData.PatientName || ""}
-                  onChange={(e) => {
-                    setAdmData(prev=>({
-                      ...prev,
-                      PatientName:e.target.value
-                    }))
-                  }
-                  
-                  }
-                />
-:
-                <AsyncApiSelect
-                  api={"https://lords-backend.onrender.com/api/v1/admission"}
-                  searchKey={"name"}
-                  labelKey="PatientName"
-                  valueKey="AdmitionId"
-                  onChange={onChange}
-                />}
+                  {admData.PatientName ? (
+                    <input
+                      type="text"
+                      style={styles.input}
+                      value={admData.PatientName || ""}
+                      onChange={(e) => {
+                        setAdmData((prev) => ({
+                          ...prev,
+                          PatientName: e.target.value,
+                        }));
+                      }}
+                    />
+                  ) : (
+                    <AsyncApiSelect
+                      api={"/admission"} // ✅ dynamic now
+                      searchKey={"name"}
+                      labelKey="PatientName"
+                      valueKey="AdmitionId"
+                      onChange={onChange}
+                    />
+                  )}
                 </div>
 
                 <div className="col-md-1 col-4 text-end">
@@ -2524,3 +2445,4 @@ useEffect(() => {
 };
 
 export default NurseStationFinalBilling;
+

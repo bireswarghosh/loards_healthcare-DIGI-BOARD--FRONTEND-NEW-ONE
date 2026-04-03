@@ -6,6 +6,7 @@ import { Modal, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../../axiosInstance";
 
+;
 const OtherCharges = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -111,9 +112,10 @@ const OtherCharges = () => {
   };
 
   const fetchBed = async (id) => {
-    if (!id) return;
     try {
+      console.log("HD");
       const res = await axiosInstance.get(`/bedMaster/${id}`);
+
       res.data.success ? setBedName(res.data.data.Bed) : setBedName("");
     } catch (error) {
       console.log("error fetching bed by id: ", error);
@@ -143,7 +145,6 @@ const OtherCharges = () => {
   }, [admissionId, location.state]);
 
   const fetchCompanyWiseOC = async (id) => {
-    if (!id) return;
     try {
       const res = await axiosInstance.get(
         `/company-wise-other-charges?cashlessId=${id}`,
@@ -216,7 +217,6 @@ const OtherCharges = () => {
   };
 
   const fetchAdmissionData = async () => {
-    if (!admissionId) return;
     try {
       setLoading(true);
       const response = await axiosInstance.get(
@@ -233,7 +233,6 @@ const OtherCharges = () => {
   };
 
   const fetchOtherCharges = async () => {
-    if (!admissionId) return;
     try {
       const response = await axiosInstance.get(
         `/admission-charges/${admissionId}`,
@@ -844,7 +843,7 @@ const OtherCharges = () => {
                               <input
                                 type="text"
                                 className="form-control form-control-sm"
-                                value={charge.Remarks || ""}
+                                value={charge.Remarks}
                                 name="Remarks"
                                 onChange={(e) => {
                                   handleChange(e, i);
@@ -855,7 +854,7 @@ const OtherCharges = () => {
                               <input
                                 type="text"
                                 className="form-control form-control-sm"
-                                value={charge.Package || ""}
+                                value={charge.Package}
                                 name="Package"
                                 onChange={(e) => {
                                   handleChange(e, i);
@@ -868,7 +867,7 @@ const OtherCharges = () => {
                       })
                     ) : (
                       <tr>
-                        <td colSpan="9" className="text-muted text-center">
+                        <td colSpan="7" className="text-muted text-center">
                           No charges found
                         </td>
                       </tr>
@@ -1155,6 +1154,7 @@ const OtherCharges = () => {
                   className="btn-close"
                   onClick={() => {
                     setShowConfirm(false);
+                    deleteChargeById(delId);
                   }}
                 ></button>
               </div>

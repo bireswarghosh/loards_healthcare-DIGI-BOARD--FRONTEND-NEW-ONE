@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -73,53 +74,104 @@ function AsyncApiSelect({
 }) {
   const [selectedOption, setSelectedOption] = useState(null);
 
+  // useEffect(() => {
+  //   if (!value) return;
+
+  //   // 🔥 value can be string OR object
+  //   const q = typeof value === "string" ? value : value?.value;
+
+  //   if (!q) return;
+
+  //   // fetch(`${api}?${searchKey}=${encodeURIComponent(q)}`)
+
+  //   axiosInstance.get(`${api}?${searchKey}=${q}`)
+  //     .then((res) => res.json())
+  //     .then((res) => {
+  //       const item = res?.data?.[0];
+  //       if (!item) return;
+
+  //       setSelectedOption({
+  //         value: item[valueKey],
+  //         label: item[labelKey],
+  //         // label: "d",
+  //       });
+  //     });
+  // }, [value]);
+
+
   useEffect(() => {
-    if (!value) return;
+  if (!value) return;
 
-    // 🔥 value can be string OR object
-    const q = typeof value === "string" ? value : value?.value;
+  const q = typeof value === "string" ? value : value?.value;
+  if (!q) return;
 
-    if (!q) return;
+  axiosInstance.get(`${api}?${searchKey}=${q}`)
+    .then((res) => {
+      const item = res?.data?.data?.[0];
+      if (!item) return;
 
-    // fetch(`${api}?${searchKey}=${encodeURIComponent(q)}`)
-    fetch(`${api}?${searchKey}=${q}`)
-      .then((res) => res.json())
-      .then((res) => {
-        const item = res?.data?.[0];
-        if (!item) return;
-
-        setSelectedOption({
-          value: item[valueKey],
-          label: item[labelKey],
-          // label: "d",
-        });
+      setSelectedOption({
+        value: item[valueKey],
+        label: item[labelKey],
       });
-  }, [value]);
+    })
+    .catch(console.error);
+}, [value]);
+
+
+
+
 
   // ------------------------------------------------
   // 🔹 SEARCH
   // ------------------------------------------------
-  const loadOptions = async (inputValue) => {
-    if (!inputValue) return [];
+  // const loadOptions = async (inputValue) => {
+  //   if (!inputValue) return [];
 
-    const url = `${api}/search?${searchKey}=${inputValue}`;
+  //   const url = `${api}/search?${searchKey}=${inputValue}`;
 
-    try {
-      const res = await fetch(url);
-      const result = await res.json();
+  //   try {
+  //     const res = await fetch(url);
+  //     const result = await res.json();
 
-      const list = result?.data || [];
+  //     const list = result?.data || [];
 
-      return list.map((item) => ({
-        value: item[valueKey],
-        // label: item[labelKey],
-        label: `${item["PatientName"]} ----- ${item["AdmitionNo"]}`,
-      }));
-    } catch (err) {
-      console.error("Search error:", err);
-      return [];
-    }
-  };
+  //     return list.map((item) => ({
+  //       value: item[valueKey],
+  //       // label: item[labelKey],
+  //       label: `${item["PatientName"]} ----- ${item["AdmitionNo"]}`,
+  //     }));
+  //   } catch (err) {
+  //     console.error("Search error:", err);
+  //     return [];
+  //   }
+  // };
+
+
+
+
+const loadOptions = async (inputValue) => {
+  if (!inputValue) return [];
+
+  try {
+    const res = await axiosInstance.get(
+      `${api}/search?${searchKey}=${inputValue}`
+    );
+
+    const list = res?.data?.data || [];
+
+    return list.map((item) => ({
+      value: item[valueKey],
+      label: `${item["PatientName"]} ----- ${item["AdmitionNo"]}`,
+    }));
+  } catch (err) {
+    console.error("Search error:", err);
+    return [];
+  }
+};
+
+
+
 
   const customStyles = {
     control: (base, state) => ({
@@ -2005,7 +2057,7 @@ const FinalBillingAdd = () => {
                   /> */}
 
                   <AsyncApiSelect
-                    api={"https://lords-backend.onrender.com/api/v1/admission"}
+                    api={"/admission"}
                     searchKey={"name"}
                     labelKey="PatientName"
                     valueKey="AdmitionId"
@@ -2359,7 +2411,7 @@ const FinalBillingAdd = () => {
                       />
                     </div>
                   </div>
-                  <div className="row g-1 align-items-center mb-1">
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Receipt Amt.</span>
                     </div>
@@ -2372,7 +2424,7 @@ const FinalBillingAdd = () => {
                         // onChange={handleChange}
                       />
                     </div>
-                  </div>
+                  </div> */}
                   <div className="row g-1 align-items-center">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>

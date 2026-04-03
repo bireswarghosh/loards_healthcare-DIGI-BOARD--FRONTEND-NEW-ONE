@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -626,10 +627,13 @@ const FinalBilling = () => {
           0,
         );
 
+        // I have changed it
         setNetBal(
           total -
-            res.data.data.details?.finalbilldtl?.find((item) => item.SlNo == 9)
-              ?.Amount1 || 0,
+            2 *
+              res.data.data.details?.finalbilldtl?.find(
+                (item) => item.SlNo == 9,
+              )?.Amount1 || 0,
         );
         setTotalReceipt(total);
         if (res.data.data.details?.finalbillalldtl) {
@@ -821,16 +825,15 @@ const FinalBilling = () => {
     billDate:
       fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
 
-
-otCharges: {
+    otCharges: {
       rows: otcDetails?.map((row, idx) => [
         row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
-        row.SubHead  || "",
+        row.SubHead || "",
         row.Amount || 0,
       ]) || [["", "", ""]],
       total:
-        billHeadData.find((item) => item.HeadName == "O.T. Charges")
-          ?.Amount1 || "0",
+        billHeadData.find((item) => item.HeadName == "O.T. Charges")?.Amount1 ||
+        "0",
     },
 
     bedCharges: {
@@ -930,6 +933,8 @@ otCharges: {
     nonPayable: "",
     // nonPayable: "1725", // not found
     billedBy: "Admin",
+    discount: fbData?.Discount || 0,
+    due: fbData?.ReciptAmt || 0,
   };
 
   // this is for handlePrint2
@@ -1117,17 +1122,15 @@ otCharges: {
     billDate:
       fbData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
 
-
-      
-otCharges: {
+    otCharges: {
       rows: otcDetails?.map((row, idx) => [
         row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
-        row.SubHead  || "",
+        row.SubHead || "",
         row.Amount || 0,
       ]) || [["", "", ""]],
       total:
-        billHeadData.find((item) => item.HeadName == "O.T. Charges")
-          ?.Amount1 || "0",
+        billHeadData.find((item) => item.HeadName == "O.T. Charges")?.Amount1 ||
+        "0",
     },
     bedCharges: {
       rows: fbData?.details?.finalbillbeddtl.map((row, idx) => [
@@ -1226,6 +1229,8 @@ otCharges: {
     nonPayable: "",
     // nonPayable: "1725", // not found
     billedBy: "Admin",
+    discount: fbData?.Discount || 0,
+    due: fbData?.ReciptAmt || 0,
   };
 
   const handleChange = (e) => {
@@ -1250,31 +1255,63 @@ otCharges: {
     setFormData(fbData);
   }, [fbData]);
 
+  //   useEffect(() => {
+  //     console.log("bill head data: ", billHeadData.find((item) => item.SlNo == 9)?.Amount1 || 0)
+  // // let val =
+  // //       Number(netBal) -
+  // //       Number(formData.Approval)
+
+  //     // setFbData((prev) => ({
+  //     //   ...prev,
+  //     //   PatiectPartyAmt: val,
+  //     // }));
+
+  //     // setFbData((prev) => ({
+  //     //   ...prev,
+  //     //   ReciptAmt: netBal - fbData.Approval - fbData.Discount,
+  //     // }));
+
+  //     setFormData((prev) => {
+  //   const patientAmt =
+  //     Number(netBal) - Number(formData.Approval || 0);
+
+  //   return {
+  //     ...prev,
+  //     PatiectPartyAmt: patientAmt,
+  //     ReciptAmt: patientAmt - Number(formData.Discount || 0),
+  //   };
+  // });
+  //   }, [fbData.Approval, netBal, billHeadData]);
+
+  //   useEffect(() => {
+  //     setFbData((prev) => ({
+  //       ...prev,
+  //       ReciptAmt: fbData.PatiectPartyAmt - fbData.Discount,
+  //     }));
+  //     // console.log("Hi dis: ",formData.Discount)
+  //   }, [fbData.Discount]);
+
+  // combined useEffect for Approval and Discount changes
   useEffect(() => {
-    console.log("bill head data: ", billHeadData.find((item) => item.SlNo == 9)?.Amount1 || 0)
-let val =
-      Number(netBal) -
-      Number(formData.Approval) -
-      Number(billHeadData.find((item) => item.SlNo == 9)?.Amount1 || 0);
+    const approval = Number(fbData.Approval || 0);
+    const discount = Number(fbData.Discount || 0);
+
+    const patientAmt = Number(netBal) - approval;
+    const receiptAmt = patientAmt - discount;
 
     setFbData((prev) => ({
       ...prev,
-      PatiectPartyAmt: val,
+      PatiectPartyAmt: patientAmt,
+      ReciptAmt: receiptAmt,
     }));
 
-    setFbData((prev) => ({
+    // optional (jodi formData use kortei hoy)
+    setFormData((prev) => ({
       ...prev,
-      ReciptAmt: netBal - fbData.Approval - fbData.Discount,
+      PatiectPartyAmt: patientAmt,
+      ReciptAmt: receiptAmt,
     }));
-  }, [fbData.Approval, netBal, billHeadData]);
-
-  useEffect(() => {
-    setFbData((prev) => ({
-      ...prev,
-      ReciptAmt: fbData.PatiectPartyAmt - fbData.Discount,
-    }));
-    // console.log("Hi dis: ",formData.Discount)
-  }, [fbData.Discount]);
+  }, [fbData.Approval, fbData.Discount, netBal, billHeadData]);
 
   return (
     <div className="min-vh-100 ">
@@ -1737,7 +1774,9 @@ let val =
                       />
                     </div>
                   </div>
-                  <div className="row g-1 align-items-center mb-1">
+
+                  {/* hidding this */}
+                  {/* <div className="row g-1 align-items-center mb-1">
                     <div className="col-6 text-end">
                       <span style={styles.label}>Receipt Amt.</span>
                     </div>
@@ -1750,7 +1789,8 @@ let val =
                         // onChange={handleChange}
                       />
                     </div>
-                  </div>
+                  </div> */}
+
                   <div className="row g-1 align-items-center">
                     <div className="col-6 text-end">
                       <span style={{ ...styles.label, color: "red" }}>
@@ -1882,7 +1922,7 @@ let val =
                       <span style={styles.label}>Approval amt</span>
                     </div>
                     <div className="col-4">
-                       <input
+                      <input
                         type="number"
                         style={styles.input}
                         value={Number(fbData?.Approval) || 0}
@@ -2149,3 +2189,4 @@ let val =
 };
 
 export default FinalBilling;
+
