@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -597,7 +596,7 @@ const FinalBillingAdd = () => {
 
   const handleSave = async () => {
     // console.log(mode);
-    // console.log("add: ", formData);
+    console.log("add: ", formData);
     setBtnLoading(true);
     try {
       if (mode === "add") {
@@ -1072,7 +1071,7 @@ const FinalBillingAdd = () => {
                         (item) => item.BedId == row.BedId,
                       )?.Bed || ""}
                     </td>
-                    <td className="text-end">{row?.BedRate}</td>
+                    <td className="text-end">{row?.BedRate || row?.ToDayRate || 0}</td>
                     <td className="text-end">
                       {bedDetails.find((item) => item.BedId == row.BedId)
                         ?.AtttndantCh || 0}
@@ -1458,7 +1457,7 @@ const FinalBillingAdd = () => {
             MyDate: dateString,
             ...entry,
             ServiceCh: entry.ServiceCh,
-            BedRate: entry.Rate,
+            BedRate: entry.Rate || entry.BedRate || entry.ToDayRate || 0,
           });
         }
 
@@ -1498,9 +1497,9 @@ const FinalBillingAdd = () => {
 
       // this will design the entire bed details according 12.00pm to 11.59 am = 1 day bed count
       const newBedArr = splitBedHistoryDateWise(arr);
-      // console.log("Calculated bed array: ", newBedArr)
+      console.log("Calculated bed array: ", newBedArr)
       const totalBedRate = newBedArr.reduce(
-        (sum, item) => sum + item.BedRate,
+        (sum, item) => sum + Number(item.ToDayRate),
         0,
       );
       // console.log("total bed rate: ", totalBedRate);
@@ -1665,8 +1664,8 @@ const FinalBillingAdd = () => {
         row.MyDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
         fetchedAdmBedDetail.find((item) => item.BedId == row.BedId)?.Bed || "",
         "1",
-        row?.BedRate || 0,
-        row?.BedRate || 0,
+        row?.BedRate || row?.ToDayRate || 0,
+        row?.BedRate || row?.ToDayRate || 0,
       ]) || [["", "", "", "", ""]],
       total:
         finalBillDetail.find((item) => item.HeadName == "Bed Charges")

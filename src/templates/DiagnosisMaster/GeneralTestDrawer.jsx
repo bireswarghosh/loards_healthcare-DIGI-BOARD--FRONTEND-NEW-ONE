@@ -219,33 +219,74 @@ const GeneralTestDrawer = ({
 
 
 
+// const getReferenceRange = (prop) => {
+//     if ((prop.ComMin != "" && prop.ComMin != null) || (prop.ComMax != "" && prop.ComMax != null)) {
+//       return `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`;
+//     }
+
+//     if ((prop.MaleMin != "" && prop.MaleMin != null) || (prop.MaleMax != "" && prop.MaleMax != null)) {
+//       return `${prop.MaleMin ?? ""} - ${prop.MaleMax ?? ""}-${prop.Others ?? ""}`;
+//     }
+
+//     if (
+//       (prop.FemaleMin != "" && prop.FemaleMin != null) || (prop.FemaleMax != "" && prop.FemaleMax != null && formData2?.Sex == "F")
+//     ) {
+//       return `${prop.FemaleMin ?? ""} - ${prop.FemaleMax ?? ""}-${prop.Others ?? ""}`;
+//     }
+
+//     if ((prop.ChildMin != "" && prop.ChildMin != null) || (prop.ChildMax != "" && prop.ChildMax != null)) {
+//       return `${prop.ChildMin ?? ""} - ${prop.ChildMax ?? ""}`;
+//     }
+
+//     if (prop.Others) {
+//       return prop.Others;
+//     }
+
+//     return "";
+//   };
+
 const getReferenceRange = (prop) => {
-    if ((prop.ComMin != "" && prop.ComMin != null) || (prop.ComMax != "" && prop.ComMax != null)) {
-      return `${prop.ComMin ?? ""} - ${prop.ComMax ?? ""}`;
+    const {
+      ComMin,
+      ComMax,
+      MaleMin,
+      MaleMax,
+      FemaleMin,
+      FemaleMax,
+      ChildMin,
+      ChildMax,
+      Others,
+    } = prop || {};
+
+    const formatRange = (min, max) => {
+      if (min && max) return `${min} - ${max}`;
+      if (min) return `${min}`;
+      if (max) return `${max}`;
+      return "";
+    };
+
+    let result = [];
+
+    // Common range
+    const common = formatRange(ComMin, ComMax);
+    if (common) result.push(common);
+
+    // Gender based
+    if (formData2?.Sex === "M") {
+      const male = formatRange(MaleMin, MaleMax);
+      if (male) result.push(male);
     }
 
-    if ((prop.MaleMin != "" && prop.MaleMin != null) || (prop.MaleMax != "" && prop.MaleMax != null)) {
-      return `${prop.MaleMin ?? ""} - ${prop.MaleMax ?? ""}-${prop.Others ?? ""}`;
+    if (formData2?.Sex === "F") {
+      const female = formatRange(FemaleMin, FemaleMax);
+      if (female) result.push(female);
     }
 
-    if (
-      (prop.FemaleMin != "" && prop.FemaleMin != null) || (prop.FemaleMax != "" && prop.FemaleMax != null && formData2?.Sex == "F")
-    ) {
-      return `${prop.FemaleMin ?? ""} - ${prop.FemaleMax ?? ""}-${prop.Others ?? ""}`;
-    }
+    // Others
+    if (Others) result.push(Others);
 
-    if ((prop.ChildMin != "" && prop.ChildMin != null) || (prop.ChildMax != "" && prop.ChildMax != null)) {
-      return `${prop.ChildMin ?? ""} - ${prop.ChildMax ?? ""}`;
-    }
-
-    if (prop.Others) {
-      return prop.Others;
-    }
-
-    return "";
+    return result.join(" "); // clean join
   };
-
-
 
   // const handlePrint = () => { 
   //   if (!selectedTest) {

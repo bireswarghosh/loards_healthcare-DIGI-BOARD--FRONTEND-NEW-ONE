@@ -286,6 +286,9 @@ const today = `${year}-${month}-${day}`;
       );
         setLoading(false);
         toast.success(res.data.message);
+        setTimeout(() => {
+          navigate(`/BloodReport/${encodeURIComponent(id)}/edit/&{tID}`)
+        },2000)
         // setFormData(res.data.data);
       }
       // console.log("res after edit: ", res.data);
@@ -333,26 +336,26 @@ const today = `${year}-${month}-${day}`;
   //   console.log(req);
   // }, [req]);
 
-
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      MCV:
-        formData.Erythrocytes != 0
-          ? (
-              (Number(formData.PCV) * 10) /
-              Number(formData.Erythrocytes)
-            ).toFixed(2)
-          : 0,
-      MCHC:
-        formData.PCV != 0
-          ? (
-              (Number(formData.Himoglobin1) * 100) /
-              Number(formData.PCV)
-            ).toFixed(2)
-          : 0,
-    }));
-  }, [formData.PCV]);
+// remove auto calculation
+  // useEffect(() => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     MCV:
+  //       formData.Erythrocytes != 0
+  //         ? (
+  //             (Number(formData.PCV) * 10) /
+  //             Number(formData.Erythrocytes)
+  //           ).toFixed(2)
+  //         : 0,
+  //     MCHC:
+  //       formData.PCV != 0
+  //         ? (
+  //             (Number(formData.Himoglobin1) * 100) /
+  //             Number(formData.PCV)
+  //           ).toFixed(2)
+  //         : 0,
+  //   }));
+  // }, [formData.PCV]);
 
 
   // --- STYLES ---
@@ -1523,7 +1526,7 @@ const today = `${year}-${month}-${day}`;
                       value={formData.PCVUnit}
                       onChange={onChangeFormData}
                       style={{ width: "30px" }}
-                      disabled={true}
+                      // disabled={true}
                       className="w-tiny text-end"
                     />
                   </div>
@@ -1613,7 +1616,7 @@ const today = `${year}-${month}-${day}`;
                     <input
                       type="text"
                       name="MCHCUnit"
-                                            disabled={true}
+                                            // disabled={true}
 
                       value={formData.MCHCUnit}
                       onChange={onChangeFormData}
@@ -1988,6 +1991,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
 
 
 export default BloodReportAdd;
+
 
 
 

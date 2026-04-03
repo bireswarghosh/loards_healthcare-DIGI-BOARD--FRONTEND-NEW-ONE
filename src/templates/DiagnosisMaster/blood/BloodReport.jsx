@@ -261,7 +261,7 @@ ReportDt: result
 }
 
 // console.log("fecthed data is",fetchedData)
-        // const caseId = "000003/25-26"; // I use it for testing bcz this id has data 
+        // const caseId = "000003/25-26"; // I use it for testing bcz this id has data
         const caseId = finalId // here id is case no.
 
         setFormData(fetchedData);
@@ -342,25 +342,26 @@ ReportDt: result
 
   // --- STYLES ---
 
-  useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      MCV:
-        formData.Erythrocytes != 0
-          ? (
-              (Number(formData.PCV) * 10) /
-              Number(formData.Erythrocytes)
-            ).toFixed(2)
-          : 0,
-      MCHC:
-        formData.PCV != 0
-          ? (
-              (Number(formData.Himoglobin1) * 100) /
-              Number(formData.PCV)
-            ).toFixed(2)
-          : 0,
-    }));
-  }, [formData.PCV]);
+  // remove auto calculation
+  // useEffect(() => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     MCV:
+  //       formData.Erythrocytes != 0
+  //         ? (
+  //             (Number(formData.PCV) * 10) /
+  //             Number(formData.Erythrocytes)
+  //           ).toFixed(2)
+  //         : 0,
+  //     MCHC:
+  //       formData.PCV != 0
+  //         ? (
+  //             (Number(formData.Himoglobin1) * 100) /
+  //             Number(formData.PCV)
+  //           ).toFixed(2)
+  //         : 0,
+  //   }));
+  // }, [formData.PCV]);
 
   // Styles from File B
   const inputStyle = {
@@ -430,7 +431,7 @@ ReportDt: result
       align-items: center;
       gap: 4px;
       margin-bottom: 2px;
-      flex-wrap: nowrap; 
+      flex-wrap: nowrap;
     }
 
     input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
@@ -444,7 +445,7 @@ ReportDt: result
     }
     textarea { height: auto; resize: none; font-family: var(--font-family); }
     input.yellow-bg { background-color: var(--bg-input-yellow); }
-    
+   
     .label {
       font-weight: bold;
       white-space: nowrap;
@@ -514,10 +515,10 @@ ReportDt: result
     }
     .lis-table-container {
       flex: 1; border: 1px solid var(--border-color);
-      background-color: #fff; overflow-y: auto; 
+      background-color: #fff; overflow-y: auto;
       min-height: 100px;
     }
-    
+   
     /* --- LIS EDITABLE TABLE --- */
     .lis-table { width: 100%; border-collapse: collapse; background: #fff; table-layout: fixed; }
     .lis-table th {
@@ -531,7 +532,7 @@ ReportDt: result
       padding: 0; /* Remove padding for input to fill cell */
       height: 20px; /* Force row height */
     }
-    
+   
     /* Seamless Table Inputs */
     .table-input {
       width: 100%;
@@ -588,7 +589,7 @@ ReportDt: result
 
       .field-row, .hemo-row { flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
       .form-container { overflow: visible; padding-right: 0; }
-      
+     
       input[type="text"], input[type="number"], input[type="date"], select {
         flex: 1; min-width: 80px;
       }
@@ -1463,7 +1464,7 @@ ReportDt: result
                     <input
                       type="number"
                       name="PCV"
-                                            disabled={true}
+                                            // disabled={true}
 
                       value={formData.PCV}
                       onChange={onChangeFormData}
@@ -1554,7 +1555,7 @@ ReportDt: result
                     <input
                       type="number"
                       name="MCHC"
-                                            disabled={true}
+                                            // disabled={true}
 
                       value={formData.MCHC}
                       onChange={onChangeFormData}
@@ -1798,7 +1799,7 @@ ReportDt: result
                   value={formData.Remarks}
                   onChange={onChangeFormData}
                 ></textarea>:
-                <select 
+                <select
                   className="w-full"
 onChange={
   (e)=>{
@@ -1811,7 +1812,7 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
                   ))}
                 </select>
                 }
-                
+               
               </div>
             </div>
           </div>

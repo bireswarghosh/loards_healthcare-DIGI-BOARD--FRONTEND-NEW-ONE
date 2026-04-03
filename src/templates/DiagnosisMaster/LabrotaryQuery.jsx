@@ -10,14 +10,20 @@ import { Await, useNavigate } from "react-router-dom";
 import PaginationBar from "./PaginationBar";
 import BookingTable from "./BookingTable";
 import TestDrawer from "./TestDrawer";
+import ZLoader from "./ZLoader";
 
 const LaboratoryQuery = () => {
   const [loading, setLoading] = useState(false);
   // --- State ---
   const [filterType, setFilterType] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(
+    new Date().toLocaleDateString("en-CA")
+  );
+  const [endDate, setEndDate] = useState(
+    new Date().toLocaleDateString("en-CA")
+  );
+
   const [signatory, setSignatory] = useState("NONE");
 const [testHtml, setTestHtml]=useState('')
 
@@ -611,6 +617,7 @@ console.log("enrichedTests", enrichedTests);
           {/* ------------------------------------------------
                 BOTTOM SECTION (SPLIT GRIDS)
             ------------------------------------------------ */}
+            {loading && <ZLoader/>}
           <div className='d-flex gap-1' style={{ height: "200px" }}>
             {/* TEST DETAIL GRID (BOTTOM LEFT) */}
             <div
@@ -641,7 +648,7 @@ console.log("enrichedTests", enrichedTests);
                   </thead>
                   <tbody>
                     {/* {console.log("test data for table", tests)} */}
-                    {loading && "loading..."}
+                    
                     {tests.length === 0 ? (
                       <tr>
                         <td colSpan={8} className='text-center text-muted'>
