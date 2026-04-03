@@ -599,7 +599,9 @@ const getReferenceRange = (prop) => {
     });
 
     /* ================= FOOTER ================= */
-    const finalY = doc.lastAutoTable.finalY + 10;
+    // const finalY = doc.lastAutoTable.finalY + 10;
+        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : y + 10;
+
 
     doc.setFontSize(9);
     doc.text("** End of Report **", pageWidth / 2, finalY, {
