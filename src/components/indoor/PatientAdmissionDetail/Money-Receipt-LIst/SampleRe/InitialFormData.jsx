@@ -55,20 +55,20 @@ function InitialFormData() {
     MoneyreeciptNo: "",
     RefferenceId: "",
     ReceiptType: 0,
-    ReceiptDate: new Date().toISOString().split("T")[0],
+    ReceiptDate: new Date().toLocaleDateString('en-CA'),
     PaymentType: "",
     Amount: "",
     Bank: "",
     Cheque: "",
-    ChqDate: new Date().toISOString().split("T")[0],
-    ClearDate: new Date().toISOString().split("T")[0],
+    ChqDate: new Date().toLocaleDateString('en-CA'),
+    ClearDate: new Date().toLocaleDateString('en-CA'),
     Narration: "",
     UserId: 37,
     SlipNo: "",
     TDS: "",
     PaidBy: "",
     Remarks: "",
-    ReceiptTime: "",
+    ReceiptTime: new Date().toTimeString().slice(0, 5),
     PrintDate: "",
     admission: null,
   });
@@ -720,8 +720,9 @@ function convertAmountToWords(amount) {
         setReceiptData({
           ...apiData,
           ReceiptDate: apiData.ReceiptDate
-            ? apiData.ReceiptDate.substring(0, 10)
+            ? new Date(apiData.ReceiptDate).toLocaleDateString('en-CA')
             : "",
+          ReceiptTime: apiData.ReceiptTime || "",
           ChqDate: apiData.ChqDate ? apiData.ChqDate.substring(0, 10) : "",
           ClearDate: apiData.ClearDate
             ? apiData.ClearDate.substring(0, 10)
@@ -729,7 +730,6 @@ function convertAmountToWords(amount) {
           PrintDate: apiData.PrintDate
             ? apiData.PrintDate.substring(0, 10)
             : "",
-          ReceiptTime: apiData.ReceiptTime || "",
         });
         if (apiData.admission?.AreaId) {
           const res = await axiosInstance.get(
@@ -913,15 +913,7 @@ function convertAmountToWords(amount) {
                         className="form-control form-control-sm"
                         id="ReceiptDate"
                         name="ReceiptDate"
-                        value={
-                          mode !== "create"
-                            ? (() => {
-                                const d = new Date(receiptData.ReceiptDate);
-                                d.setDate(d.getDate() + 1);
-                                return d.toISOString().slice(0, 10);
-                              })()
-                            : receiptData.ReceiptDate
-                        }
+                        value={receiptData.ReceiptDate}
                         onChange={handleChange}
                         disabled={mode === "view"}
                       />

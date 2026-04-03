@@ -34,6 +34,20 @@ const GeneralTestDrawer = ({
     "/doctormaster?page=1&limit=10000",
     []
   );
+
+
+  const { data: subDeps } = useAxiosFetch(
+    "/subdepartment",
+    []
+  );
+
+  let SubDepartmentMap = useMemo(() => {
+    const map = {};
+    (subDeps || []).forEach((sd) => {
+      map[sd.SubDepartmentId] = sd.SubDepartment;
+    });
+    return map;
+  }, [subDeps]);
   //  console.log("doctors",doctors);
   const doctorMap = useMemo(() => {
     const map = {};
@@ -44,6 +58,8 @@ const GeneralTestDrawer = ({
   }, [doctors]);
 
   const [selectedTest, setSelectedTest] = useState(null);
+    const [allTestProperties, setAllTestProperties] = useState({});
+
 
   const [pathologistId, setPathologistId] = useState(null);
   const [pathologistName, setPathologistName] = useState("");
@@ -370,176 +386,187 @@ const getReferenceRange = (prop) => {
 
   //   setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
   // };
- const handlePrint = () => {
-    if (!selectedTest) {
-      toast.error("Please select a test first");
+  const handlePrint = () => {
+    if (!tests.length) {
+      toast.error("No tests found");
       return;
     }
 
     const doc = new jsPDF("p", "mm", "a4");
 
     // ===== CONFIG =====
+    const pageHeight = 297;
+    const bottomMargin = 70;
+    const topMargin = 50;
     const pageWidth = 210;
     const L = 15;
     const marginRight = 35;
     const R = 110;
 
-    let y = 60;
+    /* ================= HEADER ================= */
+    const drawHeader = () => {
+      let y = topMargin;
 
-    doc.setFont("times", "normal");
-    doc.setFontSize(10);
+      doc.setFont("times", "normal");
+      doc.setFontSize(10);
 
-    /* ================= BARCODE ================= */
-    doc.setFillColor(230, 230, 230);
-    doc.rect(L, y, 60, 14, "F");
+      // BARCODE
+      doc.setFillColor(230, 230, 230);
+      doc.rect(L, y, 60, 14, "F");
 
-    doc.setFont("times", "bold");
-    doc.text(formData2?.CaseNo || "", L + 4, y + 10);
+      doc.setFont("times", "bold");
+      doc.text(formData2?.CaseNo || "", L + 4, y + 10);
 
-    doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
+      if (barcodeImg) {
+        doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
+      }
 
-    const baseY = y + 18;
+      const baseY = y + 18;
 
-    /* ================= LEFT SIDE ================= */
-    const labelX = L;
-    const colonX = L + 36;
-    const valueX = L + 40;
+      // LEFT
+      doc.setFont("times", "normal");
+      doc.text("Patient's Name", L, baseY);
+      doc.text(":", L + 36, baseY);
 
-    // Patient Name
-    doc.setFont("times", "normal");
-    doc.text("Patient's Name", labelX, baseY);
-    doc.text(":", colonX, baseY);
+      doc.setFont("times", "bold");
+      doc.text(formData2?.PatientName || "", L + 40, baseY);
 
-    doc.setFont("times", "bold");
-    doc.text(formData2?.PatientName || "", valueX, baseY);
+      doc.setFont("times", "normal");
+      doc.text("Case No.", L, baseY + 5);
+      doc.text(":", L + 36, baseY + 5);
 
-    // Case No
-    doc.setFont("times", "normal");
-    doc.text("Case No.", labelX, baseY + 5);
-    doc.text(":", colonX, baseY + 5);
+      doc.setFont("times", "bold");
+      doc.text(formData2?.CaseNo || "", L + 40, baseY + 5);
 
-    doc.setFont("times", "bold");
-    doc.text(formData2?.CaseNo || "", valueX, baseY + 5);
+      doc.setFont("times", "normal");
+      doc.text("Referred By", L, baseY + 10);
+      doc.text(":", L + 36, baseY + 10);
 
-    // Referred By
-    doc.setFont("times", "normal");
-    doc.text("Referred By", labelX, baseY + 10);
-    doc.text(":", colonX, baseY + 10);
+      doc.setFont("times", "bold");
+      doc.text(`${doctorMap[formData2.DoctorId] || ""}`, L + 40, baseY + 10);
 
-    doc.setFont("times", "bold");
-    doc.text(`${doctorMap[formData2.DoctorId] || ""}`, valueX, baseY + 10);
+      // RIGHT
+      doc.setFont("times", "normal");
+      doc.text("Age", R, baseY);
+      doc.text(":", R + 12, baseY);
 
-    /* ================= RIGHT SIDE ================= */
-    const rLabelX = R;
-    const rColonX = R + 40;
-    const rValueX = R + 44;
+      doc.setFont("times", "bold");
+      doc.text(`${formData2?.Age || ""} Y`, R + 16, baseY);
 
-    // Age
-    doc.setFont("times", "normal");
-    doc.text("Age", rLabelX, baseY);
-    doc.text(":", rColonX - 28, baseY);
+      doc.setFont("times", "normal");
+      doc.text("Sex", R + 30, baseY);
+      doc.text(":", R + 38, baseY);
 
-    doc.setFont("times", "bold");
-    doc.text(`${formData2?.Age || ""} Y`, rColonX - 24, baseY);
+      doc.setFont("times", "bold");
+      doc.text(formData2?.Sex || "", R + 42, baseY);
 
-    // Sex
-    doc.setFont("times", "normal");
-    doc.text("Sex", rColonX - 2, baseY);
-    doc.text(":", rColonX + 8, baseY);
+      doc.setFont("times", "normal");
+      doc.text("Collection Date", R, baseY + 5);
+      doc.text(":", R + 40, baseY + 5);
 
-    doc.setFont("times", "bold");
-    doc.text(formData2?.Sex || "", rColonX + 12, baseY);
+      doc.setFont("times", "bold");
+      doc.text(new Date().toISOString().split("T")[0], R + 44, baseY + 5);
 
-    // Collection Date
-    doc.setFont("times", "normal");
-    doc.text("Collection Date", rLabelX, baseY + 5);
-    doc.text(":", rColonX, baseY + 5);
+      doc.setFont("times", "normal");
+      doc.text("Reporting Date", R, baseY + 10);
+      doc.text(":", R + 40, baseY + 10);
 
-    doc.setFont("times", "bold");
-    doc.text(new Date().toISOString().split("T")[0], rValueX, baseY + 5);
+      doc.setFont("times", "bold");
+      doc.text(
+        selectedTest?.ReportDate?.split("T")[0] || "",
+        R + 44,
+        baseY + 10
+      );
 
-    // Reporting Date
-    doc.setFont("times", "normal");
-    doc.text("Reporting Date", rLabelX, baseY + 10);
-    doc.text(":", rColonX, baseY + 10);
+      // LINE
+      doc.line(L, baseY + 18, pageWidth - marginRight, baseY + 18);
 
-    doc.setFont("times", "bold");
-    doc.text(
-      selectedTest?.ReportDate?.split("T")[0] || "",
-      rValueX,
-      baseY + 10
-    );
+      return baseY + 25; // 👉 content start point
+    };
 
-    /* ================= LINE ================= */
-    y = baseY + 18;
+    // 🔥 HEADER FIRST PAGE
+    const headerEndY = drawHeader();
+    let y = headerEndY;
+ doc.text(SubDepartmentMap[tests[0].SubDepartmentId] || "", pageWidth / 2, y, {
+      align: "center",
+    });
+    /* ================= LOOP TEST ================= */
+    tests.forEach((test) => {
+      const testData = allTestProperties[test.TestId];
+      if (!testData) return;
 
-    doc.line(L, y, pageWidth - marginRight, y);
+      const { propertyList, propertyValueMap } = testData;
 
-    y += 8;
+      /* ===== TITLE ===== */
+      doc.setFont("times", "bold");
+      doc.setFontSize(12);
+      // doc.text(test.Test, pageWidth / 2, y, { align: "center" });
 
-    /* ================= TITLE ================= */
-    doc.setFont("times", "bold");
-    doc.setFontSize(12);
-    doc.text(selectedTest.Test, pageWidth / 2, y, { align: "center" });
+      y += 6;
 
-    y += 6;
+      /* ===== TABLE ===== */
+      autoTable(doc, {
+        startY: y,
 
-    /* ================= TABLE ================= */
-    doc.setFont("times", "normal");
-    doc.setFontSize(9);
+        margin: {
+          top: headerEndY, // 🔥 SAME for all pages
+          left: L,
+          right: marginRight,
+          bottom: bottomMargin,
+        },
 
-    autoTable(doc, {
-      startY: y,
-      margin: { left: L, right: marginRight },
+        pageBreak: "auto",
 
-      theme: "plain",
+        theme: "plain",
 
-      headStyles: {
-        fontStyle: "bold",
-      },
+        headStyles: {
+          fontStyle: "bold",
+        },
 
-      styles: {
-        fontSize: 9,
-        cellPadding: 2,
-      },
+        styles: {
+          fontSize: 9,
+          cellPadding: 2,
+        },
 
-      head: [["INVESTIGATION", "RESULT", "UNIT", "REFERENCE RANGE"]],
+        head: [["INVESTIGATION", "RESULT", "UNIT", "REFERENCE RANGE"]],
 
-      body: propertyList.map((prop) => {
-        const pv = propertyValueMap[prop.TestPropertyId];
+        body: propertyList.map((prop) => {
+          const pv = propertyValueMap[prop.TestPropertyId];
 
-        return [
-          prop.TestProperty || "",
-          pv?.value ?? "",
-          prop.Uom || "",
-          getReferenceRange(prop),
-        ];
-      }),
+          return [
+            prop.TestProperty || "",
+            pv?.value ?? "",
+            prop.Uom || "",
+            getReferenceRange(prop),
+          ];
+        }),
 
-      columnStyles: {
-        0: { cellWidth: 70 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 60 },
-      },
+        columnStyles: {
+          0: { cellWidth: 70 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 20 },
+          3: { cellWidth: 60 },
+        },
 
-      didDrawPage: () => {
-        doc.rect(L, y - 1, pageWidth - L - marginRight, 8);
-      },
+        // 🔥 HEADER EVERY PAGE (BEFORE CONTENT)
+        willDrawPage: () => {
+          drawHeader();
+        },
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
     });
 
+    /* ================= FOOTER ================= */
     const finalY = doc.lastAutoTable.finalY + 10;
 
-    /* ================= FOOTER ================= */
     doc.setFontSize(9);
     doc.text("** End of Report **", pageWidth / 2, finalY, {
       align: "center",
     });
 
     /* ================= OPEN PDF ================= */
-    const pdfBlob = doc.output("blob");
-    const blobUrl = URL.createObjectURL(pdfBlob);
-
+    const blobUrl = URL.createObjectURL(doc.output("blob"));
     window.open(blobUrl, "_blank");
 
     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
@@ -639,11 +666,30 @@ const getReferenceRange = (prop) => {
               tests.map((test, index) => (
                 <tr
                   key={index}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => {
+                   style={{
+                    cursor: "pointer",
+                    backgroundColor:
+                      test.TestId === selectedTest?.TestId
+                        ? "yellow"
+                        : "transparent",
+                  }}
+                  onClick={async () => {
                     setSelectedTest(test);
-                    fetchPropertyList(test?.TestId);
-                    fetchPropertyValues(formData2?.CaseId, test?.TestId);
+
+                    const props = await fetchPropertyList(test?.TestId);
+                    const values = await fetchPropertyValues(
+                      formData2?.CaseId,
+                      test?.TestId
+                    );
+
+                    // 🔥 ekhane main logic
+                    setAllTestProperties((prev) => ({
+                      ...prev,
+                      [test.TestId]: {
+                        propertyList: props || [],
+                        propertyValueMap: values || {},
+                      },
+                    }));
                   }}
                 >
                   <td>{test?.Test}</td>

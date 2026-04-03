@@ -96,6 +96,7 @@ const [testHtml, setTestHtml]=useState('')
             const nameRes = await axiosInstance.get(`/tests/${t.TestId}`);
             return {
               ...t,
+              SubDepartmentId: nameRes?.data?.data?.SubDepartmentId || 0,
               Test: nameRes?.data?.data?.Test || t.TestId,
               DescFormat: nameRes?.data?.data?.DescFormat,
               htmlContent:nameRes?.data?.data?.html_content || ""
@@ -105,7 +106,7 @@ const [testHtml, setTestHtml]=useState('')
           }
         }),
       );
-
+console.log("enrichedTests", enrichedTests);
       setTests(enrichedTests);
     } catch (error) {
       console.error("Error fetching test details:", error);
@@ -173,10 +174,14 @@ const [testHtml, setTestHtml]=useState('')
         `/testproperty?testId=${testId}&page=${page}&limit=${limit}`,
       );
 
-      setPropertyList(res?.data?.data || []);
+     const data = res?.data?.data || [];
+     setPropertyList(data);
+      return data;
     } catch (error) {
       console.error("Error fetching test property:", error);
       setPropertyList([]);
+      return [];
+    
     }
   };
   // ========================propertyValue==============================
@@ -230,10 +235,13 @@ const [testHtml, setTestHtml]=useState('')
       });
 
       setPropertyValueMap(map);
-      console.log("FULL PROPERTY VALUE MAP:", map);
+      // console.log("FULL PROPERTY VALUE MAP:", map);
+      return map;
+      return {};
     } catch (err) {
       console.error("Property value error", err);
       setPropertyValueMap({});
+      return {};  
     }
   };
 
@@ -484,7 +492,7 @@ const [testHtml, setTestHtml]=useState('')
           <BookingTable
             bookingList={bookingList}
             onRowClick={(item) => {
-              console.log("Form Data Set:", item);
+              // console.log("Form Data Set:", item);
               setFormData(item);
               fetchTestDetails(item.CaseId);
             }}
@@ -632,7 +640,7 @@ const [testHtml, setTestHtml]=useState('')
                     </tr>
                   </thead>
                   <tbody>
-                    {console.log("test data for table", tests)}
+                    {/* {console.log("test data for table", tests)} */}
                     {loading && "loading..."}
                     {tests.length === 0 ? (
                       <tr>
@@ -643,19 +651,19 @@ const [testHtml, setTestHtml]=useState('')
                     ) : (
                       tests.map((test, index) => (
                         <tr style={{ height: "100%" }} key={index}>
-                          {console.log('test id :',test.TestId)}
+                          {/* {console.log('test id :',test.TestId)} */}
                           <td
                             onClick={() => {
-                              console.log("test details", test);
+                              // console.log("test details", test);
                               const clickedDescFormat = test.DescFormat;
-                              console.log("hale luia", clickedDescFormat);
+                              // console.log("hale luia", clickedDescFormat);
 
                               const matchedTests = tests.filter(
                                 (t) => t.DescFormat === clickedDescFormat,
                               );
 
                               setSelectedTests(matchedTests);
-                              console.log(matchedTests);
+                              // console.log(matchedTests);
 
                               setFormData2({
                                 ...formData,
@@ -669,7 +677,7 @@ const [testHtml, setTestHtml]=useState('')
                               // setShowTestModal(true); // ✅ modal open
                               if (test.DescFormat === 1) {
                                 setTestHtml(test.htmlContent)
-                                console.log("test:",test)
+                                // console.log("test:",test)
                                 setTestDrawerType("descriptive");
                               }
                               if (test.DescFormat === 0) {
@@ -729,10 +737,10 @@ const [testHtml, setTestHtml]=useState('')
                               type='checkbox'
                               // checked={test.Approval === 1}
                               onChange={(e) => {
-                                console.log(
-                                  "Cancel changed:",
-                                  e.target.checked,
-                                );
+                                // console.log(
+                                //   "Cancel changed:",
+                                //   e.target.checked,
+                                // );
                               }}
                             />
                           </td>

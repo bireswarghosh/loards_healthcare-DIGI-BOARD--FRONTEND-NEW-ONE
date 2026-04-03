@@ -818,7 +818,9 @@ const PatientAdmission = () => {
     }
   };
 
-  const handlePrint = (data) => {
+
+
+const handlePrint = (data) => {
     // 1. Open a new window
     const printWindow = window.open("", "", "height=800,width=1000");
 
@@ -840,7 +842,7 @@ const PatientAdmission = () => {
          font-family: 'Roboto', sans-serif;
          font-size: 11px;
          margin: 0;
-         padding: 20px;
+         padding: 12px;
          color: #000;
          }
          /* Utility Classes */
@@ -1139,10 +1141,15 @@ const PatientAdmission = () => {
              
             </div>
             <div class="signature-row" style="margin-top:20px;">
-               <div>Signature of the Front Office Executive : SANJAY ST.</div>
-               <div>_____________________________________________________________________</div>
+              <div>
+  Signature of the Front Office Executive :
+  <span style="text-decoration: underline;">
+    ${data.meta.loggedInUser || "____________________________"}
+  </span>
+</div>
+               <div></div>
                <div class="text-right">DATE : ${data.meta.admissionDate}</div>
-            </div>case
+            </div>
          </div>
       </div>
 
@@ -1195,6 +1202,7 @@ window.onload = function () {
       // Optional: printWindow.close(); // Auto-close after print
     }, 250);
   };
+
 
   // Styles from File B
   const inputStyle = {
