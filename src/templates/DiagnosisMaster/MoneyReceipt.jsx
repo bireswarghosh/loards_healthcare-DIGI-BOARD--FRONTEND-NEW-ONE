@@ -161,12 +161,14 @@ const MoneyReceipt = () => {
 
   useEffect(() => {
     fetchReceipts(page, showRec);
+    fetchUsers();
+  }, [page, showRec]);
 
+  useEffect(() => {
     if (searchTerm.trim()) {
       fetchPatients();
     }
-    fetchUsers();
-  }, [page, startDate, endDate, searchTerm, showRec]);
+  }, [searchTerm]);
 
   useEffect(() => {
     if (!showDrawer) {
