@@ -465,10 +465,10 @@ function convertAmountToWords(amount) {
       <!-- JsBarcode CDN -->
       <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 
-      <style>
+     <style>
         body {
           font-family: 'Helvetica', 'Arial', sans-serif;
-          font-size: 12px;
+          font-size: 14px;
           margin: 0;
           padding: 20px;
           color: #000;
@@ -485,7 +485,7 @@ function convertAmountToWords(amount) {
         .header h1 {
           margin: 0;
           font-size: 24px;
-          font-weight: bold;
+          font-weight: 700;
           text-transform: uppercase;
         }
         .header p {
@@ -494,10 +494,11 @@ function convertAmountToWords(amount) {
         }
         .title-box {
           text-align: center;
-          font-weight: bold;
+       
           text-decoration: underline;
           margin: 10px 0 20px 0;
-          font-size: 16px;
+          font-size: 20px;
+  font-weight: 700;
         }
         .info-grid {
           display: flex;
@@ -510,7 +511,8 @@ function convertAmountToWords(amount) {
           width: 100%;
           display: flex;
           justify-content: space-between;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
+  font-size: 14px;
         }
         .field {
           flex: 1;
@@ -522,12 +524,14 @@ function convertAmountToWords(amount) {
           flex: 0 0 100%;
         }
         .label {
-          font-weight: bold;
+           font-weight: 700;
+  font-size: 14px;
           display: inline-block;
           min-width: 110px;
         }
         .value {
-          font-weight: normal;
+          font-weight: 600;
+          font-size: 14px;
         }
         .payment-section {
           margin-top: 20px;
@@ -536,13 +540,15 @@ function convertAmountToWords(amount) {
         .amount-box {
           margin: 15px 0;
           font-style: italic;
-          font-weight: bold;
+          font-size: 15px;
+  font-weight: 700;
         }
         .footer {
           margin-top: 40px;
           display: flex;
           justify-content: space-between;
-          font-size: 10px;
+           font-size: 12px;
+  font-weight: 600;
           padding-top: 5px;
         }
       </style>
@@ -1552,7 +1558,7 @@ function convertAmountToWords(amount) {
                             .reverse()
                             .join(".") || "",
                         admissionNo: receiptData?.admission?.AdmitionNo || "",
-                        admissionDate: "15.06.2023",
+                       admissionDate: receiptData?.admission?.AdmitionDate.split("T")[0] || "",
                         patientName: receiptData?.admission?.PatientName || "",
                         age: `${receiptData?.admission?.Age} Y` || " Y",
                         sex: receiptData?.admission?.Sex || "",
