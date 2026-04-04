@@ -779,10 +779,27 @@ const DischargeDetails = ({ mode }) => {
                     ))}
                   </select>
                 </div>
-                {mode !== "view" && (
+                {/* {mode !== "view" && (
                   <button type="submit" className="btn btn-primary btn-sm mt-2">
                     Next
                   </button>
+                )} */}
+                {mode !== "view" && (
+                  <div className="card p-3 shadow-sm border-0 mt-3">
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                      <label className="fw-semibold text-muted mb-0">
+                        Not For View (Only for Add & Edit):
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={handleSubmit(onSubmit)}
+                        className="btn btn-primary btn-sm px-4"
+                      >
+                        Save & Next
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

@@ -772,17 +772,20 @@ function convertAmountToWords(amount) {
         ...rest,
         ChqDate: (() => {
           const d = new Date(rest.ChqDate);
-          d.setDate(d.getDate() + 1);
+          // +1
+          d.setDate(d.getDate());
           return d.toISOString().slice(0, 10);
         })(),
         ClearDate: (() => {
           const d = new Date(rest.ClearDate);
-          d.setDate(d.getDate() + 1);
+           // +1
+          d.setDate(d.getDate() );
           return d.toISOString().slice(0, 10);
         })(),
         ReceiptDate: (() => {
           const d = new Date(rest.ReceiptDate);
-          d.setDate(d.getDate() + 1);
+           // +1
+          d.setDate(d.getDate());
           return d.toISOString().slice(0, 10);
         })(),
       };
@@ -1474,7 +1477,8 @@ function convertAmountToWords(amount) {
                             mode !== "create"
                               ? (() => {
                                   const d = new Date(receiptData.ChqDate);
-                                  d.setDate(d.getDate() + 1);
+                                   // +1
+                                  d.setDate(d.getDate());
                                   return d.toISOString().slice(0, 10);
                                 })()
                               : receiptData.ChqDate
@@ -1521,7 +1525,8 @@ function convertAmountToWords(amount) {
                                   return ""
                                 }
                                   const d = new Date(receiptData.ClearDate);
-                                  d.setDate(d.getDate() + 1);
+                                   // +1
+                                  d.setDate(d.getDate());
                                   return d.toISOString().slice(0, 10);
                                 })()
                               : receiptData.ClearDate

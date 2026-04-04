@@ -183,7 +183,7 @@ const Discharge = () => {
                       >
                         <i className="fa-light fa-pen" />
                       </button>
-                      <button
+                    {/* <button
                         className="btn btn-sm btn-outline-danger"
                         onClick={() => {
                           console.log(item.DisCerId);
@@ -193,7 +193,7 @@ const Discharge = () => {
                         }}
                       >
                         <i className="fa-light fa-trash" />
-                      </button>
+                      </button>   */}
                       <button
                         className="btn btn-success btn-sm"
                         onClick={() =>

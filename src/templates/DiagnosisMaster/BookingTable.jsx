@@ -16,6 +16,18 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
    });
    return map;
  }, [doctors]);
+
+ const { data: agents } = useAxiosFetch(
+   "/agents?page=1&limit=10000",
+   []
+ );
+ const agentMap = useMemo(() => {
+   const map = {};    
+    (agents || []).forEach((a) => {
+      map[a.AgentId] = a.Agent;
+    });
+    return map;
+ }, [agents]);
   return (
     <div
       className="flex-grow-1 border  bg-opacity-25 mb-1"
@@ -129,7 +141,8 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                   <td>{doctorMap[item.DoctorId]}</td>
                   <td>{item.Total}</td>
                   <td>{item.ClearingDate?.split("T")[0]}</td>
-                  <td>{item.AgentId}</td>
+                  {/* <td>{item.AgentId}</td> */}
+                  <td>{agentMap[item.AgentId] || ""}</td>
 
                   <td className="text-center">
                     <input

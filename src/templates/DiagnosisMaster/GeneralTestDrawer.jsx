@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import JsBarcode from "jsbarcode";
 import { useEffect, useMemo, useState } from "react";
 import useAxiosFetch from "./Fetch";
+import { DateFormatter } from "./DateFormatter";
 
 const GeneralTestDrawer = ({
   formData2,
@@ -427,7 +428,196 @@ const getReferenceRange = (prop) => {
 
   //   setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
   // };
-  const handlePrint = () => {
+//   const handlePrint = () => {
+//     if (!tests.length) {
+//       toast.error("No tests found");
+//       return;
+//     }
+
+//     const doc = new jsPDF("p", "mm", "a4");
+
+//     // ===== CONFIG =====
+//     const pageHeight = 297;
+//     const bottomMargin = 70;
+//     const topMargin = 50;
+//     const pageWidth = 210;
+//     const L = 15;
+//     const marginRight = 35;
+//     const R = 110;
+
+//     /* ================= HEADER ================= */
+//     const drawHeader = () => {
+//       let y = topMargin;
+
+//       doc.setFont("times", "normal");
+//       doc.setFontSize(10);
+
+//       // BARCODE
+//       doc.setFillColor(230, 230, 230);
+//       doc.rect(L, y, 60, 14, "F");
+
+//       doc.setFont("times", "bold");
+//       doc.text(formData2?.CaseNo || "", L + 4, y + 10);
+
+//       if (barcodeImg) {
+//         doc.addImage(barcodeImg, "PNG", L, y, 60, 14);
+//       }
+
+//       const baseY = y + 18;
+
+//       // LEFT
+//       doc.setFont("times", "normal");
+//       doc.text("Patient's Name", L, baseY);
+//       doc.text(":", L + 36, baseY);
+
+//       doc.setFont("times", "bold");
+//       doc.text(formData2?.PatientName || "", L + 40, baseY);
+
+//       doc.setFont("times", "normal");
+//       doc.text("Case No.", L, baseY + 5);
+//       doc.text(":", L + 36, baseY + 5);
+
+//       doc.setFont("times", "bold");
+//       doc.text(formData2?.CaseNo || "", L + 40, baseY + 5);
+
+//       doc.setFont("times", "normal");
+//       doc.text("Referred By", L, baseY + 10);
+//       doc.text(":", L + 36, baseY + 10);
+
+//       doc.setFont("times", "bold");
+//       doc.text(`${doctorMap[formData2.DoctorId] || ""}`, L + 40, baseY + 10);
+
+//       // RIGHT
+//       doc.setFont("times", "normal");
+//       doc.text("Age", R, baseY);
+//       doc.text(":", R + 12, baseY);
+
+//       doc.setFont("times", "bold");
+//       doc.text(`${formData2?.Age || ""} Y`, R + 16, baseY);
+
+//       doc.setFont("times", "normal");
+//       doc.text("Sex", R + 30, baseY);
+//       doc.text(":", R + 38, baseY);
+
+//       doc.setFont("times", "bold");
+//       doc.text(formData2?.Sex || "", R + 42, baseY);
+
+//       doc.setFont("times", "normal");
+//       doc.text("Collection Date", R, baseY + 5);
+//       doc.text(":", R + 40, baseY + 5);
+
+//       doc.setFont("times", "bold");
+//       doc.text(new Date().toISOString().split("T")[0], R + 44, baseY + 5);
+
+//       doc.setFont("times", "normal");
+//       doc.text("Reporting Date", R, baseY + 10);
+//       doc.text(":", R + 40, baseY + 10);
+
+//       doc.setFont("times", "bold");
+//       doc.text(
+//         selectedTest?.ReportDate?.split("T")[0] || "",
+//         R + 44,
+//         baseY + 10
+//       );
+
+//       // LINE
+//       doc.line(L, baseY + 18, pageWidth - marginRight, baseY + 18);
+
+//       return baseY + 25; // 👉 content start point
+//     };
+
+//     // 🔥 HEADER FIRST PAGE
+//     const headerEndY = drawHeader();
+//     let y = headerEndY;
+//  doc.text(SubDepartmentMap[tests[0].SubDepartmentId] || "", pageWidth / 2, y, {
+//       align: "center",
+//     });
+//     /* ================= LOOP TEST ================= */
+//     tests.forEach((test) => {
+//       const testData = allTestProperties[test.TestId];
+//       if (!testData) return;
+
+//       const { propertyList, propertyValueMap } = testData;
+
+//       /* ===== TITLE ===== */
+//       doc.setFont("times", "bold");
+//       doc.setFontSize(12);
+//       // doc.text(test.Test, pageWidth / 2, y, { align: "center" });
+
+//       y += 6;
+
+//       /* ===== TABLE ===== */
+//       autoTable(doc, {
+//         startY: y,
+
+//         margin: {
+//           top: headerEndY, // 🔥 SAME for all pages
+//           left: L,
+//           right: marginRight,
+//           bottom: bottomMargin,
+//         },
+
+//         pageBreak: "auto",
+
+//         theme: "plain",
+
+//         headStyles: {
+//           fontStyle: "bold",
+//         },
+
+//         styles: {
+//           fontSize: 9,
+//           cellPadding: 2,
+//         },
+
+//         head: [["INVESTIGATION", "RESULT", "UNIT", "REFERENCE RANGE"]],
+
+//         body: propertyList.map((prop) => {
+//           const pv = propertyValueMap[prop.TestPropertyId];
+
+//           return [
+//             prop.TestProperty || "",
+//             pv?.value ?? "",
+//             prop.Uom || "",
+//             getReferenceRange(prop),
+//           ];
+//         }),
+
+//         columnStyles: {
+//           0: { cellWidth: 70 },
+//           1: { cellWidth: 25 },
+//           2: { cellWidth: 20 },
+//           3: { cellWidth: 60 },
+//         },
+
+//         // 🔥 HEADER EVERY PAGE (BEFORE CONTENT)
+//         willDrawPage: () => {
+//           drawHeader();
+//         },
+//       });
+
+//       y = doc.lastAutoTable.finalY + 10;
+//     });
+
+//     /* ================= FOOTER ================= */
+//     // const finalY = doc.lastAutoTable.finalY + 10;
+//         const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : y + 10;
+
+
+//     doc.setFontSize(9);
+//     doc.text("** End of Report **", pageWidth / 2, finalY, {
+//       align: "center",
+//     });
+
+//     /* ================= OPEN PDF ================= */
+//     const blobUrl = URL.createObjectURL(doc.output("blob"));
+//     window.open(blobUrl, "_blank");
+
+//     setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+//   };
+
+// 4/4/2026-----
+const handlePrint = () => {
     if (!tests.length) {
       toast.error("No tests found");
       return;
@@ -451,7 +641,6 @@ const getReferenceRange = (prop) => {
       doc.setFont("times", "normal");
       doc.setFontSize(10);
 
-      // BARCODE
       doc.setFillColor(230, 230, 230);
       doc.rect(L, y, 60, 14, "F");
 
@@ -464,7 +653,6 @@ const getReferenceRange = (prop) => {
 
       const baseY = y + 18;
 
-      // LEFT
       doc.setFont("times", "normal");
       doc.text("Patient's Name", L, baseY);
       doc.text(":", L + 36, baseY);
@@ -486,7 +674,6 @@ const getReferenceRange = (prop) => {
       doc.setFont("times", "bold");
       doc.text(`${doctorMap[formData2.DoctorId] || ""}`, L + 40, baseY + 10);
 
-      // RIGHT
       doc.setFont("times", "normal");
       doc.text("Age", R, baseY);
       doc.text(":", R + 12, baseY);
@@ -506,102 +693,98 @@ const getReferenceRange = (prop) => {
       doc.text(":", R + 40, baseY + 5);
 
       doc.setFont("times", "bold");
-      doc.text(new Date().toISOString().split("T")[0], R + 44, baseY + 5);
+      doc.text(DateFormatter(new Date()), R + 44, baseY + 5);
 
       doc.setFont("times", "normal");
       doc.text("Reporting Date", R, baseY + 10);
       doc.text(":", R + 40, baseY + 10);
 
       doc.setFont("times", "bold");
-      doc.text(
-        selectedTest?.ReportDate?.split("T")[0] || "",
-        R + 44,
-        baseY + 10
-      );
+      doc.text(DateFormatter(selectedTest?.ReportDate), R + 44, baseY + 10);
 
-      // LINE
       doc.line(L, baseY + 18, pageWidth - marginRight, baseY + 18);
 
-      return baseY + 25; // 👉 content start point
+      return baseY + 25;
     };
 
-    // 🔥 HEADER FIRST PAGE
+    // HEADER FIRST PAGE
     const headerEndY = drawHeader();
     let y = headerEndY;
- doc.text(SubDepartmentMap[tests[0].SubDepartmentId] || "", pageWidth / 2, y, {
-      align: "center",
-    });
-    /* ================= LOOP TEST ================= */
+
+    doc.text(
+      SubDepartmentMap[tests[0].SubDepartmentId] || "",
+      pageWidth / 2,
+      y,
+      { align: "center" }
+    );
+
+    y += 6;
+
+    /* ================= 🔥 SINGLE TABLE ================= */
+
+    const finalBody = [];
+
     tests.forEach((test) => {
       const testData = allTestProperties[test.TestId];
       if (!testData) return;
 
       const { propertyList, propertyValueMap } = testData;
 
-      /* ===== TITLE ===== */
-      doc.setFont("times", "bold");
-      doc.setFontSize(12);
-      // doc.text(test.Test, pageWidth / 2, y, { align: "center" });
+      // Test Name Row
+      // finalBody.push([
+      //   { content: test.Test, colSpan: 4, styles: { fontStyle: "bold" } },
+      // ]);
 
-      y += 6;
+      propertyList.forEach((prop) => {
+        const pv = propertyValueMap[prop.TestPropertyId];
 
-      /* ===== TABLE ===== */
-      autoTable(doc, {
-        startY: y,
-
-        margin: {
-          top: headerEndY, // 🔥 SAME for all pages
-          left: L,
-          right: marginRight,
-          bottom: bottomMargin,
-        },
-
-        pageBreak: "auto",
-
-        theme: "plain",
-
-        headStyles: {
-          fontStyle: "bold",
-        },
-
-        styles: {
-          fontSize: 9,
-          cellPadding: 2,
-        },
-
-        head: [["INVESTIGATION", "RESULT", "UNIT", "REFERENCE RANGE"]],
-
-        body: propertyList.map((prop) => {
-          const pv = propertyValueMap[prop.TestPropertyId];
-
-          return [
-            prop.TestProperty || "",
-            pv?.value ?? "",
-            prop.Uom || "",
-            getReferenceRange(prop),
-          ];
-        }),
-
-        columnStyles: {
-          0: { cellWidth: 70 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 60 },
-        },
-
-        // 🔥 HEADER EVERY PAGE (BEFORE CONTENT)
-        willDrawPage: () => {
-          drawHeader();
-        },
+        finalBody.push([
+          prop.TestProperty || "",
+          pv?.value ?? "",
+          prop.Uom || "",
+          getReferenceRange(prop),
+        ]);
       });
+    });
 
-      y = doc.lastAutoTable.finalY + 10;
+    autoTable(doc, {
+      startY: y,
+
+      margin: {
+        top: headerEndY,
+        left: L,
+        right: marginRight,
+        bottom: bottomMargin,
+      },
+
+      theme: "plain",
+
+      head: [["INVESTIGATION", "RESULT", "UNIT", "REFERENCE RANGE"]],
+
+      
+      showHead: "everyPage",
+
+      styles: {
+        fontSize: 9,
+        cellPadding: 2,
+      },
+
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 60 },
+      },
+
+      body: finalBody,
+
+      willDrawPage: () => {
+        drawHeader();
+      },
     });
 
     /* ================= FOOTER ================= */
-    // const finalY = doc.lastAutoTable.finalY + 10;
-        const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : y + 10;
-
+    const finalY = doc.lastAutoTable.finalY + 10;
 
     doc.setFontSize(9);
     doc.text("** End of Report **", pageWidth / 2, finalY, {
@@ -825,7 +1008,10 @@ const getReferenceRange = (prop) => {
           Print
         </button>
 
-        <div className="d-flex justify-content-end mb-2">
+        {/* <div className="d-flex justify-content-end mb-2">
+          <label className="text-danger" htmlFor="">
+            Always Use This for First Time Entry:
+          </label>
           <div className="d-flex gap-2 mt-4">
             <button
               type="submit"
@@ -834,15 +1020,30 @@ const getReferenceRange = (prop) => {
             >
               Save All
             </button>
-            {/* <button
-              type="submit"
-              className="btn btn-primary w-50"
-              onClick={saveAllProperties}
-            >
-              Update
-            </button> */}
+            
           </div>
-        </div>
+        </div> */}
+        <div className="d-flex justify-content-end mb-3">
+  <div className="bg-light border rounded p-3 shadow-sm text-end">
+    
+    <div className="text-danger fw-semibold small mb-2">
+      ⚠️ Always Use This for First Time Entry
+    </div>
+
+    <div className="d-flex justify-content-end gap-2">
+      <button
+        type="submit"
+        className="btn btn-primary btn-sm"
+        onClick={createAllProperties}
+      >
+        💾 Save All
+      </button>
+
+      
+    </div>
+
+  </div>
+</div>
       </div>
       {/* ================= ACTION BUTTONS ================= */}
     </>

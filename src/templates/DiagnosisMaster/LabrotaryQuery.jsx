@@ -617,8 +617,7 @@ console.log("enrichedTests", enrichedTests);
           {/* ------------------------------------------------
                 BOTTOM SECTION (SPLIT GRIDS)
             ------------------------------------------------ */}
-            {loading && <ZLoader/>}
-          <div className='d-flex gap-1' style={{ height: "200px" }}>
+            {loading ? <ZLoader/> :  <div className='d-flex gap-1' style={{ height: "200px" }}>
             {/* TEST DETAIL GRID (BOTTOM LEFT) */}
             <div
               className='flex-grow-1 border  bg----rt-color-dark'
@@ -808,7 +807,8 @@ console.log("enrichedTests", enrichedTests);
                 </div>
               </div>
             </div>
-          </div>
+          </div>}
+         
         </div>
       </div>
 
