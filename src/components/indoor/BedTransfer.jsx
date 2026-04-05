@@ -360,27 +360,23 @@ const BedTransfer = () => {
       const filterBed = filteredBedMap.filter(
         (bed) => bed.BedId == formData.BedId,
       );
-      // console.log("fil ahah: ", filterBed);
       if (filterBed.length != 0) {
         setFormData((prev) => ({
           ...prev,
-          Rate: filterBed[0].TotalCh,
-          ToDayRate: filterBed[0].TotalCh,
+          Rate: filterBed[0].BedCh,
+          ToDayRate: filterBed[0].BedCh,
         }));
       }
       return;
     }
     if (formData.BedId != 0) {
-      // console.log("I am inside");
-
       const filterBed = filteredBedMap.filter(
         (bed) => bed.BedId == formData.BedId,
       );
-      // console.log("fil: ", filterBed);
       setFormData((prev) => ({
         ...prev,
-        Rate: filterBed[0].TotalCh,
-        ToDayRate: filterBed[0].TotalCh,
+        Rate: filterBed[0].BedCh,
+        ToDayRate: filterBed[0].BedCh,
       }));
       // setSelectedRate(filterBed[0].TotalCh);
       // console.log(formData);
@@ -499,8 +495,7 @@ const BedTransfer = () => {
             <label className="form-label small fw-bold">Rate</label>
             <input
               disabled={mode == "view"}
-              // value={admData.BedRate}
-              value={selecetdBed.TotalCh}
+              value={admData.BedRate}
               className="form-control form-control-sm"
               defaultValue="4000.00"
             />
@@ -613,81 +608,112 @@ const BedTransfer = () => {
 
             <tbody>
               {bedTransfers.length != 0 ? (
-                bedTransfers.map((bed, i) => (
+                bedTransfers.map((bed, i) => {
+                  const totalRows = bedTransfers.length;
+                  const isEditable = mode !== "view" && totalRows >= 2 && i !== 0 && (i === totalRows - 1 || i === totalRows - 2);
+
+                  return (
                   <tr key={i}>
                     {mode != "view" && (
                       <td>
-                        {/* {console.log("I am bed transfer: ",bed)} */}{" "}
-                        <button
-                          className="btn btn-sm btn-warning me-1"
-                          onClick={async () => {
-                            setSlNo(bed.SlNo);
-                            setUpdate(true);
-                            const bedID = bed.BedId;
-                            try {
-                              const res = await axiosInstance.get(
-                                `/bedMaster/${bedID}`,
-                              );
-                              if (res.data.success) {
-                                // console.log("original dept:",res.data.data.DepartmentId)
-                                setSelectedDeptOrginal(
-                                  res.data.data.DepartmentId,
-                                );
-
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  BedId: bed.BedId,
-                                  AdmitionDate: bed.AdmitionDate,
-                                  ReleaseDate: bed.ReleaseDate,
-                                  Release: bed.Release,
-                                  AdmitionTime: bed.AdmitionTime,
-                                  ReleaseTime: bed.ReleaseTime,
-                                  ToDayRate: bed.ToDayRate,
-                                  Rate: res.data.data.TotalCh,
-                                  Userid: bed.Userid,
-                                  RMOCh: bed.RMOCh,
-                                  AtttndantCh: bed.AtttndantCh,
-                                  packagevalid: bed.packagevalid,
-                                  packagestart: bed.packagestart,
-                                }));
-                              }
-                            } catch (error) {
-                              console.log("Error fetching bed master: ", error);
-                            }
-                          }}
-                          // disabled={bed.SlNo==1}
-                          disabled={true}
-                        >
-                          <i className="fa-light fa-pen-to-square"></i>
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => {
-                            setSlNo(bed.SlNo);
-                            setShowConfirm(true);
-                          }}
-                          // disabled={bed.SlNo==1}
-                          disabled={true}
-                        >
-                          <i className="fa-light fa-trash-can"></i>
-                        </button>
+                        {isEditable && (
+                          <button
+                            className="btn btn-sm btn-success me-1"
+                            onClick={() => {
+                              const updatedBed = bedTransfers[i];
+                              axiosInstance.put(
+                                `/admitionbeds?admitionid=${id_new}&slno=${updatedBed.SlNo}`,
+                                updatedBed,
+                              ).then((res) => {
+                                if (res.data.success) {
+                                  toast.success("Updated successfully");
+                                  fetchBedTransfers(id_new);
+                                }
+                              }).catch((err) => {
+                                console.log("Error updating: ", err);
+                                toast.error("Update failed");
+                              });
+                            }}
+                          >
+                            <i className="fa-light fa-floppy-disk"></i> Save
+                          </button>
+                        )}
                       </td>
                     )}
-                    <td>{bed?.AdmitionDate?.split("T")[0] || "NA"}</td>
-                    <td>{bed?.AdmitionTime || "NA"}</td>
+                    <td>
+                      {isEditable ? (
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={bed?.AdmitionDate?.split("T")[0] || ""}
+                          onChange={(e) => {
+                            const updated = [...bedTransfers];
+                            updated[i] = { ...updated[i], AdmitionDate: e.target.value + "T00:00:00.000Z" };
+                            setBedTransfers(updated);
+                          }}
+                        />
+                      ) : (
+                        bed?.AdmitionDate?.split("T")[0] || "NA"
+                      )}
+                    </td>
+                    <td>
+                      {isEditable ? (
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={bed?.AdmitionTime || ""}
+                          onChange={(e) => {
+                            const updated = [...bedTransfers];
+                            updated[i] = { ...updated[i], AdmitionTime: e.target.value };
+                            setBedTransfers(updated);
+                          }}
+                        />
+                      ) : (
+                        bed?.AdmitionTime || "NA"
+                      )}
+                    </td>
                     <td>{departmentMap[bedDeptMap[bed.BedId]] || "NA"}</td>
                     <td>{bedNoMap[bed.BedId] || "Loading..."}</td>
-
                     <td>{bed?.Rate || "NA"}</td>
-                    <td>{bed?.ReleaseDate?.split("T")[0] || "NA"}</td>
-                    <td>{bed?.ReleaseTime || "NA"}</td>
+                    <td>
+                      {isEditable ? (
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={bed?.ReleaseDate?.split("T")[0] || ""}
+                          onChange={(e) => {
+                            const updated = [...bedTransfers];
+                            updated[i] = { ...updated[i], ReleaseDate: e.target.value ? e.target.value + "T00:00:00.000Z" : "" };
+                            setBedTransfers(updated);
+                          }}
+                        />
+                      ) : (
+                        bed?.ReleaseDate?.split("T")[0] || "NA"
+                      )}
+                    </td>
+                    <td>
+                      {isEditable ? (
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={bed?.ReleaseTime || ""}
+                          onChange={(e) => {
+                            const updated = [...bedTransfers];
+                            updated[i] = { ...updated[i], ReleaseTime: e.target.value };
+                            setBedTransfers(updated);
+                          }}
+                        />
+                      ) : (
+                        bed?.ReleaseTime || "NA"
+                      )}
+                    </td>
                     <td>{bed?.ToDayRate || "NA"}</td>
                     <td>{bed?.Userid || "NA"}</td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
-                // : "No data available"}
-                <div className="text-center">No data available</div>
+                <tr><td colSpan="10" className="text-center">No data available</td></tr>
               )}
             </tbody>
           </table>

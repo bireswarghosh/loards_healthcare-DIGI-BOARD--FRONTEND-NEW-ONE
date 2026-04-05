@@ -530,6 +530,7 @@ const FinalBillingAdd = () => {
   const [netBal, setNetBal] = useState(0);
 
   const [bedChargesData, setBedChargesData] = useState([]);
+  const [firstBedRate, setFirstBedRate] = useState(null);
   const [fetchedAdmBedDetail, setFetchedAdmBedDetail] = useState([]);
 
   const [allOtherCharges, setAllOtherCharges] = useState([]);
@@ -1060,12 +1061,11 @@ const FinalBillingAdd = () => {
                 bedChargesData.map((row, idx) => (
                   <tr key={idx} style={styles.tableRowSelected}>
                     <td>
-                      {row.MyDate?.split("T")[0]
-                        ?.split("-")
-                        ?.reverse()
-                        ?.join("/") || ""}
+                      {row.MyDateFrom?.split("-")?.reverse()?.join("/") || ""}
+                      {" 12PM → "}
+                      {row.MyDateTo?.split("-")?.reverse()?.join("/") || ""}
+                      {" 12PM"}
                     </td>
-                    {/* <td>{row?.BedId}</td> */}
                     <td>
                       {fetchedAdmBedDetail.find(
                         (item) => item.BedId == row.BedId,
@@ -1411,11 +1411,18 @@ const FinalBillingAdd = () => {
   }
 
   // this will design the entire bed details according 12.00pm to 11.59 am = 1 day bed count
-  function splitBedHistoryDateWise(history) {
+  // handles bed transfer — if 2 beds overlap in same window, last transferred bed wins
+  function splitBedHistoryDateWise(history, dischargeDate, dischargeTime) {
     const DAY_START_HOUR = 12; // 12:00 PM
     const DAY_START_MIN = 0;
-    // console.log("history: ", history);
-    const output = [];
+
+    // build discharge datetime from form fields
+    const dischargeDT = dischargeDate && dischargeTime
+      ? new Date(`${dischargeDate.split("T")[0]} ${dischargeTime}`)
+      : new Date();
+
+    // windowKey → entry map (last bed in window wins)
+    const windowMap = {};
 
     function getDayWindowStart(dateObj) {
       const d = new Date(dateObj);
@@ -1430,18 +1437,24 @@ const FinalBillingAdd = () => {
       return d;
     }
 
-    history.forEach((entry) => {
+    // sort history by admit time so latest transfer comes last
+    const sorted = [...history].sort((a, b) => {
+      const tA = new Date(`${a.AdmitionDate.split("T")[0]} ${a.AdmitionTime}`);
+      const tB = new Date(`${b.AdmitionDate.split("T")[0]} ${b.AdmitionTime}`);
+      return tA - tB;
+    });
+
+    sorted.forEach((entry) => {
       const admDateTime = new Date(
         `${entry.AdmitionDate.split("T")[0]} ${entry.AdmitionTime}`,
       );
       const relDateTime =
         entry.Release === "Y"
           ? new Date(`${entry.ReleaseDate.split("T")[0]} ${entry.ReleaseTime}`)
-          : new Date(); // if still admitted
+          : dischargeDT;
 
       let currentWindowStart = getDayWindowStart(admDateTime);
 
-      // If admitted before noon, shift start window back 1 day
       if (admDateTime < currentWindowStart) {
         currentWindowStart.setDate(currentWindowStart.getDate() - 1);
       }
@@ -1449,23 +1462,30 @@ const FinalBillingAdd = () => {
       while (currentWindowStart <= relDateTime) {
         const nextStart = nextWindowStart(currentWindowStart);
 
-        // Check if patient was present in this window
         if (relDateTime > currentWindowStart) {
-          const dateString = currentWindowStart.toISOString().split("T")[0];
+          const fromDate = currentWindowStart.toISOString().split("T")[0];
+          const toDate = nextStart.toISOString().split("T")[0];
+          const windowKey = fromDate;
 
-          output.push({
-            MyDate: dateString,
+          // last bed transfer in this window overwrites previous
+          windowMap[windowKey] = {
+            MyDate: fromDate,
+            MyDateFrom: fromDate,
+            MyDateTo: toDate,
             ...entry,
             ServiceCh: entry.ServiceCh,
             BedRate: entry.Rate || entry.BedRate || entry.ToDayRate || 0,
-          });
+          };
         }
 
         currentWindowStart = nextStart;
       }
     });
 
-    return output;
+    // sort by date and return
+    return Object.values(windowMap).sort((a, b) =>
+      a.MyDate.localeCompare(b.MyDate),
+    );
   }
 
   // fetch bed detail by Id
@@ -1473,9 +1493,27 @@ const FinalBillingAdd = () => {
     try {
       const res1 = await axiosInstance.get(`/admissions/${admId}`);
 
-      const arr = res1.data.data.bedData; // this all fetched bed by admId
-      // console.log("hi bed: ", arr);
-      const promises = arr.map((item) =>
+      const arr = res1.data.data.bedData;
+
+      // sort by admit time so 1st bed is first
+      const sortedArr = [...arr].sort((a, b) => {
+        const tA = new Date(`${a.AdmitionDate.split("T")[0]} ${a.AdmitionTime}`);
+        const tB = new Date(`${b.AdmitionDate.split("T")[0]} ${b.AdmitionTime}`);
+        return tA - tB;
+      });
+
+      // 1st bed rate from admission BedRate (set once on load)
+      if (firstBedRate === null && sortedArr.length > 0) {
+        setFirstBedRate(Number(admData?.BedRate || sortedArr[0].ToDayRate || sortedArr[0].Rate || 0));
+      }
+
+      // override 1st bed rate with editable firstBedRate
+      const rateToUse = firstBedRate ?? Number(sortedArr[0]?.ToDayRate || sortedArr[0]?.Rate || 0);
+      if (sortedArr.length > 0) {
+        sortedArr[0] = { ...sortedArr[0], Rate: rateToUse, ToDayRate: rateToUse };
+      }
+
+      const promises = sortedArr.map((item) =>
         axiosInstance.get(`/bedMaster/${item.BedId}`),
       );
 
@@ -1485,18 +1523,12 @@ const FinalBillingAdd = () => {
 
       const allBedsData = results.map((res) => res?.data?.data);
 
-      // console.log("all bed details: ", allBedsData);
-
       let allBedsDataMap = {};
-
       for (let i = 0; i < allBedsData.length; i++) {
         allBedsDataMap[allBedsData[i].BedId] = allBedsData[i];
       }
 
-      // console.log("all bed detai map: ", allBedsDataMap);
-
-      // this will design the entire bed details according 12.00pm to 11.59 am = 1 day bed count
-      const newBedArr = splitBedHistoryDateWise(arr);
+      const newBedArr = splitBedHistoryDateWise(sortedArr, formData.BillDate, formData.ReleaseTime);
       console.log("Calculated bed array: ", newBedArr)
       const totalBedRate = newBedArr.reduce(
         (sum, item) => sum + Number(item.ToDayRate),
@@ -1513,7 +1545,7 @@ const FinalBillingAdd = () => {
         ...prev,
         details: {
           ...prev.details,
-          finalbillbeddtl: [...prev.details.finalbillbeddtl, ...newBedArr],
+          finalbillbeddtl: newBedArr,
         },
       }));
 
@@ -1523,7 +1555,7 @@ const FinalBillingAdd = () => {
 
       for (let j = 0; j < newBedArr.length; j++) {
         totalBedServiceChrg +=
-          (allBedsDataMap[newBedArr[j].BedId].ServiceCh == "Y" ? 1 : 0) *
+          (allBedsDataMap[newBedArr[j].BedId]?.ServiceCh == "Y" ? 1 : 0) *
           Number(newBedArr[j].ToDayRate) *
           (Number(serviceCharge) / 100);
       }
@@ -1776,15 +1808,18 @@ const FinalBillingAdd = () => {
     console.log("ot charge:", otcDetails);
   }, [otcDetails]);
 
+  // re-run bed calculation when discharge date/time or 1st bed rate changes
+  useEffect(() => {
+    if (Object.keys(admData).length && formData.BillDate && formData.ReleaseTime) {
+      fetchBedsById(admData?.AdmitionId);
+    }
+  }, [formData.BillDate, formData.ReleaseTime, firstBedRate]);
+
   useEffect(() => {
     if (Object.keys(admData).length) {
-      // console.log("adm data1: ", admData);
-
-      fetchBedsById(admData?.AdmitionId, admData?.BedId);
-      // console.log("Adm date:", admData?.AdmitionDate);
+      fetchBedsById(admData?.AdmitionId);
       fetchOTC(admData?.AdmitionId);
       fetchIPDOtherChargesByAdmId(admData?.AdmitionId);
-
       fetchDoctVisitByAdmId(admData?.AdmitionId);
 
       setTimeout(() => {
