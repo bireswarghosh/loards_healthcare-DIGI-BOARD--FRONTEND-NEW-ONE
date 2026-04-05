@@ -31,6 +31,21 @@ const GeneralTestDrawer = ({
     return canvas.toDataURL("image/png");
   }, [formData2?.CaseNo]);
 
+
+  const [selectedTests, setSelectedTests] = useState([]);
+const handleSelectTest = (test) => {
+  setSelectedTests((prev) => {
+    const exists = prev.find((t) => t.TestId === test.TestId);
+
+    if (exists) {
+      // remove
+      return prev.filter((t) => t.TestId !== test.TestId);
+    } else {
+      // add
+      return [...prev, test];
+    }
+  });
+};
   const { data: doctors } = useAxiosFetch(
     "/doctormaster?page=1&limit=10000",
     []
@@ -618,7 +633,7 @@ const getReferenceRange = (prop) => {
 
 // 4/4/2026-----
 const handlePrint = () => {
-    if (!tests.length) {
+    if (!selectedTests.length) {
       toast.error("No tests found");
       return;
     }
@@ -724,7 +739,7 @@ const handlePrint = () => {
 
     const finalBody = [];
 
-    tests.forEach((test) => {
+    selectedTests.forEach((test) => {
       const testData = allTestProperties[test.TestId];
       if (!testData) return;
 
@@ -856,16 +871,17 @@ const handlePrint = () => {
       </div>
 
       {/* ================= TEST TABLE ================= */}
-      <div className="table-responsive mb-3">
-        <table className="table table-bordered table-sm">
-          <thead>
+      <div className="table-responsive mb-3 shadow-sm rounded">
+        <table className="table table-hover align-middle text-center mb-1">
+          <thead className="table-info">
             <tr>
-              <th>Test Name</th>
-              <th>Report Date</th>
-              <th>Test Detail</th>
-              <th>Special Remarks</th>
-              <th>Value</th>
-              <th>Report Time</th>
+              <th className="fw-semibold">Print</th>
+              <th className="fw-semibold">Test Name</th>
+              <th className="fw-semibold">Report Date</th>
+              <th className="fw-semibold">Test Detail</th>
+              <th className="fw-semibold">Special Remarks</th>
+              <th className="fw-semibold">Value</th>
+              <th className="fw-semibold">Report Time</th>
             </tr>
           </thead>
 
@@ -886,18 +902,17 @@ const handlePrint = () => {
           <tbody>
             {tests.length === 0 ? (
               <tr>
-                <td>No test found</td>
+                <td colSpan={7} className="text-muted py-4">No test found</td>
               </tr>
             ) : (
               tests.map((test, index) => (
                 <tr
+                  className={`${
+                    test.TestId === selectedTest?.TestId ? "table-warning" : ""
+                  }`}
                   key={index}
-                   style={{
+                  style={{
                     cursor: "pointer",
-                    backgroundColor:
-                      test.TestId === selectedTest?.TestId
-                        ? "yellow"
-                        : "transparent",
                   }}
                   onClick={async () => {
                     setSelectedTest(test);
@@ -908,7 +923,7 @@ const handlePrint = () => {
                       test?.TestId
                     );
 
-                    // 🔥 ekhane main logic
+                  
                     setAllTestProperties((prev) => ({
                       ...prev,
                       [test.TestId]: {
@@ -918,10 +933,19 @@ const handlePrint = () => {
                     }));
                   }}
                 >
-                  <td>{test?.Test}</td>
-                  <td>{test?.ReportDate?.split("T")[0]}</td>
-                  <td className="text-primary">
-                    Click Here Before Print & Enter Result
+                  <td >
+                    <input
+                      type="checkbox"
+                      checked={selectedTests.some(
+                        (t) => t.TestId === test.TestId
+                      )}
+                      onChange={() => handleSelectTest(test)}
+                    />
+                  </td>
+                  <td className="fw-medium text-start">{test?.Test}</td>
+                  <td  className="text-muted">{test?.ReportDate?.split("T")[0]}</td>
+                 <td className="badge bg-danger text-white  px-2 py-3 rounded-3">
+                    Click Here Before Entery
                   </td>
                   <td></td>
                   <td></td>
@@ -934,31 +958,31 @@ const handlePrint = () => {
       </div>
 
       {/* ================= PROPERTY PANEL ================= */}
-      <div className="table-responsive mb-3">
-        <table className="table table-bordered table-sm">
-          <thead>
+      <div className="table-responsive mb-3 shadow-sm rounded">
+        <table className="table table-hover align-middle mb-0">
+          <thead table-dark text-center>
             <tr>
-              <th>Test Property</th>
-              <th>Value</th>
-              <th>UOM</th>
-              <th>LIS Val</th>
-              <th>action</th>
+              <th className="fw-semibold text-start">Test Property</th>
+              <th className="fw-semibold">Value</th>
+              <th className="fw-semibold">UOM</th>
+              <th className="fw-semibold">LIS Val</th>
+              <th className="fw-semibold">action</th>
             </tr>
           </thead>
           <tbody>
             {propertyList.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center text-muted">
+                <td colSpan={5} className="text-center text-muted py-3">
                   No property found
                 </td>
               </tr>
             ) : (
               propertyList.map((prop, index) => (
                 <tr key={index}>
-                  <td>{prop.TestProperty}</td>
-                  <td>
+                  <td  className="fw-medium text-start">{prop.TestProperty}</td>
+                  <td style={{ minWidth: "150px" }}>
                     <input
-                      className="form-control form-control-sm"
+                      className="form-control form-control-sm  border-primary-subtle"
                       type="text"
                       value={propertyValueMap[prop.TestPropertyId]?.value ?? ""}
                       onChange={(e) =>
@@ -971,11 +995,11 @@ const handlePrint = () => {
                     />
                     {/* {propertyValueMap[prop.TestPropertyId]?.value ?? ""} */}
                   </td>
-                  <td>{prop.Uom}</td>
+                  <td className="text-muted fw-semibold">{prop.Uom}</td>
 
-                  <td>
+                  <td style={{ minWidth: "150px" }}>
                     <input
-                      className="form-control form-control-sm"
+                      className="form-control form-control-sm border-success-subtle"
                       value={propertyValueMap[prop.TestPropertyId]?.lis ?? ""}
                       onChange={(e) =>
                         handlePropertyChange(
@@ -986,7 +1010,7 @@ const handlePrint = () => {
                       }
                     />
                   </td>
-                  <td>
+                  <td className="text-center">
                     <button
                       className="btn btn-sm btn-success"
                       onClick={() => saveProperty(prop)}

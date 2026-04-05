@@ -113,7 +113,7 @@ const DischargePrint = () => {
             <th style={{ border: "1px solid #000", padding: "2px" }}>Days</th>
           </tr>
         </thead>
-        <tbody>
+        {/* <tbody>
           {arr
             .sort((a, b) => a.SlNo - b.SlNo)
             .map((m, i) => (
@@ -124,6 +124,40 @@ const DischargePrint = () => {
                <td style={{ border: "1px solid #000", padding: "2px" }}>
                   {m.Type}
                 </td> 
+                <td style={{ border: "1px solid #000", padding: "2px" }}>
+                  {m.Medicine}
+                </td>
+                <td style={{ border: "1px solid #000", padding: "2px" }}>
+                  {m.dose}
+                </td>
+                <td style={{ border: "1px solid #000", padding: "2px" }}>
+                  {m.unit}
+                </td>
+                <td style={{ border: "1px solid #000", padding: "2px" }}>
+                  {m.days}
+                </td>
+              </tr>
+            ))}
+        </tbody> */}
+
+        <tbody>
+          {arr
+            .filter(
+              (m) =>
+                m.Type?.trim() ||
+                m.Medicine?.trim() ||
+                m.dose?.toString().trim() ||
+                m.unit?.trim()
+            )
+            .sort((a, b) => a.SlNo - b.SlNo)
+            .map((m, i) => (
+              <tr key={i}>
+                <td style={{ border: "1px solid #000", padding: "2px" }}>
+                  {m.SlNo}
+                </td>
+                <td style={{ border: "1px solid #000", padding: "2px" }}>
+                  {m.Type}
+                </td>
                 <td style={{ border: "1px solid #000", padding: "2px" }}>
                   {m.Medicine}
                 </td>
