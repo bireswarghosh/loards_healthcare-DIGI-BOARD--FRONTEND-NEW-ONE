@@ -548,6 +548,8 @@ const FinalBillingAdd = () => {
 
   const [serviceCharge, setServiceCharge] = useState(0); // this is for discount
   const [serviceChrgCalculated, setServiceChrgCalculated] = useState(0); // this will be calculated by the discounted values of the beds and other charges master in which service charges is on
+  const [bedServiceChrg, setBedServiceChrg] = useState(0);
+  const [ocServiceChrg, setOcServiceChrg] = useState(0);
 
   const [allTests, setAllTests] = useState({});
 
@@ -559,6 +561,10 @@ const FinalBillingAdd = () => {
       handleSave();
     }
   }, [larAlertOk]);
+
+  useEffect(() => {
+    setServiceChrgCalculated(bedServiceChrg + ocServiceChrg);
+  }, [bedServiceChrg, ocServiceChrg]);
 
   // this will fetch all test data
   const fetchAllTests = async () => {
@@ -822,15 +828,14 @@ const FinalBillingAdd = () => {
       let allMrData = [];
       let totalMr = 0;
       let totalDiscount = 0;
+
       if (res.data.success && caseId) {
-        // console.log("Hi case Id: ", caseId);
         const mrResult = await axiosInstance.get(
           `/money-receipt01/search?ReffId=${caseId}`,
         );
         if (mrResult.data.success) {
           allMrData = mrResult.data.data;
           if (allMrData.length != 0) {
-            // console.log("All mr data:", allMrData);
             totalMr = allMrData.reduce(
               (acc, item) => acc + Number(item?.Amount || 0),
               0,
@@ -842,7 +847,6 @@ const FinalBillingAdd = () => {
               }
             }
           }
-          // console.log("total mr : ", totalMr);
         }
       }
 
@@ -864,7 +868,10 @@ const FinalBillingAdd = () => {
         // console.log("totalMr:", totalMr);
         // console.log("total discount:", totalDiscount);
 
-        totalDiag = totalDiag - totalCancelTest - totalMr - totalDiscount;
+        totalDiag = arr.reduce(
+          (sum, item) => sum + Number(item.Balance || 0),
+          0,
+        );
         // const totalDiag = arr.reduce(
         //   (sum, item) =>
         //     sum +
@@ -1021,7 +1028,7 @@ const FinalBillingAdd = () => {
       );
 
       setFormData((prev) => ({
-        ...prev,
+        ...prev,  
         details: {
           ...prev.details,
           finalbillalldtl: [...prev.details.finalbillalldtl, ...updatedDOC],
@@ -1093,7 +1100,12 @@ const FinalBillingAdd = () => {
           </table>
         );
 
-      case "Others Charges":
+      case "Others Charges": {
+        const scTotal = otherChargesData
+          ? otherChargesData
+              .filter((row) => row.scharge === 1)
+              .reduce((sum, row) => sum + Number(row.Amount || 0), 0)
+          : 0;
         return (
           <table
             className="table table-bordered table-sm mb-0"
@@ -1103,12 +1115,10 @@ const FinalBillingAdd = () => {
               <tr>
                 <th style={styles.tableHeader}>Date</th>
                 <th style={styles.tableHeader}>Others Head</th>
-                <th style={styles.tableHeader} className="">
-                  Rate
-                </th>
-                <th style={styles.tableHeader} className="">
-                  Qty
-                </th>
+                <th style={styles.tableHeader}>Rate</th>
+                <th style={styles.tableHeader}>Qty</th>
+                <th style={styles.tableHeader} className="text-end">Total</th>
+                <th style={styles.tableHeader}>SC</th>
               </tr>
             </thead>
             <tbody>
@@ -1121,24 +1131,40 @@ const FinalBillingAdd = () => {
                         ?.reverse()
                         ?.join("/") || ""}
                     </td>
-
                     <td>{row.SubHead || ""}</td>
-                    <td className="">
-                      {row.Particular?.trim()?.split("x")[1] || ""}
-                    </td>
-                    <td className="">
-                      {row.Particular?.trim()?.split("x")[0] || ""}
-                    </td>
+                    <td>{row.Particular?.trim()?.split("x")[1] || ""}</td>
+                    <td>{row.Particular?.trim()?.split("x")[0] || ""}</td>
+                    <td className="text-end">{Number(row.Amount || 0).toFixed(2)}</td>
+                    <td className="text-center">{row.scharge === 1 ? "Y" : "N"}</td>
                   </tr>
                 ))
               ) : (
-                <tr colSpan="2" className="text-end text-white">
-                  No data found.
+                <tr>
+                  <td colSpan="6" className="text-end text-white">
+                    No data found.
+                  </td>
                 </tr>
+              )}
+              {otherChargesData && (
+                <>
+                  <tr style={{ fontWeight: "bold", background: "#e0e0e0" }}>
+                    <td colSpan={4} className="text-end">Others Total:</td>
+                    <td className="text-end">
+                      {otherChargesData.reduce((sum, row) => sum + Number(row.Amount || 0), 0).toFixed(2)}
+                    </td>
+                    <td></td>
+                  </tr>
+                  <tr style={{ fontWeight: "bold", background: "#ffe0b2" }}>
+                    <td colSpan={4} className="text-end">SC Items Total:</td>
+                    <td className="text-end">{scTotal.toFixed(2)}</td>
+                    <td></td>
+                  </tr>
+                </>
               )}
             </tbody>
           </table>
         );
+      }
       case "O.T. Charges":
         return (
           <table
@@ -1229,23 +1255,32 @@ const FinalBillingAdd = () => {
               <tr>
                 <th style={styles.tableHeader}>Date</th>
                 <th style={styles.tableHeader}>Case No.</th>
-                <th style={styles.tableHeader}>Amount</th>
+                <th style={styles.tableHeader}>Total</th>
+                <th style={styles.tableHeader}>Payment</th>
+                <th style={styles.tableHeader}>Due</th>
               </tr>
             </thead>
             <tbody>
               {diagData ? (
-                diagData.map((row, idx) => (
-                  <tr key={idx} style={styles.tableRowSelected}>
-                    <td>
-                      {row.CaseDate?.split("T")[0]
-                        ?.split("-")
-                        ?.reverse()
-                        ?.join("/") || ""}
-                    </td>
-                    <td>{row.CaseNo || ""}</td>
-                    <td>{row.GrossAmt || 0}</td>
-                  </tr>
-                ))
+                diagData.map((row, idx) => {
+                  const total = Number(row.GrossAmt || 0) - Number(row.CTestAmt || 0);
+                  const payment = total - Number(row.Balance || 0);
+                  const due = Number(row.Balance || 0);
+                  return (
+                    <tr key={idx} style={styles.tableRowSelected}>
+                      <td>
+                        {row.CaseDate?.split("T")[0]
+                          ?.split("-")
+                          ?.reverse()
+                          ?.join("/") || ""}
+                      </td>
+                      <td>{row.CaseNo || ""}</td>
+                      <td className="text-end">{total}</td>
+                      <td className="text-end">{payment}</td>
+                      <td className="text-end">{due}</td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr colSpan="2" className="text-end text-white">
                   No data found.
@@ -1256,7 +1291,20 @@ const FinalBillingAdd = () => {
         );
       case "Medicine Charges":
         break;
-      case "Service Charges":
+      case "Service Charges": {
+        const ocScTotal = otherChargesData
+          ? otherChargesData
+              .filter((row) => row.scharge === 1)
+              .reduce((sum, row) => sum + Number(row.Amount || 0), 0)
+          : 0;
+        const bedScTotal = bedChargesData
+          ? bedChargesData
+              .filter((row) => fetchedAdmBedDetail.find((b) => b.BedId == row.BedId)?.ServiceCh === "Y")
+              .reduce((sum, row) => sum + Number(row.BedRate || row.ToDayRate || 0), 0)
+          : 0;
+        const scPercent = Number(serviceCharge) || 0;
+        const ocScAmt = ocScTotal * (scPercent / 100);
+        const bedScAmt = bedScTotal * (scPercent / 100);
         return (
           <table
             className="table table-bordered table-sm mb-0"
@@ -1264,33 +1312,35 @@ const FinalBillingAdd = () => {
           >
             <thead>
               <tr>
-                <th style={styles.tableHeader}>Date</th>
-                <th style={styles.tableHeader}>Service Charge</th>
-                <th style={styles.tableHeader}>Amount</th>
+                <th style={styles.tableHeader}>Description</th>
+                <th style={styles.tableHeader} className="text-end">Eligible Amt</th>
+                <th style={styles.tableHeader} className="text-end">SC ({scPercent}%)</th>
               </tr>
             </thead>
             <tbody>
-              {scDetail ? (
-                scDetail.map((row, idx) => (
-                  <tr key={idx} style={styles.tableRowSelected}>
-                    <td>
-                      {row.AdmitionDate?.split("T")[0]
-                        ?.split("-")
-                        ?.reverse()
-                        ?.join("/") || ""}
-                    </td>
-                    <td>{row.SubHead || ""}</td>
-                    <td>{row.Amount || 0}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr colSpan="2" className="text-end text-white">
-                  No data found.
-                </tr>
-              )}
+              <tr style={styles.tableRowSelected}>
+                <td>Bed Charges (SC=Y)</td>
+                <td className="text-end">{bedScTotal.toFixed(2)}</td>
+                <td className="text-end">{bedScAmt.toFixed(2)}</td>
+              </tr>
+              <tr style={styles.tableRowSelected}>
+                <td>Others Charges (SC=Y)</td>
+                <td className="text-end">{ocScTotal.toFixed(2)}</td>
+                <td className="text-end">{ocScAmt.toFixed(2)}</td>
+              </tr>
+              <tr style={{ fontWeight: "bold", background: "#e0e0e0" }}>
+                <td className="text-end">Total</td>
+                <td className="text-end">{(bedScTotal + ocScTotal).toFixed(2)}</td>
+                <td className="text-end">{(bedScAmt + ocScAmt).toFixed(2)}</td>
+              </tr>
+              <tr style={{ fontWeight: "bold", background: "#c8e6c9" }}>
+                <td colSpan={2} className="text-end">Service Charges (Calculated):</td>
+                <td className="text-end">{serviceChrgCalculated}</td>
+              </tr>
             </tbody>
           </table>
         );
+      }
       case "GST Amount":
         break;
       case "Less Advance Receipt":
@@ -1561,9 +1611,7 @@ const FinalBillingAdd = () => {
       }
       totalBedServiceChrg = Number(totalBedServiceChrg).toFixed(2);
       // console.log("Final bed service charge: ", totalBedServiceChrg);
-      setServiceChrgCalculated(
-        (prev) => Number(prev) + Number(totalBedServiceChrg),
-      );
+      setBedServiceChrg(Number(totalBedServiceChrg));
     } catch (err) {
       console.error("Error while fetching bed data:", err);
       throw err;
@@ -1616,9 +1664,7 @@ const FinalBillingAdd = () => {
     // console.log("filterd oc with service charge on: ", ocWithServiceChrgOn);
     // console.log("Calculated oc service charge: ", ocServiceChargeCalculated);
     ocServiceChargeCalculated = Number(ocServiceChargeCalculated).toFixed(2);
-    setServiceChrgCalculated(
-      (prev) => Number(prev) + Number(ocServiceChargeCalculated),
-    );
+    setOcServiceChrg(Number(ocServiceChargeCalculated));
     return otherChargesByAdmId.map((item, index) => {
       // const matched = allOtherCharges.find(
       //   (oc) => oc.OtherChargesId == item.OtherChargesId,
