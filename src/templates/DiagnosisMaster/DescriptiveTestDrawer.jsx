@@ -377,6 +377,7 @@ const DescriptiveTestDrawer = ({
         onClose={() => setShowCaseTestModal(false)}
         caseId={formData2.CaseId}
         testId={activeTest?.TestId}
+         SubDepartmentId={activeTest?.SubDepartmentId}
         PatientName={formData2.PatientName}
         formData2={formData2}
         htmlContent={activeTest?.htmlContent || htmlContent}

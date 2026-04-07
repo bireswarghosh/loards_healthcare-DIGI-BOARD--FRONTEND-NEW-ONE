@@ -2592,11 +2592,24 @@ const FinalBillingAdd = () => {
                       </span>
                     </div>
                     <div className="col-6">
-                      <input
+
+  <input
+                        type="text"
+                        style={{
+                          ...styles.input,
+                          fontWeight: "bold",
+                          color: "red",
+                        }}
+                        value={formData?.ReciptAmt || 0}
+                      />
+
+
+                      {/* <input
                         type="text"
                         style={styles.input}
                         value={formData?.PatiectPartyAmt || 0}
-                      />
+                      /> */}
+
                     </div>
                   </div>
                   {/* <div className="row g-1 align-items-center">

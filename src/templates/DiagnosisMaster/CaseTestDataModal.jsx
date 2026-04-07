@@ -10,6 +10,7 @@ const CaseTestDataModal = ({
   onClose,
   caseId,
   testId,
+  SubDepartmentId,
   PatientName,
   formData2,
   htmlContent,
@@ -193,7 +194,8 @@ const CaseTestDataModal = ({
     const iframe = document.createElement("iframe");
     iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
     document.body.appendChild(iframe);
-
+// subDepartmentId 19 or 21 -> 20mm top margin, no bottom margin (for better fit on A4)
+// 19 is for CARDIOLOGY, 21 is for ULTRASONOGRAPHY
     const doc = iframe.contentWindow.document;
     doc.open();
     doc.write(`<!DOCTYPE html>
@@ -204,9 +206,7 @@ const CaseTestDataModal = ({
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:A4;margin:10mm}
-html,body{height:100%;overflow:hidden}
-body{padding:50mm 8mm 60mm 8mm;font-family:"Times New Roman",serif;font-size:13px;color:#000}
-.cc{max-height:calc(297mm - 50mm - 60mm - 20mm);overflow:hidden}
+body{ padding:${(SubDepartmentId == 19 || SubDepartmentId == 21) ? "20mm 8mm 0mm 8mm" : "50mm 8mm 60mm 8mm"};font-family:"Times New Roman",serif;font-size:13px;color:#000}
 .bc{text-align:right;margin-bottom:4px}
 .bc img{height:45px}
 .pi{width:100%;border:1px solid #000;border-collapse:collapse;font-size:11px}
