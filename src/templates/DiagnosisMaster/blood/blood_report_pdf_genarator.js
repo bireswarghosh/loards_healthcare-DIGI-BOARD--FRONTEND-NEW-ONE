@@ -424,6 +424,25 @@ import autoTable from "jspdf-autotable";
 import axiosInstance from "../../../axiosInstance";
 import JsBarcode from "jsbarcode";
 
+const getSignatureBase64 = (signatureObj) => {
+  if (!signatureObj || !signatureObj.data || !Array.isArray(signatureObj.data)) return "";
+  const binary = new Uint8Array(signatureObj.data);
+  let binaryString = "";
+  for (let i = 0; i < binary.length; i++) {
+    binaryString += String.fromCharCode(binary[i]);
+  }
+  return `data:image/jpeg;base64,${btoa(binaryString)}`;
+};
+
+const getSignatureXPosition = (pathologistId) => {
+  switch (Number(pathologistId)) {
+    case 3: return 10;   // ABHISHEK KUNDU: 1-4cm
+    case 4: return 80;   // RINA MANDAL: 8-11cm
+    case 2: return 140;  // S. ROY CHOUDHURY: 14-18cm
+    default: return 140;
+  }
+};
+
 // Helper: check if a value has meaningful data
 const hasValue = (val) => {
   if (val === null || val === undefined || val === "") return false;
@@ -808,6 +827,23 @@ export const handlePrint = async (data, Remarks) => {
     },
     margin: { left: leftMargin, right: 15 },
   });
+
+  // ===== SIGNATURE =====
+  const pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) || {};
+  const signatureBase64 = pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : "");
+
+  if (signatureBase64) {
+    const pageCount = doc.internal.getNumberOfPages();
+    const sigX = getSignatureXPosition(pathologist.PathologistId);
+    const sigWidth = 30;
+    const sigHeight = 18;
+    const sigY = 297 - 60 - sigHeight; // ~6cm from bottom
+
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.addImage(signatureBase64, "JPEG", sigX, sigY, sigWidth, sigHeight);
+    }
+  }
 
   const pdfBlob = doc.output("blob");
   const blobUrl = URL.createObjectURL(pdfBlob);

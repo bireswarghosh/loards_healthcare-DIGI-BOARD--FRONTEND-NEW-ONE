@@ -200,6 +200,8 @@ const BloodReport = () => {
   const [data, setData] = useState({}); // this is for printing pdf
 
   const [showPrint, setShowPrint] = useState(true);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [printEditData, setPrintEditData] = useState({});
 
   const [users, setUsers] = useState([]);
 
@@ -1909,9 +1911,16 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
               <button
                 className="btn btn-sm btn-primary"
                 onClick={() => {
-                  console.log("bfore pdf form: ", formData);
-                  console.log("before pdf: ", data);
-                  handlePrint(data,formData.Remarks);
+                  setPrintEditData({
+                    PatientName: data?.PatientName || caseData?.PatientName || "",
+                    PatientId: data?.PatientId || caseData?.PatientId || "",
+                    CaseNo: data?.CaseNo || caseNO || "",
+                    Age: data?.Age || caseData?.Age || "",
+                    Sex: data?.Sex || caseData?.Sex || "",
+                    CollectionDate: new Date().toLocaleDateString("en-GB"),
+                    ReportingDate: data?.ReportDt?.split("T")[0]?.split("-")?.reverse()?.join("/") || new Date().toLocaleDateString("en-GB"),
+                  });
+                  setShowPrintPreview(true);
                 }}
               >
                 Print
@@ -1935,6 +1944,43 @@ setFormData(prev=>({...prev, Remarks: e.target.value}))
             >Exit</button>
           </div>
         </div>
+
+        {/* ================= EDITABLE PRINT PREVIEW MODAL ================= */}
+        {showPrintPreview && (
+          <>
+            <div onClick={() => setShowPrintPreview(false)} style={{ position: "fixed", inset: 0, zIndex: 100000, backgroundColor: "rgba(0,0,0,0.5)" }} />
+            <div style={{ position: "fixed", top: "10%", left: "15%", right: "15%", bottom: "10%", zIndex: 100001, backgroundColor: "#fff", borderRadius: 8, overflowY: "auto", padding: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="m-0 fw-bold text-primary">📝 Edit Blood Report Details Before Print</h5>
+                <button className="btn btn-sm btn-danger" onClick={() => setShowPrintPreview(false)}>✕ Close</button>
+              </div>
+              <div className="row g-2 mb-3">
+                {[
+                  { label: "Patient Name", key: "PatientName", col: 4 },
+                  { label: "Patient ID", key: "PatientId", col: 3 },
+                  { label: "Case No.", key: "CaseNo", col: 3 },
+                  { label: "Age", key: "Age", col: 1 },
+                  { label: "Sex", key: "Sex", col: 1 },
+                  { label: "Collection Date", key: "CollectionDate", col: 3 },
+                  { label: "Reporting Date", key: "ReportingDate", col: 3 },
+                ].map((f) => (
+                  <div className={`col-md-${f.col}`} key={f.key}>
+                    <label className="form-label mb-0 small fw-bold">{f.label}</label>
+                    <input className="form-control form-control-sm" value={printEditData[f.key] || ""} onChange={(e) => setPrintEditData((prev) => ({ ...prev, [f.key]: e.target.value }))} />
+                  </div>
+                ))}
+              </div>
+              <div className="d-flex justify-content-end gap-2">
+                <button className="btn btn-secondary btn-sm" onClick={() => setShowPrintPreview(false)}>Cancel</button>
+                <button className="btn btn-primary btn-sm" onClick={() => {
+                  const mergedData = { ...data, PatientName: printEditData.PatientName, PatientId: printEditData.PatientId, CaseNo: printEditData.CaseNo, Age: printEditData.Age, Sex: printEditData.Sex };
+                  handlePrint(mergedData, formData.Remarks);
+                  setShowPrintPreview(false);
+                }}>🖨️ Generate PDF</button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
