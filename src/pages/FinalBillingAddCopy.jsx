@@ -1919,7 +1919,7 @@ const FinalBillingAdd = () => {
     fetchCashLess();
 
     // Edit mode: load saved bill then trigger live re-calculation
-    if (mode === "edit" && id) {
+    if ((mode === "edit" || mode === "view") && id) {
       (async () => {
         try {
           const res = await axiosInstance.get(`/fb/${id}`);
@@ -2940,7 +2940,7 @@ const FinalBillingAdd = () => {
         style={{ backgroundColor: "primary", borderTop: "1px solid white" }}
       >
         <div className="d-flex flex-wrap gap-1">
-          {(fbMode === "final" || mode === "edit") && (
+          {(fbMode === "final" || mode === "edit") && mode !== "view" && (
             <button
               className="btn btn-sm btn-primary"
               onClick={() => {
