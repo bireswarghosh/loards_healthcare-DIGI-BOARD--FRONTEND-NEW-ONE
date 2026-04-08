@@ -271,325 +271,570 @@ const VisitList = () => {
   };
 
   // Original handler logic - PRESERVED
-  const generatePDF = async (patient) => {
-    try {
-      // Fetch billing details for the patient visit
-      const response = await axiosInstance.get(
-        `/patient-visits/${patient.PVisitId}`,
-      );
+  // const generatePDF = async (patient) => {
+  //   try {
+  //     // Fetch billing details for the patient visit
+  //     const response = await axiosInstance.get(
+  //       `/patient-visits/${patient.PVisitId}`,
+  //     );
 
-      if (!response.data?.success) {
-        alert("Failed to fetch billing details");
-        return;
-      }
+  //     if (!response.data?.success) {
+  //       alert("Failed to fetch billing details");
+  //       return;
+  //     }
 
-      const billingData = response.data.data;
-      const regCh = parseFloat(billingData.RegCh || 0);
-      const svrCh = parseFloat(billingData.ServiceCh || 0);
-      const rate = parseFloat(billingData.Rate || 0);
-      const profDiscPer = parseFloat(billingData.discp || 0);
-      const profDiscAmt = parseFloat(billingData.Discount || 0);
-      const svrDisc = parseFloat(billingData.SrvChDisc || 0);
-      const totalPaid = parseFloat(billingData.RecAmt || 0);
+  //     const billingData = response.data.data;
+  //     const regCh = parseFloat(billingData.RegCh || 0);
+  //     const svrCh = parseFloat(billingData.ServiceCh || 0);
+  //     const rate = parseFloat(billingData.Rate || 0);
+  //     const profDiscPer = parseFloat(billingData.discp || 0);
+  //     const profDiscAmt = parseFloat(billingData.Discount || 0);
+  //     const svrDisc = parseFloat(billingData.SrvChDisc || 0);
+  //     const totalPaid = parseFloat(billingData.RecAmt || 0);
 
-      const doc = new jsPDF();
+  //     const doc = new jsPDF();
 
-      // Red logo box with white text
-      doc.setFillColor(220, 53, 69);
-      doc.rect(15, 15, 30, 30, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("L", 22, 28);
-      doc.text("H", 22, 35);
-      doc.text("C", 22, 42);
+  //     // Red logo box with white text
+  //     doc.setFillColor(220, 53, 69);
+  //     doc.rect(15, 15, 30, 30, "F");
+  //     doc.setTextColor(255, 255, 255);
+  //     doc.setFontSize(14);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text("L", 22, 28);
+  //     doc.text("H", 22, 35);
+  //     doc.text("C", 22, 42);
 
-      // Main header
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(22);
-      doc.setFont("helvetica", "bold");
-      doc.text("LORDS HEALTH CARE", 105, 25, { align: "center" });
+  //     // Main header
+  //     doc.setTextColor(0, 0, 0);
+  //     doc.setFontSize(22);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text("LORDS HEALTH CARE", 105, 25, { align: "center" });
 
-      // Address details
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text("13/3, Circular 2nd Bye Lane, Kona Expressway,", 105, 32, {
-        align: "center",
-      });
-      doc.text(
-        "(Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.",
-        105,
-        37,
-        { align: "center" },
-      );
-      doc.text(
-        "Phone No.: 8272904444 HELPLINE - 7003378414,Toll Free No:-1800-309-0895",
-        105,
-        42,
-        { align: "center" },
-      );
-      doc.text(
-        "E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org",
-        105,
-        47,
-        { align: "center" },
-      );
+  //     // Address details
+  //     doc.setFontSize(9);
+  //     doc.setFont("helvetica", "normal");
+  //     doc.text("13/3, Circular 2nd Bye Lane, Kona Expressway,", 105, 32, {
+  //       align: "center",
+  //     });
+  //     doc.text(
+  //       "(Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.",
+  //       105,
+  //       37,
+  //       { align: "center" },
+  //     );
+  //     doc.text(
+  //       "Phone No.: 8272904444 HELPLINE - 7003378414,Toll Free No:-1800-309-0895",
+  //       105,
+  //       42,
+  //       { align: "center" },
+  //     );
+  //     doc.text(
+  //       "E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org",
+  //       105,
+  //       47,
+  //       { align: "center" },
+  //     );
 
-      // Barcode area
-      doc.setLineWidth(1);
-      doc.rect(165, 15, 30, 25);
-      // Vertical barcode lines
-      for (let i = 0; i < 20; i++) {
-        if (i % 2 === 0) doc.line(167 + i, 17, 167 + i, 38);
-      }
-      doc.setFontSize(8);
-      doc.text("S-" + patient.RegistrationId, 180, 44, { align: "center" });
+  //     // Barcode area
+  //     doc.setLineWidth(1);
+  //     doc.rect(165, 15, 30, 25);
+  //     // Vertical barcode lines
+  //     for (let i = 0; i < 20; i++) {
+  //       if (i % 2 === 0) doc.line(167 + i, 17, 167 + i, 38);
+  //     }
+  //     doc.setFontSize(8);
+  //     doc.text("S-" + patient.RegistrationId, 180, 44, { align: "center" });
 
-      // ADVANCE BOOKING title
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("ADVANCE BOOKING", 105, 60, { align: "center" });
+  //     // ADVANCE BOOKING title
+  //     doc.setFontSize(18);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text("ADVANCE BOOKING", 105, 60, { align: "center" });
 
-      // MONEY RECEIPT header with Serial No
-      doc.setFontSize(14);
-      doc.setTextColor(255, 0, 0);
-      doc.setFont("helvetica", "bold");
-      doc.text("MONEY RECEIPT", 20, 75);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont("helvetica", "bold");
-      doc.text("Serial No : 1", 150, 75);
+  //     // MONEY RECEIPT header with Serial No
+  //     doc.setFontSize(14);
+  //     doc.setTextColor(255, 0, 0);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text("MONEY RECEIPT", 20, 75);
+  //     doc.setTextColor(0, 0, 0);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text("Serial No : 1", 150, 75);
 
-      // Main information table
-      const startY = 85;
-      doc.setLineWidth(0.5);
-      doc.setTextColor(0, 0, 0);
+  //     // Main information table
+  //     const startY = 85;
+  //     doc.setLineWidth(0.5);
+  //     doc.setTextColor(0, 0, 0);
 
-      // Registration details box
-      doc.rect(15, startY, 180, 25);
-      doc.line(15, startY + 12, 195, startY + 12);
-      doc.line(100, startY, 100, startY + 25);
-      doc.line(140, startY, 140, startY + 25);
+  //     // Registration details box
+  //     doc.rect(15, startY, 180, 25);
+  //     doc.line(15, startY + 12, 195, startY + 12);
+  //     doc.line(100, startY, 100, startY + 25);
+  //     doc.line(140, startY, 140, startY + 25);
 
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Registration ID : S-${patient.RegistrationId}`, 17, startY + 8);
-      doc.text(`Registration Date : ${patient.RegDate}`, 17, startY + 20);
-      doc.text(
-        `Booking Time : ${patient.RegTime || "08:20 AM"}`,
-        17,
-        startY + 32,
-      );
+  //     doc.setFontSize(9);
+  //     doc.setFont("helvetica", "normal");
+  //     doc.text(`Registration ID : S-${patient.RegistrationId}`, 17, startY + 8);
+  //     doc.text(`Registration Date : ${patient.RegDate}`, 17, startY + 20);
+  //     doc.text(
+  //       `Booking Time : ${patient.RegTime || "08:20 AM"}`,
+  //       17,
+  //       startY + 32,
+  //     );
 
-      doc.text(`Visit ID :`, 102, startY + 8);
-      doc.text(`RRR00351`, 102, startY + 20);
+  //     doc.text(`Visit ID :`, 102, startY + 8);
+  //     doc.text(`RRR00351`, 102, startY + 20);
 
-      doc.text(`Visit Date : ${patient.RegDate}`, 142, startY + 8);
-      doc.text(
-        `Visit Time : ${patient.RegTime || "8:20:00 AM"}`,
-        142,
-        startY + 20,
-      );
+  //     doc.text(`Visit Date : ${patient.RegDate}`, 142, startY + 8);
+  //     doc.text(
+  //       `Visit Time : ${patient.RegTime || "8:20:00 AM"}`,
+  //       142,
+  //       startY + 20,
+  //     );
 
-      // Patient information box - made taller to fit consultant info
-      const patientY = startY + 25;
-      doc.rect(15, patientY, 180, 55);
-      doc.line(15, patientY + 20, 195, patientY + 20);
-      doc.line(15, patientY + 40, 195, patientY + 40);
-      doc.line(140, patientY + 20, 140, patientY + 55);
+  //     // Patient information box - made taller to fit consultant info
+  //     const patientY = startY + 25;
+  //     doc.rect(15, patientY, 180, 55);
+  //     doc.line(15, patientY + 20, 195, patientY + 20);
+  //     doc.line(15, patientY + 40, 195, patientY + 40);
+  //     doc.line(140, patientY + 20, 140, patientY + 55);
 
-      doc.text(`Patient Name : ${patient.PatientName}`, 17, patientY + 12);
-      doc.text(
-        `Age : ${patient.Age || "57"} Y    Sex : ${patient.Sex || "Female"}`,
-        142,
-        patientY + 8,
-      );
-      doc.text(`Phone No : ${patient.PhoneNo}`, 142, patientY + 16);
+  //     doc.text(`Patient Name : ${patient.PatientName}`, 17, patientY + 12);
+  //     doc.text(
+  //       `Age : ${patient.Age || "57"} Y    Sex : ${patient.Sex || "Female"}`,
+  //       142,
+  //       patientY + 8,
+  //     );
+  //     doc.text(`Phone No : ${patient.PhoneNo}`, 142, patientY + 16);
 
-      doc.text(`Address : ${patient.Add1 || "HOWRAH, ,"}`, 17, patientY + 32);
-      doc.text(`SERVER2    0    Cash    N`, 142, patientY + 32);
+  //     doc.text(`Address : ${patient.Add1 || "HOWRAH, ,"}`, 17, patientY + 32);
+  //     doc.text(`SERVER2    0    Cash    N`, 142, patientY + 32);
 
-      // Consultant and Department in separate row with proper spacing
-      doc.text(
-        `CONSULTANT : Dr. ${patient.DoctorName || "ABHRA MUKHOPADHYAY"}`,
-        17,
-        patientY + 52,
-      );
-      doc.text(
-        `Department : ${patient.SpecialityName || "GENERAL MEDICINE"}`,
-        142,
-        patientY + 52,
-      );
+  //     // Consultant and Department in separate row with proper spacing
+  //     doc.text(
+  //       `CONSULTANT : Dr. ${patient.DoctorName || "ABHRA MUKHOPADHYAY"}`,
+  //       17,
+  //       patientY + 52,
+  //     );
+  //     doc.text(
+  //       `Department : ${patient.SpecialityName || "GENERAL MEDICINE"}`,
+  //       142,
+  //       patientY + 52,
+  //     );
 
-      // Services table header - adjusted position
-      const servicesY = patientY + 55;
-      doc.rect(15, servicesY, 180, 12);
-      doc.line(150, servicesY, 150, servicesY + 12);
+  //     // Services table header - adjusted position
+  //     const servicesY = patientY + 55;
+  //     doc.rect(15, servicesY, 180, 12);
+  //     doc.line(150, servicesY, 150, servicesY + 12);
 
-      doc.setFont("helvetica", "bold");
-      doc.text("Particulars / Description", 17, servicesY + 8);
-      doc.text("Amount In Rs.", 152, servicesY + 8);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.text("Particulars / Description", 17, servicesY + 8);
+  //     doc.text("Amount In Rs.", 152, servicesY + 8);
 
-      // Service items
-      let currentY = servicesY + 12;
-      doc.setFont("helvetica", "normal");
+  //     // Service items
+  //     let currentY = servicesY + 12;
+  //     doc.setFont("helvetica", "normal");
 
-      // Registration Charge (if exists)
-      if (regCh > 0) {
-        doc.rect(15, currentY, 180, 12);
-        doc.line(150, currentY, 150, currentY + 12);
-        doc.text("Registration Charge", 17, currentY + 8);
-        doc.text(regCh.toFixed(2), 185, currentY + 8, { align: "right" });
-        currentY += 12;
-      }
+  //     // Registration Charge (if exists)
+  //     if (regCh > 0) {
+  //       doc.rect(15, currentY, 180, 12);
+  //       doc.line(150, currentY, 150, currentY + 12);
+  //       doc.text("Registration Charge", 17, currentY + 8);
+  //       doc.text(regCh.toFixed(2), 185, currentY + 8, { align: "right" });
+  //       currentY += 12;
+  //     }
 
-      // Service Charge
-      if (svrCh > 0) {
-        doc.rect(15, currentY, 180, 12);
-        doc.line(150, currentY, 150, currentY + 12);
-        doc.text("Service Charge", 17, currentY + 8);
-        doc.text(svrCh.toFixed(2), 185, currentY + 8, { align: "right" });
-        currentY += 12;
-      }
+  //     // Service Charge
+  //     if (svrCh > 0) {
+  //       doc.rect(15, currentY, 180, 12);
+  //       doc.line(150, currentY, 150, currentY + 12);
+  //       doc.text("Service Charge", 17, currentY + 8);
+  //       doc.text(svrCh.toFixed(2), 185, currentY + 8, { align: "right" });
+  //       currentY += 12;
+  //     }
 
-      // Professional Charge
-      if (rate > 0) {
-        doc.rect(15, currentY, 180, 12);
-        doc.line(150, currentY, 150, currentY + 12);
-        doc.text("CONSULTATION - Professional Charge", 17, currentY + 8);
-        doc.text(rate.toFixed(2), 185, currentY + 8, { align: "right" });
-        currentY += 12;
-      }
+  //     // Professional Charge
+  //     if (rate > 0) {
+  //       doc.rect(15, currentY, 180, 12);
+  //       doc.line(150, currentY, 150, currentY + 12);
+  //       doc.text("CONSULTATION - Professional Charge", 17, currentY + 8);
+  //       doc.text(rate.toFixed(2), 185, currentY + 8, { align: "right" });
+  //       currentY += 12;
+  //     }
 
-      // Discount row (if applicable)
-      const totalDiscount = profDiscAmt + svrDisc;
-      if (totalDiscount > 0) {
-        doc.rect(15, currentY, 180, 12);
+  //     // Discount row (if applicable)
+  //     const totalDiscount = profDiscAmt + svrDisc;
+  //     if (totalDiscount > 0) {
+  //       doc.rect(15, currentY, 180, 12);
 
-        doc.line(150, currentY, 150, currentY + 12);
-        doc.text(
-          `Less Discount${profDiscPer > 0 ? ` (${profDiscPer}%)` : ""}`,
-          17,
-          currentY + 8,
-        );
-        doc.text(totalDiscount.toFixed(2), 185, currentY + 8, {
-          align: "right",
-        });
-        currentY += 12;
-      }
+  //       doc.line(150, currentY, 150, currentY + 12);
+  //       doc.text(
+  //         `Less Discount${profDiscPer > 0 ? ` (${profDiscPer}%)` : ""}`,
+  //         17,
+  //         currentY + 8,
+  //       );
+  //       doc.text(totalDiscount.toFixed(2), 185, currentY + 8, {
+  //         align: "right",
+  //       });
+  //       currentY += 12;
+  //     }
 
-      // Convert amount to words
-      const numberToWords = (num) => {
-        const ones = [
-          "",
-          "one",
-          "two",
-          "three",
-          "four",
-          "five",
-          "six",
-          "seven",
-          "eight",
-          "nine",
-        ];
-        const tens = [
-          "",
-          "",
-          "twenty",
-          "thirty",
-          "forty",
-          "fifty",
-          "sixty",
-          "seventy",
-          "eighty",
-          "ninety",
-        ];
-        const teens = [
-          "ten",
-          "eleven",
-          "twelve",
-          "thirteen",
-          "fourteen",
-          "fifteen",
-          "sixteen",
-          "seventeen",
-          "eighteen",
-          "nineteen",
-        ];
+  //     // Convert amount to words
+  //     const numberToWords = (num) => {
+  //       const ones = [
+  //         "",
+  //         "one",
+  //         "two",
+  //         "three",
+  //         "four",
+  //         "five",
+  //         "six",
+  //         "seven",
+  //         "eight",
+  //         "nine",
+  //       ];
+  //       const tens = [
+  //         "",
+  //         "",
+  //         "twenty",
+  //         "thirty",
+  //         "forty",
+  //         "fifty",
+  //         "sixty",
+  //         "seventy",
+  //         "eighty",
+  //         "ninety",
+  //       ];
+  //       const teens = [
+  //         "ten",
+  //         "eleven",
+  //         "twelve",
+  //         "thirteen",
+  //         "fourteen",
+  //         "fifteen",
+  //         "sixteen",
+  //         "seventeen",
+  //         "eighteen",
+  //         "nineteen",
+  //       ];
 
-        if (num === 0) return "zero";
+  //       if (num === 0) return "zero";
 
-        const convertHundreds = (n) => {
-          let str = "";
-          if (n >= 100) {
-            str += ones[Math.floor(n / 100)] + " hundred ";
-            n %= 100;
-          }
-          if (n >= 20) {
-            str += tens[Math.floor(n / 10)] + " ";
-            n %= 10;
-          } else if (n >= 10) {
-            str += teens[n - 10] + " ";
-            return str;
-          }
-          if (n > 0) str += ones[n] + " ";
+  //       const convertHundreds = (n) => {
+  //         let str = "";
+  //         if (n >= 100) {
+  //           str += ones[Math.floor(n / 100)] + " hundred ";
+  //           n %= 100;
+  //         }
+  //         if (n >= 20) {
+  //           str += tens[Math.floor(n / 10)] + " ";
+  //           n %= 10;
+  //         } else if (n >= 10) {
+  //           str += teens[n - 10] + " ";
+  //           return str;
+  //         }
+  //         if (n > 0) str += ones[n] + " ";
+  //         return str;
+  //       };
+
+  //       let rupees = Math.floor(num);
+  //       const paise = Math.round((num - rupees) * 100);
+
+  //       let result = "";
+  //       if (rupees >= 10000000) {
+  //         result += convertHundreds(Math.floor(rupees / 10000000)) + "crore ";
+  //         rupees %= 10000000;
+  //       }
+  //       if (rupees >= 100000) {
+  //         result += convertHundreds(Math.floor(rupees / 100000)) + "lakh ";
+  //         rupees %= 100000;
+  //       }
+  //       if (rupees >= 1000) {
+  //         result += convertHundreds(Math.floor(rupees / 1000)) + "thousand ";
+  //         rupees %= 1000;
+  //       }
+  //       if (rupees > 0) {
+  //         result += convertHundreds(rupees);
+  //       }
+
+  //       result = result.trim();
+  //       if (paise > 0) {
+  //         result += " & " + convertHundreds(paise) + "paise";
+  //       } else {
+  //         result += " & zero paise";
+  //       }
+
+  //       return result + " only";
+  //     };
+
+  //     // Total amount in words
+  //     doc.rect(15, currentY, 180, 18);
+  //     doc.line(150, currentY, 150, currentY + 18);
+  //     doc.setFont("helvetica", "bold");
+  //     const amountInWords = numberToWords(totalPaid);
+  //     doc.text(`PAID : Rupees ${amountInWords}`, 17, currentY + 12);
+  //     doc.text(totalPaid.toFixed(2), 185, currentY + 12, { align: "right" });
+  //     currentY += 18;
+
+  //     // Footer signature
+  //     doc.setFont("helvetica", "normal");
+  //     doc.text("Received By : SANJAY ST.", 17, currentY + 15);
+
+  //     // Save PDF with patient name
+  //     const fileName = `MoneyReceipt_${patient.PatientName.replace(
+  //       /\s+/g,
+  //       "_",
+  //     )}_${patient.RegistrationId.replace("/", "-")}.pdf`;
+  //     doc.save(fileName);
+  //     alert("Professional Money Receipt PDF generated successfully!");
+  //   } catch (error) {
+  //     console.error("Error generating PDF:", error);
+  //     alert("Failed to generate PDF: " + error.message);
+  //   }
+  // };
+
+const generatePDF = async (patient) => {
+  try {
+    const response = await axiosInstance.get(
+      `/patient-visits/${patient.PVisitId}`,
+    );
+
+    if (!response.data?.success) {
+      alert("Failed to fetch billing details");
+      return;
+    }
+
+    const billingData = response.data.data;
+
+    const regCh = parseFloat(billingData.RegCh || 0);
+    const svrCh = parseFloat(billingData.ServiceCh || 0);
+    const rate = parseFloat(billingData.Rate || 0);
+    const profDiscPer = parseFloat(billingData.discp || 0);
+    const profDiscAmt = parseFloat(billingData.Discount || 0);
+    const svrDisc = parseFloat(billingData.SrvChDisc || 0);
+    const totalPaid = parseFloat(billingData.RecAmt || 0);
+
+    const totalDiscount = profDiscAmt + svrDisc;
+
+    const numberToWords = (num) => {
+      const ones = ["","one","two","three","four","five","six","seven","eight","nine"];
+      const tens = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
+      const teens = ["ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+
+      if (num === 0) return "zero";
+
+      const convertHundreds = (n) => {
+        let str = "";
+        if (n >= 100) {
+          str += ones[Math.floor(n / 100)] + " hundred ";
+          n %= 100;
+        }
+        if (n >= 20) {
+          str += tens[Math.floor(n / 10)] + " ";
+          n %= 10;
+        } else if (n >= 10) {
+          str += teens[n - 10] + " ";
           return str;
-        };
-
-        let rupees = Math.floor(num);
-        const paise = Math.round((num - rupees) * 100);
-
-        let result = "";
-        if (rupees >= 10000000) {
-          result += convertHundreds(Math.floor(rupees / 10000000)) + "crore ";
-          rupees %= 10000000;
         }
-        if (rupees >= 100000) {
-          result += convertHundreds(Math.floor(rupees / 100000)) + "lakh ";
-          rupees %= 100000;
-        }
-        if (rupees >= 1000) {
-          result += convertHundreds(Math.floor(rupees / 1000)) + "thousand ";
-          rupees %= 1000;
-        }
-        if (rupees > 0) {
-          result += convertHundreds(rupees);
-        }
-
-        result = result.trim();
-        if (paise > 0) {
-          result += " & " + convertHundreds(paise) + "paise";
-        } else {
-          result += " & zero paise";
-        }
-
-        return result + " only";
+        if (n > 0) str += ones[n] + " ";
+        return str;
       };
 
-      // Total amount in words
-      doc.rect(15, currentY, 180, 18);
-      doc.line(150, currentY, 150, currentY + 18);
-      doc.setFont("helvetica", "bold");
-      const amountInWords = numberToWords(totalPaid);
-      doc.text(`PAID : Rupees ${amountInWords}`, 17, currentY + 12);
-      doc.text(totalPaid.toFixed(2), 185, currentY + 12, { align: "right" });
-      currentY += 18;
+      let rupees = Math.floor(num);
+      const paise = Math.round((num - rupees) * 100);
 
-      // Footer signature
-      doc.setFont("helvetica", "normal");
-      doc.text("Received By : SANJAY ST.", 17, currentY + 15);
+      let result = "";
+      if (rupees >= 10000000) {
+        result += convertHundreds(Math.floor(rupees / 10000000)) + "crore ";
+        rupees %= 10000000;
+      }
+      if (rupees >= 100000) {
+        result += convertHundreds(Math.floor(rupees / 100000)) + "lakh ";
+        rupees %= 100000;
+      }
+      if (rupees >= 1000) {
+        result += convertHundreds(Math.floor(rupees / 1000)) + "thousand ";
+        rupees %= 1000;
+      }
+      if (rupees > 0) {
+        result += convertHundreds(rupees);
+      }
 
-      // Save PDF with patient name
-      const fileName = `MoneyReceipt_${patient.PatientName.replace(
-        /\s+/g,
-        "_",
-      )}_${patient.RegistrationId.replace("/", "-")}.pdf`;
-      doc.save(fileName);
-      alert("Professional Money Receipt PDF generated successfully!");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF: " + error.message);
-    }
-  };
+      result = result.trim();
+      result += paise > 0
+        ? " & " + convertHundreds(paise) + "paise"
+        : " & zero paise";
+
+      return result + " only";
+    };
+
+    const amountInWords = numberToWords(totalPaid);
+
+    const win = window.open("", "_blank");
+
+    win.document.write(`
+      <html>
+      <head>
+        <title>Money Receipt</title>
+        <style>
+          @page { size: auto; margin: 5mm; }
+
+          body {
+            font-family: Arial;
+            font-size: 14px;
+            font-weight: 600;
+          }
+
+          .header {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid black;
+            padding-bottom: 5px;
+          }
+
+          .title-main {
+            font-size: 18px;
+            font-weight: 900;
+          }
+
+          .sub-text {
+            font-size: 12px;
+            font-weight: 600;
+          }
+          .sub-text1 {
+            font-size: 16px;
+            font-weight: 600;
+          }
+
+          .receipt-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 900;
+            color: red;
+            margin-top: 5px;
+          }
+
+          .box {
+            border: 1px solid black;
+            margin-top: 10px;
+            padding: 8px;
+          }
+
+          .row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-weight: 700;
+          }
+
+          .big {
+            font-size: 16px;
+            font-weight: 900;
+          }
+
+        </style>
+      </head>
+
+      <body>
+
+        <!-- HEADER -->
+        <div class="header">
+          <div>
+            <img src="/assets/lords.png" style="width:75px;" />
+          </div>
+
+          <div style="text-align:center;">
+            <div class="title-main">LORDS HEALTH CARE (NURSING HOME)</div>
+            <div class="sub-text1">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
+
+            <div class="sub-text">
+              13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+              (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
+            </div>
+
+            <div class="sub-text">
+            E-mail: patientdesk@lordshealthcare.org<br/>
+              Phone No.: 8272904444 | HELPLINE-7003378414  |  Toll Free No:-1800-309-0895
+            </div>
+          </div>
+
+          <div style="text-align:right;">
+            <canvas id="qrcode"></canvas>
+          </div>
+        </div>
+
+        <div class="receipt-title">MONEY RECEIPT</div>
+
+        <div class="box">
+          <div class="row">
+            <div>Reg ID: S-${patient.RegistrationId}</div>
+            <div>Date: ${patient.RegDate}</div>
+          </div>
+          <div class="row">
+            <div>Time: ${patient.RegTime}</div>
+            <div>Visit Time: ${patient.RegTime}</div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="row"><span>Name</span><span>${patient.PatientName}</span></div>
+          <div class="row"><span>Age / Sex</span><span>${patient.Age} / ${patient.Sex}</span></div>
+          <div class="row"><span>Phone</span><span>${patient.PhoneNo}</span></div>
+          <div class="row"><span>Address</span><span>${patient.Add1 || ""}</span></div>
+          <div class="row"><span>Consultant</span><span>${patient.DoctorName}</span></div>
+          <div class="row"><span>Department</span><span>${patient.SpecialityName}</span></div>
+        </div>
+
+        <div class="box">
+          ${regCh > 0 ? `<div class="row"><span>Registration Charge</span><span>${regCh}</span></div>` : ""}
+          ${svrCh > 0 ? `<div class="row"><span>Service Charge</span><span>${svrCh}</span></div>` : ""}
+          ${rate > 0 ? `<div class="row"><span>Consultation</span><span>${rate}</span></div>` : ""}
+          ${totalDiscount > 0 ? `<div class="row"><span>Discount</span><span>${totalDiscount}</span></div>` : ""}
+        </div>
+
+        <div class="box big">
+          <div>PAID: ${amountInWords}</div>
+          <div class="row">
+            <span>Total</span>
+            <span>${totalPaid.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div style="margin-top:15px; font-weight:700;">
+          Received By: SANJAY ST.
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+        <script>
+          QRCode.toCanvas(document.getElementById("qrcode"), "S-${patient.RegistrationId}", { width: 80 });
+
+          setTimeout(() => {
+            window.print();
+          }, 500);
+        </script>
+
+      </body>
+      </html>
+    `);
+
+    win.document.close();
+
+    win.onload = () => {
+      win.focus();
+    };
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to generate PDF");
+  }
+};
+
+
+ 
+
+ 
+ 
 
   // Original handler logic - PRESERVED
   const handleDelete = async (patient) => {
@@ -666,7 +911,7 @@ const DrPressPrint = ({
           /* Header Styles */
           .header {
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
           }
           .hospital-name {
             font-size: 15px;
@@ -676,23 +921,25 @@ const DrPressPrint = ({
           }
           .address {
             font-size: 11px;
+            font-weight:700;
             margin: 2px 0;
           }
           .contact-info {
-            font-size: 10px;
+            font-size: 12px;
             margin-top: 2px;
             font-weight: bold;
           }
 
           /* Patient Details Box */
           .details-box {
-            border: 2px solid #000; 
+            border: 2px solid #000;
             width: 100%;
             /*border-collapse: collapse;*/
             margin-bottom: 10px;
           }
           .details-box td {
             padding: 3px;
+            font-weight:700;
             /*vertical-align: middle;*/
            /* border: 1px solid #000; */
           }
@@ -707,15 +954,17 @@ const DrPressPrint = ({
             padding: 2px 0;
             margin-bottom: 20px;
             font-size: 12px;
+            font-weight:700;
           }
-          
+         
           /* ADDED THIS CLASS TO INCREASE SPACING */
           .vital-item {
-            margin-bottom: 4px; /* Adjust this number to make the space bigger or smaller */
+            margin-bottom: 6px; /* Adjust this number to make the space bigger or smaller */
+            font-weight:700;
           }
 
           .vital-item span {
-            font-weight: normal;
+            font-weight: 700;
             margin-left: 2px;
           }
 
@@ -788,15 +1037,15 @@ const DrPressPrint = ({
             <img src="/assets/lords.png"/>
           </div>
           <div class="header">
-            <div class="hospital-name">LORDS HEALTH CARE</div>
+            <div class="hospital-name">LORDS HEALTH CARE (NURSING HOME)</div>
             <div class="hospital-name">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
             <div class="address">
               13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
               (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
             </div>
             <div class="contact-info">
-              E-mail: patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org<br/>
-              Phone No.: 8272904444 HELPLINE-7003378414. Toll Free No:-1800-309-0895
+              E-mail: patientdesk@lordshealthcare.org<br/>
+              Phone No.: 8272904444 | HELPLINE-7003378414  |  Toll Free No:-1800-309-0895
             </div>
           </div>
           <div class="top-barcode">
@@ -846,13 +1095,13 @@ const DrPressPrint = ({
           <!--  <td><span class="label">Department</span></td>
             <td colspan="3">${department || "PEDIATRIC MEDICINE"}</td> -->
            <td><span class="label">Qualification</span></td>
-            <td colspan="3">${qualification || ""}</td> 
+            <td colspan="3">${qualification || ""}</td>
           </tr>
         </table>
-        
+       
         <div class="prescription-title">PRESCRIPTION</div>
         <div style="font-weight:bold; margin-bottom:8px; font-size: 15px;">Vitals</div>
-        
+       
         <div class="vitals-container">
            <div class="vital-item">PR: <span>${pr || ""}</span></div>
            <div class="vital-item">RR: <span>${rr || ""}</span></div>
@@ -893,7 +1142,7 @@ const DrPressPrint = ({
             //         textMargin: 0
             //     });
             // } catch (e) { console.log(e); }
-            
+           
             // setTimeout(() => {
             //     window.print();
             //     setTimeout(() => window.close(), 100);

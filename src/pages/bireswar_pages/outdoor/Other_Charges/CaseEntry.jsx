@@ -1,3 +1,4 @@
+
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -47,13 +48,13 @@ const DepartmentModal = ({ isOpen, setIsOpen, tests = [] }) => {
           <title>Print Reports</title>
           <style>
             @page { margin: 15mm; }
-            body { 
-              font-family: Arial, sans-serif; 
+            body {
+              font-family: Arial, sans-serif;
               color: #333;
             }
             /* এই ক্লাসটি পরের রিপোর্টকে নতুন পেজে নিয়ে যাবে */
-            .page-break { 
-              page-break-after: always; 
+            .page-break {
+              page-break-after: always;
             }
             .report-header {
               text-align: center;
@@ -72,12 +73,12 @@ const DepartmentModal = ({ isOpen, setIsOpen, tests = [] }) => {
                 <h2>${test.TestName}</h2>
                 <p>Test ID: ${test.TestId} | Delivery Date: ${test.DeliveryDate || "N/A"}</p>
               </div>
-              
+             
               <div class="report-body">
                 ${test.html_content}
               </div>
             </div>
-            
+           
             ${index < testsToPrint.length - 1 ? '<div class="page-break"></div>' : ""}
           `,
             )
@@ -1580,7 +1581,7 @@ body{
 }
 
 .qr-item{
-  
+ 
   padding:8px;
 
   display:flex;
@@ -1606,7 +1607,7 @@ body{
 
 .code-text{
   font-size:8px;
-  
+ 
   margin-top:4px;
   text-align:center;
   width:100%;
@@ -2183,7 +2184,8 @@ window.onload = function(){
 
 body{
   font-family: Arial;
-  font-size:11px;
+  font-size:12px;
+  font-weight:700;
   margin:0;
   padding:0;
 }
@@ -2213,18 +2215,19 @@ body{
 
 .hospital-name{
   font-size:15px;
-  font-weight:bold;
+  font-weight:700;
 }
 
 .address,.contact-info{
-  font-size:10px;
+  font-size:12px;
+  font-weight:700;
   line-height:1.3;
 }
 
 .title{
   font-size:13px;
   text-align:center;
-  font-weight:bold;
+  font-weight:700;
   margin-top:8px;
 }
 
@@ -2255,7 +2258,8 @@ table{
 th,td{
   border:1px solid #333;
   padding:4px;
-  font-size:10px;
+  font-size:14px;
+  font-weight:700;
 }
 
 th{
@@ -2265,7 +2269,8 @@ th{
 .footer{
   text-align:center;
   margin-top:10px;
-  font-size:9px;
+  font-size:11px;
+  font-weight:700;
 }
 
 hr{
@@ -2409,13 +2414,14 @@ ${list.reduce(
 <style>
 
 @page{
-  
+ 
   margin:10mm;
 }
 
 body{
   font-family:Arial, sans-serif;
-  font-size:11px;
+  font-size:12px;
+  font-weigt:700
   margin:0;
 }
 
@@ -2436,18 +2442,19 @@ body{
 
 .hospital-name{
   font-size:15px;
-  font-weight:bold;
+  font-weight:600;
   margin:2px 0;
 }
 
 .address,.contact-info{
-  font-size:10px;
+  font-size:11px;
+  font-weight:700;
   line-height:1.3;
 }
 
 .title{
   text-align:center;
-  font-weight:bold;
+  font-weight:600;
   font-size:13px;
   margin-top:8px;
 }
@@ -2463,8 +2470,9 @@ body{
 }
 
 .patient-col{
-  width:48%;
-  font-size:10px;
+    margin:4px 0;
+  font-size:13px;
+  font-weight:bold;
 }
 
 .patient-row{
@@ -2473,7 +2481,7 @@ body{
 }
 
 .patient-label{
-  font-weight:bold;
+  font-weight:700;
   width:85px;
 }
 
@@ -2490,7 +2498,8 @@ table{
 th,td{
   border:1px solid #333;
   padding:4px;
-  font-size:10px;
+  font-size:12px;
+  font-weight:700;
 }
 
 th{
@@ -2500,7 +2509,8 @@ th{
 .footer{
   text-align:center;
   margin-top:10px;
-  font-size:9px;
+  font-size:11px;
+  font-weight:700;
 }
 
 hr{

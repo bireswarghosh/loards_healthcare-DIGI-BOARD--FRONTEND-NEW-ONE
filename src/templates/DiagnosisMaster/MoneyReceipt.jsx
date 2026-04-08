@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
@@ -1009,7 +1010,7 @@ ${t.CancelTast == 1 ? "(Cancel)" : ""}
 <div class="page">
 
 <div class="top-header-row">
-      
+     
 <div class="top-favicon">
 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRLBp8HRkxkrAD3J_42s4lQdr95CDxPS-aQCQ&s"/>
 </div>
@@ -1210,10 +1211,15 @@ ${
 
 <style>
 
+// body{
+// font-family: Arial, sans-serif;
+// font-size:10px;
+// margin:0;
+// }
 body{
-font-family: Arial, sans-serif;
-font-size:10px;
-margin:0;
+  font-family: Arial, sans-serif;
+  font-size:12px;   /* 10 → 12 or 13 */
+  font-weight:500;  /* optional */
 }
 
 .page{
@@ -1232,8 +1238,8 @@ align-items:center;
 }
 
 .hospital-name{
-font-size:15px;
-font-weight:bold;
+  font-size:18px;
+  font-weight:700;
 }
 
 .address{
@@ -1261,7 +1267,8 @@ flex-grow:1;
 .title{
 text-align:center;
 font-weight:bold;
-font-size:12px;
+  font-size:16px;
+  font-weight:700;
 margin-top:5px;
 }
 
@@ -1276,7 +1283,7 @@ padding:6px;
 
 .patient-col{
 width:48%;
-font-size:10px;
+font-size:12px;
 }
 
 .patient-row{
@@ -1298,14 +1305,16 @@ margin-top:6px;
 th{
 border:1px solid #333;
 padding:3px;
-font-size:10px;
+  font-size:12px;
+  font-weight:600;
 }
 
 td{
 border-left:1px solid #333;
 border-right:1px solid #333;
 padding:3px;
-font-size:10px;
+font-size:12px;
+font-weight:600;
 }
 
 /* ⭐ only last row bottom border */
@@ -1324,7 +1333,8 @@ background-color:#f0f0f0;
 .footer{
 text-align:center;
 margin-top:4px;
-font-size:9px;
+  font-size:11px;
+  font-weight:500;
 color:#555;
 }
 
@@ -1377,7 +1387,7 @@ ${pagesHtml}
 
         body {
           font-family: 'Courier New', Courier, monospace;
-          font-size: 11px; 
+          font-size: 11px;
           line-height: 1.1; /* Tightened line height */
           color: #000;
           margin: 0 auto;
@@ -1387,7 +1397,7 @@ ${pagesHtml}
         }
 
         .center { text-align: center; }
-        
+       
         .divider {
           text-align: center;
           letter-spacing: 1px;
@@ -1399,24 +1409,24 @@ ${pagesHtml}
 
         .row { display: flex; justify-content: space-between; }
         .w-50 { width: 48%; }
-        
+       
         /* Table Styling */
         .test-table { width: 100%; border-collapse: collapse; margin-top: 2px; table-layout: fixed; }
         .test-table th { font-weight: normal; text-align: left; padding-bottom: 2px; }
         .test-table th.amount, .test-table td.amount { text-align: right; }
         .test-table td { padding: 1px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        
+       
         /* Totals Styling */
         .totals-section { margin-top: 5px; } /* Reduced from 15px */
         .totals-row { display: flex; margin-bottom: 1px; }
         .totals-label { width: 130px; }
         .totals-mid { flex-grow: 1; }
         .totals-val { width: 100px; text-align: right; }
-        
+       
         /* Footer Styling */
         .footer-info { margin-top: 5px; display: flex; justify-content: space-between; }
         .bottom-footer { margin-top: 15px; } /* Reduced from 30px */
-        
+       
         /* Hide scrollbars for print */
         ::-webkit-scrollbar { display: none; }
       </style>
@@ -1537,7 +1547,7 @@ ${pagesHtml}
       <div className="panel">
         {/* Header */}
         <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>Sample Receipt222</h5>
+          <h5>Sample Receipt</h5>
           <div className="d-flex gap-2">
             <button
               className="btn btn-sm btn-primary"
@@ -1682,7 +1692,7 @@ ${pagesHtml}
               <table className="table table-striped table-hover table-dashed">
                 <thead>
                   <tr>
-                    <th>Actionkkkk 20.00</th>
+                    <th>Action</th>
                     <th>Sl No</th>
                     <th>Receipt No</th>
                     <th>Receipt Date</th>

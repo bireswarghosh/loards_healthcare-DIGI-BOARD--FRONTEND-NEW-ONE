@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import AsyncSelect from "react-select/async";
 import { fi } from "date-fns/locale";
 import { handlePrint5 } from "./FinalBillPrintFunc";
+import RetroModal from "./FinalBillPrintPopUp";
 
 const CustomModal = ({ show = true, setShow, setOk }) => {
   if (!show) return null; // hide modal if not open
@@ -551,6 +552,11 @@ const FinalBillingAdd = () => {
   const [larAlertShow, setLarAlertShow] = useState(false);
   const [larAlertOk, setLarAlertOk] = useState(false);
 
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [printType, setPrintType] = useState("");
+  const [allDiagWithTest, setAllDiagWithTest] = useState([]);
+  const [dischrgType, setDischrgType] = useState('');
+
   useEffect(() => {
     if (larAlertOk) {
       handleSave();
@@ -664,6 +670,26 @@ const FinalBillingAdd = () => {
   //     console.log("error fetching ipd money recipt detail by admId: ", error);
   //   }
   // };
+
+  const fetchAllDiadWithTest = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/case01/admition-with-tests/${id}`);
+      res.data.success ? setAllDiagWithTest(res.data.data) : setAllDiagWithTest([]);
+    } catch (error) {
+      console.log("Error fetching all diag with test by adm id: ", error);
+    }
+  };
+
+  const fetchDischargeType = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/discert/adm/${encodeURIComponent(id)}`);
+      if (res.data.success) {
+        const disc = res.data.data?.DiscType || "";
+        const map = { "0": "Normal Discharge", "1": "Discharge on Request", "2": "Discharge on Risk Bond", "3": "Expired", "4": "Referred", "5": "LAMA", "6": "Discharge Against Medical Service", "7": "Left Against Discharge Advice" };
+        setDischrgType(map[disc] || "");
+      } else { setDischrgType(""); }
+    } catch (error) { console.log("error fetching discharge type: ", error); }
+  };
 
   const fetchAllDoctors = async () => {
     try {
@@ -1410,6 +1436,8 @@ const FinalBillingAdd = () => {
 
       fetchDiag(id);
       fetchLessAdv(id);
+      fetchAllDiadWithTest(id);
+      fetchDischargeType(id);
     } catch (error) {
       console.log("error fetching: ", error);
     }
@@ -1735,7 +1763,7 @@ const FinalBillingAdd = () => {
     dischargeDate:
       `${formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${formData?.ReleaseTime || ""}` ||
       "",
-    dischargeType: "Expired not known confusion",
+    dischargeType: dischrgType || "",
     doctor:
       allDoctors.find((item) => item.DoctorId == admData?.UCDoctor1Id)
         ?.Doctor || "",
@@ -2933,19 +2961,29 @@ const FinalBillingAdd = () => {
             </button>
           )}
 
-          {fbMode !== "final" && (
-            <button
-              className="btn btn-sm btn-primary"
-              onClick={() => {
-                // console.log("print data is: ", billData1);
-                // console.log(finalBillDetail);
-                handlePrint5(billData1);
+          {showPrintModal && (
+            <RetroModal
+              showModal={showPrintModal}
+              setShowModal={setShowPrintModal}
+              printType={printType}
+              setPrintType={setPrintType}
+              billData1={billData1}
+              defaultInvoiceData={{
+                hospital: { name: "LORDS HEALTH CARE", address: "13/3, Circular 2nd Bye Lane, Kona Expressway, (Near Jumanabala Balika Vidyalaya) Shibpur, Howrah-711 102, W.B.", phone: "8272904444", helpline: "7003378414", email: "patientdesk@lordshealthcare.org", website: "www.lordshealthcare.org" },
+                patient: { name: admData.PatientName || "", address: `${admData.Add1 || ""}, ${admData.Add2 || ""}, ${admData.Add3 || ""},`, doctor: allDoctors.find((item) => item.DoctorId == admData?.UCDoctor1Id)?.Doctor || "", billNo: formData?.BillNo || "", age: `${admData.Age || ""} ${admData.AgeType || "Y"}`, sex: admData.Sex || "", admDate: `${admData?.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/")} Time: ${admData?.AdmitionTime || ""}` || "", disDate: `${formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${formData?.ReleaseTime || ""}` || "", regdNo: admData.AdmitionNo || "", billDate: formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "" },
+                printBy: authUserData?.find((item) => item.UserId == loggedInUser)?.UserName || "",
+                groups: allDiagWithTest,
               }}
-              disabled={btnLoading}
-            >
-              Print
-            </button>
+              billData2={billData1}
+            />
           )}
+          <button
+            className="btn btn-sm btn-primary"
+            onClick={() => setShowPrintModal((prev) => !prev)}
+            disabled={btnLoading}
+          >
+            Print
+          </button>
           <button
             className="btn btn-sm btn-primary"
             onClick={() => {

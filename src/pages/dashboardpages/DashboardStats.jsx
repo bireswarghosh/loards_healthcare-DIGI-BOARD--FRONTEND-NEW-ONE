@@ -1,3 +1,4 @@
+
 import React from "react";
 import CountUp from "react-countup";
 
@@ -117,7 +118,7 @@ const DashboardStats = ({ response = {} }) => {
                 <CountUp end={response.totalPatients || 0} duration={1.2} />
               </div>
 
-              <div className="stat-footer">**** **** **** 1234</div>
+              {/* <div className="stat-footer">**** **** **** 1234</div> */}
             </div>
           </div>
         </div>
@@ -140,7 +141,7 @@ const DashboardStats = ({ response = {} }) => {
                 <CountUp end={response.totalOpd || 0} duration={1.2} />
               </div>
 
-              <div className="stat-footer">**** **** **** 5678</div>
+              {/* <div className="stat-footer">**** **** **** 5678</div> */}
             </div>
           </div>
         </div>
@@ -163,13 +164,13 @@ const DashboardStats = ({ response = {} }) => {
                 <CountUp end={response.insured || 0} duration={1.2} />
               </div>
 
-              <div className="stat-footer">**** **** **** 8899</div>
+              {/* <div className="stat-footer">**** **** **** 8899</div> */}
             </div>
           </div>
         </div>
 
         {/* REVENUE */}
-        <div className="col-md-3">
+        {/* <div className="col-md-3">
           <div className="stat-anim">
             <div
               className="stat-card"
@@ -189,10 +190,11 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-footer">**** **** **** 4321</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );
 };
 
 export default DashboardStats;
+

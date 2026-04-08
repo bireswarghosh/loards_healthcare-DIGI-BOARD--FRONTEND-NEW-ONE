@@ -38,7 +38,7 @@ function mergeConsecutive(arr) {
   return result;
 }
 
-// this print final bill summary
+// this print final bill summary (done)
 export const handlePrint1 = (data) => {
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
@@ -49,13 +49,14 @@ export const handlePrint1 = (data) => {
       @page { size: A4; margin: 10mm; }
       body {
         font-family: Arial, sans-serif;
-        font-size: 11px;
+        font-size: 12px;
+        font-weight:700;
         color: #000;
         line-height: 1.3;
         -webkit-print-color-adjust: exact;
       }
       .container { width: 100%; max-width: 210mm; margin: 0 auto; }
-      
+     
       /* Header Section */
       .header-table { width: 100%; border: none; margin-bottom: 10px; }
       .header-table td { border: none; vertical-align: top; }
@@ -69,36 +70,45 @@ export const handlePrint1 = (data) => {
         position: relative;
       }
       .logo-text { font-size: 8px; font-weight: bold; text-align: center; margin-top: 5px; color: #006400; }
-      
+     
       .company-info { text-align: center; width: 70%; }
-      .company-name { font-size: 22px; font-weight: bold; color: #000000; margin: 0; }
-      .company-address { font-size: 10px; margin-bottom: 5px; }
+      .company-name { font-size: 22px; font-weight: 700; color: #000000; margin: 0; }
+      .company-pvt { font-size: 18px; font-weight: 700;}
+      .company-address { font-size: 10px; font-weight: 700;  }
       .company-contact { font-size: 10px; font-weight: bold; }
-      
+     
       /* Patient Info Grid */
       .info-box {margin-top:30px; width: 100%; border: 1px solid #000; padding: 4px; padding-right:2px; margin-bottom: 10px; }
       .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
       .info-col { width: 48%; display: flex; }
       .label { font-weight: bold; width: 120px; }
-      .value { flex: 1; }
-      
+      .value { flex: 1; font-weight: 700; }
+     
       /* Tables */
       .section-title { font-weight: bold; margin-top: 10px; margin-bottom: 2px; text-decoration: underline; font-size: 12px; }
-      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; }
+      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; font-weight: bold;}
       table.data-table th, table.data-table td { border: 1px solid #000; padding: 3px 5px; }
       table.data-table th { background-color: #f0f0f0; text-align: left; font-weight: bold; }
       .text-right { text-align: right; }
       .text-center { text-align: center; }
-      
+      .important-row {
+     
+  font-weight: 700;
+  background: #fafafa;
+}
+  table.data-table td {
+  font-weight: 700;
+}
+     
       /* Footer Totals */
       .footer-totals { width: 100%; margin-top: 20px; border-top: 1px solid #000; padding-top: 5px; }
       .total-row { display: flex; justify-content: flex-end; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
       .total-label { margin-right: 20px; }
-      
+     
       /* Signature */
       .signature-section { margin-top: 40px; text-align: right; font-size: 11px; }
       .admin-sig { margin-top: 30px; }
-      
+     
       /* Utilities */
       .page-break { page-break-before: always; }
       .urn-box { position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 2px; font-size: 9px; }
@@ -116,15 +126,24 @@ export const handlePrint1 = (data) => {
           <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
-          <h1 class="company-name">${data.hospitalName}</h1>
+         <!-- <h1 class="company-name">${data.hospitalName}</h1>
           <div class="company-address">${data.address}</div>
           <div class="company-contact">
             Phone No.: ${data.phone} HELPLINE - ${data.helpline}<br>
             Toll Free No.- ${data.tollFree} <br>
             E-mail: ${data.email}, Website: ${data.website}
+          </div> -->
+
+           <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
+          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-contact">
+E-mail: patientdesk@lordshealthcare.org <br>
+Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
           </div>
         </td>
-      
+     
      
        <td >        
           <img src="/assets/nabh.png" style="width:120px;" />
@@ -132,7 +151,7 @@ export const handlePrint1 = (data) => {
       </tr>
     </table>
     <!--
-    
+   
     <div style="text-align: center; font-weight: bold; margin: 10px 0; font-size: 14px; text-decoration: underline;">BILL SUMMARY</div>
     -->
   `;
@@ -141,10 +160,10 @@ export const handlePrint1 = (data) => {
   <div style="display:flex; align-items:center; justify-content:center; position:relative; margin:10px 0; margin-bottom:10px">
 
     <!-- BARCODE LEFT -->
-    <img 
-      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96" 
+    <img
+      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96"
       alt="barcode"
-      style="position:absolute; left:0; width:200px; height:50px; "
+      style="position:absolute;top:1.5; left:0; width:200px; height:45px; "
     />
 
     <!-- BILL SUMMARY TEXT -->
@@ -194,7 +213,11 @@ export const handlePrint1 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${
+          data?.bedCharges?.rows?.length
+            ? data.bedCharges.rows[data.bedCharges.rows.length - 1]?.[1] || ""
+            : ""
+        }</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -213,11 +236,11 @@ export const handlePrint1 = (data) => {
     tHtml += `</tr></thead><tbody>`;
 
     rows.forEach((row) => {
-      tHtml += `<tr>`;
+      tHtml += `<tr class="important-row">`;
       row.forEach((cell, index) => {
         // Align amounts to right (usually the last columns)
         const alignClass = index >= row.length - 2 ? "text-right" : "";
-        tHtml += `<td class="${alignClass}">${cell}</td>`;
+        tHtml += `<td class="${alignClass}" style="font-weight:600">${cell}</td>`;
       });
       tHtml += `</tr>`;
     });
@@ -260,7 +283,7 @@ export const handlePrint1 = (data) => {
     );
   }
 
-// this is for ot charges
+  // this is for ot charges
   console.log("ot charges data is : ", data.otCharges);
   if (Number(data.otCharges.total) > 0) {
     console.log("inside ot charges");
@@ -271,8 +294,6 @@ export const handlePrint1 = (data) => {
       data.otCharges.total,
     );
   }
-
-
 
   // General Services (Attendant, O2, etc)
   html += buildTable(
@@ -386,7 +407,7 @@ export const handlePrint2 = (invoiceData) => {
   const styles = `
         <style>
             @media print { @page { margin: 10mm; } }
-            body { font-family: 'Arial', sans-serif; font-size: 11pt; color: #000; margin: 0; padding: 20px; }
+            body { font-family: 'Arial', sans-serif; font-size: 11pt;  font-weight:700; color: #000; margin: 0; padding: 20px; }
             .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #000; padding-bottom: 10px; }
             .hospital-name { font-size: 20pt; font-weight: bold; margin-bottom: 2px; }
             .hospital-info { font-size: 9pt; line-height: 1.3; }
@@ -398,9 +419,10 @@ export const handlePrint2 = (invoiceData) => {
 
             .title { text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 15px; font-size: 12pt; }
 
+            
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
             th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 8px 4px; text-align: left; font-size: 9pt; }
-            td { padding: 4px; vertical-align: top; font-size: 9pt; }
+            td { padding: 4px; vertical-align: top; font-size: 11pt;font-weight: bold; }
 
             .group-header-row td { border-top: 1px dashed #ccc; padding-top: 10px; font-weight: bold; }
            .amount-col {
@@ -411,7 +433,7 @@ export const handlePrint2 = (invoiceData) => {
            .amount-col1 {
   text-align: right;
   width: 100px;
-  font-weight: 600; 
+  font-weight: 600;
 }
 
             .rate-col { text-align: right; width: 80px; }
@@ -422,23 +444,14 @@ export const handlePrint2 = (invoiceData) => {
 
 
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #000;
-  padding-bottom: 10px;
-  text-align: center;
-}
+.header-table { width: 100%; border: none; margin-bottom: 10px; }
+.header-table td { border: none; vertical-align: top; }
 
-.header img {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-}
-
+.company-info { text-align: center; width: 70%; }
+.company-name { font-size: 22px; font-weight: 700; color: #000000; margin: 0; }
+.company-pvt { font-size: 18px; font-weight: 700;}
+.company-address { font-size: 10px; font-weight: 700; }
+.company-contact { font-size: 10px; font-weight: bold; }
 
 
 
@@ -496,7 +509,7 @@ export const handlePrint2 = (invoiceData) => {
         <html>
         <head>${styles}</head>
         <body>
-           <div class="header">
+          <!-- <div class="header">
     <img src="/assets/lords.png" alt="Hospital Logo" />
 
     <div>
@@ -507,8 +520,32 @@ export const handlePrint2 = (invoiceData) => {
             E-mail: ${invoiceData.hospital.email}, Website: ${invoiceData.hospital.website}
         </div>
     </div>
-</div>
+</div> -->
 
+<table class="header-table">
+  <tr>
+    <td>
+      <img src="/assets/lords.png" style="width:80px;" />
+    </td>
+
+    <td class="company-info">
+      <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
+      <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+      <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
+      <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+      <div class="company-contact">
+        E-mail: patientdesk@lordshealthcare.org <br>
+        Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+      </div>
+    </td>
+
+    <td>
+      <img src="/assets/nabh.png" style="width:120px;" />
+    </td>
+  </tr>
+</table>
+
+<hr style="border: 1px solid #000; margin: 8px 0 15px 0;" />
 
             <div class="patient-grid">
                 <div>
@@ -581,7 +618,7 @@ export const handlePrint2 = (invoiceData) => {
   }
 };
 
-// this print final bill patient copy
+// this print final bill patient copy (done)
 export const handlePrint3 = (data) => {
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
@@ -592,12 +629,13 @@ export const handlePrint3 = (data) => {
       body {
         font-family: Arial, sans-serif;
         font-size: 11px;
+         font-weight:700;
         color: #000;
         line-height: 1.3;
         -webkit-print-color-adjust: exact;
       }
       .container { width: 100%; max-width: 210mm; margin: 0 auto; }
-      
+     
       /* Header Section */
       .header-table { width: 100%; border: none; margin-bottom: 10px; }
       .header-table td { border: none; vertical-align: top; }
@@ -611,36 +649,37 @@ export const handlePrint3 = (data) => {
         position: relative;
       }
       .logo-text { font-size: 8px; font-weight: bold; text-align: center; margin-top: 5px; color: #006400; }
-      
-      .company-info { text-align: center; width: 70%; }
-      .company-name { font-size: 22px; font-weight: bold; color: #000000; margin: 0; }
-      .company-address { font-size: 10px; margin-bottom: 5px; }
+     
+   .company-info { text-align: center; width: 70%; }
+      .company-name { font-size: 22px; font-weight: 700; color: #000000; margin: 0; }
+      .company-pvt { font-size: 18px; font-weight: 700; }
+      .company-address { font-size: 10px; font-weight: 700; }
       .company-contact { font-size: 10px; font-weight: bold; }
-      
+     
       /* Patient Info Grid */
       .info-box {margin-top:30px; width: 100%; border: 1px solid #000; padding: 4px; padding-right:2px; margin-bottom: 10px; }
       .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
       .info-col { width: 48%; display: flex; }
       .label { font-weight: bold; width: 120px; }
-      .value { flex: 1; }
-      
+      .value { flex: 1; font-weight: 700; }
+     
       /* Tables */
       .section-title { font-weight: bold; margin-top: 10px; margin-bottom: 2px; text-decoration: underline; font-size: 12px; }
-      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; }
+      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;  font-weight:bold; }
       table.data-table th, table.data-table td { border: 1px solid #000; padding: 3px 5px; }
       table.data-table th { background-color: #f0f0f0; text-align: left; font-weight: bold; }
       .text-right { text-align: right; }
       .text-center { text-align: center; }
-      
+     
       /* Footer Totals */
       .footer-totals { width: 100%; margin-top: 20px; border-top: 1px solid #000; padding-top: 5px; }
       .total-row { display: flex; justify-content: flex-end; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
       .total-label { margin-right: 20px; }
-      
+     
       /* Signature */
       .signature-section { margin-top: 40px; text-align: right; font-size: 11px; }
       .admin-sig { margin-top: 30px; }
-      
+     
       /* Utilities */
       .page-break { page-break-before: always; }
       .urn-box { position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 2px; font-size: 9px; }
@@ -658,15 +697,24 @@ export const handlePrint3 = (data) => {
           <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
-          <h1 class="company-name">${data.hospitalName}</h1>
+         <!-- <h1 class="company-name">${data.hospitalName}</h1>
           <div class="company-address">${data.address}</div>
           <div class="company-contact">
             Phone No.: ${data.phone} HELPLINE - ${data.helpline}<br>
             Toll Free No.- ${data.tollFree} <br>
             E-mail: ${data.email}, Website: ${data.website}
+          </div> -->
+
+           <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
+          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-contact">
+E-mail: patientdesk@lordshealthcare.org <br>
+Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
           </div>
         </td>
-      
+     
      
        <td >        
           <img src="/assets/nabh.png" style="width:120px;" />
@@ -674,7 +722,7 @@ export const handlePrint3 = (data) => {
       </tr>
     </table>
     <!--
-    
+   
     <div style="text-align: center; font-weight: bold; margin: 10px 0; font-size: 14px; text-decoration: underline;">BILL SUMMARY</div>
     -->
   `;
@@ -682,16 +730,16 @@ export const handlePrint3 = (data) => {
   html += `
   <div style="display:flex; align-items:center; justify-content:center; position:relative; margin:10px 0; margin-bottom:10px">
 
-    <!-- BARCODE LEFT -->
-    <img 
-      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96" 
+   <!-- BARCODE LEFT -->
+    <img
+      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96"
       alt="barcode"
-      style="position:absolute; left:0; width:200px; height:50px; "
+      style="position:absolute;top:1.5; left:0; width:200px; height:45px; "
     />
 
     <!-- BILL SUMMARY TEXT -->
     <div style="font-weight:bold; font-size:14px; text-decoration:underline; text-align:center;">
-      TAX INVOICE - CUM BILL
+      NET BILL
     </div>
 
   </div>
@@ -736,7 +784,11 @@ export const handlePrint3 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${
+          data?.bedCharges?.rows?.length
+            ? data.bedCharges.rows[data.bedCharges.rows.length - 1]?.[1] || ""
+            : ""
+        }</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -802,8 +854,7 @@ export const handlePrint3 = (data) => {
     );
   }
 
-
-// this is for ot charges
+  // this is for ot charges
   console.log("ot charges data is : ", data.otCharges);
   if (Number(data.otCharges.total) > 0) {
     console.log("inside ot charges");
@@ -910,7 +961,7 @@ export const handlePrint3 = (data) => {
   }
 };
 
-// this print final bill Indoor Copy
+// this print final bill Indoor Copy (done)
 export const handlePrint4 = (data) => {
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
@@ -921,12 +972,13 @@ export const handlePrint4 = (data) => {
       body {
         font-family: Arial, sans-serif;
         font-size: 11px;
+        font-weight: bold;
         color: #000;
         line-height: 1.3;
         -webkit-print-color-adjust: exact;
       }
       .container { width: 100%; max-width: 210mm; margin: 0 auto; }
-      
+     
       /* Header Section */
       .header-table { width: 100%; border: none; margin-bottom: 10px; }
       .header-table td { border: none; vertical-align: top; }
@@ -940,10 +992,11 @@ export const handlePrint4 = (data) => {
         position: relative;
       }
       .logo-text { font-size: 8px; font-weight: bold; text-align: center; margin-top: 5px; color: #006400; }
-      
+     
       .company-info { text-align: center; width: 70%; }
-      .company-name { font-size: 22px; font-weight: bold; color: #000000; margin: 0; }
-      .company-address { font-size: 10px; margin-bottom: 5px; }
+      .company-name { font-size: 22px; font-weight: 700; color: #000000; margin: 0; }
+      .company-pvt { font-size: 18px; font-weight: 700; }
+      .company-address { font-size: 10px; font-weight: 700;  }
       .company-contact { font-size: 10px; font-weight: bold; }
       
       /* Patient Info Grid */
@@ -951,25 +1004,25 @@ export const handlePrint4 = (data) => {
       .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
       .info-col { width: 48%; display: flex; }
       .label { font-weight: bold; width: 120px; }
-      .value { flex: 1; }
-      
+      .value { flex: 1; font-weight: 700;}
+     
       /* Tables */
       .section-title { font-weight: bold; margin-top: 10px; margin-bottom: 2px; text-decoration: underline; font-size: 12px; }
-      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; }
+      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; font-weight: bold; }
       table.data-table th, table.data-table td { border: 1px solid #000; padding: 3px 5px; }
       table.data-table th { background-color: #f0f0f0; text-align: left; font-weight: bold; }
       .text-right { text-align: right; }
       .text-center { text-align: center; }
-      
+     
       /* Footer Totals */
       .footer-totals { width: 100%; margin-top: 20px; border-top: 1px solid #000; padding-top: 5px; }
       .total-row { display: flex; justify-content: flex-end; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
       .total-label { margin-right: 20px; }
-      
+     
       /* Signature */
       .signature-section { margin-top: 40px; text-align: right; font-size: 11px; }
       .admin-sig { margin-top: 30px; }
-      
+     
       /* Utilities */
       .page-break { page-break-before: always; }
       .urn-box { position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 2px; font-size: 9px; }
@@ -987,15 +1040,24 @@ export const handlePrint4 = (data) => {
           <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
-          <h1 class="company-name">${data.hospitalName}</h1>
+         <!-- <h1 class="company-name">${data.hospitalName}</h1>
           <div class="company-address">${data.address}</div>
           <div class="company-contact">
             Phone No.: ${data.phone} HELPLINE - ${data.helpline}<br>
             Toll Free No.- ${data.tollFree} <br>
             E-mail: ${data.email}, Website: ${data.website}
+          </div> -->
+
+           <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
+          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-contact">
+E-mail: patientdesk@lordshealthcare.org <br>
+Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
           </div>
         </td>
-      
+     
      
        <td >        
           <img src="/assets/nabh.png" style="width:120px;" />
@@ -1003,8 +1065,8 @@ export const handlePrint4 = (data) => {
       </tr>
     </table>
     <!--
-    
-    <div style="text-align: center; font-weight: bold; margin: 10px 0; font-size: 14px; text-decoration: underline;">FINAL BILL TPA</div>
+   
+    <div style="text-align: center; font-weight: bold; margin: 10px 0; font-size: 14px; text-decoration: underline;">BILL SUMMARY</div>
     -->
   `;
 
@@ -1012,10 +1074,10 @@ export const handlePrint4 = (data) => {
   <div style="display:flex; align-items:center; justify-content:center; position:relative; margin:10px 0; margin-bottom:10px">
 
     <!-- BARCODE LEFT -->
-    <img 
-      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96" 
+    <img
+      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96"
       alt="barcode"
-      style="position:absolute; left:0; width:200px; height:50px; "
+      style="position:absolute;top:1.5; left:0; width:200px; height:45px; "
     />
 
     <!-- BILL SUMMARY TEXT -->
@@ -1065,7 +1127,11 @@ export const handlePrint4 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${
+          data?.bedCharges?.rows?.length
+            ? data.bedCharges.rows[data.bedCharges.rows.length - 1]?.[1] || ""
+            : ""
+        }</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>
@@ -1244,11 +1310,12 @@ export const handlePrint5 = (data) => {
         font-family: Arial, sans-serif;
         font-size: 11px;
         color: #000;
+        font-weight: bold;
         line-height: 1.3;
         -webkit-print-color-adjust: exact;
       }
       .container { width: 100%; max-width: 210mm; margin: 0 auto; }
-      
+     
       /* Header Section */
       .header-table { width: 100%; border: none; margin-bottom: 10px; }
       .header-table td { border: none; vertical-align: top; }
@@ -1262,37 +1329,38 @@ export const handlePrint5 = (data) => {
         position: relative;
       }
       .logo-text { font-size: 8px; font-weight: bold; text-align: center; margin-top: 5px; color: #006400; }
-      
-      .company-info { text-align: center; width: 70%; }
-      .company-name { font-size: 22px; font-weight: bold; color: #000000; margin: 0; }
-      .company-address { font-size: 10px; margin-bottom: 5px; }
+     
+       .company-info { text-align: center; width: 70%; }
+      .company-name { font-size: 22px; font-weight: 700; color: #000000; margin: 0; }
+      .company-pvt { font-size: 18px; font-weight: 700;  }
+      .company-address { font-size: 10px; font-weight: 700;  }
       .company-contact { font-size: 10px; font-weight: bold; }
-      
+     
       /* Patient Info Grid */
       .info-box {margin-top:30px; width: 100%; border: 1px solid #000; padding: 4px; padding-right:2px; margin-bottom: 10px; }
       .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
       .info-col { width: 48%; display: flex; }
       .label { font-weight: bold; width: 120px; }
-      .value { flex: 1; }
-      
+      .value { flex: 1; font-weight: 700;}
+     
       /* Tables */
       .section-title { font-weight: bold; margin-top: 10px; margin-bottom: 2px; text-decoration: underline; font-size: 12px; }
-      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 10px; }
+      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; font-weight: bold; }
       table.data-table th, table.data-table td { border: 1px solid #000; padding: 3px 5px; }
       table.data-table th { background-color: #f0f0f0; text-align: left; font-weight: bold; }
       .text-right { text-align: right; }
       .text-left { text-align: left; }
       .text-center { text-align: center; }
-      
+     
       /* Footer Totals */
       .footer-totals { width: 100%; margin-top: 20px; border-top: 1px solid #000; padding-top: 5px; }
       .total-row { display: flex; justify-content: flex-end; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
       .total-label { margin-right: 20px; }
-      
+     
       /* Signature */
       .signature-section { margin-top: 40px; text-align: right; font-size: 11px; }
       .admin-sig { margin-top: 30px; }
-      
+     
       /* Utilities */
       .page-break { page-break-before: always; }
       .urn-box { position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 2px; font-size: 9px; }
@@ -1301,7 +1369,6 @@ export const handlePrint5 = (data) => {
 
   // HTML Construction
   let html = `<html><head><title>Final Bill</title>${styles}</head><body><div class="container">`;
-
   // --- HEADER ---
   html += `
     <table class="header-table">
@@ -1310,15 +1377,24 @@ export const handlePrint5 = (data) => {
           <img src="/assets/lords.png" style="width:80px;" />
         </td>
         <td class="company-info">
-          <h1 class="company-name">${data.hospitalName}</h1>
+         <!-- <h1 class="company-name">${data.hospitalName}</h1>
           <div class="company-address">${data.address}</div>
           <div class="company-contact">
             Phone No.: ${data.phone} HELPLINE - ${data.helpline}<br>
             Toll Free No.- ${data.tollFree} <br>
             E-mail: ${data.email}, Website: ${data.website}
+          </div> -->
+
+           <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
+          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-contact">
+E-mail: patientdesk@lordshealthcare.org <br>
+Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
           </div>
         </td>
-      
+     
      
        <td >        
           <img src="/assets/nabh.png" style="width:120px;" />
@@ -1326,7 +1402,7 @@ export const handlePrint5 = (data) => {
       </tr>
     </table>
     <!--
-    
+   
     <div style="text-align: center; font-weight: bold; margin: 10px 0; font-size: 14px; text-decoration: underline;">BILL SUMMARY</div>
     -->
   `;
@@ -1334,11 +1410,11 @@ export const handlePrint5 = (data) => {
   html += `
   <div style="display:flex; align-items:center; justify-content:center; position:relative; margin:10px 0; margin-bottom:10px">
 
-    <!-- BARCODE LEFT -->
-    <img 
-      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96" 
+     <!-- BARCODE LEFT -->
+    <img
+      src="https://barcode.tec-it.com/barcode.ashx?data=${data.ipdNo}&code=Code128&dpi=96"
       alt="barcode"
-      style="position:absolute; left:0; width:200px; height:50px; "
+      style="position:absolute;top:1.5; left:0; width:200px; height:45px; "
     />
 
     <!-- BILL SUMMARY TEXT -->
@@ -1381,7 +1457,7 @@ export const handlePrint5 = (data) => {
        
       <!--  <div class="info-col"><span class="label">DISCHARGE TYPE</span>: <span class="value">${data.dischargeType}</span></div> -->
         <!--
-        
+       
         <div class="info-col"><span class="label">DISCHARGE DATE</span>: <span class="value">${data.dischargeDate}</span></div>
         -->
        
@@ -1391,7 +1467,11 @@ export const handlePrint5 = (data) => {
           <div class="info-col"><span class="label">UNDER DOCTOR</span>: <span class="value">${data.doctor}</span></div>
       </div>
        <div class="info-row">
-        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${data.bedCharges.rows[data.bedCharges.rows.length - 1][1] || ""}</span></div>
+        <div class="info-col"><span class="label">BED NO AT THE TIME OF DISCHARGE</span>: <span class="value">${
+          data?.bedCharges?.rows?.length
+            ? data.bedCharges.rows[data.bedCharges.rows.length - 1]?.[1] || ""
+            : ""
+        }</span></div>
         <div class="info-col">
         <div style="border: 1px dotted black; width:100px; height:30px; display: flex; justify-content: center; ">
         <div style=" font-size: 12px; font-weight: 700;">URN NO</div>

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 
 
@@ -10,7 +11,7 @@ import DashboardStats from "./DashboardStats";
 import DateFilter from "./DateFilter";
 import PatientPieChart from "./PatientPieChart";
 import CommonTable from "./CommonTable";
-import DodgeGameLoader from "./LoadingGame";
+// import DodgeGameLoader from "./LoadingGame";
 import TestTable from "./TestTable";
 import axiosInstance from "../../axiosInstance";
 
@@ -199,7 +200,7 @@ const DiagnosticDashboard = () => {
         background: #bbd4f7;
         min-height: 100vh;
         padding: 20px;
-        
+       
       }
 
       .dashboard-section {
@@ -221,7 +222,7 @@ const DiagnosticDashboard = () => {
 
            .sticky-filter {
   position: sticky;
-  top: 10px; 
+  top: 10px;
   z-index: 999;
 }
     `}</style>
@@ -229,7 +230,8 @@ const DiagnosticDashboard = () => {
       <div className="dashboard-bg">
         {loading ? (
           // <ZLoader />
-          <DodgeGameLoader />
+          // <DodgeGameLoader />
+          <h1>Loading...</h1>
         ) : (
           <>
             {/* 🔍 FILTER + STATS */}
@@ -244,7 +246,7 @@ const DiagnosticDashboard = () => {
               </div>
             </div>
             <div className="mb-3">
-              <DashboardStats response={response1} />
+              {/* <DashboardStats response={response1} /> */}
             </div>
 
             {/* 📊 TABLE + GRAPH */}
@@ -258,7 +260,7 @@ const DiagnosticDashboard = () => {
                 </div>
               </div>
 
-              <div className="col-lg-4">
+              {/* <div className="col-lg-4">
                 <div className="dashboard-card">
                   {stats && (
                     <PatientCompareGraph
@@ -271,11 +273,11 @@ const DiagnosticDashboard = () => {
                     />
                   )}
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* 📈 CHARTS */}
-            <div className="row g-4 dashboard-section">
+            {/* <div className="row g-4 dashboard-section">
               <div className="col-lg-4">
                 <div className="dashboard-card">
                   <CommonBarChart
@@ -303,7 +305,7 @@ const DiagnosticDashboard = () => {
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
             {/* ///camping table  */}
             <div className="row g-4 dashboard-section">
               <div className="col-lg-8">
@@ -320,7 +322,7 @@ const DiagnosticDashboard = () => {
 
             {/* ////test table--- */}
             <div className="row g-4 dashboard-section">
-              <div className="col-lg-4">
+              {/* <div className="col-lg-4">
                 <div className="dashboard-card">
                   {stats && (
                     <PatientCompareGraph
@@ -333,7 +335,7 @@ const DiagnosticDashboard = () => {
                     />
                   )}
                 </div>
-              </div>
+              </div> */}
               <div className="col-lg-8">
                 <div className="dashboard-card">
                   <CommonTable
@@ -353,3 +355,4 @@ const DiagnosticDashboard = () => {
 };
 
 export default DiagnosticDashboard;
+

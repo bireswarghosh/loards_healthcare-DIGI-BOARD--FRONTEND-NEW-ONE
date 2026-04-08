@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 
 import axiosInstance from "../../axiosInstance";
@@ -10,7 +11,7 @@ import DashboardStats from "./DashboardStats";
 import DateFilter from "./DateFilter";
 import PatientPieChart from "./PatientPieChart";
 import CommonTable from "./CommonTable";
-import DodgeGameLoader from "./LoadingGame";
+// import DodgeGameLoader from "./LoadingGame";
 
 const OpdDashboard = () => {
   const [startDate, setStartDate] = useState(
@@ -52,7 +53,7 @@ const OpdDashboard = () => {
          startDate,
          endDate,
         },
-      }); 
+      });
 
       setPatientCountByDoctor(res.data);
       setLoading(false);
@@ -163,7 +164,7 @@ const doctorCountColumns = [
         background: #e1bbf7;
         min-height: 100vh;
         padding: 20px;
-        
+       
       }
 
       .dashboard-section {
@@ -184,14 +185,15 @@ const doctorCountColumns = [
       }
              .sticky-filter {
   position: sticky;
-  top: 10px; 
+  top: 10px;
   z-index: 999;
 }
     `}</style>
 
       <div className="dashboard-bg">
         {loading ? (
-          <DodgeGameLoader />
+          // <DodgeGameLoader />
+          <h1>Loading...</h1>
         ) : (
           <>
             {/* 🔍 FILTER + STATS */}
@@ -206,7 +208,7 @@ const doctorCountColumns = [
               </div>
             </div>
             <div className=" mb-3 ">
-              <DashboardStats response={response} />
+              {/* <DashboardStats response={response} /> */}
             </div>
             {/* 📊 TABLE + GRAPH */}
             <div className="row g-4 dashboard-section">
@@ -221,7 +223,7 @@ const doctorCountColumns = [
                 </div>
               </div>
 
-              <div className="col-lg-4">
+              {/* <div className="col-lg-4">
                 <div className="dashboard-card">
                   {stats && (
                     <PatientCompareGraph
@@ -234,11 +236,11 @@ const doctorCountColumns = [
                     />
                   )}
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* 📈 CHARTS */}
-            <div className="row g-4 dashboard-section">
+            {/* <div className="row g-4 dashboard-section">
               <div className="col-lg-4">
                 <div className="dashboard-card">
                   <CommonBarChart
@@ -266,7 +268,7 @@ const doctorCountColumns = [
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
             {/* 📊 TABLE + GRAPH */}
             <div className="row g-4 dashboard-section">
               <div className="col-lg-8">
@@ -288,3 +290,4 @@ const doctorCountColumns = [
 };
 
 export default OpdDashboard;
+
