@@ -781,13 +781,30 @@ const PatientAdmission = () => {
           });
         }
 
+        // Update first admitionbeds record's date/time when editing
+        if (mode === "edit") {
+          try {
+            const bedRes = await axiosInstance.get(`/admitionbeds?admitionid=${decodeURIComponent(id)}`);
+            if (bedRes.data.success && bedRes.data.data?.length > 0) {
+              const firstBed = bedRes.data.data[0];
+              await axiosInstance.put(
+                `/admitionbeds?admitionid=${decodeURIComponent(id)}&slno=${firstBed.SlNo}`,
+                {
+                  ...firstBed,
+                  AdmitionDate: cleanData.AdmitionDate + "T00:00:00.000Z",
+                  AdmitionTime: new Date(`1970-01-01T${cleanData.AdmitionTime}`).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+                }
+              );
+            }
+          } catch (err) {
+            console.error("Error updating admitionbeds date/time:", err);
+          }
+        }
+
         toast.success(
           `Admission ${mode === "create" ? "created" : "updated"} successfully!`,
         );
 
-        // alert(
-        //   `Admission ${mode === "create" ? "created" : "updated"} successfully!`
-        // );
         if (mode === "create") ;
         else setMode("view");
       }

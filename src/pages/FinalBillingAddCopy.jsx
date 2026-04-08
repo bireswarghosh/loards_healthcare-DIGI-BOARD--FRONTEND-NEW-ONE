@@ -374,26 +374,21 @@ const FinalBillingAdd = () => {
 
   // convert time from 12 hours to 24 hours format
   function convertTo24Hour(time12) {
-    // Example input: "2:35 PM"
-
-    const [time, modifier] = time12.split(" "); // "2:35" , "PM"
+    if (!time12) return "00:00";
+    const normalized = time12.trim().replace(/(\d)(AM|PM)/i, "$1 $2");
+    const [time, modifier] = normalized.split(" ");
     let [hours, minutes] = time.split(":");
-
     hours = parseInt(hours, 10);
+    if (modifier?.toUpperCase() === "PM" && hours !== 12) hours += 12;
+    if (modifier?.toUpperCase() === "AM" && hours === 12) hours = 0;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  }
 
-    if (modifier === "PM" && hours !== 12) {
-      hours = hours + 12;
-    }
-
-    if (modifier === "AM" && hours === 12) {
-      hours = 0;
-    }
-
-    // Format to HH:MM
-    const hh = String(hours).padStart(2, "0");
-    const mm = String(minutes).padStart(2, "0");
-
-    return `${hh}:${mm}`;
+  // Convert UTC ISO string to local YYYY-MM-DD
+  function toLocalDateStr(isoStr) {
+    if (!isoStr) return "";
+    const d = new Date(isoStr);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
   const [fbMode, setFbMode] = useState("estimate"); // 'final or estimate'
@@ -632,6 +627,12 @@ const FinalBillingAdd = () => {
           },
         );
 
+        navigate("/fina-bill-list2");
+      } else if (mode === "edit") {
+        const res = await axiosInstance.put(`/fb/${id}`, formData);
+        if (res.data.success) {
+          toast.success("Final Bill updated successfully.");
+        }
         navigate("/fina-bill-list2");
       }
     } catch (error) {
@@ -1466,10 +1467,11 @@ const FinalBillingAdd = () => {
     const DAY_START_HOUR = 12; // 12:00 PM
     const DAY_START_MIN = 0;
 
-    // build discharge datetime from form fields
-    const dischargeDT = dischargeDate && dischargeTime
-      ? new Date(`${dischargeDate.split("T")[0]} ${dischargeTime}`)
-      : new Date();
+    // build discharge datetime from form fields — NEVER fall back to current date/time
+    if (!dischargeDate || !dischargeTime) {
+      return [];
+    }
+    const dischargeDT = new Date(`${dischargeDate.split("T")[0]}T${convertTo24Hour(dischargeTime)}`);
 
     // windowKey → entry map (last bed in window wins)
     const windowMap = {};
@@ -1489,19 +1491,23 @@ const FinalBillingAdd = () => {
 
     // sort history by admit time so latest transfer comes last
     const sorted = [...history].sort((a, b) => {
-      const tA = new Date(`${a.AdmitionDate.split("T")[0]} ${a.AdmitionTime}`);
-      const tB = new Date(`${b.AdmitionDate.split("T")[0]} ${b.AdmitionTime}`);
+      const tA = new Date(`${toLocalDateStr(a.AdmitionDate)}T${convertTo24Hour(a.AdmitionTime)}`);
+      const tB = new Date(`${toLocalDateStr(b.AdmitionDate)}T${convertTo24Hour(b.AdmitionTime)}`);
       return tA - tB;
     });
 
-    sorted.forEach((entry) => {
+    sorted.forEach((entry, idx) => {
       const admDateTime = new Date(
-        `${entry.AdmitionDate.split("T")[0]} ${entry.AdmitionTime}`,
+        `${toLocalDateStr(entry.AdmitionDate)}T${convertTo24Hour(entry.AdmitionTime)}`,
       );
+      const isLastBed = idx === sorted.length - 1;
+      // Last bed always uses form's discharge date/time, not bed record's release date
       const relDateTime =
-        entry.Release === "Y"
-          ? new Date(`${entry.ReleaseDate.split("T")[0]} ${entry.ReleaseTime}`)
-          : dischargeDT;
+        isLastBed
+          ? dischargeDT
+          : entry.Release === "Y"
+            ? new Date(`${toLocalDateStr(entry.ReleaseDate)}T${convertTo24Hour(entry.ReleaseTime)}`)
+            : dischargeDT;
 
       let currentWindowStart = getDayWindowStart(admDateTime);
 
@@ -1524,7 +1530,7 @@ const FinalBillingAdd = () => {
             MyDateTo: toDate,
             ...entry,
             ServiceCh: entry.ServiceCh,
-            BedRate: entry.Rate || entry.BedRate || entry.ToDayRate || 0,
+            BedRate: (entry.Rate && entry.Rate !== "NA" ? Number(entry.Rate) : 0) || Number(entry.BedRate || 0) || Number(entry.ToDayRate || 0),
           };
         }
 
@@ -1539,7 +1545,7 @@ const FinalBillingAdd = () => {
   }
 
   // fetch bed detail by Id
-  const fetchBedsById = async (admId) => {
+  const fetchBedsById = async (admId, billDate, releaseTime) => {
     try {
       const res1 = await axiosInstance.get(`/admissions/${admId}`);
 
@@ -1547,8 +1553,8 @@ const FinalBillingAdd = () => {
 
       // sort by admit time so 1st bed is first
       const sortedArr = [...arr].sort((a, b) => {
-        const tA = new Date(`${a.AdmitionDate.split("T")[0]} ${a.AdmitionTime}`);
-        const tB = new Date(`${b.AdmitionDate.split("T")[0]} ${b.AdmitionTime}`);
+        const tA = new Date(`${toLocalDateStr(a.AdmitionDate)}T${convertTo24Hour(a.AdmitionTime)}`);
+        const tB = new Date(`${toLocalDateStr(b.AdmitionDate)}T${convertTo24Hour(b.AdmitionTime)}`);
         return tA - tB;
       });
 
@@ -1578,7 +1584,7 @@ const FinalBillingAdd = () => {
         allBedsDataMap[allBedsData[i].BedId] = allBedsData[i];
       }
 
-      const newBedArr = splitBedHistoryDateWise(sortedArr, formData.BillDate, formData.ReleaseTime);
+      const newBedArr = splitBedHistoryDateWise(sortedArr, billDate, releaseTime);
       console.log("Calculated bed array: ", newBedArr)
       const totalBedRate = newBedArr.reduce(
         (sum, item) => sum + Number(item.ToDayRate),
@@ -1857,13 +1863,13 @@ const FinalBillingAdd = () => {
   // re-run bed calculation when discharge date/time or 1st bed rate changes
   useEffect(() => {
     if (Object.keys(admData).length && formData.BillDate && formData.ReleaseTime) {
-      fetchBedsById(admData?.AdmitionId);
+      fetchBedsById(admData?.AdmitionId, formData.BillDate, formData.ReleaseTime);
     }
   }, [formData.BillDate, formData.ReleaseTime, firstBedRate]);
 
   useEffect(() => {
     if (Object.keys(admData).length) {
-      fetchBedsById(admData?.AdmitionId);
+      fetchBedsById(admData?.AdmitionId, formData.BillDate, formData.ReleaseTime);
       fetchOTC(admData?.AdmitionId);
       fetchIPDOtherChargesByAdmId(admData?.AdmitionId);
       fetchDoctVisitByAdmId(admData?.AdmitionId);
@@ -1883,6 +1889,41 @@ const FinalBillingAdd = () => {
     fetchAllDoctors();
     fetchDept();
     fetchCashLess();
+
+    // Edit mode: load saved bill then trigger live re-calculation
+    if (mode === "edit" && id) {
+      (async () => {
+        try {
+          const res = await axiosInstance.get(`/fb/${id}`);
+          if (res.data.success) {
+            const bill = res.data.data;
+            const syncTime = bill.ReleaseTime || bill.BillTime || prev.ReleaseTime;
+            setFormData((prev) => ({
+              ...prev,
+              BillNo: bill.BillNo || "",
+              BillDate: bill.BillDate?.split("T")[0] || prev.BillDate,
+              BillTime: syncTime,
+              ReleaseTime: syncTime,
+              BillType: bill.BillType || "I",
+              ReffId: bill.ReffId || "",
+              Discount: bill.Discount || 0,
+              ReciptAmt: bill.ReciptAmt || 0,
+              CB: bill.CB || "",
+              ChequeNo: bill.ChequeNo || "",
+              ChequeDt: bill.ChequeDt?.split("T")[0] || prev.ChequeDt,
+              BankName: bill.BankName || "",
+              CashlessId: bill.CashlessId || 0,
+              Approval: bill.Approval || 0,
+              Remarks: bill.Remarks || "",
+              PatiectPartyAmt: bill.PatiectPartyAmt || 0,
+            }));
+            if (bill.ReffId) fetchAdm(bill.ReffId);
+          }
+        } catch (err) {
+          console.error("Error loading bill for edit:", err);
+        }
+      })();
+    }
   }, []);
 
   useEffect(() => {
@@ -2090,9 +2131,11 @@ const FinalBillingAdd = () => {
                     // value={formData?.BillTime || ""}
                     value={convertTo24Hour(formData?.BillTime) || ""}
                     onChange={(e) => {
+                      const t = convertTo12Hour(e.target.value);
                       setFormData((prev) => ({
                         ...prev,
-                        BillTime: convertTo12Hour(e.target.value),
+                        BillTime: t,
+                        ReleaseTime: t,
                       }));
                     }}
                   />
@@ -2109,9 +2152,11 @@ const FinalBillingAdd = () => {
                     // value={formData?.ReleaseTime || ""}
                     value={convertTo24Hour(formData?.ReleaseTime) || ""}
                     onChange={(e) => {
+                      const t = convertTo12Hour(e.target.value);
                       setFormData((prev) => ({
                         ...prev,
-                        ReleaseTime: convertTo12Hour(e.target.value),
+                        ReleaseTime: t,
+                        BillTime: t,
                       }));
                     }}
                   />
@@ -2867,7 +2912,7 @@ const FinalBillingAdd = () => {
         style={{ backgroundColor: "primary", borderTop: "1px solid white" }}
       >
         <div className="d-flex flex-wrap gap-1">
-          {fbMode === "final" && (
+          {(fbMode === "final" || mode === "edit") && (
             <button
               className="btn btn-sm btn-primary"
               onClick={() => {
