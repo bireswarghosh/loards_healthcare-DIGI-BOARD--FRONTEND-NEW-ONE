@@ -630,7 +630,7 @@ hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
 <div class="cc">${contentHtml}</div>
 
 <div class="footer">
-  <hr/>
+  
   <div style="display:flex;">
     ${
       signatureBase64
