@@ -1266,65 +1266,35 @@ const CaseEntry = () => {
           }
 
           // this will update the 1st mr
-          let { PatientName, Phone, DoctorId, CaseDate, ReceiptId, ...res } =
-            allPrevData[allPrevData.length - 1];
-
-          const {
-            ReceiptNo,
-            ReffId,
-            ReceiptDate,
-            BillAmount,
-            Desc,
-            DiscAmt,
-            Amount,
-            BalanceAmt,
-            CBalAmt,
-            AdjAmt,
-            AgentDiscId,
-            BankName,
-            ChequeNo,
-            CompName,
-            DiscChk,
-            DiscOtherId,
-            HeadId,
-            MRType,
-            Narration,
-            Remarks,
-            TDS,
-            TypeofReceipt,
-            UserId,
-            ReffType,
-            ReceiptTime,
-          } = allPrevData[allPrevData.length - 1];
-
-          console.log("payement method");
+          const firstMR = allPrevData[allPrevData.length - 1];
+          const { PatientName, Phone, DoctorId, CaseDate, ReceiptId, ...res } = firstMR;
 
           const receiptData = {
-            ReceiptNo,
-            ReffId,
-            ReceiptDate,
-            BillAmount,
-            Desc,
-            DiscAmt,
-            Amount,
-            BalanceAmt,
-            CBalAmt,
-            AdjAmt,
-            AgentDiscId,
-            BankName,
-            ChequeNo,
-            CompName,
-            DiscChk,
-            DiscOtherId,
-            HeadId,
+            ReceiptNo: firstMR.ReceiptNo,
+            ReffId: firstMR.ReffId,
+            ReceiptDate: firstMR.ReceiptDate,
+            BillAmount: parseFloat(formData.GrossAmt || 0),
+            Desc: parseFloat(formData.Desc || 0),
+            DiscAmt: parseFloat(formData.DescAmt || 0),
+            Amount: parseFloat(formData.Advance || 0),
+            BalanceAmt: parseFloat(formData.GrossAmt || 0) - parseFloat(formData.Advance || 0),
+            CBalAmt: firstMR.CBalAmt,
+            AdjAmt: firstMR.AdjAmt,
+            AgentDiscId: firstMR.AgentDiscId,
+            BankName: formData.BankName || firstMR.BankName,
+            ChequeNo: formData.ChequeNo || firstMR.ChequeNo,
+            CompName: firstMR.CompName,
+            DiscChk: firstMR.DiscChk,
+            DiscOtherId: firstMR.DiscOtherId,
+            HeadId: firstMR.HeadId,
             MRType: formData.PaymentType,
-            Narration,
-            Remarks,
-            TDS,
-            TypeofReceipt,
-            UserId,
+            Narration: formData.Narration || firstMR.Narration,
+            Remarks: firstMR.Remarks,
+            TDS: firstMR.TDS,
+            TypeofReceipt: firstMR.TypeofReceipt,
+            UserId: firstMR.UserId,
             ReffType: formData.PaymentType,
-            ReceiptTime,
+            ReceiptTime: firstMR.ReceiptTime,
             paymentMethods: [
               {
                 method:
