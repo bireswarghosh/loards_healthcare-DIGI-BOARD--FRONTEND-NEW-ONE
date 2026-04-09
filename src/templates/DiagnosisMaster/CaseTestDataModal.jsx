@@ -584,6 +584,9 @@ const signatureBase64 =
 // subDepartmentId 19 or 21 -> 20mm top margin, no bottom margin (for better fit on A4)
 // 19 is for CARDIOLOGY, 21 is for ULTRASONOGRAPHY
 
+    const isCardioOrUSG = (SubDepartmentId == 19 || SubDepartmentId == 21);
+    const topPad = isCardioOrUSG ? '20mm' : '50mm';
+
     const doc = iframe.contentWindow.document;
     doc.open();
     doc.write(`<!DOCTYPE html>
@@ -594,30 +597,24 @@ const signatureBase64 =
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:A4;margin:10mm}
-html,body{height:100%;overflow:hidden}
-body{ padding:${(SubDepartmentId == 19 || SubDepartmentId == 21) ? "20mm 8mm 0mm 8mm" : "50mm 8mm 0mm 8mm"};font-family:"Times New Roman",serif;font-size:13px;color:#000}
-
-.cc{max-height:calc(297mm - 50mm - 60mm - 20mm);overflow:hidden}
+body{padding:${topPad} 8mm 0 8mm;font-family:"Times New Roman",serif;font-size:13px;color:#000}
 .bc{text-align:right;margin-bottom:4px}
 .bc img{height:45px}
 .pi{width:100%;border:1px solid #000;border-collapse:collapse;font-size:11px}
 .pi td{border:none;padding:2px 4px}
 hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
-.cc{font-family:"Times New Roman",serif;font-size:13px;line-height:1.6}
+.cc{font-family:"Times New Roman",serif;font-size:13px;line-height:1.5}
 .cc p{margin:0 0 3px}
 .cc strong{font-weight:bold}
-.cc table{width:100%;border-collapse:collapse;margin:8px 0}
-.cc table td,.cc table th{border:1px solid #bfbfbf;padding:4px 6px;vertical-align:middle}
+.cc table{width:100%;border-collapse:collapse;margin:6px 0}
+.cc table td,.cc table th{border:1px solid #bfbfbf;padding:3px 5px;vertical-align:middle}
 .cc h2{font-size:1.4em;margin:6px 0}
 .cc h3{font-size:1.2em;margin:5px 0}
 .cc ul,.cc ol{padding-left:18px;margin:3px 0}
 .cc img{max-width:100%;height:auto}
-
-.footer{
-  position: fixed;
-  bottom: 10mm;
-  left: 8mm;
-  right: 8mm;
+.footer{position:fixed;bottom:10mm;left:8mm;right:8mm}
+@media print{
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 </head>
@@ -635,7 +632,6 @@ hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
 <div class="footer">
   <hr/>
   <div style="display:flex;">
-    
     ${
       signatureBase64
         ? `
@@ -644,16 +640,29 @@ hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
           Number(pathologist.PathologistId) === 4 ? 'left:80mm' :
           'left:140mm'
         };text-align:center;">
-          <img src="${signatureBase64}" style="height:60px;font-weight:bold;"/>
+          <img src="${signatureBase64}" style="height:60px;"/>
         </div>
       `
         : ""
     }
-
   </div>
 </div>
+<script>
+window.addEventListener('beforeprint',function(){
+  var body=document.body;
+  var pageH=297-20;
+  var usedH=body.scrollHeight * 0.264583;
+  if(usedH>pageH){
+    var scale=Math.max(0.85, pageH/usedH);
+    body.style.transform='scale('+scale.toFixed(3)+')';
+    body.style.transformOrigin='top left';
+    body.style.width=(100/scale)+'%';
+  }
+});
+</script>
 </body>
 </html>`);
+
     doc.close();
 
     iframe.contentWindow.focus();
