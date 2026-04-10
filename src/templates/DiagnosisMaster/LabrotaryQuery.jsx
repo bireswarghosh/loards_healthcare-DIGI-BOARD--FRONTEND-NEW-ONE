@@ -1724,21 +1724,31 @@ useEffect(() => {
 }, [])
 
 const getSignatureBase64 = (signatureObj) => {
-  if (!signatureObj || !signatureObj.data || !Array.isArray(signatureObj.data)) return "";
-  const binary = new Uint8Array(signatureObj.data);
+  if (!signatureObj) return "";
+  const arr = signatureObj.data || signatureObj;
+  if (!arr || !Array.isArray(arr)) return "";
+  const binary = new Uint8Array(arr);
+  if (binary.length < 4) return "";
   let binaryString = "";
   for (let i = 0; i < binary.length; i++) {
     binaryString += String.fromCharCode(binary[i]);
   }
-  return `data:image/jpeg;base64,${btoa(binaryString)}`;
+  const b64 = btoa(binaryString);
+  const mime = (binary[0] === 0x89 && binary[1] === 0x50) ? "image/png" : "image/jpeg";
+  return `data:${mime};base64,${b64}`;
 };
 
 useEffect(() => {
   console.log("selected pathologist object:", selPath);
+  console.log("Signature field:", selPath?.Signature);
+  console.log("Signature type:", typeof selPath?.Signature);
   const toStore = { ...selPath };
   if (toStore.Signature) {
-    toStore.SignatureBase64 = getSignatureBase64(toStore.Signature);
-    delete toStore.Signature; // don't store raw BLOB in localStorage
+    const b64 = getSignatureBase64(toStore.Signature);
+    console.log("Generated SignatureBase64 length:", b64.length);
+    console.log("SignatureBase64 preview:", b64.substring(0, 80));
+    toStore.SignatureBase64 = b64;
+    delete toStore.Signature;
   }
   localStorage.setItem("SelectedPathologistData", JSON.stringify(toStore));
 }, [selPath])

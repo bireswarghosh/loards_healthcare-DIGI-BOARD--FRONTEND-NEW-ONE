@@ -380,11 +380,13 @@ const CaseTestDataModal = ({
 const getSignatureBase64 = (signatureObj) => {
   if (!signatureObj || !signatureObj.data || !Array.isArray(signatureObj.data)) return "";
   const binary = new Uint8Array(signatureObj.data);
+  if (binary.length < 4) return "";
   let binaryString = "";
   for (let i = 0; i < binary.length; i++) {
     binaryString += String.fromCharCode(binary[i]);
   }
-  return `data:image/jpeg;base64,${btoa(binaryString)}`;
+  const mime = (binary[0] === 0x89 && binary[1] === 0x50) ? "image/png" : "image/jpeg";
+  return `data:${mime};base64,${btoa(binaryString)}`;
 };
 
 let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) || {};
@@ -640,7 +642,7 @@ hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
           Number(pathologist.PathologistId) === 4 ? 'left:80mm' :
           'left:140mm'
         };text-align:center;">
-          <img src="${signatureBase64}" style="height:60px;"/>
+          <img src="${signatureBase64}" style="height:120px;"/>
         </div>
       `
         : ""

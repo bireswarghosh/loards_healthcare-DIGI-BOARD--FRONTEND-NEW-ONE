@@ -427,11 +427,13 @@ import JsBarcode from "jsbarcode";
 const getSignatureBase64 = (signatureObj) => {
   if (!signatureObj || !signatureObj.data || !Array.isArray(signatureObj.data)) return "";
   const binary = new Uint8Array(signatureObj.data);
+  if (binary.length < 4) return "";
   let binaryString = "";
   for (let i = 0; i < binary.length; i++) {
     binaryString += String.fromCharCode(binary[i]);
   }
-  return `data:image/jpeg;base64,${btoa(binaryString)}`;
+  const mime = (binary[0] === 0x89 && binary[1] === 0x50) ? "image/png" : "image/jpeg";
+  return `data:${mime};base64,${btoa(binaryString)}`;
 };
 
 const getSignatureXPosition = (pathologistId) => {
@@ -835,13 +837,17 @@ export const handlePrint = async (data, Remarks) => {
   if (signatureBase64) {
     const pageCount = doc.internal.getNumberOfPages();
     const sigX = getSignatureXPosition(pathologist.PathologistId);
-    const sigWidth = 30;
-    const sigHeight = 18;
+    const sigWidth = 50;
+    const sigHeight = 35;
     const sigY = 297 - 60 - sigHeight; // ~6cm from bottom
+    const imgType = signatureBase64.includes('image/png') ? 'PNG' : 'JPEG';
 
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.addImage(signatureBase64, "JPEG", sigX, sigY, sigWidth, sigHeight);
+      // Thick page separator line
+      doc.setFillColor(0, 0, 0);
+      doc.rect(leftMargin, 297 - 28, 180, 0.8, 'F');
+      doc.addImage(signatureBase64, imgType, sigX, sigY, sigWidth, sigHeight);
     }
   }
 

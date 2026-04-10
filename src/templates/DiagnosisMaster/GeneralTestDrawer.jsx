@@ -1142,11 +1142,13 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
 const getSignatureBase64 = (signatureObj) => {
   if (!signatureObj || !signatureObj.data || !Array.isArray(signatureObj.data)) return "";
   const binary = new Uint8Array(signatureObj.data);
+  if (binary.length < 4) return "";
   let binaryString = "";
   for (let i = 0; i < binary.length; i++) {
     binaryString += String.fromCharCode(binary[i]);
   }
-  return `data:image/jpeg;base64,${btoa(binaryString)}`;
+  const mime = (binary[0] === 0x89 && binary[1] === 0x50) ? "image/png" : "image/jpeg";
+  return `data:${mime};base64,${btoa(binaryString)}`;
 };
 
 const signatureBase64ForPrint = pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : "");
@@ -1880,7 +1882,9 @@ const handlePrint = () => {
       doc.setFont("times", "bold");
       doc.text(printData.ReportingDate || "", R + 44, baseY + 10);
 
+      doc.setLineWidth(0.8);
       doc.line(L, baseY + 18, pageWidth - marginRight, baseY + 18);
+      doc.setLineWidth(0.2);
 
       return baseY + 25;
     };
@@ -1952,16 +1956,20 @@ const handlePrint = () => {
     });
 // ===== SIGNATURE ADD ON EVERY PAGE =====
 if (signatureBase64) {
-  const sigWidth = 30;
-  const sigHeight = 18;
+  const sigWidth = 50;
+  const sigHeight = 35;
   const sigY = 297 - 60 - sigHeight; // ~6cm from bottom
   const pId = Number(pathologist.PathologistId);
   const sigX = pId === 3 ? 10 : pId === 4 ? 80 : 140;
+  const imgType = signatureBase64.includes('image/png') ? 'PNG' : 'JPEG';
 
   const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.addImage(signatureBase64, "JPEG", sigX, sigY, sigWidth, sigHeight);
+    // Thick page separator line (2cm = 20mm height)
+    doc.setFillColor(0, 0, 0);
+    doc.rect(L, 297 - 28, pageWidth - L - marginRight, 0.8, 'F');
+    doc.addImage(signatureBase64, imgType, sigX, sigY, sigWidth, sigHeight);
   }
 }
 

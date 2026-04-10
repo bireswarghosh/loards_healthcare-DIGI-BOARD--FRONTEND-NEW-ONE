@@ -1,4 +1,3 @@
-
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -250,7 +249,11 @@ const DepartmentModal = ({ isOpen, setIsOpen, tests = [] }) => {
 
 const CaseEntry = () => {
   const { data: depertments } = useAxiosFetch("/subdepartment");
-
+  function utcToISTDateOnly(utc) {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kolkata",
+    }).format(new Date(utc));
+  }
   const depMap = useMemo(() => {
     const map = {};
     (depertments || []).forEach((d) => {
@@ -295,7 +298,8 @@ const CaseEntry = () => {
       minute: "2-digit",
       hour12: true,
     }),
-    CaseDate: new Date().toISOString().slice(0, 10),
+    // CaseDate: new Date().toISOString().slice(0, 10),
+    CaseDate: utcToISTDateOnly(new Date()),
     CaseP: "",
     CaseNo: "",
     CaseS: "",
@@ -562,7 +566,8 @@ const CaseEntry = () => {
 
           setFormData({
             ...caseData,
-            CaseDate: caseData?.CaseDate?.split("T")[0] || "",
+            // CaseDate: caseData?.CaseDate?.split("T")[0] || "",
+            CaseDate: utcToISTDateOnly(caseData?.CaseDate),
             // ReceiptAmt: receiptAmt.toFixed(2),
           });
 
@@ -796,7 +801,8 @@ const CaseEntry = () => {
       SubDepartmentId: test.SubDepartmentId, // ⭐ ADD THIS
       Rate: rate,
       NetRate: rate,
-      DeliveryDate: new Date().toISOString().slice(0, 10),
+      // DeliveryDate: new Date().toISOString().slice(0, 10),
+      DeliveryDate: utcToISTDateOnly(new Date()),
       DeliveryTime: "07:00 PM",
       Profile: "N",
       ComYN: "Y",
@@ -997,9 +1003,12 @@ const CaseEntry = () => {
               SubDepartmentId: subDeptId, // ⭐ ADD THIS LINE
               Rate: t.Rate || 0,
               NetRate: t.NetRate || t.Rate || 0,
+              // DeliveryDate: t.DeliveryDate
+              //   ? new Date(t.DeliveryDate).toISOString().slice(0, 10)
+              //   : new Date().toISOString().slice(0, 10),
               DeliveryDate: t.DeliveryDate
-                ? new Date(t.DeliveryDate).toISOString().slice(0, 10)
-                : new Date().toISOString().slice(0, 10),
+                ? utcToISTDateOnly(t.DeliveryDate)
+                : utcToISTDateOnly(new Date()),
               DeliveryTime: t.DeliveryTime || "07:00 PM",
               Profile: t.Profile || "N",
               ComYN: t.ComYN || "Y",
@@ -1021,15 +1030,59 @@ const CaseEntry = () => {
     }
   };
 
+  const validateForm = () => {
+    let errors = {};
+
+    if (!formData.PatientName?.trim()) {
+      errors.PatientName = "Patient Name is required";
+    }
+
+    if (!formData.Age || formData.Age <= 0) {
+      errors.Age = "Valid Age is required";
+    }
+
+    if (!formData.Sex) {
+      errors.Sex = "Sex is required";
+    }
+
+    if (
+      !formData.Add1?.trim() &&
+      !formData.Add2?.trim() &&
+      !formData.Add3?.trim()
+    ) {
+      errors.Address = "At least one Address field is required";
+    }
+
+    if (tests.length === 0) {
+      errors.Tests = "At least 1 test must be added";
+    }
+
+    return errors;
+  };
+
   // Handle Save (CREATE or UPDATE)
   const handleSave = async () => {
+    
+    const errors = validateForm();
+
+    if (Object.keys(errors).length > 0) {
+      // error show
+      if (errors.PatientName) toast.error(errors.PatientName);
+      else if (errors.Age) toast.error(errors.Age);
+      else if (errors.Sex) toast.error(errors.Sex);
+      else if (errors.Address) toast.error(errors.Address);
+      else if (errors.Tests) toast.error(errors.Tests);
+
+      return; // stop save
+    }
+
     try {
       setLoading(true);
 
       if (mode === "create" || !orgId || orgId === "undefined") {
         // CREATE new case with tests
         if (tests.length === 0) {
-          alert("Please add at least one test");
+          console.log("Please add at least one test");
           setLoading(false);
           return;
         }
@@ -1130,7 +1183,8 @@ const CaseEntry = () => {
 
           const receiptData = {
             ReffId: newCaseId,
-            ReceiptDate: new Date().toISOString().slice(0, 10),
+            // ReceiptDate: new Date().toISOString().slice(0, 10),
+            ReceiptDate: utcToISTDateOnly(new Date()),
             BillAmount: parseFloat(formData.GrossAmt || 0),
             Desc: parseFloat(formData.Desc || 0),
             DiscAmt: parseFloat(formData.DescAmt || 0),
@@ -1267,7 +1321,8 @@ const CaseEntry = () => {
 
           // this will update the 1st mr
           const firstMR = allPrevData[allPrevData.length - 1];
-          const { PatientName, Phone, DoctorId, CaseDate, ReceiptId, ...res } = firstMR;
+          const { PatientName, Phone, DoctorId, CaseDate, ReceiptId, ...res } =
+            firstMR;
 
           const receiptData = {
             ReceiptNo: firstMR.ReceiptNo,
@@ -1277,7 +1332,9 @@ const CaseEntry = () => {
             Desc: parseFloat(formData.Desc || 0),
             DiscAmt: parseFloat(formData.DescAmt || 0),
             Amount: parseFloat(formData.Advance || 0),
-            BalanceAmt: parseFloat(formData.GrossAmt || 0) - parseFloat(formData.Advance || 0),
+            BalanceAmt:
+              parseFloat(formData.GrossAmt || 0) -
+              parseFloat(formData.Advance || 0),
             CBalAmt: firstMR.CBalAmt,
             AdjAmt: firstMR.AdjAmt,
             AgentDiscId: firstMR.AgentDiscId,
@@ -1377,7 +1434,8 @@ const CaseEntry = () => {
         minute: "2-digit",
         hour12: true,
       }),
-      CaseDate: new Date().toISOString().slice(0, 10),
+      // CaseDate: new Date().toISOString().slice(0, 10),
+      CaseDate: utcToISTDateOnly(new Date()),
       CaseP: "",
       CaseNo: "",
       CaseS: "",
@@ -2062,7 +2120,7 @@ window.onload = function(){
   //         <div class="patient-col">
   //           <p><b>Age:</b> ${formData.Age} ${formData.AgeType}</p>
   //           <p><b>Sex:</b> ${formData.Sex}</p>
-  //           <p><b>Date:</b> ${new Date().toISOString().slice(0, 10)}</p>
+  //           <p><b>Date:</b> ${utcToISTDateOnly(new Date())}</p>
   //           <p><b>Doctor:</b> ${doctorName}</p>
   //         </div>
   //       </div>
@@ -2297,7 +2355,7 @@ CLINICAL PATHOLOGY — SubDept: ${depMap[subDeptId] || ""}
   <div class="patient-col">
     <p><b>Age:</b> ${formData.Age} ${formData.AgeType}</p>
     <p><b>Sex:</b> ${formData.Sex}</p>
-    <p><b>Date:</b> ${new Date().toISOString().slice(0, 10)}</p>
+    <p><b>Date:</b> ${utcToISTDateOnly(new Date())}</p>
     <p><b>Doctor:</b> ${doctorName}</p>
   </div>
 
@@ -2562,7 +2620,7 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 <div class="patient-row">
 <span class="patient-label">Date</span>
-<span class="patient-value">${new Date().toISOString().slice(0, 10)}</span>
+<span class="patient-value">${utcToISTDateOnly(new Date())}</span>
 </div>
 
 <div class="patient-row">
@@ -2829,7 +2887,7 @@ ${
 
   //       <div class="patient-row">
   //         <span class="patient-label">Date</span>
-  //         <span class="patient-value">${new Date().toISOString().slice(0, 10)}</span>
+  //         <span class="patient-value">${utcToISTDateOnly(new Date())}</span>
   //       </div>
 
   //        <div class="patient-row">
@@ -3380,6 +3438,7 @@ ${
                           name="PatientName"
                           value={formData.PatientName}
                           onChange={handleInputChange}
+                          required
                           style={{ ...inputStyle, flex: 1, minWidth: "150px" }}
                         />
                         <span className="text-danger fw-bold">**</span>
