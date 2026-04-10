@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 
 import axiosInstance from "../../axiosInstance";
@@ -11,6 +10,8 @@ import DashboardStats from "./DashboardStats";
 import DateFilter from "./DateFilter";
 import PatientPieChart from "./PatientPieChart";
 import CommonTable from "./CommonTable";
+import GlobeLoader from "./GlobeLoader";
+import OpdCardsStats from "./OPdCardsStats";
 // import DodgeGameLoader from "./LoadingGame";
 
 const OpdDashboard = () => {
@@ -22,6 +23,8 @@ const OpdDashboard = () => {
   );
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
+  const[totalRev,setTotalRev]=useState("")
+  const[totalPatients,setTotalPatients]=useState("")
   const [areas, setAreas] = useState([]);
   const [depts, setDepts] = useState([]);
   const [stats, setStats] = useState(null);
@@ -38,12 +41,36 @@ const OpdDashboard = () => {
       });   //lords-backend.onrender.com/api/v1/patient-visits?page=1&limit=100
 
       setResponse(res.data);
-      setLoading(false);
+setTotalPatients(res?.data?.pagination?.total)
+const rev=(res?.data?.data.reduce((acc,item)=>acc+(item.FinalRecAmt || 0),0))
+setTotalRev(rev) 
+console.log(rev);
+   
+setLoading(false);
     } catch (error) {
     } finally {
       // setLoading(false);
     }
   };
+
+  const specilityWiseCount = response?.data ? Object.values(response.data.reduce((acc, curr) => {
+    const key = curr.SpecialityName;
+    if (!acc[key]) {
+      acc[key] = {
+        name: key,
+        totalPatients: 0
+      };
+    }
+
+    acc[key].totalPatients += 1;
+    return acc
+  }, {})) : [];
+
+  const finalData = specilityWiseCount
+    .sort((a, b) => b.totalPatients - a.totalPatients)
+    .slice(0, 5);
+
+console.log(finalData);
 
   const getPatientCountByDoctor = async () => {
     try {
@@ -193,7 +220,8 @@ const doctorCountColumns = [
       <div className="dashboard-bg">
         {loading ? (
           // <DodgeGameLoader />
-          <h1>Loading...</h1>
+          // <h1>Loading...</h1>
+          <GlobeLoader/>
         ) : (
           <>
             {/* 🔍 FILTER + STATS */}
@@ -208,11 +236,11 @@ const doctorCountColumns = [
               </div>
             </div>
             <div className=" mb-3 ">
-              {/* <DashboardStats response={response} /> */}
+              <OpdCardsStats totalPatients={totalPatients} totalRev={totalRev} />
             </div>
             {/* 📊 TABLE + GRAPH */}
             <div className="row g-4 dashboard-section">
-              <div className="col-lg-8">
+              <div className="col-md-8">
                 <div className="dashboard-card">
                   <CommonTable
                     data={response.data}
@@ -221,7 +249,19 @@ const doctorCountColumns = [
                     total={response.pagination?.total}
                   />
                 </div>
+               
+                
               </div>
+               <div className="col-md-4">
+ <div className="dashboard-card">
+<CommonBarChart
+  data={finalData}
+  title="Speciality Wise Patients"
+  dataKey="name"
+  valueKey="totalPatients"
+  topCount={5}
+/> </div>
+                </div>
 
               {/* <div className="col-lg-4">
                 <div className="dashboard-card">
@@ -290,4 +330,3 @@ const doctorCountColumns = [
 };
 
 export default OpdDashboard;
-

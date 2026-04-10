@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -98,29 +99,25 @@ function AsyncApiSelect({
   //     });
   // }, [value]);
 
-
   useEffect(() => {
-  if (!value) return;
+    if (!value) return;
 
-  const q = typeof value === "string" ? value : value?.value;
-  if (!q) return;
+    const q = typeof value === "string" ? value : value?.value;
+    if (!q) return;
 
-  axiosInstance.get(`${api}?${searchKey}=${q}`)
-    .then((res) => {
-      const item = res?.data?.data?.[0];
-      if (!item) return;
+    axiosInstance
+      .get(`${api}?${searchKey}=${q}`)
+      .then((res) => {
+        const item = res?.data?.data?.[0];
+        if (!item) return;
 
-      setSelectedOption({
-        value: item[valueKey],
-        label: item[labelKey],
-      });
-    })
-    .catch(console.error);
-}, [value]);
-
-
-
-
+        setSelectedOption({
+          value: item[valueKey],
+          label: item[labelKey],
+        });
+      })
+      .catch(console.error);
+  }, [value]);
 
   // ------------------------------------------------
   // 🔹 SEARCH
@@ -147,31 +144,25 @@ function AsyncApiSelect({
   //   }
   // };
 
+  const loadOptions = async (inputValue) => {
+    if (!inputValue) return [];
 
+    try {
+      const res = await axiosInstance.get(
+        `${api}/search?${searchKey}=${inputValue}`,
+      );
 
+      const list = res?.data?.data || [];
 
-const loadOptions = async (inputValue) => {
-  if (!inputValue) return [];
-
-  try {
-    const res = await axiosInstance.get(
-      `${api}/search?${searchKey}=${inputValue}`
-    );
-
-    const list = res?.data?.data || [];
-
-    return list.map((item) => ({
-      value: item[valueKey],
-      label: `${item["PatientName"]} ----- ${item["AdmitionNo"]}`,
-    }));
-  } catch (err) {
-    console.error("Search error:", err);
-    return [];
-  }
-};
-
-
-
+      return list.map((item) => ({
+        value: item[valueKey],
+        label: `${item["PatientName"]} ----- ${item["AdmitionNo"]}`,
+      }));
+    } catch (err) {
+      console.error("Search error:", err);
+      return [];
+    }
+  };
 
   const customStyles = {
     control: (base, state) => ({
@@ -389,7 +380,7 @@ const FinalBillingAdd = () => {
   function toLocalDateStr(isoStr) {
     if (!isoStr) return "";
     const d = new Date(isoStr);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
 
   const [fbMode, setFbMode] = useState("estimate"); // 'final or estimate'
@@ -555,7 +546,10 @@ const FinalBillingAdd = () => {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printType, setPrintType] = useState("");
   const [allDiagWithTest, setAllDiagWithTest] = useState([]);
-  const [dischrgType, setDischrgType] = useState('');
+  const [dischrgType, setDischrgType] = useState("");
+
+  const [otObjDetails, setOtObjDetails] = useState({});
+  const [otChargeDetails, setOtChargeDetails] = useState([]);
 
   useEffect(() => {
     if (larAlertOk) {
@@ -674,7 +668,9 @@ const FinalBillingAdd = () => {
   const fetchAllDiadWithTest = async (id) => {
     try {
       const res = await axiosInstance.get(`/case01/admition-with-tests/${id}`);
-      res.data.success ? setAllDiagWithTest(res.data.data) : setAllDiagWithTest([]);
+      res.data.success
+        ? setAllDiagWithTest(res.data.data)
+        : setAllDiagWithTest([]);
     } catch (error) {
       console.log("Error fetching all diag with test by adm id: ", error);
     }
@@ -682,13 +678,28 @@ const FinalBillingAdd = () => {
 
   const fetchDischargeType = async (id) => {
     try {
-      const res = await axiosInstance.get(`/discert/adm/${encodeURIComponent(id)}`);
+      const res = await axiosInstance.get(
+        `/discert/adm/${encodeURIComponent(id)}`,
+      );
       if (res.data.success) {
         const disc = res.data.data?.DiscType || "";
-        const map = { "0": "Normal Discharge", "1": "Discharge on Request", "2": "Discharge on Risk Bond", "3": "Expired", "4": "Referred", "5": "LAMA", "6": "Discharge Against Medical Service", "7": "Left Against Discharge Advice" };
+        const map = {
+          0: "Normal Discharge",
+          1: "Discharge on Request",
+          2: "Discharge on Risk Bond",
+          3: "Expired",
+          4: "Referred",
+          5: "LAMA",
+          6: "Discharge Against Medical Service",
+          7: "Left Against Discharge Advice",
+        };
         setDischrgType(map[disc] || "");
-      } else { setDischrgType(""); }
-    } catch (error) { console.log("error fetching discharge type: ", error); }
+      } else {
+        setDischrgType("");
+      }
+    } catch (error) {
+      console.log("error fetching discharge type: ", error);
+    }
   };
 
   const fetchAllDoctors = async () => {
@@ -1055,7 +1066,7 @@ const FinalBillingAdd = () => {
       );
 
       setFormData((prev) => ({
-        ...prev,  
+        ...prev,
         details: {
           ...prev.details,
           finalbillalldtl: [...prev.details.finalbillalldtl, ...updatedDOC],
@@ -1105,7 +1116,9 @@ const FinalBillingAdd = () => {
                         (item) => item.BedId == row.BedId,
                       )?.Bed || ""}
                     </td>
-                    <td className="text-end">{row?.BedRate || row?.ToDayRate || 0}</td>
+                    <td className="text-end">
+                      {row?.BedRate || row?.ToDayRate || 0}
+                    </td>
                     <td className="text-end">
                       {bedDetails.find((item) => item.BedId == row.BedId)
                         ?.AtttndantCh || 0}
@@ -1144,7 +1157,9 @@ const FinalBillingAdd = () => {
                 <th style={styles.tableHeader}>Others Head</th>
                 <th style={styles.tableHeader}>Rate</th>
                 <th style={styles.tableHeader}>Qty</th>
-                <th style={styles.tableHeader} className="text-end">Total</th>
+                <th style={styles.tableHeader} className="text-end">
+                  Total
+                </th>
                 <th style={styles.tableHeader}>SC</th>
               </tr>
             </thead>
@@ -1161,8 +1176,12 @@ const FinalBillingAdd = () => {
                     <td>{row.SubHead || ""}</td>
                     <td>{row.Particular?.trim()?.split("x")[1] || ""}</td>
                     <td>{row.Particular?.trim()?.split("x")[0] || ""}</td>
-                    <td className="text-end">{Number(row.Amount || 0).toFixed(2)}</td>
-                    <td className="text-center">{row.scharge === 1 ? "Y" : "N"}</td>
+                    <td className="text-end">
+                      {Number(row.Amount || 0).toFixed(2)}
+                    </td>
+                    <td className="text-center">
+                      {row.scharge === 1 ? "Y" : "N"}
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -1175,14 +1194,20 @@ const FinalBillingAdd = () => {
               {otherChargesData && (
                 <>
                   <tr style={{ fontWeight: "bold", background: "#e0e0e0" }}>
-                    <td colSpan={4} className="text-end">Others Total:</td>
+                    <td colSpan={4} className="text-end">
+                      Others Total:
+                    </td>
                     <td className="text-end">
-                      {otherChargesData.reduce((sum, row) => sum + Number(row.Amount || 0), 0).toFixed(2)}
+                      {otherChargesData
+                        .reduce((sum, row) => sum + Number(row.Amount || 0), 0)
+                        .toFixed(2)}
                     </td>
                     <td></td>
                   </tr>
                   <tr style={{ fontWeight: "bold", background: "#ffe0b2" }}>
-                    <td colSpan={4} className="text-end">SC Items Total:</td>
+                    <td colSpan={4} className="text-end">
+                      SC Items Total:
+                    </td>
                     <td className="text-end">{scTotal.toFixed(2)}</td>
                     <td></td>
                   </tr>
@@ -1290,7 +1315,8 @@ const FinalBillingAdd = () => {
             <tbody>
               {diagData ? (
                 diagData.map((row, idx) => {
-                  const total = Number(row.GrossAmt || 0) - Number(row.CTestAmt || 0);
+                  const total =
+                    Number(row.GrossAmt || 0) - Number(row.CTestAmt || 0);
                   const payment = total - Number(row.Balance || 0);
                   const due = Number(row.Balance || 0);
                   return (
@@ -1326,8 +1352,15 @@ const FinalBillingAdd = () => {
           : 0;
         const bedScTotal = bedChargesData
           ? bedChargesData
-              .filter((row) => fetchedAdmBedDetail.find((b) => b.BedId == row.BedId)?.ServiceCh === "Y")
-              .reduce((sum, row) => sum + Number(row.BedRate || row.ToDayRate || 0), 0)
+              .filter(
+                (row) =>
+                  fetchedAdmBedDetail.find((b) => b.BedId == row.BedId)
+                    ?.ServiceCh === "Y",
+              )
+              .reduce(
+                (sum, row) => sum + Number(row.BedRate || row.ToDayRate || 0),
+                0,
+              )
           : 0;
         const scPercent = Number(serviceCharge) || 0;
         const ocScAmt = ocScTotal * (scPercent / 100);
@@ -1340,8 +1373,12 @@ const FinalBillingAdd = () => {
             <thead>
               <tr>
                 <th style={styles.tableHeader}>Description</th>
-                <th style={styles.tableHeader} className="text-end">Eligible Amt</th>
-                <th style={styles.tableHeader} className="text-end">SC ({scPercent}%)</th>
+                <th style={styles.tableHeader} className="text-end">
+                  Eligible Amt
+                </th>
+                <th style={styles.tableHeader} className="text-end">
+                  SC ({scPercent}%)
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1357,11 +1394,15 @@ const FinalBillingAdd = () => {
               </tr>
               <tr style={{ fontWeight: "bold", background: "#e0e0e0" }}>
                 <td className="text-end">Total</td>
-                <td className="text-end">{(bedScTotal + ocScTotal).toFixed(2)}</td>
+                <td className="text-end">
+                  {(bedScTotal + ocScTotal).toFixed(2)}
+                </td>
                 <td className="text-end">{(bedScAmt + ocScAmt).toFixed(2)}</td>
               </tr>
               <tr style={{ fontWeight: "bold", background: "#c8e6c9" }}>
-                <td colSpan={2} className="text-end">Service Charges (Calculated):</td>
+                <td colSpan={2} className="text-end">
+                  Service Charges (Calculated):
+                </td>
                 <td className="text-end">{serviceChrgCalculated}</td>
               </tr>
             </tbody>
@@ -1417,6 +1458,116 @@ const FinalBillingAdd = () => {
       res.data.success ? setCashLessData(res.data.data) : setCashLessData([]);
     } catch (error) {
       console.log("error fetching cashless: ", error);
+    }
+  };
+
+// const fetch all otslots
+const fetchOtSlots = async () => {
+     try {
+      const res = await axiosInstance.get("/otSlot");
+      if (res.data.success) {
+        return res.data.data || [];
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.log("error fetching all ot slots:", error);
+      return [];
+    }
+}
+
+
+  // fetch all ot-master
+  const fetchOtMasters = async () => {
+    try {
+      const res = await axiosInstance.get("/otMaster");
+      if (res.data.success) {
+        return res.data.data || [];
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.log("error fetching all ot masters:", error);
+      return [];
+    }
+  };
+
+  // fetch all ot-items
+  const fetchOtItems = async () => {
+    try {
+      const res = await axiosInstance.get("/otItem");
+      if (res.data.success) {
+        return res.data.data || [];
+      } else {
+        return [];
+      }
+    } catch (error) {
+      console.log("error fetching all ot items:", error);
+      return [];
+    }
+  };
+
+  // fetching o.t. charges in details for ot pdf
+  const fetchOTchargesDetail = async (id) => {
+    if (!id) return;
+
+    try {
+      let allOtMasters = await fetchOtMasters();
+      let allOTitems = await fetchOtItems();
+      let allOtSlots = await fetchOtSlots()
+      let allOtSlotsMap = {}
+      let allOTitemsMap = {};
+      let allOtMastersMap = {};
+
+      if (allOtSlots.length != 0) {
+        for (let i = 0; i < allOtSlots.length; i++) {
+          allOtSlotsMap[allOtSlots[i]?.OTSlotId || ""] = allOtSlots[i];
+        }
+      }
+      if (allOtMasters.length != 0) {
+        for (let i = 0; i < allOtMasters.length; i++) {
+          allOtMastersMap[allOtMasters[i]?.OtMasterId || ""] = allOtMasters[i];
+        }
+      }
+
+      if (allOTitems.length != 0) {
+        for (let i = 0; i < allOTitems.length; i++) {
+          allOTitemsMap[allOTitems[i]?.OtItemId || ""] = allOTitems[i];
+        }
+      }
+
+      let x = String(id.split("-")[1]) + "-" + String(id.split("-")[2]);
+      const res = await axiosInstance.get(`/ot-bills/${encodeURIComponent(x)}`);
+      if (res.data.success) {
+        let data = res.data.data;
+        let { otBillDetails, ...rest } = data;
+        rest = {
+          ...rest,
+          OTname: allOtMastersMap[rest?.OTId || ""]?.OtMaster || "",
+          OTslotName: allOtSlotsMap[rest?.OTSlotId || ""]?.OTSlot || "",
+        };
+        console.log("Rest is ", rest)
+        setOtObjDetails(rest || {});
+        if (data?.otBillDetails.length > 0) {
+          let arr = data?.otBillDetails.map((item) => ({
+            ...item,
+            name: allOTitemsMap[item.OtItemId]?.OtItem || "",
+            category: allOTitemsMap[item.OtItemId]?.OtCategory || "",
+          }));
+          console.log("obj is", rest);
+          console.log("arr is", arr);
+          setOtChargeDetails(arr);
+        } else {
+          setOtChargeDetails([]);
+        }
+      } else {
+        setOtObjDetails({});
+        setOtChargeDetails([]);
+      }
+    } catch (error) {
+      setOtObjDetails({});
+      setOtChargeDetails([]);
+      console.log("error fetching: ", error);
     }
   };
 
@@ -1499,7 +1650,9 @@ const FinalBillingAdd = () => {
     if (!dischargeDate || !dischargeTime) {
       return [];
     }
-    const dischargeDT = new Date(`${dischargeDate.split("T")[0]}T${convertTo24Hour(dischargeTime)}`);
+    const dischargeDT = new Date(
+      `${dischargeDate.split("T")[0]}T${convertTo24Hour(dischargeTime)}`,
+    );
 
     // windowKey → entry map (last bed in window wins)
     const windowMap = {};
@@ -1519,8 +1672,12 @@ const FinalBillingAdd = () => {
 
     // sort history by admit time so latest transfer comes last
     const sorted = [...history].sort((a, b) => {
-      const tA = new Date(`${toLocalDateStr(a.AdmitionDate)}T${convertTo24Hour(a.AdmitionTime)}`);
-      const tB = new Date(`${toLocalDateStr(b.AdmitionDate)}T${convertTo24Hour(b.AdmitionTime)}`);
+      const tA = new Date(
+        `${toLocalDateStr(a.AdmitionDate)}T${convertTo24Hour(a.AdmitionTime)}`,
+      );
+      const tB = new Date(
+        `${toLocalDateStr(b.AdmitionDate)}T${convertTo24Hour(b.AdmitionTime)}`,
+      );
       return tA - tB;
     });
 
@@ -1530,12 +1687,13 @@ const FinalBillingAdd = () => {
       );
       const isLastBed = idx === sorted.length - 1;
       // Last bed always uses form's discharge date/time, not bed record's release date
-      const relDateTime =
-        isLastBed
-          ? dischargeDT
-          : entry.Release === "Y"
-            ? new Date(`${toLocalDateStr(entry.ReleaseDate)}T${convertTo24Hour(entry.ReleaseTime)}`)
-            : dischargeDT;
+      const relDateTime = isLastBed
+        ? dischargeDT
+        : entry.Release === "Y"
+          ? new Date(
+              `${toLocalDateStr(entry.ReleaseDate)}T${convertTo24Hour(entry.ReleaseTime)}`,
+            )
+          : dischargeDT;
 
       let currentWindowStart = getDayWindowStart(admDateTime);
 
@@ -1558,7 +1716,10 @@ const FinalBillingAdd = () => {
             MyDateTo: toDate,
             ...entry,
             ServiceCh: entry.ServiceCh,
-            BedRate: (entry.Rate && entry.Rate !== "NA" ? Number(entry.Rate) : 0) || Number(entry.BedRate || 0) || Number(entry.ToDayRate || 0),
+            BedRate:
+              (entry.Rate && entry.Rate !== "NA" ? Number(entry.Rate) : 0) ||
+              Number(entry.BedRate || 0) ||
+              Number(entry.ToDayRate || 0),
           };
         }
 
@@ -1581,20 +1742,37 @@ const FinalBillingAdd = () => {
 
       // sort by admit time so 1st bed is first
       const sortedArr = [...arr].sort((a, b) => {
-        const tA = new Date(`${toLocalDateStr(a.AdmitionDate)}T${convertTo24Hour(a.AdmitionTime)}`);
-        const tB = new Date(`${toLocalDateStr(b.AdmitionDate)}T${convertTo24Hour(b.AdmitionTime)}`);
+        const tA = new Date(
+          `${toLocalDateStr(a.AdmitionDate)}T${convertTo24Hour(a.AdmitionTime)}`,
+        );
+        const tB = new Date(
+          `${toLocalDateStr(b.AdmitionDate)}T${convertTo24Hour(b.AdmitionTime)}`,
+        );
         return tA - tB;
       });
 
       // 1st bed rate from admission BedRate (set once on load)
       if (firstBedRate === null && sortedArr.length > 0) {
-        setFirstBedRate(Number(admData?.BedRate || sortedArr[0].ToDayRate || sortedArr[0].Rate || 0));
+        setFirstBedRate(
+          Number(
+            admData?.BedRate ||
+              sortedArr[0].ToDayRate ||
+              sortedArr[0].Rate ||
+              0,
+          ),
+        );
       }
 
       // override 1st bed rate with editable firstBedRate
-      const rateToUse = firstBedRate ?? Number(sortedArr[0]?.ToDayRate || sortedArr[0]?.Rate || 0);
+      const rateToUse =
+        firstBedRate ??
+        Number(sortedArr[0]?.ToDayRate || sortedArr[0]?.Rate || 0);
       if (sortedArr.length > 0) {
-        sortedArr[0] = { ...sortedArr[0], Rate: rateToUse, ToDayRate: rateToUse };
+        sortedArr[0] = {
+          ...sortedArr[0],
+          Rate: rateToUse,
+          ToDayRate: rateToUse,
+        };
       }
 
       const promises = sortedArr.map((item) =>
@@ -1612,8 +1790,12 @@ const FinalBillingAdd = () => {
         allBedsDataMap[allBedsData[i].BedId] = allBedsData[i];
       }
 
-      const newBedArr = splitBedHistoryDateWise(sortedArr, billDate, releaseTime);
-      console.log("Calculated bed array: ", newBedArr)
+      const newBedArr = splitBedHistoryDateWise(
+        sortedArr,
+        billDate,
+        releaseTime,
+      );
+      console.log("Calculated bed array: ", newBedArr);
       const totalBedRate = newBedArr.reduce(
         (sum, item) => sum + Number(item.ToDayRate),
         0,
@@ -1890,14 +2072,26 @@ const FinalBillingAdd = () => {
 
   // re-run bed calculation when discharge date/time or 1st bed rate changes
   useEffect(() => {
-    if (Object.keys(admData).length && formData.BillDate && formData.ReleaseTime) {
-      fetchBedsById(admData?.AdmitionId, formData.BillDate, formData.ReleaseTime);
+    if (
+      Object.keys(admData).length &&
+      formData.BillDate &&
+      formData.ReleaseTime
+    ) {
+      fetchBedsById(
+        admData?.AdmitionId,
+        formData.BillDate,
+        formData.ReleaseTime,
+      );
     }
   }, [formData.BillDate, formData.ReleaseTime, firstBedRate]);
 
   useEffect(() => {
     if (Object.keys(admData).length) {
-      fetchBedsById(admData?.AdmitionId, formData.BillDate, formData.ReleaseTime);
+      fetchBedsById(
+        admData?.AdmitionId,
+        formData.BillDate,
+        formData.ReleaseTime,
+      );
       fetchOTC(admData?.AdmitionId);
       fetchIPDOtherChargesByAdmId(admData?.AdmitionId);
       fetchDoctVisitByAdmId(admData?.AdmitionId);
@@ -1925,7 +2119,8 @@ const FinalBillingAdd = () => {
           const res = await axiosInstance.get(`/fb/${id}`);
           if (res.data.success) {
             const bill = res.data.data;
-            const syncTime = bill.ReleaseTime || bill.BillTime || prev.ReleaseTime;
+            const syncTime =
+              bill.ReleaseTime || bill.BillTime || prev.ReleaseTime;
             setFormData((prev) => ({
               ...prev,
               BillNo: bill.BillNo || "",
@@ -1946,6 +2141,16 @@ const FinalBillingAdd = () => {
               PatiectPartyAmt: bill.PatiectPartyAmt || 0,
             }));
             if (bill.ReffId) fetchAdm(bill.ReffId);
+
+            if (Object.keys(bill?.details).length > 0) {
+              let data = bill?.details;
+              if (data.finalbillalldtl.length > 0) {
+                let otBillNo = data.finalbillalldtl.find(
+                  (item) => item.PrintHead == "O.T. CHARGES",
+                )?.SubHead;
+                fetchOTchargesDetail(otBillNo);
+              }
+            }
           }
         } catch (err) {
           console.error("Error loading bill for edit:", err);
@@ -2105,6 +2310,8 @@ const FinalBillingAdd = () => {
           <button
             className="btn btn-primary btn-sm"
             onClick={() => {
+              setOtObjDetails({});
+              setOtChargeDetails([]);
               navigate("/fina-bill-list2");
             }}
           >
@@ -2665,8 +2872,7 @@ const FinalBillingAdd = () => {
                       </span>
                     </div>
                     <div className="col-6">
-
-  <input
+                      <input
                         type="text"
                         style={{
                           ...styles.input,
@@ -2676,13 +2882,11 @@ const FinalBillingAdd = () => {
                         value={formData?.ReciptAmt || 0}
                       />
 
-
                       {/* <input
                         type="text"
                         style={styles.input}
                         value={formData?.PatiectPartyAmt || 0}
                       /> */}
-
                     </div>
                   </div>
                   {/* <div className="row g-1 align-items-center">
@@ -2969,12 +3173,46 @@ const FinalBillingAdd = () => {
               setPrintType={setPrintType}
               billData1={billData1}
               defaultInvoiceData={{
-                hospital: { name: "LORDS HEALTH CARE", address: "13/3, Circular 2nd Bye Lane, Kona Expressway, (Near Jumanabala Balika Vidyalaya) Shibpur, Howrah-711 102, W.B.", phone: "8272904444", helpline: "7003378414", email: "patientdesk@lordshealthcare.org", website: "www.lordshealthcare.org" },
-                patient: { name: admData.PatientName || "", address: `${admData.Add1 || ""}, ${admData.Add2 || ""}, ${admData.Add3 || ""},`, doctor: allDoctors.find((item) => item.DoctorId == admData?.UCDoctor1Id)?.Doctor || "", billNo: formData?.BillNo || "", age: `${admData.Age || ""} ${admData.AgeType || "Y"}`, sex: admData.Sex || "", admDate: `${admData?.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/")} Time: ${admData?.AdmitionTime || ""}` || "", disDate: `${formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${formData?.ReleaseTime || ""}` || "", regdNo: admData.AdmitionNo || "", billDate: formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "" },
-                printBy: authUserData?.find((item) => item.UserId == loggedInUser)?.UserName || "",
+                hospital: {
+                  name: "LORDS HEALTH CARE",
+                  address:
+                    "13/3, Circular 2nd Bye Lane, Kona Expressway, (Near Jumanabala Balika Vidyalaya) Shibpur, Howrah-711 102, W.B.",
+                  phone: "8272904444",
+                  helpline: "7003378414",
+                  email: "patientdesk@lordshealthcare.org",
+                  website: "www.lordshealthcare.org",
+                },
+                patient: {
+                  name: admData.PatientName || "",
+                  address: `${admData.Add1 || ""}, ${admData.Add2 || ""}, ${admData.Add3 || ""},`,
+                  doctor:
+                    allDoctors.find(
+                      (item) => item.DoctorId == admData?.UCDoctor1Id,
+                    )?.Doctor || "",
+                  billNo: formData?.BillNo || "",
+                  age: `${admData.Age || ""} ${admData.AgeType || "Y"}`,
+                  sex: admData.Sex || "",
+                  admDate:
+                    `${admData?.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/")} Time: ${admData?.AdmitionTime || ""}` ||
+                    "",
+                  disDate:
+                    `${formData?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || ""} Time: ${formData?.ReleaseTime || ""}` ||
+                    "",
+                  regdNo: admData.AdmitionNo || "",
+                  billDate:
+                    formData?.BillDate?.split("T")[0]
+                      ?.split("-")
+                      ?.reverse()
+                      ?.join("/") || "",
+                },
+                printBy:
+                  authUserData?.find((item) => item.UserId == loggedInUser)
+                    ?.UserName || "",
                 groups: allDiagWithTest,
               }}
               billData2={billData1}
+              otObjDetails={otObjDetails}
+              otChargeDetails={otChargeDetails}
             />
           )}
           <button

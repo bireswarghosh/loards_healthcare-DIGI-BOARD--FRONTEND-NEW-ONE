@@ -1,4 +1,5 @@
 
+
 function mergeConsecutive(arr) {
   const result = [];
 
@@ -419,7 +420,7 @@ export const handlePrint2 = (invoiceData) => {
 
             .title { text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 15px; font-size: 12pt; }
 
-            
+           
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
             th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 8px 4px; text-align: left; font-size: 9pt; }
             td { padding: 4px; vertical-align: top; font-size: 11pt;font-weight: bold; }
@@ -998,7 +999,7 @@ export const handlePrint4 = (data) => {
       .company-pvt { font-size: 18px; font-weight: 700; }
       .company-address { font-size: 10px; font-weight: 700;  }
       .company-contact { font-size: 10px; font-weight: bold; }
-      
+     
       /* Patient Info Grid */
       .info-box {margin-top:30px; width: 100%; border: 1px solid #000; padding: 4px; padding-right:2px; margin-bottom: 10px; }
       .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
@@ -1666,4 +1667,325 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
     alert("Pop-up blocked. Please allow pop-ups for this website to print.");
   }
 };
+
+// this is for print ot pdf
+export function handleprint6(otObjDetails, otChargeDetails) {
+  // --- Helper Functions ---
+ 
+  // Format Date to DD/MM/YYYY
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+  };
+
+  // Format Current Date and Time
+  const getCurrentDateTime = () => {
+    const d = new Date();
+    const date = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+    const time = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+    return `${date} ${time}`;
+  };
+
+  // Convert Number to Words (Rupees format)
+  const numberToWords = (num) => {
+    const a = ['','one ','two ','three ','four ', 'five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
+    const b = ['', '', 'twenty','thirty','forty','fifty', 'sixty','seventy','eighty','ninety'];
+   
+    const convert = (n) => {
+      if (n === 0) return 'zero';
+      let str = '';
+      if ((n = n.toString()).length > 9) return 'overflow';
+      const parsed = ('000000000' + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+      if (!parsed) return;
+      str += (parsed[1] != 0) ? (a[Number(parsed[1])] || b[parsed[1][0]] + ' ' + a[parsed[1][1]]) + 'crore ' : '';
+      str += (parsed[2] != 0) ? (a[Number(parsed[2])] || b[parsed[2][0]] + ' ' + a[parsed[2][1]]) + 'lakh ' : '';
+      str += (parsed[3] != 0) ? (a[Number(parsed[3])] || b[parsed[3][0]] + ' ' + a[parsed[3][1]]) + 'thousand ' : '';
+      str += (parsed[4] != 0) ? (a[Number(parsed[4])] || b[parsed[4][0]] + ' ' + a[parsed[4][1]]) + 'hundred ' : '';
+      str += (parsed[5] != 0) ? ((str != '') ? '' : '') + (a[Number(parsed[5])] || b[parsed[5][0]] + ' ' + a[parsed[5][1]]) : '';
+      return str.trim();
+    };
+
+    const wholePart = Math.floor(num);
+    const decimalPart = Math.round((num - wholePart) * 100);
+   
+    let words = `Rupees ${convert(wholePart)}`;
+    if (decimalPart > 0) {
+      words += ` and ${convert(decimalPart)} paise only`;
+    } else {
+      words += ` and zero paise only`;
+    }
+   
+    // Capitalize first letter to match image exactly
+    return words.charAt(0).toUpperCase() + words.slice(1).toLowerCase();
+  };
+
+
+  // --- Data Processing ---
+ 
+  // Group charges by category
+  const groupedCharges = otChargeDetails.reduce((acc, item) => {
+    if (!acc[item.category]) acc[item.category] = { items: [], total: 0 };
+    acc[item.category].items.push(item);
+    acc[item.category].total += item.Amount;
+    return acc;
+  }, {});
+
+  // Calculations
+  const baseOtAmount = otObjDetails.OTAmt || 0;
+  let itemsTotal = 0;
+  for (const cat in groupedCharges) {
+    itemsTotal += groupedCharges[cat].total;
+  }
+ 
+  const totalOtCharge = baseOtAmount + itemsTotal;
+  const totalOtMedicine = otObjDetails.MedicineAmt || 0;
+  const netOtBillAmount = totalOtCharge + totalOtMedicine;
+
+
+  // --- HTML Template Construction ---
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>O.T. Break Up - ${otObjDetails.OtBillNo}</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          font-size: 13px;
+          color: #000;
+          margin: 0;
+          padding: 20px;
+        }
+        /* Header Styling */
+        .header {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          position: relative;
+          margin-bottom: 20px;
+        }
+        .logo-placeholder {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 80px;
+          height: 60px;
+          border: 1px solid #ccc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          color: #888;
+        }
+        .header h1 {
+          margin: 0 0 5px 0;
+          font-size: 24px;
+          font-weight: bold;
+          letter-spacing: 1px;
+        }
+        .header p {
+          margin: 3px 0;
+          font-size: 12px;
+        }
+        .doc-title {
+          font-weight: bold;
+          font-size: 14px;
+          margin-top: 10px;
+        }
+       
+        /* Patient Details Box */
+        .patient-box {
+          border: 1px solid #000;
+          padding: 8px 12px;
+          margin-bottom: 10px;
+          line-height: 1.6;
+        }
+       
+        /* Main Table Layout */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .border-top { border-top: 1px solid #000; }
+        .border-bottom { border-bottom: 1px solid #000; }
+       
+        th {
+          padding: 8px 0;
+          font-weight: normal;
+        }
+        td {
+          padding: 4px 0;
+          vertical-align: top;
+        }
+       
+        /* Flex rows inside table cells to match layout structure */
+        .flex-row {
+          display: flex;
+          justify-content: space-between;
+        }
+        .flex-col {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+       
+        .category-name {
+          color: #555;
+          font-size: 12px;
+          margin-top: 15px;
+        }
+        .item-name {
+          color: #666;
+          font-size: 11px;
+          text-transform: uppercase;
+        }
+       
+        /* Totals Area */
+        .totals-table {
+          width: 100%;
+          margin-top: 20px;
+        }
+        .totals-table td {
+          padding: 6px 0;
+        }
+        .amount-in-words {
+          text-align: right;
+          font-size: 13px;
+        }
+       
+        /* Footer */
+        .footer {
+          margin-top: 40px;
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+        }
+       
+        @media print {
+          body { -webkit-print-color-adjust: exact; padding: 0; }
+        }
+      </style>
+    </head>
+    <body>
+
+      <div class="header">
+      <!--  <div class="logo-placeholder">LOGO HERE</div> -->
+       <div class="logo-placeholder"> <img src="/assets/lords.png" style="width:80px;" /> </div>
+        <div>
+          <h1>LORDS HEALTH CARE (NURSING HOME)</h1>
+          <p>13/3, Circular 2nd Bye Lane, Kona Expressway,</p>
+          <p>(Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.</p>
+          <p>Phone No.: 8272904444 HELPLINE - 7003378414</p>
+          <p>E-mail:patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org</p>
+          <div class="doc-title">O.T. BREAK UP</div>
+        </div>
+      </div>
+
+      <div class="patient-box">
+        <div>Admission No &nbsp;: ${otObjDetails.AdmitionId}</div>
+        <div>Patient Name &nbsp;: ${otObjDetails.PatientName}</div>
+      </div>
+
+      <table class="border-top border-bottom">
+        <thead>
+          <tr class="border-bottom">
+            <th colspan="3">DESCRIPTION</th>
+            <th style="text-align: right; width: 15%;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="3" style="padding-top: 10px;">
+              <div class="flex-row">
+                <div class="flex-col" style="width: 33.33%;">
+                  <div><strong>O.T. Bill No.</strong> &nbsp;: <span style="font-size:12px;">${otObjDetails.OtBillNo}</span></div>
+                  <div><strong>O.T. Type</strong> &nbsp;&nbsp;&nbsp;&nbsp;: ${otObjDetails.OTType}</div>
+                </div>
+                <div class="flex-col" style="width: 33.33%;">
+                  <div><strong>O.T. Name</strong> &nbsp;&nbsp;&nbsp;&nbsp;: <span style="font-size:12px;">${otObjDetails.OTname}</span></div>
+                </div>
+                <div class="flex-col" style="width: 33.33%;">
+                  <div><strong>O.T. Slot</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span style="font-size:12px;">${otObjDetails.OTslotName}</span></div>
+                  <div><strong>O.T Date</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${formatDate(otObjDetails.BillDate)}</div>
+                </div>
+              </div>
+            </td>
+            <td style="text-align: right; padding-top: 32px;">${baseOtAmount.toFixed(2)}</td>
+          </tr>
+
+          ${Object.keys(groupedCharges).map(category => `
+            <tr>
+              <td colspan="4">
+                <div class="category-name">${category}</div>
+              </td>
+            </tr>
+            ${groupedCharges[category].items.map(item => `
+              <tr>
+                <td style="width: 45%;" class="item-name">${item.name}</td>
+                <td style="width: 25%; text-align: center;">${item.Qty}${item.Unit.replace('PER HOUR','PER HO')} @ &nbsp;&nbsp;&nbsp;${item.Rate.toFixed(2)}</td>
+                <td style="width: 15%; text-align: right;">${item.Amount.toFixed(2)}</td>
+                <td style="width: 15%;"></td>
+              </tr>
+            `).join('')}
+            <tr>
+              <td colspan="3"></td>
+              <td style="text-align: right; padding-top: 10px;">${groupedCharges[category].total.toFixed(2)}</td>
+            </tr>
+          `).join('')}
+         
+          <tr><td colspan="4" style="height: 20px;"></td></tr>
+        </tbody>
+      </table>
+
+      <table class="totals-table border-top">
+        <tr>
+          <td style="text-align: right; width: 85%;">Total OT Charge :</td>
+          <td style="text-align: right; width: 15%;">${totalOtCharge.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td style="text-align: right;">Total OT Medicine :</td>
+          <td style="text-align: right;">${totalOtMedicine.toFixed(2)}</td>
+        </tr>
+        <tr class="border-top border-bottom">
+          <td style="text-align: right;">
+            <div class="flex-row">
+              <span class="amount-in-words">(${numberToWords(netOtBillAmount)})</span>
+              <span><strong>NET OT Bill Amount (With OT Medicine):</strong></span>
+            </div>
+          </td>
+          <td style="text-align: right;"><strong>${netOtBillAmount.toFixed(2)}</strong></td>
+        </tr>
+      </table>
+
+      <div class="footer">
+        <div>Print Date & Time : ${getCurrentDateTime()}</div>
+        <div style="padding-right: 50px;">For :</div>
+      </div>
+
+    </body>
+    </html>
+  `;
+
+  // --- Print Execution ---
+ 
+  // Open a new window and write the generated HTML into it
+  const printWindow = window.open('', '_blank', 'width=800,height=900');
+  if (printWindow) {
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+   
+    // Wait for the window to finish loading content before printing
+    printWindow.onload = function() {
+      printWindow.focus();
+      printWindow.print();
+    };
+  } else {
+    console.error("Popup blocked. Please allow popups for this site to print the bill.");
+  }
+}
 

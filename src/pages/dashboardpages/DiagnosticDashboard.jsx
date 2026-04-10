@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 
 
@@ -14,6 +13,8 @@ import CommonTable from "./CommonTable";
 // import DodgeGameLoader from "./LoadingGame";
 import TestTable from "./TestTable";
 import axiosInstance from "../../axiosInstance";
+import DashboardSkeleton from "./DashboardSkeleton";
+import DiaCardsStats from "./DiaCardsStats";
 
 const DiagnosticDashboard = () => {
   const [startDate, setStartDate] = useState(
@@ -43,7 +44,7 @@ const DiagnosticDashboard = () => {
       setResponse(res.data);
     } catch (error) {
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
   const fetchAreas = async () => {
@@ -231,7 +232,7 @@ const DiagnosticDashboard = () => {
         {loading ? (
           // <ZLoader />
           // <DodgeGameLoader />
-          <h1>Loading...</h1>
+         <DashboardSkeleton/>
         ) : (
           <>
             {/* 🔍 FILTER + STATS */}
@@ -246,7 +247,7 @@ const DiagnosticDashboard = () => {
               </div>
             </div>
             <div className="mb-3">
-              {/* <DashboardStats response={response1} /> */}
+              <DiaCardsStats response={response1.meta} />
             </div>
 
             {/* 📊 TABLE + GRAPH */}
@@ -355,4 +356,3 @@ const DiagnosticDashboard = () => {
 };
 
 export default DiagnosticDashboard;
-

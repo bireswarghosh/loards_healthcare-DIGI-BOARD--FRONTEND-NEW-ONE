@@ -591,86 +591,120 @@ const VisitList = () => {
   //   }
   // };
 
-const generatePDF = async (patient) => {
-  try {
-    const response = await axiosInstance.get(
-      `/patient-visits/${patient.PVisitId}`,
-    );
+  const generatePDF = async (patient) => {
+    try {
+      const response = await axiosInstance.get(
+        `/patient-visits/${patient.PVisitId}`,
+      );
 
-    if (!response.data?.success) {
-      alert("Failed to fetch billing details");
-      return;
-    }
+      if (!response.data?.success) {
+        alert("Failed to fetch billing details");
+        return;
+      }
 
-    const billingData = response.data.data;
+      const billingData = response.data.data;
 
-    const regCh = parseFloat(billingData.RegCh || 0);
-    const svrCh = parseFloat(billingData.ServiceCh || 0);
-    const rate = parseFloat(billingData.Rate || 0);
-    const profDiscPer = parseFloat(billingData.discp || 0);
-    const profDiscAmt = parseFloat(billingData.Discount || 0);
-    const svrDisc = parseFloat(billingData.SrvChDisc || 0);
-    const totalPaid = parseFloat(billingData.RecAmt || 0);
+      const regCh = parseFloat(billingData.RegCh || 0);
+      const svrCh = parseFloat(billingData.ServiceCh || 0);
+      const rate = parseFloat(billingData.Rate || 0);
+      const profDiscPer = parseFloat(billingData.discp || 0);
+      const profDiscAmt = parseFloat(billingData.Discount || 0);
+      const svrDisc = parseFloat(billingData.SrvChDisc || 0);
+      const totalPaid = parseFloat(billingData.RecAmt || 0);
 
-    const totalDiscount = profDiscAmt + svrDisc;
+      const totalDiscount = profDiscAmt + svrDisc;
 
-    const numberToWords = (num) => {
-      const ones = ["","one","two","three","four","five","six","seven","eight","nine"];
-      const tens = ["","","twenty","thirty","forty","fifty","sixty","seventy","eighty","ninety"];
-      const teens = ["ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen"];
+      const numberToWords = (num) => {
+        const ones = [
+          "",
+          "one",
+          "two",
+          "three",
+          "four",
+          "five",
+          "six",
+          "seven",
+          "eight",
+          "nine",
+        ];
+        const tens = [
+          "",
+          "",
+          "twenty",
+          "thirty",
+          "forty",
+          "fifty",
+          "sixty",
+          "seventy",
+          "eighty",
+          "ninety",
+        ];
+        const teens = [
+          "ten",
+          "eleven",
+          "twelve",
+          "thirteen",
+          "fourteen",
+          "fifteen",
+          "sixteen",
+          "seventeen",
+          "eighteen",
+          "nineteen",
+        ];
 
-      if (num === 0) return "zero";
+        if (num === 0) return "zero";
 
-      const convertHundreds = (n) => {
-        let str = "";
-        if (n >= 100) {
-          str += ones[Math.floor(n / 100)] + " hundred ";
-          n %= 100;
-        }
-        if (n >= 20) {
-          str += tens[Math.floor(n / 10)] + " ";
-          n %= 10;
-        } else if (n >= 10) {
-          str += teens[n - 10] + " ";
+        const convertHundreds = (n) => {
+          let str = "";
+          if (n >= 100) {
+            str += ones[Math.floor(n / 100)] + " hundred ";
+            n %= 100;
+          }
+          if (n >= 20) {
+            str += tens[Math.floor(n / 10)] + " ";
+            n %= 10;
+          } else if (n >= 10) {
+            str += teens[n - 10] + " ";
+            return str;
+          }
+          if (n > 0) str += ones[n] + " ";
           return str;
+        };
+
+        let rupees = Math.floor(num);
+        const paise = Math.round((num - rupees) * 100);
+
+        let result = "";
+        if (rupees >= 10000000) {
+          result += convertHundreds(Math.floor(rupees / 10000000)) + "crore ";
+          rupees %= 10000000;
         }
-        if (n > 0) str += ones[n] + " ";
-        return str;
+        if (rupees >= 100000) {
+          result += convertHundreds(Math.floor(rupees / 100000)) + "lakh ";
+          rupees %= 100000;
+        }
+        if (rupees >= 1000) {
+          result += convertHundreds(Math.floor(rupees / 1000)) + "thousand ";
+          rupees %= 1000;
+        }
+        if (rupees > 0) {
+          result += convertHundreds(rupees);
+        }
+
+        result = result.trim();
+        result +=
+          paise > 0
+            ? " & " + convertHundreds(paise) + "paise"
+            : " & zero paise";
+
+        return result + " only";
       };
 
-      let rupees = Math.floor(num);
-      const paise = Math.round((num - rupees) * 100);
+      const amountInWords = numberToWords(totalPaid);
 
-      let result = "";
-      if (rupees >= 10000000) {
-        result += convertHundreds(Math.floor(rupees / 10000000)) + "crore ";
-        rupees %= 10000000;
-      }
-      if (rupees >= 100000) {
-        result += convertHundreds(Math.floor(rupees / 100000)) + "lakh ";
-        rupees %= 100000;
-      }
-      if (rupees >= 1000) {
-        result += convertHundreds(Math.floor(rupees / 1000)) + "thousand ";
-        rupees %= 1000;
-      }
-      if (rupees > 0) {
-        result += convertHundreds(rupees);
-      }
+      const win = window.open("", "_blank");
 
-      result = result.trim();
-      result += paise > 0
-        ? " & " + convertHundreds(paise) + "paise"
-        : " & zero paise";
-
-      return result + " only";
-    };
-
-    const amountInWords = numberToWords(totalPaid);
-
-    const win = window.open("", "_blank");
-
-    win.document.write(`
+      win.document.write(`
       <html>
       <head>
         <title>Money Receipt</title>
@@ -818,23 +852,16 @@ const generatePDF = async (patient) => {
       </html>
     `);
 
-    win.document.close();
+      win.document.close();
 
-    win.onload = () => {
-      win.focus();
-    };
-
-  } catch (error) {
-    console.error(error);
-    alert("Failed to generate PDF");
-  }
-};
-
-
- 
-
- 
- 
+      win.onload = () => {
+        win.focus();
+      };
+    } catch (error) {
+      console.error(error);
+      alert("Failed to generate PDF");
+    }
+  };
 
   // Original handler logic - PRESERVED
   const handleDelete = async (patient) => {
@@ -865,35 +892,40 @@ const generatePDF = async (patient) => {
   };
 
   // main function for pdf generation
-const DrPressPrint = ({
-  registrationNo,
-  visitDate,
-  patientName,
-  age,
-  sex,
-  address,
-  phone,
-  visitTime,
-  consultant,
-  doctorRegNo,
-  department,
-  qualification,
-  barcodeValue,
-  pr,
-  rr,
-  bp,
-  temp,
-  height,
-  weight,
-  bmi,
-  nutritionalStatus,
-  drugAllergies,
-}) => {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const printDateTime = new Date().toLocaleString("en-IN");
-  const printWindow = window.open("", "", "width=900,height=800");
+  const DrPressPrint = ({
+    registrationNo,
+    visitDate,
+    patientName,
+    age1,
+    ageY,
+    age2,
+    ageM,
+    age3,
+    ageD,
+    sex,
+    address,
+    phone,
+    visitTime,
+    consultant,
+    doctorRegNo,
+    department,
+    qualification,
+    barcodeValue,
+    pr,
+    rr,
+    bp,
+    temp,
+    height,
+    weight,
+    bmi,
+    nutritionalStatus,
+    drugAllergies,
+  }) => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const printDateTime = new Date().toLocaleString("en-IN");
+    const printWindow = window.open("", "", "width=900,height=800");
 
-  printWindow.document.write(`
+    printWindow.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -1069,7 +1101,7 @@ const DrPressPrint = ({
           </tr>
           <tr>
             <td><span class="label">Age</span></td>
-            <td>${age || ""} Y</td>
+            <td><span>${age1 || 0}${ageY || "Y"}-${age2 || 0}${ageM || "M"}-${age3 || 0}${ageD || "D"}</span></td>
             <td><span class="label">Sex</span></td>
             <td>${sex || ""}</td>
           </tr>
@@ -1170,8 +1202,8 @@ const DrPressPrint = ({
     </html>
   `);
 
-  printWindow.document.close();
-};
+    printWindow.document.close();
+  };
 
   // generate visit entry pdf
   const generateVisitEntryPDF = async (data) => {
@@ -1201,18 +1233,20 @@ const DrPressPrint = ({
         registrationNo: `S-${fetchedData.RegistrationId}`,
         visitDate: fetchedData.RegistrationDate?.split("T")[0],
         patientName: fetchedData.PatientName,
-        age: fetchedData.Age,
+        age1: fetchedData.Age,
+        ageY: fetchedData.AgeType,
+        age2: fetchedData.AgeD,
+        ageM: fetchedData.AgeTypeD,
+        age3: fetchedData.AgeN,
+        ageD: fetchedData.AgeTypeN,
         sex: fetchedData.Sex,
         // address:
         //   `${fetchedData?.PatientAdd1}, ${fetchedData?.PatientAdd2}, ${fetchedData?.PatientAdd3}` ||
         //   " ",
-        address: fetchedData?.PatientAdd1
-          ? `${fetchedData?.PatientAdd1}`
-          : "" + fetchedData?.PatientAdd2
-            ? `, ${fetchedData?.PatientAdd2}`
-            : "" + fetchedData?.PatientAdd3
-              ? `, ${fetchedData?.PatientAdd3}, `
-              : "",
+        address:
+          (fetchedData?.PatientAdd1 || "") +
+          (fetchedData?.PatientAdd2 ? `, ${fetchedData?.PatientAdd2}` : "") +
+          (fetchedData?.PatientAdd3 ? `, ${fetchedData?.PatientAdd3}` : ""),
         phone: fetchedData.PhoneNo,
         visitTime: t,
         // consultant: formData.VisitTypeName,
@@ -1807,3 +1841,4 @@ const DrPressPrint = ({
 };
 
 export default VisitList;
+

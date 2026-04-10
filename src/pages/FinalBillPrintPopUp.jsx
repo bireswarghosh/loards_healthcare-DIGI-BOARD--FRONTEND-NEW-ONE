@@ -1,5 +1,6 @@
+
 import React from "react";
-import { handlePrint1, handlePrint2, handlePrint3, handlePrint4 } from "./FinalBillPrintFunc";
+import { handlePrint1, handlePrint2, handlePrint3, handlePrint4, handleprint6 } from "./FinalBillPrintFunc";
 
 
 // Neutral, modern Radio Component
@@ -60,7 +61,8 @@ const ModernNeutralModal = ({
   setPrintType,
   billData1,
   defaultInvoiceData,
-  billData2
+  billData2,
+  otObjDetails, otChargeDetails
 }) => {
   return (
     <div
@@ -205,6 +207,9 @@ const ModernNeutralModal = ({
               type="button"
               style={{ fontSize: "0.85rem", borderRadius: "8px" }}
               onClick={() => {
+
+                setTimeout(() => {
+                  
                 switch (printType) {
                   case "billSummary":
                     handlePrint1(billData1);
@@ -218,9 +223,15 @@ const ModernNeutralModal = ({
                   case "indoorCopy":
                     handlePrint4(billData2);
                     break;
+                  case "otBillDetail":
+                   handleprint6(otObjDetails, otChargeDetails)
+                    break;
+
                   default:
                     console.log("wrong choice");
                 }
+                },3000
+                )
                 setShowModal(false);
               }}
             >
@@ -247,6 +258,7 @@ const ModernNeutralModal = ({
 
 
 export default ModernNeutralModal;
+
 
 
 

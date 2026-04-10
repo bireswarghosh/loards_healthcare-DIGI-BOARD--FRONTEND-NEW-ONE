@@ -1,7 +1,7 @@
 import React from "react";
 import CountUp from "react-countup";
 
-const DashboardStats = ({ response = {} }) => {
+const OpdCardsStats = ({ totalPatients=0, totalRev=0 }) => {
   
   return (
     <>
@@ -37,16 +37,14 @@ const DashboardStats = ({ response = {} }) => {
 
         .stat-title {
           font-size: 13px;
-          font-weight: 600;
           opacity: 0.9;
           letter-spacing: 0.5px;
         }
 
         .stat-value {
-          font-size: 38px;
+          font-size: 28px;
           font-weight: 700;
           margin-top: 6px;
-          margin-left:10px;
         }
 
         /* 🔥 floating circles */
@@ -113,10 +111,10 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-circle"></div>
               <div className="stat-circle-2"></div>
 
-              <div className="stat-title">TOTAL ADMISSIONS</div>
+              <div className="stat-title">TOTAL Visit</div>
 
               <div className="stat-value">
-                <CountUp end={response.totalPatients || 0} duration={1.2} />
+                <CountUp end={totalPatients } duration={1.2} />
               </div>
 
               {/* <div className="stat-footer">**** **** **** 1234</div> */}
@@ -136,10 +134,11 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-circle"></div>
               <div className="stat-circle-2"></div>
 
-              <div className="stat-title">FROM OPD</div>
+              <div className="stat-title">Total Revenue</div>
 
               <div className="stat-value">
-                <CountUp end={response.totalOpd || 0} duration={1.2} />
+                {totalRev>0 &&  <>₹ <CountUp end={totalRev} duration={1.2}/></>}  
+                
               </div>
 
               {/* <div className="stat-footer">**** **** **** 5678</div> */}
@@ -162,7 +161,7 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-title">INSURED PATIENTS</div>
 
               <div className="stat-value">
-                <CountUp end={response.insured || 0} duration={1.2} />
+                {/* <CountUp end={response.insured || 0} duration={1.2} /> */}
               </div>
 
               {/* <div className="stat-footer">**** **** **** 8899</div> */}
@@ -171,7 +170,7 @@ const DashboardStats = ({ response = {} }) => {
         </div>
 
         {/* REVENUE */}
-        <div className="col-md-3">
+        {/* <div className="col-md-3">
           <div className="stat-anim">
             <div
               className="stat-card"
@@ -182,22 +181,19 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-circle"></div>
               <div className="stat-circle-2"></div>
 
-              <div className="stat-title">Male/Female</div>
+              <div className="stat-title">TOTAL REVENUE</div>
 
               <div className="stat-value">
-                <CountUp end={response?.totalFemale || 0}  duration={1.2} /> -
-                                <CountUp end={response?.totalMale || 0}  duration={1.2} />
-
-
+                ₹<CountUp end={response.totalPatients || 0} duration={1.2} />
               </div>
 
-              {/* <div className="stat-footer">**** **** **** 4321</div> */}
+              <div className="stat-footer">**** **** **** 4321</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );
 };
 
-export default DashboardStats;
+export default OpdCardsStats;

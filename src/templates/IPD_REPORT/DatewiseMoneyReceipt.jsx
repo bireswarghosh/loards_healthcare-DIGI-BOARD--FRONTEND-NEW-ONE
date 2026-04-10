@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { set } from "date-fns";
@@ -46,13 +47,27 @@ const DatewiseMoneyReceipt = () => {
     }
   };
 
+  const getMode = (type) => {
+    switch (type) {
+      case 0:
+        return "Cash";
+      case 1:
+        return "Bank";
+      case 2:
+        return "Card";
+      case 3:
+        return "UPI";
+      default:
+        return "Other";
+    }
+  };
+
   const fetchMoneyReceipt = async (from, to) => {
     try {
-         setPrintLoading(true);
+      setPrintLoading(true);
       const res = await axiosInstance.get(
         `/moneyreceipt/search?page=1&limit=10&dateFrom=${from}&dateTo=${to}&allReceipt=true&refund=false&search=`,
       );
-     
 
       //   console.log("data: ", res.data.data);
       const data = res.data.data;
@@ -69,7 +84,8 @@ const DatewiseMoneyReceipt = () => {
             receiptNo: item.MoneyreeciptNo,
             amount: item.Amount,
             tds: item.TDS,
-            mode: item.ReceiptType,
+            // mode: item.ReceiptType,
+            mode: getMode(item.PaymentType),
             //   user: item.UserId,
             user:
               allUsers?.find((user) => user.UserId === item.UserId)?.UserName ||
@@ -80,6 +96,9 @@ const DatewiseMoneyReceipt = () => {
             bedNo:
               allBeds?.find((bed) => bed.BedId == item.admission.BedId)?.Bed ||
               "",
+                  // ✅ JUST EI 2 LINE ADD KOR
+    bank: item.Bank?.trim() || "",
+    cheque: item.Cheque?.trim() || "",
           }))
           .reverse(); // Reverse to get chronological order
         console.log("transactionData: ", transactionData);
@@ -93,17 +112,76 @@ const DatewiseMoneyReceipt = () => {
         setTransactions(transactionData);
 
         // date-wise group data
+        // const grouped = Object.values(
+        //   transactionData.reduce(
+        //     (a, o) => (
+        //       (a[o.date] ??= { date: o.date, records: [], totalAmount: 0 }),
+        //       a[o.date].records.push(o),
+        //       (a[o.date].totalAmount += o.amount),
+        //       a
+        //     ),
+        //     {},
+        //   ),
+        // );
+
+        // sort data based on payment mode
+        //         const grouped = Object.values(
+        //   transactionData.reduce((acc, item) => {
+        //     const key = `${item.date}_${item.mode}`;
+
+        //     if (!acc[key]) {
+        //       acc[key] = {
+        //         date: item.date,
+        //         mode: item.mode,
+        //         records: [],
+        //         totalAmount: 0,
+        //       };
+        //     }
+
+        //     acc[key].records.push(item);
+        //     acc[key].totalAmount += item.amount;
+
+        //     return acc;
+        //   }, {})
+        // );
+
         const grouped = Object.values(
-          transactionData.reduce(
-            (a, o) => (
-              (a[o.date] ??= { date: o.date, records: [], totalAmount: 0 }),
-              a[o.date].records.push(o),
-              (a[o.date].totalAmount += o.amount),
-              a
-            ),
-            {},
-          ),
+          transactionData.reduce((acc, item) => {
+            const key = `${item.date}_${item.mode}`;
+
+            if (!acc[key]) {
+              acc[key] = {
+                date: item.date,
+                mode: item.mode,
+                records: [],
+                totalAmount: 0,
+              };
+            }
+
+            acc[key].records.push(item);
+
+            // ✅ EI LINE TA ADD KORBE (IMPORTANT)
+            acc[key].records.sort((a, b) =>
+              a.receiptNo.localeCompare(b.receiptNo),
+            );
+
+            acc[key].totalAmount += item.amount;
+
+            return acc;
+          }, {}),
         );
+
+        const modeOrder = ["Cash", "Bank", "Card", "UPI"];
+
+        grouped.sort((a, b) => {
+          if (a.date !== b.date) {
+            return (
+              new Date(a.date.split("/").reverse().join("-")) -
+              new Date(b.date.split("/").reverse().join("-"))
+            );
+          }
+          return modeOrder.indexOf(a.mode) - modeOrder.indexOf(b.mode);
+        });
 
         setPrintData(grouped);
 
@@ -139,6 +217,18 @@ const DatewiseMoneyReceipt = () => {
       0,
     );
 
+    let cashTotal = 0;
+    let bankTotal = 0;
+    let cardTotal = 0;
+    let upiTotal = 0;
+
+    data.forEach((group) => {
+      if (group.mode === "Cash") cashTotal += group.totalAmount;
+      else if (group.mode === "Bank") bankTotal += group.totalAmount;
+      else if (group.mode === "Card") cardTotal += group.totalAmount;
+      else if (group.mode === "UPI") upiTotal += group.totalAmount;
+    });
+
     // 2. Open Print Window
     const printWindow = window.open("", "", "height=800,width=1000");
 
@@ -155,6 +245,8 @@ const DatewiseMoneyReceipt = () => {
         <th>Patient Name</th>
         <th>ADM No.</th>
         <th>Bed No.</th>
+        <th>Bank</th>
+        <th>Transaction No</th>
       </tr>
     </thead>
   `;
@@ -163,11 +255,19 @@ const DatewiseMoneyReceipt = () => {
     const tableBodyContent = data
       .map((group) => {
         // A. The Date/Mode Header for this group
+        //     const groupHeaderRow = `
+        //   <tr class="group-row">
+        //     <td colspan="9">
+        //       <div class="group-date">Date : ${group.date}</div>
+        //       <div class="group-mode">Cash</div>
+        //     </td>
+        //   </tr>
+        // `;
         const groupHeaderRow = `
       <tr class="group-row">
-        <td colspan="9">
+        <td colspan="11">
           <div class="group-date">Date : ${group.date}</div>
-          <div class="group-mode">Cash</div>
+         <div class="group-mode">${group.mode}</div>
         </td>
       </tr>
     `;
@@ -186,6 +286,8 @@ const DatewiseMoneyReceipt = () => {
         <td class="font-bold">${txn.patientName}</td>
         <td>${txn.admNo}</td>
         <td class="text-blue italic">${txn.bedNo}</td>
+         <td>${txn.bank}</td>      <!-- ADD -->
+         <td>${txn.cheque}</td>    <!-- ADD -->
       </tr>
     `,
           )
@@ -195,7 +297,7 @@ const DatewiseMoneyReceipt = () => {
         // We put these inside a row spanning 9 columns to keep them inside the table flow
         const groupTotalRows = `
       <tr>
-        <td colspan="9" style="padding: 5px 0 0 0;">
+        <td colspan="11" style="padding: 5px 0 0 0;">
           <div class="total-box cash-total-row">
             <div class="total-label">Cash Total :</div>
             <div class="total-value">${group.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
@@ -205,7 +307,7 @@ const DatewiseMoneyReceipt = () => {
         </td>
       </tr>
       <tr>
-        <td colspan="9" style="padding: 2px 0 10px 0;">
+        <td colspan="11" style="padding: 2px 0 10px 0;">
           <div class="total-box day-total-row">
             <div class="total-label">DAY Total :</div>
             <div class="total-value">${group.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
@@ -256,6 +358,10 @@ const DatewiseMoneyReceipt = () => {
           /* Table Styling */
           table { width: 100%; border-collapse: collapse; margin-bottom: 0px; }
           
+          td, th {
+  white-space: nowrap;
+}
+
           /* Table Header */
           thead th {
             background-color: #f2f2f2;
@@ -298,15 +404,68 @@ const DatewiseMoneyReceipt = () => {
           .footer-item { flex: 1; display: flex; justify-content: center; }
           .footer-divider { border-right: 1px solid green; }
           .print-meta { margin-top: 10px; font-size: 10px; font-weight: bold; }
+
+
+.org-main {
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.org-sub {
+  font-size: 13px;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+.address {
+  font-size: 12px;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.contact {
+  font-size: 12px;
+  margin-top: 3px;
+  font-weight: bold;
+}
+
+.report-title {
+  color: red;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+
         </style>
       </head>
       <body>
 
         <div class="header">
-          <div class="org-name">LORDS DIAGNOSTIC</div>
-          <div class="address">13/3, CIRCULAR 2ND BYE LANE,</div>
-          <div class="report-title">DATEWISE INDOOR MONEY RECEIPT DETAILS</div>
-        </div>
+  <div class="org-main">
+    LORDS HEALTH CARE (NURSING HOME)
+  </div>
+
+  <div class="org-sub">
+    (A Unit of MJJ Enterprises Pvt. Ltd.)
+  </div>
+
+  <div class="address">
+    13/3, Circular 2nd Bye Lane, Kona Expressway,<br/>
+    (Near Umanabala Balika Vidyalaya) Shibpur, Howrah-711102, W.B.
+  </div>
+
+  <div class="contact">
+    E-mail: patientdesk@lordshealthcare.org <br/>
+    Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
+  </div>
+
+  <div class="report-title">
+    DATEWISE INDOOR MONEY RECEIPT DETAILS
+  </div>
+</div>
 
         <div class="filters-row">
           <span>Admision No.</span>
@@ -332,16 +491,19 @@ const DatewiseMoneyReceipt = () => {
         </div>
 
         <div class="footer-summary">
-          <div class="footer-item footer-divider">
-            Cash Total &nbsp;&nbsp; : &nbsp;&nbsp; ${calculatedGrandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-          </div>
-          <div class="footer-item footer-divider">
-            Bank Total &nbsp;&nbsp; :
-          </div>
-          <div class="footer-item">
-            Card Total &nbsp;&nbsp; :
-          </div>
-        </div>
+  <div class="footer-item footer-divider">
+    Cash Total &nbsp;&nbsp; : &nbsp;&nbsp; ${cashTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+  </div>
+  <div class="footer-item footer-divider">
+    Bank Total &nbsp;&nbsp; : &nbsp;&nbsp; ${bankTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+  </div>
+  <div class="footer-item footer-divider">
+    Card Total &nbsp;&nbsp; : &nbsp;&nbsp; ${cardTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+  </div>
+  <div class="footer-item">
+    UPI Total &nbsp;&nbsp; : &nbsp;&nbsp; ${upiTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+  </div>
+</div>
 
         <div class="print-meta">
           Print Date &Time : ${printDate}
@@ -490,3 +652,5 @@ const DatewiseMoneyReceipt = () => {
 };
 
 export default DatewiseMoneyReceipt;
+
+

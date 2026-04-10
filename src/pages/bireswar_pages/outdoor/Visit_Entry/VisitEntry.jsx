@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../../../axiosInstance";
@@ -175,7 +176,7 @@ const VisitEntry = () => {
       console.log("rates in use: ", ratesData);
       if (ratesData.length !== 0) {
         const data = ratesData.find(
-          (item) => item.VisitTypeId == formData.VisitTypeId
+          (item) => item.VisitTypeId == formData.VisitTypeId,
         );
         console.log("fethed fin rate: ", data);
         setFormData((prev) => ({
@@ -266,7 +267,7 @@ const VisitEntry = () => {
           "/admission/search?name=${name}&phone=${phone}",
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         data = response.data.data;
       }
@@ -284,7 +285,7 @@ const VisitEntry = () => {
                 `/doctormaster/${billData.DoctorId}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                }
+                },
               );
               if (doctorResponse.data && doctorResponse.data.success) {
                 doctorName = doctorResponse.data.data.Doctor;
@@ -300,7 +301,7 @@ const VisitEntry = () => {
                 `/speciality/${billData.department}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                }
+                },
               );
               if (deptResponse.data && deptResponse.data.success) {
                 setDepartmentName(deptResponse.data.data.Speciality);
@@ -310,7 +311,7 @@ const VisitEntry = () => {
                 `/doctormaster/department/${billData.department}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
-                }
+                },
               );
               if (doctorsResponse.data && doctorsResponse.data.success) {
                 setDoctors(doctorsResponse.data.data || []);
@@ -328,7 +329,7 @@ const VisitEntry = () => {
         if (data.CashLessId) {
           try {
             const cashlessRes = await axiosInstance.get(
-              `/cashless/${data.CashLessId}`
+              `/cashless/${data.CashLessId}`,
             );
             if (cashlessRes.data?.success) {
               cashlessName = cashlessRes.data.data.Cashless;
@@ -342,7 +343,7 @@ const VisitEntry = () => {
           const companyId = data.CompanyId || data.m_CompanyId;
           try {
             const companyRes = await axiosInstance.get(
-              `/acgenled/${companyId}`
+              `/acgenled/${companyId}`,
             );
             if (companyRes.data?.success) {
               companyName = companyRes.data.data.Desc;
@@ -369,7 +370,9 @@ const VisitEntry = () => {
           Add2: data.PatientAdd2 || data.Add2 || "",
           Add3: data.PatientAdd3 || data.Add3 || "",
           fullAddress:
-            [data?.PatientAdd1, data?.PatientAdd2, data?.PatientAdd3].filter(Boolean).join(", ") || "",
+            [data?.PatientAdd1, data?.PatientAdd2, data?.PatientAdd3]
+              .filter(Boolean)
+              .join(", ") || "",
           PPr: data.PPr || "",
           GurdianName: data.GurdianName || "",
           Relation: data.Relation || "",
@@ -397,7 +400,9 @@ const VisitEntry = () => {
           OutBillDate: data.PVisitDate
             ? data.PVisitDate.split("T")[0]
             : new Date().toISOString().split("T")[0],
-          RegistrationDate: data.RegistrationDate ? data.RegistrationDate.split("T")[0] : "",
+          RegistrationDate: data.RegistrationDate
+            ? data.RegistrationDate.split("T")[0]
+            : "",
           RegistrationTime: data.vTime || getInitialTime(),
           RegCh: data.RegCh?.toString() || "0.00",
           Rate: data.Rate?.toString() || "0.00",
@@ -519,7 +524,7 @@ const VisitEntry = () => {
             const lastMonth = new Date(
               regDate.getFullYear(),
               regDate.getMonth(),
-              0
+              0,
             );
             days += lastMonth.getDate();
           }
@@ -597,7 +602,7 @@ const VisitEntry = () => {
           `/doctormaster/department/${value}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
         if (response.data && response.data.success) {
           setDoctors(response.data.data || []);
@@ -611,7 +616,7 @@ const VisitEntry = () => {
     // Update doctor name when doctor is selected
     if (name === "doctorId" && value) {
       const selectedDoctor = doctors.find(
-        (doc) => doc.DoctorId.toString() === value
+        (doc) => doc.DoctorId.toString() === value,
       );
       if (selectedDoctor) {
         setFormData((prev) => ({ ...prev, docName: selectedDoctor.Doctor }));
@@ -634,7 +639,7 @@ const VisitEntry = () => {
       // Calculate total payment and due amount
       const totalPaidAmount = paymentMethods.reduce(
         (sum, p) => sum + parseFloat(p.amount || 0),
-        0
+        0,
       );
       const totalBillAmount = parseFloat(formData.billAmt || 0);
       const dueAmount = totalBillAmount - totalPaidAmount;
@@ -768,13 +773,13 @@ const VisitEntry = () => {
 
       if (mode === "edit" && (id || formData.PVisitId)) {
         const visitId = id || formData.PVisitId;
-        console.log("Sending Data to Backend:", visitData);
-
+        // console.log("Sending Data to Backend edit:", visitData);
         response = await axiosInstance.put(
           `/patient-visits/${visitId}`,
-          visitData
+          visitData,
         );
       } else {
+        // console.log("hi this visit data payload add: ",visitData)
         response = await axiosInstance.post("/patient-visits", visitData);
       }
 
@@ -840,10 +845,10 @@ const VisitEntry = () => {
       VisitTypeId: Number(data.VisitTypeId) || "",
 
       // VISIT DETAILS
-      RegistrationDate: data.RegistrationDate
-        ? data.RegistrationDate.split("T")[0]
-        : "",
-      RegistrationTime: data.RegistrationTime || "",
+      // RegistrationDate: data.RegistrationDate
+      //   ? data.RegistrationDate.split("T")[0]
+      //   : "",
+      // RegistrationTime: data.RegistrationTime || "",
       VNo: data.VNo || "",
       OutBillDate: data.PVisitDate ? data.PVisitDate.split("T")[0] : "",
       Rate: data.Rate?.toString() || "",
@@ -859,7 +864,7 @@ const VisitEntry = () => {
     // ⭐ Load doctors for that department
     if (data.SpecialityId) {
       const res = await axiosInstance.get(
-        `/doctormaster/department/${data.SpecialityId}`
+        `/doctormaster/department/${data.SpecialityId}`,
       );
       setDoctors(res.data.data || []);
     }
@@ -904,7 +909,7 @@ const VisitEntry = () => {
         setFormData((prev) => ({ ...prev, DepartmentId: selectedDept }));
 
         const resDept = await axiosInstance.get(
-          `/doctormaster/department/${selectedDept}`
+          `/doctormaster/department/${selectedDept}`,
           // {
           //   headers: { Authorization: `Bearer ${token}` },
           // }
@@ -917,6 +922,17 @@ const VisitEntry = () => {
       alert("Error searching patient");
     }
   };
+
+  useEffect(() => {
+    const full = [formData.Add1, formData.Add2, formData.Add3]
+      .filter(Boolean)
+      .join(", ");
+
+    setFormData((prev) => ({
+      ...prev,
+      fullAddress: full,
+    }));
+  }, [formData.Add1, formData.Add2, formData.Add3]);
 
   // bill calculation----------------------------------------
   useEffect(() => {
@@ -1131,7 +1147,7 @@ const VisitEntry = () => {
             color: #000;
             font-size: 12px;
           }
-          
+         
           /* Header Styles */
           .header {
             text-align: center;
@@ -1140,7 +1156,7 @@ const VisitEntry = () => {
           .hospital-name {
             font-size: 15px;
             font-weight: 800;
-            
+           
             margin: 0;
             letter-spacing: 1px;
           }
@@ -1170,13 +1186,13 @@ const VisitEntry = () => {
             display: inline-block;
             min-width: 90px;
           }
-          
+         
           /* Vitals Section */
           .vitals-container {
            
             padding: 5px 0;
             margin-bottom: 20px;
-            
+           
             gap: 15px;
             font-size: 11px;
            
@@ -1195,7 +1211,7 @@ const VisitEntry = () => {
             text-decoration: underline;
             margin: 10px 0 20px 0;
           }
-          
+         
           .rx-area {
             min-height: 400px;
             width: 100%;
@@ -1323,7 +1339,7 @@ const VisitEntry = () => {
            <div class="vital-item">Drug Allergies: <span>Yes / No</span></div>
         </div>
 
-      
+     
 
         <div class="rx-area">
            </div>
@@ -1355,7 +1371,7 @@ const VisitEntry = () => {
 
   const totalPaid = paymentMethods.reduce(
     (sum, p) => sum + parseFloat(p.amount || 0),
-    0
+    0,
   );
   const billAmount = parseFloat(formData.billAmt || 0);
 
@@ -1626,20 +1642,37 @@ const VisitEntry = () => {
                   </div>
                   {/* Address & Contact */}
                   <div className="col-md-6">
-                    <label className="form-label">Complete Address</label>
-                    <textarea
-                      name="fullAddress"
-                      className="form-control"
-                      value={
-                        !formData?.fullAddress
-                          ?.split(",")
-                          .map((item) => item != "")[0]
-                          ? ""
-                          : formData?.fullAddress
-                      }
-                      onChange={handleChange}
-                      placeholder="Enter complete address"
-                    />
+                    <div className="row">
+                      <div className="col-md-4">
+                        <label className="form-label">Address Line 1</label>
+                        <input
+                          name="Add1"
+                          className="form-control"
+                          value={formData.Add1 || ""}
+                          onChange={handleChange}
+                        />
+                      </div>
+
+                      <div className="col-md-4">
+                        <label className="form-label">Address Line 2</label>
+                        <input
+                          name="Add2"
+                          className="form-control"
+                          value={formData.Add2 || ""}
+                          onChange={handleChange}
+                        />
+                      </div>
+
+                      <div className="col-md-4">
+                        <label className="form-label">Address Line 3</label>
+                        <input
+                          name="Add3"
+                          className="form-control"
+                          value={formData.Add3 || ""}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="col-md-3">
@@ -1822,7 +1855,7 @@ const VisitEntry = () => {
                       value={formData.CashLessId || ""}
                       onChange={(e) => {
                         const selectedCashless = cashlessData.find(
-                          (item) => item.CashlessId == e.target.value
+                          (item) => item.CashlessId == e.target.value,
                         );
                         setFormData((prev) => ({
                           ...prev,
@@ -1862,7 +1895,7 @@ const VisitEntry = () => {
                       value={formData.CompanyId || ""}
                       onChange={(e) => {
                         const selectedCompany = companyData.find(
-                          (item) => item.DescId == e.target.value
+                          (item) => item.DescId == e.target.value,
                         );
                         setFormData((prev) => ({
                           ...prev,
@@ -1967,7 +2000,7 @@ const VisitEntry = () => {
                         value={
                           departmentName ||
                           departments.find(
-                            (d) => d.SpecialityId == formData.DepartmentId
+                            (d) => d.SpecialityId == formData.DepartmentId,
                           )?.Speciality ||
                           ""
                         }
@@ -2212,7 +2245,7 @@ const VisitEntry = () => {
                       className="form-control"
                       value={paymentMethods.reduce(
                         (sum, p) => sum + parseFloat(p.amount || 0),
-                        0
+                        0,
                       )}
                       readOnly
                     />
@@ -2284,7 +2317,7 @@ const VisitEntry = () => {
                               updatePaymentMethod(
                                 index,
                                 "amount",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -2303,7 +2336,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "upiApp",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -2318,7 +2351,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "utrNumber",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -2337,7 +2370,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "bankName",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -2353,7 +2386,7 @@ const VisitEntry = () => {
                                   updatePaymentMethod(
                                     index,
                                     "chequeNumber",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                               />
@@ -2416,7 +2449,7 @@ const VisitEntry = () => {
                             department:
                               departmentName ||
                               departments.find(
-                                (d) => d.SpecialityId == formData.DepartmentId
+                                (d) => d.SpecialityId == formData.DepartmentId,
                               )?.Speciality ||
                               "",
                             qualification: docDetail.Qualification,
@@ -2436,7 +2469,7 @@ const VisitEntry = () => {
                     <button
                       type="button"
                       className="btn btn-primary"
-                      onClick={handleSubmit} 
+                      onClick={handleSubmit}
                       disabled={isSubmitting}
                     >
                       {isSubmitting

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 
 import axiosInstance from "../../axiosInstance";
@@ -11,6 +10,7 @@ import DashboardStats from "./DashboardStats";
 import DateFilter from "./DateFilter";
 import PatientPieChart from "./PatientPieChart";
 import CommonTable from "./CommonTable";
+import GradientLoader from "./GradientLoader";
 // import DodgeGameLoader from "./LoadingGame";
 
 const IpdDashboard = () => {
@@ -171,7 +171,8 @@ const IpdDashboard = () => {
       <div className="dashboard-bg">
         {loading ? (
           // <DodgeGameLoader />
-          <h1>Loading...</h1>
+          // <h1>Loading...</h1>
+          <GradientLoader/>
         ) : (
           <>
             {/* 🔍 FILTER + STATS */}
@@ -295,4 +296,3 @@ const IpdDashboard = () => {
 };
 
 export default IpdDashboard;
-

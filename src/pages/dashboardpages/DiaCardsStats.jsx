@@ -1,7 +1,7 @@
 import React from "react";
 import CountUp from "react-countup";
 
-const DashboardStats = ({ response = {} }) => {
+const DiaCardsStats = ({ response  }) => {
   
   return (
     <>
@@ -37,16 +37,14 @@ const DashboardStats = ({ response = {} }) => {
 
         .stat-title {
           font-size: 13px;
-          font-weight: 600;
           opacity: 0.9;
           letter-spacing: 0.5px;
         }
 
         .stat-value {
-          font-size: 38px;
+          font-size: 28px;
           font-weight: 700;
           margin-top: 6px;
-          margin-left:10px;
         }
 
         /* 🔥 floating circles */
@@ -102,7 +100,7 @@ const DashboardStats = ({ response = {} }) => {
 
       <div className="row g-4 mt-2">
         {/* TOTAL VISIT */}
-        <div className="col-md-3">
+        <div className="col-md-4">
           <div className="stat-anim">
             <div
               className="stat-card"
@@ -113,10 +111,10 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-circle"></div>
               <div className="stat-circle-2"></div>
 
-              <div className="stat-title">TOTAL ADMISSIONS</div>
+              <div className="stat-title">Test Count</div>
 
               <div className="stat-value">
-                <CountUp end={response.totalPatients || 0} duration={1.2} />
+                <CountUp end={response?.numberTests?.totalTests || 0} duration={1.2} />
               </div>
 
               {/* <div className="stat-footer">**** **** **** 1234</div> */}
@@ -125,7 +123,7 @@ const DashboardStats = ({ response = {} }) => {
         </div>
 
         {/* OPD */}
-        <div className="col-md-3">
+        <div className="col-md-4">
           <div className="stat-anim">
             <div
               className="stat-card"
@@ -136,10 +134,10 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-circle"></div>
               <div className="stat-circle-2"></div>
 
-              <div className="stat-title">FROM OPD</div>
+              <div className="stat-title">Cancelled Tests</div>
 
               <div className="stat-value">
-                <CountUp end={response.totalOpd || 0} duration={1.2} />
+                <CountUp end={response?.numberTests?.cancelledTests || 0} duration={1.2} />
               </div>
 
               {/* <div className="stat-footer">**** **** **** 5678</div> */}
@@ -148,7 +146,7 @@ const DashboardStats = ({ response = {} }) => {
         </div>
 
         {/* INSURED */}
-        <div className="col-md-3">
+        <div className="col-md-4">
           <div className="stat-anim">
             <div
               className="stat-card"
@@ -159,10 +157,11 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-circle"></div>
               <div className="stat-circle-2"></div>
 
-              <div className="stat-title">INSURED PATIENTS</div>
+              <div className="stat-title">Total Revenue</div>
 
               <div className="stat-value">
-                <CountUp end={response.insured || 0} duration={1.2} />
+                {response?.totalGrossAmt && <>₹ <CountUp end={response.totalGrossAmt } duration={1.2} /></>}
+                
               </div>
 
               {/* <div className="stat-footer">**** **** **** 8899</div> */}
@@ -171,7 +170,7 @@ const DashboardStats = ({ response = {} }) => {
         </div>
 
         {/* REVENUE */}
-        <div className="col-md-3">
+        {/* <div className="col-md-3">
           <div className="stat-anim">
             <div
               className="stat-card"
@@ -182,22 +181,19 @@ const DashboardStats = ({ response = {} }) => {
               <div className="stat-circle"></div>
               <div className="stat-circle-2"></div>
 
-              <div className="stat-title">Male/Female</div>
+              <div className="stat-title">TOTAL REVENUE</div>
 
               <div className="stat-value">
-                <CountUp end={response?.totalFemale || 0}  duration={1.2} /> -
-                                <CountUp end={response?.totalMale || 0}  duration={1.2} />
-
-
+                ₹<CountUp end={response.totalPatients || 0} duration={1.2} />
               </div>
 
-              {/* <div className="stat-footer">**** **** **** 4321</div> */}
+              <div className="stat-footer">**** **** **** 4321</div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </>
   );
 };
 
-export default DashboardStats;
+export default DiaCardsStats;
