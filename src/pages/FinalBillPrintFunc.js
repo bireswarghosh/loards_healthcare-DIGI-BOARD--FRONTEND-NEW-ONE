@@ -1886,8 +1886,8 @@ export function handleprint6(otObjDetails, otChargeDetails) {
       </div>
 
       <div class="patient-box">
-        <div>Admission No &nbsp;: ${otObjDetails.AdmitionId}</div>
-        <div>Patient Name &nbsp;: ${otObjDetails.PatientName}</div>
+        <div>Admission No &nbsp;: ${otObjDetails.AdmitionId || ""}</div>
+        <div>Patient Name &nbsp;: ${otObjDetails.PatientName || ""}</div>
       </div>
 
       <table class="border-top border-bottom">
@@ -1902,15 +1902,15 @@ export function handleprint6(otObjDetails, otChargeDetails) {
             <td colspan="3" style="padding-top: 10px;">
               <div class="flex-row">
                 <div class="flex-col" style="width: 33.33%;">
-                  <div><strong>O.T. Bill No.</strong> &nbsp;: <span style="font-size:12px;">${otObjDetails.OtBillNo}</span></div>
-                  <div><strong>O.T. Type</strong> &nbsp;&nbsp;&nbsp;&nbsp;: ${otObjDetails.OTType}</div>
+                  <div><strong>O.T. Bill No.</strong> &nbsp;: <span style="font-size:12px;">${otObjDetails.OtBillNo || ""}</span></div>
+                  <div><strong>O.T. Type</strong> &nbsp;&nbsp;&nbsp;&nbsp;: ${otObjDetails.OTType || ""}</div>
                 </div>
                 <div class="flex-col" style="width: 33.33%;">
-                  <div><strong>O.T. Name</strong> &nbsp;&nbsp;&nbsp;&nbsp;: <span style="font-size:12px;">${otObjDetails.OTname}</span></div>
+                  <div><strong>O.T. Name</strong> &nbsp;&nbsp;&nbsp;&nbsp;: <span style="font-size:12px;">${otObjDetails.OTname || ""}</span></div>
                 </div>
                 <div class="flex-col" style="width: 33.33%;">
-                  <div><strong>O.T. Slot</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span style="font-size:12px;">${otObjDetails.OTslotName}</span></div>
-                  <div><strong>O.T Date</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${formatDate(otObjDetails.BillDate)}</div>
+                  <div><strong>O.T. Slot</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span style="font-size:12px;">${otObjDetails.OTslotName || ""}</span></div>
+                  <div><strong>O.T Date</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: ${formatDate(otObjDetails.BillDate) || ""}</div>
                 </div>
               </div>
             </td>
