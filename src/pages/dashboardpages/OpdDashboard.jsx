@@ -11,7 +11,7 @@ import DateFilter from "./DateFilter";
 import PatientPieChart from "./PatientPieChart";
 import CommonTable from "./CommonTable";
 import GlobeLoader from "./GlobeLoader";
-import OpdCardsStats from "./OPdCardsStats";
+import OpdCardsStats from "./OpdCardsStats";
 // import DodgeGameLoader from "./LoadingGame";
 
 const OpdDashboard = () => {
