@@ -837,9 +837,9 @@ export const handlePrint = async (data, Remarks) => {
   if (signatureBase64) {
     const pageCount = doc.internal.getNumberOfPages();
     const sigX = getSignatureXPosition(pathologist.PathologistId);
-    const sigWidth = 40;
-    const sigHeight = 28;
-    const sigY = 297 - 60 - sigHeight + 5; // 5mm lower
+    const sigWidth = 30;
+    const sigHeight = 20;
+    const sigY = 297 - 60 - sigHeight + 10; // 10mm lower
     const imgType = signatureBase64.includes('image/png') ? 'PNG' : 'JPEG';
 
     for (let i = 1; i <= pageCount; i++) {
