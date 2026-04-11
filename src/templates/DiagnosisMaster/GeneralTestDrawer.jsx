@@ -1956,11 +1956,11 @@ const handlePrint = () => {
     });
 // ===== SIGNATURE ADD ON EVERY PAGE =====
 if (signatureBase64) {
-  const sigWidth = 50;
-  const sigHeight = 35;
-  const sigY = 297 - 60 - sigHeight; // ~6cm from bottom
+  const sigWidth = 40;
+  const sigHeight = 28;
+  const sigY = 297 - 60 - sigHeight + 5; // 5mm lower
   const pId = Number(pathologist.PathologistId);
-  const sigX = pId === 3 ? 10 : pId === 4 ? 80 : 140;
+  const sigX = pId === 3 ? 10 : pId === 4 ? 90 : 150;
   const imgType = signatureBase64.includes('image/png') ? 'PNG' : 'JPEG';
 
   const pageCount = doc.internal.getNumberOfPages();

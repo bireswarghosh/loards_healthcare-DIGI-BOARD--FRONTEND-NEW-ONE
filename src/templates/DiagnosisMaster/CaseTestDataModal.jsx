@@ -639,10 +639,10 @@ hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
         ? `
         <div style="position:absolute;bottom:10mm;${
           Number(pathologist.PathologistId) === 3 ? 'left:10mm' :
-          Number(pathologist.PathologistId) === 4 ? 'left:80mm' :
-          'left:140mm'
+          Number(pathologist.PathologistId) === 4 ? 'left:90mm' :
+          'left:150mm'
         };text-align:center;">
-          <img src="${signatureBase64}" style="height:120px;"/>
+          <img src="${signatureBase64}" style="height:95px;"/>
         </div>
       `
         : ""

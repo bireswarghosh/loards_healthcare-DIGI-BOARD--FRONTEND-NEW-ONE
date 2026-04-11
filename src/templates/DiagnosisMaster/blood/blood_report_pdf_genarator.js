@@ -439,9 +439,9 @@ const getSignatureBase64 = (signatureObj) => {
 const getSignatureXPosition = (pathologistId) => {
   switch (Number(pathologistId)) {
     case 3: return 10;   // ABHISHEK KUNDU: 1-4cm
-    case 4: return 80;   // RINA MANDAL: 8-11cm
-    case 2: return 140;  // S. ROY CHOUDHURY: 14-18cm
-    default: return 140;
+    case 4: return 90;   // RINA MANDAL: shifted right
+    case 2: return 150;  // S. ROY CHOUDHURY: shifted right
+    default: return 150;
   }
 };
 
@@ -837,9 +837,9 @@ export const handlePrint = async (data, Remarks) => {
   if (signatureBase64) {
     const pageCount = doc.internal.getNumberOfPages();
     const sigX = getSignatureXPosition(pathologist.PathologistId);
-    const sigWidth = 50;
-    const sigHeight = 35;
-    const sigY = 297 - 60 - sigHeight; // ~6cm from bottom
+    const sigWidth = 40;
+    const sigHeight = 28;
+    const sigY = 297 - 60 - sigHeight + 5; // 5mm lower
     const imgType = signatureBase64.includes('image/png') ? 'PNG' : 'JPEG';
 
     for (let i = 1; i <= pageCount; i++) {
