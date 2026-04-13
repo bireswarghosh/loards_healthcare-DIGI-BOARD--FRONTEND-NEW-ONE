@@ -381,6 +381,7 @@ import DateWiseBedChargesPdf from "./templates/IPD_REPORT/DateWiseBedChargesPdf.
 import DateWiseFinalBillOtherChargesReg from "./templates/IPD_REPORT/DateWiseFinalBillOtherChargesReg.jsx";
 
 
+import BedStatus from "./pages/BedStatus.jsx";
 import NurseStation from "./pages/NurseStation.jsx"
 import PathologyDashboard from "./pages/dashboardpages/PathologyDashboard.jsx";
 import PathologistLogin from "..//src/components/indoor/loginPathologist/PathologistLogin.jsx";
@@ -638,6 +639,7 @@ function App() {
 
 <Route path="/dateWiseFinalBillOtherChargesReg" element={ <> <DateWiseFinalBillOtherChargesReg/> </> } />
 
+<Route path="/bed-status" element={<ProtectedRoute><BedStatus /></ProtectedRoute>} />
 <Route path="/nurseStation" element={ <> <NurseStation/> </> } /> 
 {/* master */}
 

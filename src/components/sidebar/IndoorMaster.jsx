@@ -73,6 +73,16 @@ const IndoorMaster = () => {
           </li>
         )}
 
+
+             {(isSuperAdmin || permissions?.indoorMaster_bedMaster !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/bed-status" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-bed"></i></span>
+              <span className="sidebar-txt">Bed Status</span>
+            </NavLink>
+          </li>
+        )}
+
         {(isSuperAdmin || permissions?.indoorMaster_religionMaster !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/ReligionMaster" className="sidebar-link">

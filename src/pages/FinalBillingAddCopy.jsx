@@ -3217,7 +3217,13 @@ const fetchOtSlots = async () => {
           )}
           <button
             className="btn btn-sm btn-primary"
-            onClick={() => setShowPrintModal((prev) => !prev)}
+            onClick={() => {
+              if (fbMode === "estimate") {
+                handlePrint5(billData1);
+              } else {
+                setShowPrintModal((prev) => !prev);
+              }
+            }}
             disabled={btnLoading}
           >
             Print

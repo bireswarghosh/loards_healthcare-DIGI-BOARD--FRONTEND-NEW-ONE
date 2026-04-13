@@ -1630,9 +1630,7 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
         <span class="total-label">Due:</span>
         <span>${data?.due || 0}</span>
       </div>
-       <div class="total-row" style="justify-content: flex-start; margin-top: 10px; font-weight: normal;">
-        Non Payble Other Chrg: ${data.nonPayable}
-      </div>
+      
     </div>
     <!--
      <div class="signature-section">
