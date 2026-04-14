@@ -910,8 +910,8 @@ const FinalBillingAdd = () => {
           (sum, item) => {
             const total = Number(item.GrossAmt || 0);
             const payment = total - Number(item.Balance || 0);
-            // payment < 0 means overpaid → due negative
-            const due = payment < 0 ? payment : total - payment;
+            // payment < 0 means refund/overpaid → already settled, due = 0
+            const due = payment < 0 ? 0 : total - payment;
             return sum + due;
           },
           0,
@@ -1323,7 +1323,7 @@ const FinalBillingAdd = () => {
                 diagData.map((row, idx) => {
                   const total = Number(row.GrossAmt || 0);
                   const payment = total - Number(row.Balance || 0);
-                  const due = total - payment;
+                  const due = payment < 0 ? 0 : total - payment;
                   return (
                     <tr key={idx} style={styles.tableRowSelected}>
                       <td>
