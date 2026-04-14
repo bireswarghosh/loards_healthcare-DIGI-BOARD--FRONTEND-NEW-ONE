@@ -907,7 +907,13 @@ const FinalBillingAdd = () => {
         // console.log("total discount:", totalDiscount);
 
         totalDiag = arr.reduce(
-          (sum, item) => sum + Number(item.Balance || 0),
+          (sum, item) => {
+            const total = Number(item.GrossAmt || 0);
+            const payment = total - Number(item.Balance || 0);
+            // payment < 0 means overpaid → due negative
+            const due = payment < 0 ? payment : total - payment;
+            return sum + due;
+          },
           0,
         );
         // const totalDiag = arr.reduce(
@@ -1315,10 +1321,9 @@ const FinalBillingAdd = () => {
             <tbody>
               {diagData ? (
                 diagData.map((row, idx) => {
-                  const total =
-                    Number(row.GrossAmt || 0) - Number(row.CTestAmt || 0);
+                  const total = Number(row.GrossAmt || 0);
                   const payment = total - Number(row.Balance || 0);
-                  const due = Number(row.Balance || 0);
+                  const due = total - payment;
                   return (
                     <tr key={idx} style={styles.tableRowSelected}>
                       <td>
