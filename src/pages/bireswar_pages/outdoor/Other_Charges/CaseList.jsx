@@ -18,6 +18,7 @@ const CaseList = () => {
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [driveFiles, setDriveFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
+  const [agentMap, setAgentMap] = useState({});
 
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10))
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
@@ -34,6 +35,18 @@ const CaseList = () => {
     console.log("useEffect Start Date:", startDate);
     console.log("useEffect End Date:", endDate);
   }, [startDate, endDate]);
+
+  useEffect(() => {
+    axiosInstance.get("/agents?page=1&limit=1000").then((res) => {
+      if (res.data?.data) {
+        const map = {};
+        res.data.data.forEach((a) => {
+          map[a.AgentId] = a.Agent;
+        });
+        setAgentMap(map);
+      }
+    }).catch(console.error);
+  }, []);
 
   const fetchVisits = useCallback(
     async (
@@ -161,7 +174,7 @@ const CaseList = () => {
             <th>Slip</th>
             <th>Case Date</th>
             <th>Patient Name</th>
-
+            <th>Agent Name</th>
             <th>Total</th>
             <th>Adv</th>
 
@@ -245,7 +258,7 @@ const CaseList = () => {
               <td>{data.SlipNo}</td>
               <td>{data.CaseDate.slice(0, 10)}</td>
               <td className="fw-bold">{data.PatientName}</td>
-
+              <td>{agentMap[data.AgentId] || ""}</td>
               <td>₹{data.Total}</td>
               <td>₹{data.Advance}</td>
 
