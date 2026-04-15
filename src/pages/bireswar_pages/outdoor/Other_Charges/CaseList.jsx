@@ -4,37 +4,47 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import axiosInstance from "../../../../axiosInstance";
 import Footer from "../../../../components/footer/Footer";
 
+const STORAGE_KEY = "caseListSearch";
+const getStored = () => {
+  try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+};
+
 const CaseList = () => {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const stored = useRef(getStored()).current;
+  const today = new Date().toISOString().slice(0, 10);
 
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchPhone, setSearchPhone] = useState("");
-  const [searchPatientName, setSearchPatientName] = useState("");
-  const [searchDate, setSearchDate] = useState("");
-  const [searchRegistrationId, setSearchRegistrationId] = useState("");
+  const [searchPhone, setSearchPhone] = useState(stored.phone || "");
+  const [searchPatientName, setSearchPatientName] = useState(stored.patientName || "");
+  const [searchDate, setSearchDate] = useState(stored.date || "");
+  const [searchRegistrationId, setSearchRegistrationId] = useState(stored.regId || "");
   const [showFileModal, setShowFileModal] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [driveFiles, setDriveFiles] = useState([]);
   const [loadingFiles, setLoadingFiles] = useState(false);
   const [agentMap, setAgentMap] = useState({});
 
-  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10))
-  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState(stored.startDate || today);
+  const [endDate, setEndDate] = useState(stored.endDate || today);
 
-  // Set default limit to 20 as requested
   const [paginationModel, setPaginationModel] = useState({
-    page: 1,
+    page: stored.page || 1,
     pageSize: 20,
     totalPages: 0,
   });
   const [rowCount, setRowCount] = useState(0);
 
+  // Save search state to sessionStorage whenever filters change
   useEffect(() => {
-    console.log("useEffect Start Date:", startDate);
-    console.log("useEffect End Date:", endDate);
-  }, [startDate, endDate]);
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+      startDate, endDate, patientName: searchPatientName,
+      phone: searchPhone, date: searchDate, regId: searchRegistrationId,
+      page: paginationModel.page,
+    }));
+  }, [startDate, endDate, searchPatientName, searchPhone, searchDate, searchRegistrationId, paginationModel.page]);
 
   useEffect(() => {
     axiosInstance.get("/agents?page=1&limit=1000").then((res) => {
@@ -60,9 +70,6 @@ const CaseList = () => {
       setLoading(true);
 
       try {
-        console.log("fetchVisits Start Date:", startDate);
-        console.log("fetchVisits  End Date:", endDate);
-
         const params = new URLSearchParams({
           page: page.toString(),
           limit: limit.toString(),
@@ -104,8 +111,14 @@ const CaseList = () => {
     [startDate, endDate],
   );
 
+  const initialFetchDone = useRef(false);
   useEffect(() => {
-    fetchVisits("", "", "", "", 1, paginationModel.pageSize);
+    if (!initialFetchDone.current) {
+      initialFetchDone.current = true;
+      fetchVisits(searchPatientName, searchPhone, searchDate, searchRegistrationId, stored.page || 1, paginationModel.pageSize);
+    } else {
+      fetchVisits(searchPatientName, searchPhone, searchDate, searchRegistrationId, 1, paginationModel.pageSize);
+    }
   }, [fetchVisits]);
 
   const handleSearch = () => {
@@ -338,12 +351,13 @@ const CaseList = () => {
                   <button
                     className="btn btn-sm btn-secondary"
                     onClick={() => {
-                      setStartDate(new Date().toISOString().slice(0, 10));
-                      setEndDate(new Date().toISOString().slice(0, 10));
+                      setStartDate(today);
+                      setEndDate(today);
                       setSearchPatientName("");
                       setSearchPhone("");
                       setSearchDate("");
                       setSearchRegistrationId("");
+                      sessionStorage.removeItem(STORAGE_KEY);
                       fetchVisits("", "", "", "", 1, 20);
                     }}
                   >
