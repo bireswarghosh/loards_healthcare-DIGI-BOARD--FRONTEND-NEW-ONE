@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axiosInstance from "../../../../axiosInstance";
 import Footer from "../../../../components/footer/Footer";
 import { useNavigate } from "react-router-dom";
@@ -14,11 +14,42 @@ const num = (v) => parseFloat(v || 0).toFixed(2);
 const AgentWiseSaleReport = () => {
   const navigate = useNavigate();
   const printRef = useRef();
+  const dropdownRef = useRef();
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [loading, setLoading] = useState(false);
   const [agentGroups, setAgentGroups] = useState([]);
   const [grandTotals, setGrandTotals] = useState({ bill: 0, disc: 0, net: 0, receipt: 0, balance: 0 });
+  const [allAgents, setAllAgents] = useState([]);
+  const [selectedAgentIds, setSelectedAgentIds] = useState([]);
+  const [agentSearch, setAgentSearch] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    axiosInstance.get("/agents?page=1&limit=1000").then((res) => {
+      setAllAgents(res.data?.data || []);
+    }).catch(console.error);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+        setDropdownOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggleAgent = (id) => {
+    setSelectedAgentIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const filteredAgents = allAgents.filter((a) =>
+    a.Agent?.toLowerCase().includes(agentSearch.toLowerCase())
+  );
 
   const fetchReport = async () => {
     setLoading(true);
@@ -29,10 +60,9 @@ const AgentWiseSaleReport = () => {
       );
       const cases = res.data?.data || [];
 
-      // Fetch agents map
-      const agentRes = await axiosInstance.get("/agents?page=1&limit=1000");
+      // Build agent map from already-loaded agents
       const agentMap = {};
-      (agentRes.data?.data || []).forEach((a) => { agentMap[a.AgentId] = a.Agent; });
+      allAgents.forEach((a) => { agentMap[a.AgentId] = a.Agent; });
 
       // Fetch test details for each case
       const enriched = await Promise.all(
@@ -58,10 +88,11 @@ const AgentWiseSaleReport = () => {
         })
       );
 
-      // Group by AgentId
+      // Group by AgentId — filter by selected agents if any
       const groups = {};
       enriched.forEach((c) => {
         const agentId = c.AgentId || 0;
+        if (selectedAgentIds.length > 0 && !selectedAgentIds.includes(agentId)) return;
         const agentName = agentMap[agentId] || "DIRECT";
         if (!groups[agentId]) groups[agentId] = { agentName, cases: [] };
         groups[agentId].cases.push(c);
@@ -124,6 +155,49 @@ const AgentWiseSaleReport = () => {
           <div className="panel-header d-flex justify-content-between align-items-center">
             <h5>Agent Wise Sale Report (Detail)</h5>
             <div className="d-flex gap-2 align-items-center flex-wrap">
+              {/* Agent multi-select - custom dropdown */}
+              <div ref={dropdownRef} style={{ position: "relative" }}>
+                <button
+                  className="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  onClick={() => setDropdownOpen((o) => !o)}
+                >
+                  {selectedAgentIds.length === 0 ? "All Agents" : `${selectedAgentIds.length} Agent(s)`}
+                  <span className="ms-1">▾</span>
+                </button>
+                {dropdownOpen && (
+                  <div style={{
+                    position: "absolute", top: "100%", left: 0, zIndex: 9999,
+                    background: "#fff", border: "1px solid #ccc", borderRadius: 4,
+                    minWidth: 240, maxHeight: 280, overflowY: "auto", padding: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+                  }}>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm mb-2"
+                      placeholder="Search agent..."
+                      value={agentSearch}
+                      onChange={(e) => setAgentSearch(e.target.value)}
+                      autoFocus
+                    />
+                    <div className="mb-1">
+                      <button className="btn btn-xs btn-link p-0 small text-danger"
+                        onClick={() => setSelectedAgentIds([])}>
+                        Clear All
+                      </button>
+                    </div>
+                    {filteredAgents.map((a) => (
+                      <label key={a.AgentId} className="d-flex align-items-center gap-2 py-1 px-1"
+                        style={{ cursor: "pointer", fontSize: "0.82rem", whiteSpace: "nowrap" }}>
+                        <input type="checkbox"
+                          checked={selectedAgentIds.includes(a.AgentId)}
+                          onChange={() => toggleAgent(a.AgentId)}
+                        />
+                        {a.Agent}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
               <label className="mb-0 small fw-bold">From:</label>
               <input type="date" className="form-control form-control-sm" style={{ width: 140 }}
                 value={startDate} onChange={(e) => setStartDate(e.target.value)} />
