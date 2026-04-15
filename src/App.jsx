@@ -71,6 +71,7 @@ import DrRectVisitDetail from "./pages/bireswar_pages/outdoor/Dr_Rect_Visit_Deta
 import OtherCharges from "./pages/bireswar_pages/outdoor/Other_Charges/OtherCharges.jsx";
 import OtherChargesIPD from "./pages/bireswar_pages/outdoor/Other_Charges/OtherChargesIPD.jsx";
 import CaseList from "./pages/bireswar_pages/outdoor/Other_Charges/CaseList.jsx";
+import AgentWiseSaleReport from "./pages/bireswar_pages/outdoor/Other_Charges/AgentWiseSaleReport.jsx";
 import CaseView from "./pages/bireswar_pages/outdoor/Other_Charges/CaseView.jsx";
 import DateWiseRegistrationCharge from "./pages/bireswar_pages/outdoor/DateWiseRegistrationCharge/DateWiseRegistrationCharge.jsx";
 import PatientHistory from "./pages/bireswar_pages/outdoor/PatientHistory/PatientHistory.jsx";
@@ -534,6 +535,7 @@ function App() {
  <Route path="/other-charges" element={<ProtectedRoute><OtherChargesIPD /></ProtectedRoute>} />
 
 <Route path="/CaseList" element={<CaseList />} />
+<Route path="/AgentWiseSaleReport" element={<AgentWiseSaleReport />} />
 <Route path="/CaseView/:caseId" element={<CaseView />} />
 
 <Route path="/CaseEntry" element={<CaseEntryForm />} />

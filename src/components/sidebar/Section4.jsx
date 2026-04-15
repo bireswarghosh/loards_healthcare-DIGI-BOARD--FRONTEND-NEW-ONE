@@ -71,6 +71,30 @@ dia  report
 
 
 
+<li className="sidebar-dropdown-item">
+  <NavLink to="/deptwiseTestReport" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Dept. Wise Test Report</span>
+  </NavLink>
+</li>
+
+
+
+
+
+<li className="sidebar-dropdown-item">
+  <NavLink to="/AgentWiseSaleReport" className="sidebar-link">
+    <span className="nav-icon">
+      <i className="fa-light fa-diamond"></i>
+    </span>
+    <span className="sidebar-txt">Agent Wise Sale Report</span>
+  </NavLink>
+</li>
+
+
+
 
       </ul>
     </li>
