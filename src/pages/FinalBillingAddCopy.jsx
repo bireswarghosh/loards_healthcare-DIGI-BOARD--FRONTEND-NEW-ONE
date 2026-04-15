@@ -627,6 +627,9 @@ const FinalBillingAdd = () => {
           },
         );
 
+        // Mark bed as Vacant in bedmaster
+        await axiosInstance.patch(`/bedMaster/Vacant/${ele.BedId}`);
+
         navigate("/fina-bill-list2");
       } else if (mode === "edit") {
         const res = await axiosInstance.put(`/fb/${id}`, formData);
@@ -3218,16 +3221,13 @@ const fetchOtSlots = async () => {
               billData2={billData1}
               otObjDetails={otObjDetails}
               otChargeDetails={otChargeDetails}
+              fbMode={fbMode}
             />
           )}
           <button
             className="btn btn-sm btn-primary"
             onClick={() => {
-              if (fbMode === "estimate") {
-                handlePrint5(billData1);
-              } else {
-                setShowPrintModal((prev) => !prev);
-              }
+              setShowPrintModal((prev) => !prev);
             }}
             disabled={btnLoading}
           >

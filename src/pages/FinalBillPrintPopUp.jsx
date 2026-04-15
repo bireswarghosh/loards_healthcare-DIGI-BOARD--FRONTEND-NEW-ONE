@@ -1,6 +1,6 @@
 
 import React from "react";
-import { handlePrint1, handlePrint2, handlePrint3, handlePrint4, handleprint6 } from "./FinalBillPrintFunc";
+import { handlePrint1, handlePrint2, handlePrint3, handlePrint4, handleprint6, handlePrint5 } from "./FinalBillPrintFunc";
 
 
 // Neutral, modern Radio Component
@@ -62,7 +62,8 @@ const ModernNeutralModal = ({
   billData1,
   defaultInvoiceData,
   billData2,
-  otObjDetails, otChargeDetails
+  otObjDetails, otChargeDetails,
+  fbMode
 }) => {
   return (
     <div
@@ -99,6 +100,12 @@ const ModernNeutralModal = ({
         <div className="row g-3">
           {/* Left Column */}
           <div className="col-12 col-md-6">
+            <ModernRadio
+              id="estimate"
+              label="Estimate"
+              printType={printType}
+              setPrintType={setPrintType}
+            />
             <ModernRadio
               id="billSummary"
               label="Bill Summary"
@@ -211,6 +218,9 @@ const ModernNeutralModal = ({
                 setTimeout(() => {
                   
                 switch (printType) {
+                  case "estimate":
+                    handlePrint5(billData1);
+                    break;
                   case "billSummary":
                     handlePrint1(billData1);
                     break;
