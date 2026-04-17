@@ -1581,13 +1581,11 @@
 
 
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import axiosInstance from "../../axiosInstance";
-import { set } from "date-fns";
-import debounce from "lodash.debounce";
 import ApiSelect from "./ApiSelect";
-import { Await, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PaginationBar from "./PaginationBar";
 import BookingTable from "./BookingTable";
 import TestDrawer from "./TestDrawer";
@@ -1616,55 +1614,84 @@ const [testHtml, setTestHtml]=useState('')
   // =======================fetchBoookingList====================================================
   const [bookingList, setBookingList] = useState([]);
   const [PatientName, setPatientName] = useState("");
-   const [searchField, setSearchField] = useState("PatientName"); // default
-  const searchFields = [
-"CaseId",
+  const [searchTestName, setSearchTestName] = useState("");
+  const [selectedSearchTests, setSelectedSearchTests] = useState([]);
+  const [testSuggestions, setTestSuggestions] = useState([]);
+  const [showTestDD, setShowTestDD] = useState(false);
+  const [searchDoctorName, setSearchDoctorName] = useState("");
+  const [allDoctors, setAllDoctors] = useState([]);
+  const [selectedDoctors, setSelectedDoctors] = useState([]);
+  const [showDocDD, setShowDocDD] = useState(false);
+  const [searchAgentName, setSearchAgentName] = useState("");
+  const [allAgentsSearch, setAllAgentsSearch] = useState([]);
+  const [selectedAgents, setSelectedAgents] = useState([]);
+  const [showAgentDD, setShowAgentDD] = useState(false);
+  const [subDepartments, setSubDepartments] = useState([]);
+  const [selectedSubDepts, setSelectedSubDepts] = useState([]);
+  const [showSubDeptDD, setShowSubDeptDD] = useState(false);
+  const [subDeptFilter, setSubDeptFilter] = useState("");
+  const testDDRef = useRef(null);
+  const docDDRef = useRef(null);
+  const agentDDRef = useRef(null);
+  const subDeptDDRef = useRef(null);
+  const testSearchTimer = useRef(null);
 
-    "CaseNo",
-
-    "PatientName",
-
-    "Phone",
-
-    "Sex",
-    "AgentId",
-    "DoctorId",
-
-    "AdmitionId",
-
-    "BankName",
-    "ChequeNo",
-
-    "MobileNo"
-  ];
   /* ================= PAGINATION ================= */
   const [pageNo, setPageNo] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCases, setTotalCases] = useState(0);
   const navigate = useNavigate();
-  const fetchBoookingList = async () => {
+
+  useEffect(() => {
+    axiosInstance.get("/subdepartment").then((res) => setSubDepartments(res.data?.data || [])).catch(() => {});
+    axiosInstance.get("/doctors?page=1&limit=1000").then((res) => setAllDoctors(res.data?.data || [])).catch(() => {});
+    axiosInstance.get("/agents?page=1&limit=1000").then((res) => setAllAgentsSearch(res.data?.data || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (testDDRef.current && !testDDRef.current.contains(e.target)) setShowTestDD(false);
+      if (docDDRef.current && !docDDRef.current.contains(e.target)) setShowDocDD(false);
+      if (agentDDRef.current && !agentDDRef.current.contains(e.target)) setShowAgentDD(false);
+      if (subDeptDDRef.current && !subDeptDDRef.current.contains(e.target)) setShowSubDeptDD(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleTestInput = (val) => {
+    setSearchTestName(val);
+    if (testSearchTimer.current) clearTimeout(testSearchTimer.current);
+    if (val.length < 2) { setTestSuggestions([]); setShowTestDD(false); return; }
+    testSearchTimer.current = setTimeout(() => {
+      axiosInstance.get(`/tests/search/advanced?test=${encodeURIComponent(val)}&page=1&limit=20`)
+        .then((r) => { setTestSuggestions((r.data.data || []).filter(t => !selectedSearchTests.find(s => s.TestId === t.TestId))); setShowTestDD(true); })
+        .catch(() => {});
+    }, 300);
+  };
+
+  const fetchBoookingList = async (resetPage = false) => {
     try {
-      const response = await axiosInstance.get(
-        `case01/search?${searchField}=${PatientName}&startDate=${startDate}&endDate=${endDate}&page=${pageNo}&limit=${limit}`,
-      );
+      const pg = resetPage ? 1 : pageNo;
+      if (resetPage) setPageNo(1);
 
+      let url = `case-dtl-01/lab-query?startDate=${startDate}&endDate=${endDate}&page=${pg}&limit=${limit}`;
+      if (PatientName) url += `&PatientName=${encodeURIComponent(PatientName)}`;
+      if (selectedSearchTests.length > 0) url += `&testName=${encodeURIComponent(selectedSearchTests.map(t => t.Test).join(','))}`;
+      if (selectedDoctors.length > 0) url += `&doctorName=${encodeURIComponent(selectedDoctors.map(d => d.Doctor).join(','))}`;
+      if (selectedAgents.length > 0) url += `&agentName=${encodeURIComponent(selectedAgents.map(a => a.Agent).join(','))}`;
+      if (selectedSubDepts.length > 0) url += `&subDepartmentId=${selectedSubDepts.map(s => s.SubDepartmentId).join(',')}`;
+
+      const response = await axiosInstance.get(url);
       setBookingList(response?.data?.data || []);
-
-      setTotalPages(response?.data?.pagination?.totalPages);
+      setTotalPages(response?.data?.pagination?.totalPages || 1);
+      setTotalCases(response?.data?.pagination?.total || 0);
     } catch (error) {
       console.error("Error fetching booking list:", error);
     }
   };
 
-  const debouncedFetchBookingList = useMemo(
-    () =>
-      debounce(() => {
-        setPageNo(1); // Reset to first page on new search
-        fetchBoookingList();
-      }, 500), // ⏱️ 500ms debounce
-    [PatientName, startDate, endDate,searchField],
-  );
-  // ================= PAGINATION =================
   const goToPage = (p) => {
     if (p < 1 || p > totalPages) return;
     setPageNo(p);
@@ -1754,16 +1781,15 @@ useEffect(() => {
 }, [selPath])
 
 
-  useEffect(() => {
-    debouncedFetchBookingList();
-    // Cancel the debounce on useEffect cleanup.
-    return () => {
-      debouncedFetchBookingList.cancel();
-    };
-  }, [PatientName, startDate, endDate,searchField]);
+  // Fetch on page change only
   useEffect(() => {
     fetchBoookingList();
   }, [pageNo]);
+
+  // Initial load
+  useEffect(() => {
+    fetchBoookingList(true);
+  }, []);
   // ======================================================================================================
 
   const initialFormData = {
@@ -1942,41 +1968,106 @@ useEffect(() => {
                 ROW 1: FILTER BAR & STATUS INDICATORS
                 ------------------------------------------------ */}
           <div className='d-flex align-items-center gap-2 mb-1 flex-wrap'>
-            {/* Filter Type */}
-            <div className='d-flex align-items-center gap-2'>
-              {/* <label className="form-label m-0 fw-bold small text-nowrap">
-                Filter Type
-              </label> */}
-              {/* <select
-                className="form-select form-select-sm"
-                style={{ width: "120px" }}
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option>All</option> */}
-              {/* </select> */}
-              {/* Extra text box visible in screenshot next to filter type  */}
-              <input
-                value={PatientName}
-                onChange={(e) => setPatientName(e.target.value)}
-                type='text'
-                className='form-control form-control-sm'
-                placeholder='Search patient name'
-              />
+            <input
+              value={PatientName}
+              onChange={(e) => setPatientName(e.target.value)}
+              type='text'
+              className='form-control form-control-sm'
+              placeholder='Patient Name'
+              style={{ width: "130px" }}
+              onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)}
+            />
+
+            {/* Test multi-select */}
+            <div ref={testDDRef} style={{ position: "relative", minWidth: "140px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowTestDD(true)}>
+                {selectedSearchTests.map(t => (
+                  <span key={t.TestId} style={{ background: "#e3f2fd", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    {t.Test}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedSearchTests(p => p.filter(x => x.TestId !== t.TestId)); }}>×</span>
+                  </span>
+                ))}
+                <input value={searchTestName} onChange={(e) => handleTestInput(e.target.value)} placeholder={selectedSearchTests.length ? "" : "Test..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+              </div>
+              {showTestDD && testSuggestions.length > 0 && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
+                  {testSuggestions.map(t => (
+                    <div key={t.TestId} onClick={() => { setSelectedSearchTests(p => [...p, t]); setSearchTestName(""); setTestSuggestions([]); setShowTestDD(false); }} style={{ padding: "5px 8px", cursor: "pointer", fontSize: "0.78rem", borderBottom: "1px solid #eee" }} onMouseEnter={e => e.target.style.background = "#e3f2fd"} onMouseLeave={e => e.target.style.background = "#fff"}>
+                      {t.Test} <span style={{ color: "#888", fontSize: "0.68rem" }}>₹{t.Rate}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <select
-              className="form-select form-select-sm"
-              style={{ width: "180px" }}
-              value={searchField}
-              onChange={(e) => setSearchField(e.target.value)}
+            {/* Doctor multi-select */}
+            <div ref={docDDRef} style={{ position: "relative", minWidth: "130px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowDocDD(true)}>
+                {selectedDoctors.map(d => (
+                  <span key={d.DoctorId} style={{ background: "#e8f5e9", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    {d.Doctor}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedDoctors(p => p.filter(x => x.DoctorId !== d.DoctorId)); }}>×</span>
+                  </span>
+                ))}
+                <input value={searchDoctorName} onChange={(e) => setSearchDoctorName(e.target.value)} onFocus={() => setShowDocDD(true)} placeholder={selectedDoctors.length ? "" : "Doctor..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+              </div>
+              {showDocDD && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
+                  {allDoctors.filter(d => d.Doctor?.toLowerCase().includes(searchDoctorName.toLowerCase()) && !selectedDoctors.find(s => s.DoctorId === d.DoctorId)).slice(0, 20).map(d => (
+                    <div key={d.DoctorId} onClick={() => { setSelectedDoctors(p => [...p, d]); setSearchDoctorName(""); setShowDocDD(false); }} style={{ padding: "5px 8px", cursor: "pointer", fontSize: "0.78rem", borderBottom: "1px solid #eee" }} onMouseEnter={e => e.target.style.background = "#e8f5e9"} onMouseLeave={e => e.target.style.background = "#fff"}>
+                      {d.Doctor}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Agent multi-select */}
+            <div ref={agentDDRef} style={{ position: "relative", minWidth: "120px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowAgentDD(true)}>
+                {selectedAgents.map(a => (
+                  <span key={a.AgentId} style={{ background: "#fff3e0", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    {a.Agent}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedAgents(p => p.filter(x => x.AgentId !== a.AgentId)); }}>×</span>
+                  </span>
+                ))}
+                <input value={searchAgentName} onChange={(e) => setSearchAgentName(e.target.value)} onFocus={() => setShowAgentDD(true)} placeholder={selectedAgents.length ? "" : "Agent..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+              </div>
+              {showAgentDD && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
+                  {allAgentsSearch.filter(a => a.Agent?.toLowerCase().includes(searchAgentName.toLowerCase()) && !selectedAgents.find(s => s.AgentId === a.AgentId)).slice(0, 20).map(a => (
+                    <div key={a.AgentId} onClick={() => { setSelectedAgents(p => [...p, a]); setSearchAgentName(""); setShowAgentDD(false); }} style={{ padding: "5px 8px", cursor: "pointer", fontSize: "0.78rem", borderBottom: "1px solid #eee" }} onMouseEnter={e => e.target.style.background = "#fff3e0"} onMouseLeave={e => e.target.style.background = "#fff"}>
+                      {a.Agent}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* SubDepartment multi-select */}
+            <div ref={subDeptDDRef} style={{ position: "relative", minWidth: "140px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowSubDeptDD(true)}>
+                {selectedSubDepts.map(s => (
+                  <span key={s.SubDepartmentId} style={{ background: "#f3e5f5", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    {s.SubDepartment}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedSubDepts(p => p.filter(x => x.SubDepartmentId !== s.SubDepartmentId)); }}>×</span>
+                  </span>
+                ))}
+                <input value={subDeptFilter} onChange={(e) => { setSubDeptFilter(e.target.value); setShowSubDeptDD(true); }} onFocus={() => setShowSubDeptDD(true)} placeholder={selectedSubDepts.length ? "" : "SubDept..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+              </div>
+              {showSubDeptDD && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
+                  {subDepartments.filter(s => s.SubDepartment?.toLowerCase().includes(subDeptFilter.toLowerCase()) && !selectedSubDepts.find(x => x.SubDepartmentId === s.SubDepartmentId)).map(s => (
+                    <div key={s.SubDepartmentId} onClick={() => { setSelectedSubDepts(p => [...p, s]); setSubDeptFilter(""); }} style={{ padding: "5px 8px", cursor: "pointer", fontSize: "0.78rem", borderBottom: "1px solid #eee" }} onMouseEnter={e => e.target.style.background = "#f3e5f5"} onMouseLeave={e => e.target.style.background = "#fff"}>
+                      {s.SubDepartment}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              className='btn btn-sm btn-primary fw-bold'
+              onClick={() => fetchBoookingList(true)}
             >
-              {searchFields.map((field) => (
-                <option key={field} value={field}>
-                  {field}
-                </option>
-              ))}
-            </select>
+              Search
+            </button>
 
             {/* Signatory */}
             <div className='d-flex align-items-center gap-2 ms-auto'>
@@ -2082,7 +2173,7 @@ useEffect(() => {
 
             {/* Total Cases Indicator */}
             <span className='fw-bold text-danger ms-2 small text-nowrap'>
-              Total Cases
+              Total Cases: {totalCases}
             </span>
 
             {/* Spacer */}
