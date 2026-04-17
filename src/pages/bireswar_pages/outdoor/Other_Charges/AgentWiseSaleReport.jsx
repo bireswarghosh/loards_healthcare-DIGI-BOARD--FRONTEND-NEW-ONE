@@ -31,7 +31,6 @@ const AgentWiseSaleReport = () => {
     }).catch(console.error);
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target))
@@ -54,67 +53,26 @@ const AgentWiseSaleReport = () => {
   const fetchReport = async () => {
     setLoading(true);
     try {
-      // Fetch all cases in date range (up to 1000)
-      const res = await axiosInstance.get(
-        `/case01/search?startDate=${startDate}&endDate=${endDate}&page=1&limit=1000`
-      );
-      const cases = res.data?.data || [];
+      let url = `/case-dtl-01/agent-wise-report?fromDate=${startDate}&toDate=${endDate}`;
+      if (selectedAgentIds.length > 0) {
+        url += `&agentIds=${selectedAgentIds.join(",")}`;
+      }
 
-      // Build agent map from already-loaded agents
-      const agentMap = {};
-      allAgents.forEach((a) => { agentMap[a.AgentId] = a.Agent; });
+      const res = await axiosInstance.get(url);
+      const groups = res.data?.data || [];
 
-      // Fetch test details for each case
-      const enriched = await Promise.all(
-        cases.map(async (c) => {
-          try {
-            const dtlRes = await axiosInstance.get(`/case-dtl-01/case/${c.CaseId}`);
-            const tests = dtlRes.data?.data || [];
-            // Fetch test names
-            const namedTests = await Promise.all(
-              tests.map(async (t) => {
-                try {
-                  const tRes = await axiosInstance.get(`/tests/${t.TestId}`);
-                  return { ...t, TestName: tRes.data?.data?.Test || t.TestId, Rate: tRes.data?.data?.Rate || t.Rate || 0 };
-                } catch {
-                  return { ...t, TestName: t.TestId };
-                }
-              })
-            );
-            return { ...c, tests: namedTests };
-          } catch {
-            return { ...c, tests: [] };
-          }
-        })
-      );
-
-      // Group by AgentId — filter by selected agents if any
-      const groups = {};
-      enriched.forEach((c) => {
-        const agentId = c.AgentId || 0;
-        if (selectedAgentIds.length > 0 && !selectedAgentIds.includes(agentId)) return;
-        const agentName = agentMap[agentId] || "DIRECT";
-        if (!groups[agentId]) groups[agentId] = { agentName, cases: [] };
-        groups[agentId].cases.push(c);
-      });
-
-      // Sort agents by name
-      const sorted = Object.values(groups).sort((a, b) => a.agentName.localeCompare(b.agentName));
-
-      // Compute totals
       let gBill = 0, gDisc = 0, gNet = 0, gReceipt = 0, gBalance = 0;
-      sorted.forEach((g) => {
+      groups.forEach((g) => {
         g.cases.forEach((c) => {
-          const bill = parseFloat(c.Total || 0);
-          const disc = parseFloat(c.DescAmt || 0);
-          const net = parseFloat(c.GrossAmt || 0);
-          const receipt = parseFloat(c.Advance || 0);
-          const balance = net - receipt;
-          gBill += bill; gDisc += disc; gNet += net; gReceipt += receipt; gBalance += balance;
+          gBill += c.GrossAmt;
+          gDisc += c.DescAmt;
+          gNet += c.GrossAmt - c.DescAmt;
+          gReceipt += c.Advance;
+          gBalance += (c.GrossAmt - c.DescAmt) - c.Advance;
         });
       });
 
-      setAgentGroups(sorted);
+      setAgentGroups(groups);
       setGrandTotals({ bill: gBill, disc: gDisc, net: gNet, receipt: gReceipt, balance: gBalance });
     } catch (err) {
       console.error(err);
@@ -155,7 +113,6 @@ const AgentWiseSaleReport = () => {
           <div className="panel-header d-flex justify-content-between align-items-center">
             <h5>Agent Wise Sale Report (Detail)</h5>
             <div className="d-flex gap-2 align-items-center flex-wrap">
-              {/* Agent multi-select - custom dropdown */}
               <div ref={dropdownRef} style={{ position: "relative" }}>
                 <button
                   className="btn btn-sm btn-outline-secondary"
@@ -226,7 +183,6 @@ const AgentWiseSaleReport = () => {
               <div className="text-center text-muted py-5">Click Generate to load report</div>
             ) : (
               <div ref={printRef}>
-                {/* Report Header */}
                 <div className="header text-center mb-3">
                   <div className="fw-bold fs-5">LORDS DIAGNOSTIC</div>
                   <div className="small">13/3, CIRCULAR 2ND BYE LANE,</div>
@@ -240,7 +196,6 @@ const AgentWiseSaleReport = () => {
                   </div>
                 </div>
 
-                {/* Column Headers */}
                 <table className="table table-sm mb-0" style={{ fontSize: "0.82rem" }}>
                   <thead>
                     <tr className="col-header" style={{ borderTop: "1px solid #000", borderBottom: "1px solid #000" }}>
@@ -261,20 +216,18 @@ const AgentWiseSaleReport = () => {
                   </thead>
                 </table>
 
-                {/* Agent Groups */}
                 {agentGroups.map((group, gi) => {
                   let subBill = 0, subDisc = 0, subNet = 0, subReceipt = 0, subBalance = 0;
                   group.cases.forEach((c) => {
-                    subBill += parseFloat(c.Total || 0);
-                    subDisc += parseFloat(c.DescAmt || 0);
-                    subNet += parseFloat(c.GrossAmt || 0);
-                    subReceipt += parseFloat(c.Advance || 0);
-                    subBalance += parseFloat(c.GrossAmt || 0) - parseFloat(c.Advance || 0);
+                    subBill += c.GrossAmt;
+                    subDisc += c.DescAmt;
+                    subNet += c.GrossAmt - c.DescAmt;
+                    subReceipt += c.Advance;
+                    subBalance += (c.GrossAmt - c.DescAmt) - c.Advance;
                   });
 
                   return (
                     <div key={gi} className="mb-2">
-                      {/* Agent Name Header */}
                       <div className="fw-bold" style={{ color: "red", fontSize: "0.85rem", padding: "4px 0" }}>
                         AGENT NAME : &nbsp;
                         <span style={{ color: "#8B0000" }}>{group.agentName}</span>
@@ -283,14 +236,14 @@ const AgentWiseSaleReport = () => {
                       <table className="table table-sm mb-0" style={{ fontSize: "0.82rem" }}>
                         <tbody>
                           {group.cases.map((c, ci) => {
-                            const testTotal = c.tests.reduce((s, t) => s + parseFloat(t.Rate || 0), 0);
-                            const cNet = parseFloat(c.GrossAmt || 0);
-                            const cReceipt = parseFloat(c.Advance || 0);
+                            const cBill = c.GrossAmt;
+                            const cDisc = c.DescAmt;
+                            const cNet = cBill - cDisc;
+                            const cReceipt = c.Advance;
                             const cBalance = cNet - cReceipt;
 
                             return (
                               <React.Fragment key={ci}>
-                                {/* Case row */}
                                 <tr>
                                   <td style={{ width: "12%" }} className="fw-bold text-primary">{c.CaseNo}</td>
                                   <td style={{ width: "9%" }}>{fmt(c.CaseDate)}</td>
@@ -298,14 +251,12 @@ const AgentWiseSaleReport = () => {
                                   <td></td>
                                   <td></td><td></td><td></td><td></td><td></td>
                                 </tr>
-                                {/* Doctor row */}
                                 <tr>
                                   <td></td><td></td>
                                   <td style={{ color: "#555" }}>Dr. {c.DoctorName || ""}</td>
                                   <td></td>
                                   <td></td><td></td><td></td><td></td><td></td>
                                 </tr>
-                                {/* Test rows */}
                                 {c.tests.map((t, ti) => (
                                   <tr key={ti}>
                                     <td></td><td></td>
@@ -315,21 +266,19 @@ const AgentWiseSaleReport = () => {
                                     <td></td><td></td><td></td><td></td>
                                   </tr>
                                 ))}
-                                {/* Test Total row */}
                                 <tr style={{ color: "red", fontStyle: "italic" }}>
                                   <td></td><td></td><td></td>
                                   <td className="text-end fw-bold"><em>Test TOTAL :</em></td>
-                                  <td className="text-end">{num(c.Total)}</td>
-                                  <td className="text-end">{num(c.DescAmt)}</td>
-                                  <td className="text-end">{num(0)}</td>
+                                  <td className="text-end">{num(cBill)}</td>
+                                  <td className="text-end">{num(cDisc)}</td>
+                                  <td className="text-end">{num(cNet)}</td>
                                   <td className="text-end">{num(cReceipt)}</td>
-                                  <td className="text-end">{num(0)}</td>
+                                  <td className="text-end">{num(cBalance)}</td>
                                 </tr>
                               </React.Fragment>
                             );
                           })}
 
-                          {/* Sub Total */}
                           <tr style={{ color: "blue", fontWeight: "bold", borderTop: "1px dashed #aaa", borderBottom: "1px dashed #aaa" }}>
                             <td></td><td></td><td></td>
                             <td className="text-end">SUB TOTAL :</td>
@@ -345,7 +294,6 @@ const AgentWiseSaleReport = () => {
                   );
                 })}
 
-                {/* Grand Total */}
                 <table className="table table-sm mt-2" style={{ fontSize: "0.82rem" }}>
                   <tbody>
                     <tr style={{ color: "red", fontWeight: "bold", border: "2px solid red" }}>
@@ -360,7 +308,6 @@ const AgentWiseSaleReport = () => {
                   </tbody>
                 </table>
 
-                {/* Print footer */}
                 <div className="mt-3 small fw-bold">
                   Print Date &amp; Time : {fmt(today)} &nbsp;&nbsp;
                   {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
