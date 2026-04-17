@@ -64,11 +64,11 @@ const AgentWiseSaleReport = () => {
       let gBill = 0, gDisc = 0, gNet = 0, gReceipt = 0, gBalance = 0;
       groups.forEach((g) => {
         g.cases.forEach((c) => {
-          gBill += c.GrossAmt;
+          gBill += c.Total;
           gDisc += c.DescAmt;
-          gNet += c.GrossAmt - c.DescAmt;
+          gNet += c.GrossAmt;
           gReceipt += c.Advance;
-          gBalance += (c.GrossAmt - c.DescAmt) - c.Advance;
+          gBalance += c.GrossAmt - c.Advance;
         });
       });
 
@@ -219,11 +219,11 @@ const AgentWiseSaleReport = () => {
                 {agentGroups.map((group, gi) => {
                   let subBill = 0, subDisc = 0, subNet = 0, subReceipt = 0, subBalance = 0;
                   group.cases.forEach((c) => {
-                    subBill += c.GrossAmt;
+                    subBill += c.Total;
                     subDisc += c.DescAmt;
-                    subNet += c.GrossAmt - c.DescAmt;
+                    subNet += c.GrossAmt;
                     subReceipt += c.Advance;
-                    subBalance += (c.GrossAmt - c.DescAmt) - c.Advance;
+                    subBalance += c.GrossAmt - c.Advance;
                   });
 
                   return (
@@ -236,9 +236,7 @@ const AgentWiseSaleReport = () => {
                       <table className="table table-sm mb-0" style={{ fontSize: "0.82rem" }}>
                         <tbody>
                           {group.cases.map((c, ci) => {
-                            const cBill = c.GrossAmt;
-                            const cDisc = c.DescAmt;
-                            const cNet = cBill - cDisc;
+                            const cNet = c.GrossAmt;
                             const cReceipt = c.Advance;
                             const cBalance = cNet - cReceipt;
 
@@ -269,8 +267,8 @@ const AgentWiseSaleReport = () => {
                                 <tr style={{ color: "red", fontStyle: "italic" }}>
                                   <td></td><td></td><td></td>
                                   <td className="text-end fw-bold"><em>Test TOTAL :</em></td>
-                                  <td className="text-end">{num(cBill)}</td>
-                                  <td className="text-end">{num(cDisc)}</td>
+                                  <td className="text-end">{num(c.Total)}</td>
+                                  <td className="text-end">{num(c.DescAmt)}</td>
                                   <td className="text-end">{num(cNet)}</td>
                                   <td className="text-end">{num(cReceipt)}</td>
                                   <td className="text-end">{num(cBalance)}</td>
