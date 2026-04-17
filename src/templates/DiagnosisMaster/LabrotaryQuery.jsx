@@ -1643,6 +1643,29 @@ const [testHtml, setTestHtml]=useState('')
   const [totalCases, setTotalCases] = useState(0);
   const navigate = useNavigate();
 
+  // Persist/restore search state via sessionStorage
+  const saveSearch = () => {
+    sessionStorage.setItem("labQuery", JSON.stringify({
+      PatientName, startDate, endDate, pageNo,
+      selectedSearchTests, selectedDoctors, selectedAgents, selectedSubDepts
+    }));
+  };
+  const restoreSearch = () => {
+    try {
+      const s = JSON.parse(sessionStorage.getItem("labQuery"));
+      if (!s) return false;
+      if (s.PatientName) setPatientName(s.PatientName);
+      if (s.startDate) setStartDate(s.startDate);
+      if (s.endDate) setEndDate(s.endDate);
+      if (s.pageNo) setPageNo(s.pageNo);
+      if (s.selectedSearchTests?.length) setSelectedSearchTests(s.selectedSearchTests);
+      if (s.selectedDoctors?.length) setSelectedDoctors(s.selectedDoctors);
+      if (s.selectedAgents?.length) setSelectedAgents(s.selectedAgents);
+      if (s.selectedSubDepts?.length) setSelectedSubDepts(s.selectedSubDepts);
+      return true;
+    } catch { return false; }
+  };
+
   useEffect(() => {
     axiosInstance.get("/subdepartment").then((res) => setSubDepartments(res.data?.data || [])).catch(() => {});
     axiosInstance.get("/doctors?page=1&limit=1000").then((res) => setAllDoctors(res.data?.data || [])).catch(() => {});
@@ -1687,6 +1710,7 @@ const [testHtml, setTestHtml]=useState('')
       setBookingList(response?.data?.data || []);
       setTotalPages(response?.data?.pagination?.totalPages || 1);
       setTotalCases(response?.data?.pagination?.total || 0);
+      saveSearch();
     } catch (error) {
       console.error("Error fetching booking list:", error);
     }
@@ -1781,14 +1805,15 @@ useEffect(() => {
 }, [selPath])
 
 
-  // Fetch on page change only
+  // Fetch on page change
   useEffect(() => {
     fetchBoookingList();
   }, [pageNo]);
 
-  // Initial load
+  // Initial load — restore from session if available
   useEffect(() => {
-    fetchBoookingList(true);
+    const restored = restoreSearch();
+    setTimeout(() => fetchBoookingList(restored ? false : true), restored ? 100 : 0);
   }, []);
   // ======================================================================================================
 
@@ -2068,6 +2093,40 @@ useEffect(() => {
             >
               Search
             </button>
+            <button
+              className='btn btn-sm btn-outline-danger fw-bold'
+              onClick={() => {
+                setPatientName(""); setSelectedSearchTests([]); setSearchTestName("");
+                setSelectedDoctors([]); setSearchDoctorName("");
+                setSelectedAgents([]); setSearchAgentName("");
+                setSelectedSubDepts([]); setSubDeptFilter("");
+                sessionStorage.removeItem("labQuery");
+                setTimeout(() => fetchBoookingList(true), 100);
+              }}
+            >
+              Clear
+            </button>
+            {bookingList.length > 0 && (
+              <button
+                className='btn btn-sm btn-success fw-bold'
+                onClick={() => {
+                  const filters = [
+                    PatientName && `Patient: ${PatientName}`,
+                    selectedSearchTests.length > 0 && `Tests: ${selectedSearchTests.map(t => t.Test).join(", ")}`,
+                    selectedDoctors.length > 0 && `Doctors: ${selectedDoctors.map(d => d.Doctor).join(", ")}`,
+                    selectedAgents.length > 0 && `Agents: ${selectedAgents.map(a => a.Agent).join(", ")}`,
+                    selectedSubDepts.length > 0 && `SubDept: ${selectedSubDepts.map(s => s.SubDepartment).join(", ")}`,
+                  ].filter(Boolean).join(" | ");
+                  const rows = bookingList.map((c, i) => `<tr><td>${i+1}</td><td>${c.CaseNo || ""}</td><td>${c.CaseDate ? new Date(c.CaseDate).toLocaleDateString("en-IN") : ""}</td><td>${c.PatientName || ""}</td><td>${c.DoctorName || ""}</td><td>${c.AgentName || ""}</td><td>${c.Sex || ""}</td><td>${c.Age || ""}${c.AgeType || ""}</td><td style="text-align:right">${parseFloat(c.GrossAmt || 0).toFixed(2)}</td></tr>`).join("");
+                  const win = window.open("", "_blank");
+                  win.document.write(`<html><head><title>Lab Query Report</title><style>body{font-family:Arial;padding:15px;font-size:12px}h2,p{text-align:center;margin:2px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #000;padding:4px 6px;font-size:11px}th{background:#eee}.info{text-align:center;margin:8px 0;font-weight:bold}@media print{@page{size:A4 landscape;margin:8mm}}</style></head><body><h2>LORDS DIAGNOSTIC</h2><p>Laboratory Query Report</p><div class="info">From: ${startDate} &nbsp; To: ${endDate}${filters ? "<br/>" + filters : ""}<br/>Total Cases: ${totalCases}</div><table><thead><tr><th>#</th><th>Case No</th><th>Date</th><th>Patient Name</th><th>Doctor</th><th>Agent</th><th>Sex</th><th>Age</th><th>Gross Amt</th></tr></thead><tbody>${rows}</tbody></table><div style="margin-top:15px;font-size:11px;font-weight:bold">Print Date: ${new Date().toLocaleDateString("en-IN")} ${new Date().toLocaleTimeString("en-IN")}</div></body></html>`);
+                  win.document.close();
+                  win.onload = () => { win.focus(); setTimeout(() => win.print(), 300); };
+                }}
+              >
+                Print
+              </button>
+            )}
 
             {/* Signatory */}
             <div className='d-flex align-items-center gap-2 ms-auto'>
