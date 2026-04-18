@@ -142,17 +142,17 @@ const Discharge = () => {
               <th>Discharge Time</th>
               <th>Discharge Date</th>
               <th>Patient Name</th>
-              {/* <th>Under Dr.</th> */}
               <th>Admission No.</th>
               <th>Admission Date</th>
               <th>Phone</th>
+              <th>Age/Sex</th>
             </tr>
           </thead>
 
           <tbody>
             {dischargeList.length === 0 ? (
               <tr>
-                <td colSpan={10} className="text-center text-muted">
+                <td colSpan={9} className="text-center text-muted">
                   No records found
                 </td>
               </tr>
@@ -209,27 +209,19 @@ const Discharge = () => {
                   </td>
                   <td>{item.DisCerNo}</td>
                   <td>{item.DisCerTime}</td>
-                  <td>{item.DisCerDate.split("T")[0]}</td>
-
-                  {/* <td></td> */}
-
-                  {/* <td>{item.DoctorId}</td> */}
-                  <td>{/* {doctorMap[item.DoctorId]} */}</td>
-
-                  <td>A-{item.AdmitionId}</td>
-                  <td></td>
-                  <td>{item.AgentId}</td>
-
-                  
-
-                  <td>{item.Date}</td>
+                  <td>{item.DisCerDate?.split("T")[0]}</td>
+                  <td className="fw-bold">{item.PatientName || ""}</td>
+                  <td>{item.AdmitionNo || `A-${item.AdmitionId}`}</td>
+                  <td>{item.AdmitionDate || ""}</td>
+                  <td>{item.PhoneNo || ""}</td>
+                  <td>{item.Age}{item.AgeType}/{item.Sex}</td>
                 </tr>
               ))
             )}
 
             {/* Empty filler row (same as your code) */}
             <tr style={{ height: "100%" }}>
-              <td colSpan={10} className="p-0 border-0"></td>
+              <td colSpan={9} className="p-0 border-0"></td>
             </tr>
           </tbody>
         </table>
