@@ -782,11 +782,13 @@ const PatientAdmission = () => {
         }
 
         // Update first admitionbeds record's date/time when editing
+        // Also update last (active) admitionbed record's ToDayRate & Rate with new BedRate
         if (mode === "edit") {
           try {
             const bedRes = await axiosInstance.get(`/admitionbeds?admitionid=${decodeURIComponent(id)}`);
             if (bedRes.data.success && bedRes.data.data?.length > 0) {
-              const firstBed = bedRes.data.data[0];
+              const beds = bedRes.data.data;
+              const firstBed = beds[0];
               await axiosInstance.put(
                 `/admitionbeds?admitionid=${decodeURIComponent(id)}&slno=${firstBed.SlNo}`,
                 {
@@ -795,6 +797,19 @@ const PatientAdmission = () => {
                   AdmitionTime: new Date(`1970-01-01T${cleanData.AdmitionTime}`).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
                 }
               );
+
+              // Update last active bed record's rate
+              const lastBed = beds[beds.length - 1];
+              if (lastBed.Release === "N") {
+                await axiosInstance.put(
+                  `/admitionbeds?admitionid=${decodeURIComponent(id)}&slno=${lastBed.SlNo}`,
+                  {
+                    ...lastBed,
+                    ToDayRate: cleanData.BedRate || 0,
+                    Rate: cleanData.BedRate || 0,
+                  }
+                );
+              }
             }
           } catch (err) {
             console.error("Error updating admitionbeds date/time:", err);
