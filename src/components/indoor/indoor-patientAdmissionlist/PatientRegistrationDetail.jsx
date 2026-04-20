@@ -2052,9 +2052,11 @@ window.onload = function () {
                             className="ms-2"
                             type="text"
                             value={
-                              doctors.find(
-                                (d) => d.DoctorId == formData.UCDoctor1Id,
-                              )?.Doctor || ""
+                              formData.UCDoctor1Id
+                                ? doctors.find(
+                                    (d) => d.DoctorId == formData.UCDoctor1Id,
+                                  )?.Doctor || ""
+                                : ""
                             }
                             onClick={() => {
                               if (mode !== "view") {
@@ -2078,9 +2080,11 @@ window.onload = function () {
                             className="ms-2"
                             type="text"
                             value={
-                              doctors.find(
-                                (d) => d.DoctorId == formData.UCDoctor2Id,
-                              )?.Doctor || ""
+                              formData.UCDoctor2Id
+                                ? doctors.find(
+                                    (d) => d.DoctorId == formData.UCDoctor2Id,
+                                  )?.Doctor || ""
+                                : ""
                             }
                             onClick={() => {
                               if (mode !== "view") {
@@ -2103,9 +2107,11 @@ window.onload = function () {
                             className="ms-2"
                             type="text"
                             value={
-                              doctors.find(
-                                (d) => d.DoctorId == formData.UCDoctor3Id,
-                              )?.Doctor || ""
+                              formData.UCDoctor3Id
+                                ? doctors.find(
+                                    (d) => d.DoctorId == formData.UCDoctor3Id,
+                                  )?.Doctor || ""
+                                : ""
                             }
                             onClick={() => {
                               if (mode !== "view") {
