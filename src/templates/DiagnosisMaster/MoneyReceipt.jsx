@@ -89,23 +89,16 @@ const MoneyReceipt = () => {
 
       // if only one mr present then only 1st mr exists
       if (n == 1) {
-        // if you are editing 1st mr then this will run
-        if (modalType == "edit") {
-          setAdditionalDueAmt(0);
-          return;
-        }
-        // if you are add 2nd mr then this will run
-        else {
-          setAdditionalDueAmt(formData.DiscAmt);
-          return;
-        }
+        // both edit and add should deduct discount
+        setAdditionalDueAmt(Number(formData.DiscAmt) || 0);
+        return;
       } else if (n > 1) {
         console.log("hoooo");
         let lastEle = allPreviouseReceipts[n - 1]; // this is the last element of allPreviouseReceipts and this is the 1st mr
 
         // if the selected mr is the 1st mr
         if (lastEle.ReceiptId == formData.ReceiptId) {
-          setAdditionalDueAmt(0);
+          setAdditionalDueAmt(Number(formData.DiscAmt) || 0);
           return;
         }
 
@@ -360,13 +353,19 @@ const MoneyReceipt = () => {
       if (res.data.success && res.data.data?.length) {
         const receipt = res.data.data[0];
 
+        // Parse paymentMethods if it's a JSON string
+        let parsedPM = receipt.paymentMethods;
+        if (typeof parsedPM === "string") {
+          try { parsedPM = JSON.parse(parsedPM); } catch (e) { parsedPM = null; }
+        }
+
         // Load payment methods if exists
         if (
-          receipt.paymentMethods &&
-          Array.isArray(receipt.paymentMethods) &&
-          receipt.paymentMethods.length > 0
+          parsedPM &&
+          Array.isArray(parsedPM) &&
+          parsedPM.length > 0
         ) {
-          const loadedMethods = receipt.paymentMethods.map((pm) => ({
+          const loadedMethods = parsedPM.map((pm) => ({
             type:
               pm.method === "Cash"
                 ? "0"
@@ -380,6 +379,67 @@ const MoneyReceipt = () => {
             chequeNumber: pm.chequeNumber || "",
           }));
           setPaymentMethods(loadedMethods);
+
+          // Fetch total paid from all receipts for correct due amount in edit mode
+          let totalSum = receipt.Amount || 0;
+          if (receipt?.ReffId) {
+            try {
+              const resAll = await axiosInstance.get(
+                `/money-receipt01/search?ReffId=${receipt.ReffId}`
+              );
+              if (resAll.data.success && resAll.data.data?.length) {
+                totalSum = resAll.data.data.reduce(
+                  (acc, item) => acc + Number(item.Amount || 0),
+                  0
+                );
+              }
+            } catch (e) {
+              console.error("Failed to fetch all receipts for total:", e);
+            }
+          }
+
+          setFormData({
+            ReceiptId: receipt.ReceiptId,
+            ReceiptNo: receipt.ReceiptNo || "",
+            ReffId: receipt.ReffId || "",
+            ReceiptDate: receipt.ReceiptDate?.slice(0, 10) || "",
+            BillAmount: receipt.BillAmount || 0,
+            BalanceAmt: receipt.BalanceAmt || 0,
+            Amount: totalSum,
+            DiscAmt: receipt.DiscAmt || 0,
+            Desc: receipt.Desc || 0,
+            AdjAmt: receipt.AdjAmt || 0,
+            MRType: receipt.MRType || "",
+            BankName: receipt.BankName || "",
+            ChequeNo: receipt.ChequeNo || "",
+            Phone: receipt.Phone || "",
+            CaseDate: receipt.CaseDate?.slice(0, 10) || "",
+            Add1: receipt.Add1 || "",
+            Add2: receipt.Add2 || "",
+            Add3: receipt.Add3 || "",
+            DoctorId: receipt.DoctorId || "",
+            CBalAmt: receipt.CBalAmt || 0,
+            Remarks: receipt.Remarks || "",
+            UserId: receipt.UserId || "",
+            TypeofReceipt: receipt.TypeofReceipt || "",
+            DiscOtherId: receipt.DiscOtherId || "",
+            DiscChk: receipt.DiscChk || "",
+            HeadId: receipt.HeadId || "",
+            ReffType: receipt.ReffType || "",
+            AgentDiscId: receipt.AgentDiscId || "",
+            CompName: receipt.CompName || "",
+            ReceiptTime: receipt.ReceiptTime || "",
+            Narration: receipt.Narration || "",
+            PaidBy: receipt.PaidBy || "",
+            TDS: receipt.TDS || 0,
+            PatientName: receipt.PatientName || "",
+            Age: receipt.Age || "",
+            Sex: receipt.Sex || "",
+            AdmitionNo: receipt.AdmitionNo || "",
+          });
+
+          setLoading(false);
+          return;
         } else {
           // Default: show old payment method data or empty cash payment
 
@@ -465,51 +525,6 @@ const MoneyReceipt = () => {
           setLoading(false);
           return;
         }
-
-        setFormData({
-          ReceiptId: receipt.ReceiptId,
-          ReceiptNo: receipt.ReceiptNo || "",
-          ReffId: receipt.ReffId || "",
-          ReceiptDate: receipt.ReceiptDate?.slice(0, 10) || "",
-          BillAmount: receipt.BillAmount || 0,
-          BalanceAmt: receipt.BalanceAmt || 0,
-          Amount: receipt.Amount || 0,
-          DiscAmt: receipt.DiscAmt || 0,
-          Desc: receipt.Desc || 0,
-          AdjAmt: receipt.AdjAmt || 0,
-          MRType: receipt.MRType || "",
-          BankName: receipt.BankName || "",
-          ChequeNo: receipt.ChequeNo || "",
-          Phone: receipt.Phone || "",
-          CaseDate: receipt.CaseDate?.slice(0, 10) || "",
-          Add1: receipt.Add1 || "",
-          Add2: receipt.Add2 || "",
-          Add3: receipt.Add3 || "",
-          DoctorId: receipt.DoctorId || "",
-
-          // extra
-          CBalAmt: receipt.CBalAmt || 0,
-          Remarks: receipt.Remarks || "",
-          UserId: receipt.UserId || "",
-          TypeofReceipt: receipt.TypeofReceipt || "",
-          DiscOtherId: receipt.DiscOtherId || "",
-          DiscChk: receipt.DiscChk || "",
-          HeadId: receipt.HeadId || "",
-          ReffType: receipt.ReffType || "",
-          AgentDiscId: receipt.AgentDiscId || "",
-          CompName: receipt.CompName || "",
-          ReceiptTime: receipt.ReceiptTime || "",
-
-          Narration: receipt.Narration || "",
-          PaidBy: receipt.PaidBy || "",
-          TDS: receipt.TDS || 0,
-
-          // readonly
-          PatientName: receipt.PatientName || "",
-          Age: receipt.Age || "",
-          Sex: receipt.Sex || "",
-          AdmitionNo: receipt.AdmitionNo || "",
-        });
       } else {
         toast.error("Receipt data not found");
       }
