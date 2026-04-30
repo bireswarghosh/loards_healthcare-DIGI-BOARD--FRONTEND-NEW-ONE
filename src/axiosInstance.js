@@ -7,7 +7,14 @@ const axiosInstance = axios.create({
 // ! for production
 
 
- baseURL:'https://lords-backend.onrender.com/api/v1',
+//  baseURL:'https://lords-backend.onrender.com/api/v1',
+
+
+//  baseURL:'https://kjjx3q2s-5000.inc1.devtunnels.ms/api/v1',
+
+ baseURL: window.location.hostname === 'localhost'
+   ? 'http://localhost:5000/api/v1'
+   : `${window.location.protocol}//${window.location.hostname.replace('-5173', '-5000')}:${window.location.port}/api/v1`,
 
 
 
@@ -15,13 +22,10 @@ const axiosInstance = axios.create({
 
 
 
-
-
-
-  // Automatically switch between production and local
-  baseURL: window.location.hostname === 'localhost'
-    ? 'http://localhost:5000/api/v1'  // for local machine
-    : 'https://lords-backend.onrender.com/api/v1',  // for production
+  // // Automatically switch between production and local
+  // baseURL: window.location.hostname === 'localhost'
+  //   ? 'http://localhost:5000/api/v1'  // for local machine
+  //   : 'https://lords-backend.onrender.com/api/v1',  // for production
 
 
   timeout: 30000, // Increased timeout to 30 seconds

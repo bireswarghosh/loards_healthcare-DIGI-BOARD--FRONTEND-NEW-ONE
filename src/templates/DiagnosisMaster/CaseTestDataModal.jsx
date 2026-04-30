@@ -351,11 +351,10 @@
 
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { RichTextEditorComponent, Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count } from '@syncfusion/ej2-react-richtexteditor';
-import { Inject as RteInject } from '@syncfusion/ej2-react-richtexteditor';
 import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
 import JsBarcode from "jsbarcode";
+import DocumentEditor from "../../components/editor/DocumentEditor";
 
 const CaseTestDataModal = ({
   open,
@@ -372,9 +371,24 @@ const CaseTestDataModal = ({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ htmlContent: "" });
   const [editId, setEditId] = useState(null);
-  const rteRef = useRef(null);
-  const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const editorContentRef = useRef("");
+  const [editorKey, setEditorKey] = useState(0);
+  const [editorInitHtml, setEditorInitHtml] = useState("");
   const [printData, setPrintData] = useState({});
+
+  const buildPatientHeaderHtml = () => {
+    const pName = formData2?.PatientName || PatientName || "";
+    const age = (formData2?.Age || "") + (formData2?.AgeType || "");
+    const cNo = formData2?.CaseNo || "";
+    const sex = formData2?.Sex || "";
+    const addr = [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", ");
+    const bDate = new Date().toISOString().split("T")[0];
+    return `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:11px;margin-bottom:8px"><tr><td style="padding:2px 4px;width:13%;border:none"><b>Patient</b></td><td style="padding:2px 4px;width:37%;border:none">: ${pName}</td><td style="padding:2px 4px;width:13%;border:none"><b>Age</b></td><td style="padding:2px 4px;width:37%;border:none">: ${age}</td></tr><tr><td style="padding:2px 4px;border:none"><b>Case No</b></td><td style="padding:2px 4px;border:none">: ${cNo}</td><td style="padding:2px 4px;border:none"><b>Sex</b></td><td style="padding:2px 4px;border:none">: ${sex}</td></tr><tr><td style="padding:2px 4px;border:none"><b>Ref. By</b></td><td style="padding:2px 4px;border:none">: </td><td style="padding:2px 4px;border:none"><b>Billing Date</b></td><td style="padding:2px 4px;border:none">: ${bDate}</td></tr><tr><td style="padding:2px 4px;border:none"><b>Address</b></td><td style="padding:2px 4px;border:none">: ${addr}</td><td style="padding:2px 4px;border:none"><b>Report Date</b></td><td style="padding:2px 4px;border:none">: </td></tr></table><hr style="border:none;border-top:1px solid #000;margin:6px 0" />`;
+  };
+
+  const buildEditorContent = (bodyContent) => {
+    return buildPatientHeaderHtml() + (bodyContent || "");
+  };
 
 
 const getSignatureBase64 = (signatureObj) => {
@@ -423,47 +437,35 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
     }
   };
 
-  /* ================= TOOLBAR CONFIG ================= */
-  const rteToolbarSettings = {
-    items: [
-      'Undo', 'Redo', '|',
-      'ImportWord', 'ExportWord', 'ExportPdf', '|',
-      'Bold', 'Italic', 'Underline', 'StrikeThrough', '|',
-      'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
-      'Formats', 'Alignments', 'Blockquote', '|',
-      'NumberFormatList', 'BulletFormatList', '|',
-      'Outdent', 'Indent', '|',
-      'CreateLink', 'Image', 'CreateTable', '|',
-      'FormatPainter', 'ClearFormat', '|',
-      'EmojiPicker', '|',
-      'SourceCode', 'FullScreen'
-    ],
-  };
 
-  const rteImportWord = {
-    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ImportFromWord',
-  };
 
-  const rteExportWord = {
-    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToDocx',
-    fileName: 'test-report.docx',
-  };
+  /* ================= INIT PRINT DATA ================= */
+  useEffect(() => {
+    setPrintData({
+      PatientName: formData2?.PatientName || PatientName || "",
+      Age: (formData2?.Age || "") + (formData2?.AgeType || ""),
+      CaseNo: formData2?.CaseNo || "",
+      Sex: formData2?.Sex || "",
+      ReferredBy: "",
+      BillingDate: new Date().toISOString().split("T")[0],
+      Address: [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", "),
+      ReportDate: "",
+    });
+  }, [open, formData2, PatientName]);
 
-  const rteExportPdf = {
-    serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToPdf',
-    fileName: 'test-report.pdf',
-  };
-
-  const rteInsertImageSettings = {
-    saveUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/SaveFile',
-    path: 'https://services.syncfusion.com/react/production/api/RichTextEditor/GetImage',
-  };
-
-  const handleEditorChange = () => {
-    if (rteRef.current) {
-      setFormData({ htmlContent: rteRef.current.value });
+  // Update ReferredBy once doctors loaded
+  useEffect(() => {
+    if (Object.keys(doctorsMap).length && formData2?.DoctorId) {
+      setPrintData((prev) => ({ ...prev, ReferredBy: prev.ReferredBy || doctorsMap[formData2.DoctorId] || "" }));
     }
-  };
+  }, [doctorsMap, formData2?.DoctorId]);
+
+  // Update ReportDate once records loaded
+  useEffect(() => {
+    if (records.length) {
+      setPrintData((prev) => ({ ...prev, ReportDate: prev.ReportDate || records[0]?.created_at?.split("T")[0] || "" }));
+    }
+  }, [records]);
 
   /* ================= FETCH ================= */
   useEffect(() => {
@@ -487,15 +489,29 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
       if (list.length > 0) {
         const latest = list[list.length - 1];
         setEditId(latest.id);
-        setFormData({ htmlContent: latest.html_content || "" });
+        const content = latest.html_content || "";
+        const withHeader = buildEditorContent(content);
+        setFormData({ htmlContent: content });
+        editorContentRef.current = content;
+        setEditorInitHtml(withHeader);
       } else {
         setEditId(null);
-        setFormData({ htmlContent: htmlContent || "" });
+        const content = htmlContent || "";
+        const withHeader = buildEditorContent(content);
+        setFormData({ htmlContent: content });
+        editorContentRef.current = content;
+        setEditorInitHtml(withHeader);
       }
+      setEditorKey((k) => k + 1);
     } catch {
       toast.error("Failed to load data");
       setEditId(null);
-      setFormData({ htmlContent: htmlContent || "" });
+      const content = htmlContent || "";
+      const withHeader = buildEditorContent(content);
+      setFormData({ htmlContent: content });
+      editorContentRef.current = content;
+      setEditorInitHtml(withHeader);
+      setEditorKey((k) => k + 1);
     }
   };
 
@@ -512,17 +528,19 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
 
   /* ================= SAVE ================= */
   const handleSubmit = async () => {
-    if (!formData.htmlContent.trim()) {
+    const currentHtml = editorContentRef.current || formData.htmlContent;
+    if (!currentHtml.trim()) {
       toast.warn("Content required");
       return;
     }
+    setFormData({ htmlContent: currentHtml });
 
     setLoading(true);
     try {
       const fd = new FormData();
       fd.append("caseId", caseId);
       fd.append("testId", testId);
-      fd.append("htmlContent", formData.htmlContent);
+      fd.append("htmlContent", currentHtml);
 
       if (editId) {
         await axiosInstance.put(`/case-test-data/${editId}`, fd);
@@ -542,56 +560,16 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
     }
   };
 
-  /* ================= OPEN PRINT PREVIEW ================= */
-  const openPrintPreview = () => {
-    if (!records?.length) {
-      toast.warn("No content to print");
-      return;
-    }
-    setPrintData({
-      PatientName: formData2?.PatientName || PatientName || "",
-      Age: (formData2?.Age || "") + (formData2?.AgeType || ""),
-      CaseNo: formData2?.CaseNo || "",
-      Sex: formData2?.Sex || "",
-      ReferredBy: doctorsMap[formData2?.DoctorId || ""] || "",
-      BillingDate: new Date().toISOString().split("T")[0],
-      Address: [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", "),
-      ReportDate: records[0]?.created_at?.split("T")[0] || "",
-    });
-    setShowPrintPreview(true);
-  };
-
-  /* ================= PRINT ================= */
-  const handlePrint = () => {
-    const contentHtml = (rteRef.current ? rteRef.current.value : formData.htmlContent) || records?.at(-1)?.html_content || "";
-
-    const pName = printData.PatientName || "";
-    const age = printData.Age || "";
-    const cNo = printData.CaseNo || "";
-    const sex = printData.Sex || "";
-    const refBy = printData.ReferredBy || "";
-    const bDate = printData.BillingDate || "";
-    const addr = printData.Address || "";
-    const rDate = printData.ReportDate || "";
-
-const signatureBase64 =
-  (SubDepartmentId == 19 || SubDepartmentId == 21)
-    ? ""
-    : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
-
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
-    document.body.appendChild(iframe);
-
-// subDepartmentId 19 or 21 -> 20mm top margin, no bottom margin (for better fit on A4)
-// 19 is for CARDIOLOGY, 21 is for ULTRASONOGRAPHY
-
+  /* ================= BUILD PRINT HTML ================= */
+  const buildPrintHtml = () => {
+    const fullContent = editorContentRef.current || formData.htmlContent || records?.at(-1)?.html_content || "";
+    const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21)
+      ? ""
+      : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
     const isCardioOrUSG = (SubDepartmentId == 19 || SubDepartmentId == 21);
     const topPad = isCardioOrUSG ? '20mm' : '50mm';
 
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(`<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -599,54 +577,27 @@ const signatureBase64 =
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:A4;margin:10mm}
-body{padding:${topPad} 8mm 0 8mm;font-family:"Times New Roman",serif;font-size:13px;color:#000}
-.bc{text-align:right;margin-bottom:4px}
-.bc img{height:45px}
-.pi{width:100%;border:1px solid #000;border-collapse:collapse;font-size:11px}
-.pi td{border:none;padding:2px 4px}
-hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
-.cc{font-family:"Times New Roman",serif;font-size:13px;line-height:1.5}
-.cc p{margin:0 0 3px}
-.cc strong{font-weight:bold}
-.cc table{width:100%;border-collapse:collapse;margin:6px 0}
-.cc table td,.cc table th{border:1px solid #bfbfbf;padding:3px 5px;vertical-align:middle}
-.cc h2{font-size:1.4em;margin:6px 0}
-.cc h3{font-size:1.2em;margin:5px 0}
-.cc ul,.cc ol{padding-left:18px;margin:3px 0}
-.cc img{max-width:100%;height:auto}
-.footer{position:fixed;bottom:10mm;left:8mm;right:8mm}
+body{padding:${topPad} 8mm 0 8mm;font-family:"Times New Roman",serif;font-size:13px;color:#000;line-height:1.5}
+p{margin:0 0 3px}
+strong{font-weight:bold}
+table{width:100%;border-collapse:collapse}
+td,th{padding:3px 5px;vertical-align:middle}
+h2{font-size:1.4em;margin:6px 0}
+h3{font-size:1.2em;margin:5px 0}
+ul,ol{padding-left:18px;margin:3px 0}
+img{max-width:100%;height:auto}
+hr{border:none;border-top:1px solid #000;margin:6px 0}
+.footer{position:fixed;bottom:10cm;right:5cm}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 </head>
 <body>
-<div class="bc"><img src="${barcodeImg}" /></div>
-<table class="pi">
-<tr><td style="width:13%"><b>Patient</b></td><td style="width:37%">: ${pName}</td><td style="width:13%"><b>Age</b></td><td style="width:37%">: ${age}</td></tr>
-<tr><td><b>Case No</b></td><td>: ${cNo}</td><td><b>Sex</b></td><td>: ${sex}</td></tr>
-<tr><td><b>Ref. By</b></td><td>: ${refBy}</td><td><b>Billing Date</b></td><td>: ${bDate}</td></tr>
-<tr><td><b>Address</b></td><td>: ${addr}</td><td><b>Report Date</b></td><td>: ${rDate}</td></tr>
-</table>
-<hr class="sep">
-<div class="cc">${contentHtml}</div>
-
+${fullContent}
 <div class="footer">
-  
   <div style="display:flex;">
-    ${
-      signatureBase64
-        ? `
-        <div style="position:absolute;bottom:5mm;${
-          Number(pathologist.PathologistId) === 3 ? 'left:10mm' :
-          Number(pathologist.PathologistId) === 4 ? 'left:90mm' :
-          'left:150mm'
-        };text-align:center;">
-          <img src="${signatureBase64}" style="height:65px;"/>
-        </div>
-      `
-        : ""
-    }
+    ${signatureBase64 ? `<div style="position:absolute;bottom:0;right:5cm;text-align:center;"><img src="${signatureBase64}" style="height:65px;"/></div>` : ""}
   </div>
 </div>
 <script>
@@ -663,56 +614,36 @@ window.addEventListener('beforeprint',function(){
 });
 </script>
 </body>
-</html>`);
+</html>`;
+  };
 
+  /* ================= PRINT ================= */
+  const handlePrint = () => {
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(buildPrintHtml());
     doc.close();
-
     iframe.contentWindow.focus();
     setTimeout(() => {
       iframe.contentWindow.print();
       setTimeout(() => document.body.removeChild(iframe), 1000);
     }, 500);
-    setShowPrintPreview(false);
+  };
+
+  /* ================= PDF (same as print, opens in new tab for Save as PDF) ================= */
+  const handlePdf = () => {
+    const win = window.open("", "_blank");
+    win.document.write(buildPrintHtml());
+    win.document.close();
   };
 
   if (!open) return null;
 
   return (
     <>
-      {/* ================= EDITABLE PRINT PREVIEW ================= */}
-      {showPrintPreview && (
-        <>
-          <div onClick={() => setShowPrintPreview(false)} style={{ position: "fixed", inset: 0, zIndex: 1000000, backgroundColor: "rgba(0,0,0,0.5)" }} />
-          <div style={{ position: "fixed", top: "5%", left: "15%", right: "15%", bottom: "5%", zIndex: 1000001, backgroundColor: "#fff", borderRadius: 8, overflowY: "auto", padding: 20, boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="m-0 fw-bold text-primary">📝 Edit Report Details Before Print</h5>
-              <button className="btn btn-sm btn-danger" onClick={() => setShowPrintPreview(false)}>✕ Close</button>
-            </div>
-            <div className="row g-2 mb-3">
-              {[
-                { label: "Patient Name", key: "PatientName", col: 4 },
-                { label: "Case No.", key: "CaseNo", col: 2 },
-                { label: "Age", key: "Age", col: 2 },
-                { label: "Sex", key: "Sex", col: 1 },
-                { label: "Referred By", key: "ReferredBy", col: 3 },
-                { label: "Billing Date", key: "BillingDate", col: 3 },
-                { label: "Report Date", key: "ReportDate", col: 3 },
-                { label: "Address", key: "Address", col: 6 },
-              ].map((f) => (
-                <div className={`col-md-${f.col}`} key={f.key}>
-                  <label className="form-label mb-0 small fw-bold">{f.label}</label>
-                  <input className="form-control form-control-sm" value={printData[f.key] || ""} onChange={(e) => setPrintData((prev) => ({ ...prev, [f.key]: e.target.value }))} />
-                </div>
-              ))}
-            </div>
-            <div className="d-flex justify-content-end gap-2">
-              <button className="btn btn-secondary btn-sm" onClick={() => setShowPrintPreview(false)}>Cancel</button>
-              <button className="btn btn-primary btn-sm" onClick={handlePrint}>🖨️ Generate Print</button>
-            </div>
-          </div>
-        </>
-      )}
-
       {/* ================= BACKDROP ================= */}
       <div
         onClick={onClose}
@@ -740,35 +671,28 @@ window.addEventListener('beforeprint',function(){
           boxShadow: "-2px 0 10px rgba(0,0,0,0.2)",
         }}
       >
-        {/* HEADER */}
-        <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
-          <h6 className="m-0 fw-bold">
-            Case: {caseId} | Test: {testId} | {PatientName}
-          </h6>
+        {/* HEADER - minimal */}
+        <div className="d-flex justify-content-between align-items-center px-3 py-1 border-bottom bg-light" style={{ flexShrink: 0 }}>
+          <span className="fw-bold" style={{ fontSize: "0.85rem" }}>
+            {PatientName} | {formData2?.CaseNo}
+          </span>
           <button className="btn-close" onClick={onClose}></button>
         </div>
 
-        {/* BODY - Editor */}
-        <div className="flex-grow-1 p-2" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <div className="mb-1">
-            <strong className="small">✏️ Editor</strong>
-          </div>
-          <div style={{ flex: 1, overflow: "auto" }}>
-            <RichTextEditorComponent
-              ref={rteRef}
-              value={formData.htmlContent || htmlContent || ""}
-              change={handleEditorChange}
-              toolbarSettings={rteToolbarSettings}
-              importWord={rteImportWord}
-              exportWord={rteExportWord}
-              exportPdf={rteExportPdf}
-              insertImageSettings={rteInsertImageSettings}
-              height="100%"
-              enableResize={false}
-            >
-              <RteInject services={[Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count]} />
-            </RichTextEditorComponent>
-          </div>
+        {/* BODY - DocumentEditor (same DOCX-style as /test-editor) */}
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <DocumentEditor
+            key={editorKey}
+            initialContent={editorInitHtml || buildEditorContent(formData.htmlContent || htmlContent || "")}
+            documentTitle={`Case ${caseId} - Test ${testId}`}
+            onSave={(data) => {
+              editorContentRef.current = data.html;
+              handleSubmit();
+            }}
+            onContentChange={(html) => {
+              editorContentRef.current = html;
+            }}
+          />
         </div>
 
         {/* FOOTER */}
@@ -780,8 +704,11 @@ window.addEventListener('beforeprint',function(){
           >
             {editId ? "Update" : "Save"}
           </button>
-          <button className="btn btn-primary" onClick={openPrintPreview}>
+          <button className="btn btn-primary" onClick={handlePrint}>
             Print
+          </button>
+          <button className="btn btn-warning" onClick={handlePdf}>
+            PDF
           </button>
           <button className="btn btn-secondary" onClick={onClose}>
             Close

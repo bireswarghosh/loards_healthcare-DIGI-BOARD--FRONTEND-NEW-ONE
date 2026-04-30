@@ -1,0 +1,48 @@
+#editor-scroll-container {
+  overflow-y: scroll !important;
+  overflow-x: auto !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.ProseMirror {
+  outline: none !important;
+  min-height: 1056px;
+  padding: 72px 96px;
+  font-family: Calibri, sans-serif;
+  font-size: 11pt;
+  line-height: 1.15;
+  overflow: visible !important;
+}
+
+.ProseMirror:focus {
+  outline: none !important;
+}
+
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ProseMirror td, .ProseMirror th {
+  border: 1px solid #999;
+  padding: 6px 8px;
+  vertical-align: top;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

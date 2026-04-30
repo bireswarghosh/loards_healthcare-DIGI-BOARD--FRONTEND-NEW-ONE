@@ -1,1194 +1,290 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
 import useAxiosFetch from "./DiagnosisMaster/Fetch";
 import axiosInstance from "../axiosInstance";
+
+const SectionCard = ({ title, icon, color, children }) => (
+  <div style={{ borderRadius: 10, overflow: "hidden", marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: `1px solid ${color}30` }}>
+    <div style={{ background: `linear-gradient(135deg, ${color}, ${color}dd)`, color: "#fff", padding: "10px 16px", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ fontSize: 18 }}>{icon}</span>{title}
+    </div>
+    <div style={{ background: "#fff", padding: 12 }}>{children}</div>
+  </div>
+);
+
+const NumberedTextArea = ({ value, onChange, readOnly, placeholder, rows = 4 }) => {
+  const ref = useRef(null);
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !readOnly) {
+      e.preventDefault();
+      const ta = ref.current;
+      const pos = ta.selectionStart;
+      const text = ta.value;
+      const lines = text.substring(0, pos).split("\n");
+      const nextNum = lines.length + 1;
+      const newText = text.substring(0, pos) + `\n${nextNum}. ` + text.substring(pos);
+      onChange(newText);
+      setTimeout(() => {
+        ta.selectionStart = ta.selectionEnd = pos + `\n${nextNum}. `.length;
+        ta.focus();
+      }, 0);
+    }
+  };
+
+  const ensureFirstNumber = (val) => {
+    if (!val || val.trim() === "") return "";
+    if (!/^\d+\./.test(val.trim())) return `1. ${val}`;
+    return val;
+  };
+
+  return (
+    <textarea
+      ref={ref}
+      className="form-control"
+      rows={rows}
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={(e) => {
+        if (!readOnly && !e.target.value) onChange("1. ");
+      }}
+      onKeyDown={handleKeyDown}
+      readOnly={readOnly}
+      placeholder={readOnly ? "" : placeholder || "Type here... Press Enter for new numbered line"}
+      style={{
+        border: readOnly ? "none" : "1px solid #ddd",
+        background: readOnly ? "#f8f9fa" : "#fff",
+        resize: "vertical", fontSize: 13, lineHeight: 1.8,
+        fontFamily: "'Segoe UI', sans-serif",
+        whiteSpace: "pre-wrap",
+      }}
+    />
+  );
+};
+
+const PlainTextArea = ({ value, onChange, readOnly, placeholder, rows = 3 }) => (
+  <textarea
+    className="form-control"
+    rows={rows}
+    value={value || ""}
+    onChange={(e) => onChange(e.target.value)}
+    readOnly={readOnly}
+    placeholder={readOnly ? "" : placeholder}
+    style={{
+      border: readOnly ? "none" : "1px solid #ddd",
+      background: readOnly ? "#f8f9fa" : "#fff",
+      resize: "vertical", fontSize: 13, lineHeight: 1.8,
+      whiteSpace: "pre-wrap",
+    }}
+  />
+);
+
+// Convert array to numbered text
+const arrayToText = (arr, key) => {
+  if (!arr || arr.length === 0) return "";
+  return arr.sort((a, b) => (a.SlNo || 0) - (b.SlNo || 0)).map((item, i) => `${i + 1}. ${item[key] || ""}`).join("\n");
+};
+
+// Convert numbered text to array
+const textToArray = (text, key) => {
+  if (!text || !text.trim()) return [];
+  return text.split("\n").filter(l => l.trim()).map((line, i) => ({
+    SlNo: i + 1,
+    [key]: line.replace(/^\d+\.\s*/, "").trim(),
+  }));
+};
+
+// Convert medicine array to text
+const medArrayToText = (arr) => {
+  if (!arr || arr.length === 0) return "";
+  return arr.sort((a, b) => (a.SlNo || 0) - (b.SlNo || 0)).map((item, i) => {
+    const parts = [item.Type, item.Medicine, item.dose, item.unit, item.days ? `${item.days} days` : ""].filter(Boolean).join(" — ");
+    return `${i + 1}. ${parts || item.Medicine || ""}`;
+  }).join("\n");
+};
 
 const DischargeNewAdvice = () => {
   const savedAdmitionId = sessionStorage.getItem("selectedAdmitionId");
   const { id } = useParams();
+  const navigate = useNavigate();
   const { data: emrData } = useAxiosFetch(id ? `/emr/D-${id}` : null, [id]);
+  const { data: medData } = useAxiosFetch(id ? `/discertdtl/by-id/${encodeURIComponent(id)}` : null, [id]);
+  const { data: dischargeData } = useAxiosFetch(id ? `/discert/${id}` : null, [id]);
 
-  const { data: medData } = useAxiosFetch(
-    id ? `/discertdtl/by-id/${encodeURIComponent(id)}` : null,
-    [id]
-  );
-  const { data: dischargeData } = useAxiosFetch(id ? `/discert/${id}` : null, [
-    id,
-  ]);
+  const [isEditMode, setIsEditMode] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [formData, setFormData] = useState({
-    pastHistory: [{ SlNo: 1, pasthistory: "" }],
+  const [form, setForm] = useState({
+    diagnosis: "",
+    complaints: "",
+    pastHistory: "",
+    investigations: "",
+    adviceMedicine: "",
     significantFindings: "",
     investigationResults: "",
-    investigations: [{ SlNo: 1, Invest: "" }],
     conditionAtDischarge: "",
     followUpDate: "",
-    adviceMedicine: [
-      { SlNo: 1, Type: "", Medicine: "", dose: "", unit: "", days: "" },
-    ],
-    generalFormat: [{ test: "", rate: "", testPro: "", provalue: "" }],
-    bloodFormat: [{ slno: 1, proName: "", value: "" }],
-    notesNarration: "",
-    diagnosis: [{ SlNo: 1, diagonisis: "" }],
-    complaints: [{ SlNo: 1, chief: "" }],
   });
 
-  const addRow = (field) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: [
-        ...prev[field],
-        field === "pastHistory"
-          ? { SlNo: prev[field].length + 1, pasthistory: "" }
-          : field === "investigations"
-            ? { SlNo: prev[field].length + 1, Invest: "" }
-            : field === "adviceMedicine"
-              ? {
-                  SlNo: prev[field].length + 1,
-                  Type: "",
-                  Medicine: "",
-                  dose: "",
-                  unit: "",
-                  days: "",
-                }
-              : field === "generalFormat"
-                ? { test: "", rate: "", testPro: "", provalue: "" }
-                : field === "bloodFormat"
-                  ? { slno: prev[field].length + 1, proName: "", value: "" }
-                  : field === "diagnosis"
-                    ? { SlNo: prev[field].length + 1, diagonisis: "" }
-                    : field === "complaints"
-                      ? { SlNo: prev[field].length + 1, chief: "" }
-                      : {},
-      ],
-    }));
-  };
+  const set = (key) => (val) => setForm((p) => ({ ...p, [key]: val }));
 
-  const updateRow = (field, index, key, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].map((item, i) =>
-        i === index ? { ...item, [key]: value } : item
-      ),
-    }));
-  };
-
-  const [addEditState, setAddEditState] = useState(true);
-
+  // Load from API
   useEffect(() => {
-    if (addEditState === true) return;
-    if (!emrData) return;
+    if (!emrData && !dischargeData && !medData) return;
 
-    setFormData((prev) => ({
-      ...prev,
+    setForm({
+      diagnosis: arrayToText(emrData?.diagnosis, "diagonisis"),
+      complaints: arrayToText(emrData?.complaints, "chief"),
+      pastHistory: arrayToText(emrData?.pastHistory, "pasthistory"),
+      investigations: arrayToText(emrData?.investigations, "Invest"),
+      adviceMedicine: medArrayToText(medData),
+      significantFindings: dischargeData?.G || "",
+      investigationResults: dischargeData?.C || "",
+      conditionAtDischarge: dischargeData?.F || "",
+      followUpDate: dischargeData?.E || "",
+    });
 
-      // Past History
-      pastHistory:
-        emrData.pastHistory?.length > 0
-          ? emrData.pastHistory
-              ?.sort((a, b) => a.SlNo - b.SlNo)
-              .map((item, i) => ({
-                SlNo: item.SlNo,
-                pasthistory: item.pasthistory || "",
-              }))
-          : [],
-
-      // Significant Findings (from diagnosis)
-      significantFindings: dischargeData?.G,
-      followUpDate: dischargeData?.E,
-      // ?.map((d) => d.Diagnosis || d.diagnosis || "")
-      // .join("\n") || prev.significantFindings,
-      conditionAtDischarge: dischargeData?.F,
-      // Investigation Results
-      investigationResults: dischargeData?.C,
-      // emrData.investigations
-      //   ?.map((i) => i.Invest || i.invest || "")
-      //   .join("\n") || prev.investigationResults,
-
-      // Treatment Done (from medicine)
-      investigations:
-        emrData.investigations?.length > 0
-          ? emrData.investigations
-              ?.sort((a, b) => a.SlNo - b.SlNo)
-              .map((item, index) => ({
-                SlNo: item.SlNo,
-                Invest: item.Invest || "",
-              }))
-          : [],
-
-      // =====advicemed====
-      adviceMedicine: medData
-        ? medData
-            .sort((a, b) => a.SlNo - b.SlNo)
-            .map((item) => ({
-              SlNo: item.SlNo,
-              Type: item.Type,
-              Medicine: item.Medicine,
-              dose: item.dose,
-              unit: item.unit,
-              days: item.days,
-            }))
-        : [],
-      diagnosis:
-        emrData.diagnosis?.length > 0
-          ? emrData.diagnosis
-              .sort((a, b) => a.SlNo - b.SlNo)
-              .map((item) => ({
-                SlNo: item.SlNo,
-                diagonisis: item.diagonisis || "",
-              }))
-          : [],
-
-      complaints:
-        emrData.complaints?.length > 0
-          ? emrData.complaints
-              .sort((a, b) => a.SlNo - b.SlNo)
-              .map((item) => ({
-                SlNo: item.SlNo,
-                chief: item.chief || "",
-              }))
-          : [],
-
-      // Notes / Narration (from complaints)
-      // notesNarration:
-      //   emrData.complaints
-      //     ?.map((c) => c.chief || c.Complaint || "")
-      //     .join("\n") || prev.notesNarration,
-      notesNarration: dischargeData?.C,
-    }));
-  }, [addEditState, emrData, medData, dischargeData]);
+    if (emrData || medData) setIsEditMode(false);
+  }, [emrData, medData, dischargeData]);
 
   const handleSave = async () => {
+    setSaving(true);
     try {
-      const payload = {
+      // EMR
+      const emrPayload = {
         RegistrationId: `D-${id}`,
-
         admissionid: savedAdmitionId,
-
         VisitId: "null",
-        pastHistory: formData.pastHistory,
-        // significantFindings: formData.significantFindings,
-        // investigationResults: formData.investigationResults,
-        complaints: formData.complaints,
-        diagnosis: formData.diagnosis,
-        investigations: formData.investigations,
-        // conditionAtDischarge: formData.conditionAtDischarge,
-        // followUpDate: formData.followUpDate,
-        // adviceMedicine: formData.adviceMedicine,
-        // generalFormat: formData.generalFormat,
-        // bloodFormat: formData.bloodFormat,
-        // notesNarration: formData.notesNarration,
+        pastHistory: textToArray(form.pastHistory, "pasthistory"),
+        complaints: textToArray(form.complaints, "chief"),
+        diagnosis: textToArray(form.diagnosis, "diagonisis"),
+        investigations: textToArray(form.investigations, "Invest"),
       };
-      // const advicePayload = formData.adviceMedicine.map((item) => ({
-      //   SlNo: item.SlNo || "",
-      //   Type: item.Type || "",
-      //   Medicine: item.Medicine || "",
-      //   dose: item.dose || "",
-      //   unit: item.unit || "",
-      //   days: item.days || "",
-      //   DisCerId: `D-${id}`,
-      // }));
 
-      let res;
-      if (addEditState) {
-        const res = await axiosInstance.post(`/emr/bulk`, payload);
+      if (isEditMode) {
+        await axiosInstance.post(`/emr/bulk`, emrPayload);
       } else {
-        res = await axiosInstance.put(`/emr/bulk`, payload);
+        await axiosInstance.put(`/emr/bulk`, emrPayload);
       }
 
-      // ----- ADVICE MEDICINE -----
+      // Advice Medicine
+      const medLines = form.adviceMedicine ? form.adviceMedicine.split("\n").filter(l => l.trim()) : [];
       const advicePayload = {
-        records: formData.adviceMedicine.map((item) => ({
+        records: medLines.map((line) => ({
           DisCerId: `${id}`,
           DisCerDate: new Date().toISOString().split("T")[0],
-          DisCerTime: new Date().toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-
+          DisCerTime: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
           AdmitionId: savedAdmitionId,
-
-          Medicine: item.Medicine || "",
-          unit: item.unit || "",
-          days: item.days || "",
-          dose: item.dose || "",
-          Type: item.Type || "",
+          Medicine: line.replace(/^\d+\.\s*/, "").trim(),
+          unit: "", days: "", dose: "", Type: "",
         })),
       };
 
-      let res2;
-      if (addEditState) {
-        res2 = await axiosInstance.post(`/discertdtl/bulk`, advicePayload);
-      } else {
-        res2 = await axiosInstance.put(
-          `/discertdtl/bulk/${encodeURIComponent(id)}`,
-          advicePayload
-        );
+      if (advicePayload.records.length > 0) {
+        if (isEditMode) {
+          await axiosInstance.post(`/discertdtl/bulk`, advicePayload);
+        } else {
+          await axiosInstance.put(`/discertdtl/bulk/${encodeURIComponent(id)}`, advicePayload);
+        }
       }
-      // ---- DISCHARGE MAIN TABLE UPDATE ----
-      const dischargePayload = {
-        // DisCerDate: new Date().toISOString().split("T")[0],
-        // DisCerTime: new Date().toLocaleTimeString("en-GB", {
-        //   hour: "2-digit",
-        //   minute: "2-digit",
-        // }),
-        AdmitionId: savedAdmitionId,
-        G: formData.significantFindings || "",
-        E: formData.followUpDate || "",
-        F: formData.conditionAtDischarge || "",
-        C: formData.investigationResults || "",
-      };
-{(formData.significantFindings ||
-  formData.followUpDate ||
-  formData.conditionAtDischarge ||
-  formData.notesNarration) &&
-  (await axiosInstance.put(`/discert/${id}`, dischargePayload));}
-      
 
-      toast.success("Updated Successfully!");
+      // Discharge main
+      const dp = {
+        AdmitionId: savedAdmitionId,
+        G: form.significantFindings || "",
+        E: form.followUpDate || "",
+        F: form.conditionAtDischarge || "",
+        C: form.investigationResults || "",
+      };
+      if (dp.G || dp.E || dp.F || dp.C) {
+        await axiosInstance.put(`/discert/${id}`, dp);
+      }
+
+      toast.success("Saved Successfully!");
       sessionStorage.removeItem("selectedAdmitionId");
     } catch (error) {
-      console.error("UPDATE ERROR:", error);
-      toast.error("Something went wrong ???!");
+      console.error("SAVE ERROR:", error);
+      toast.error("Something went wrong!");
+    } finally {
+      setSaving(false);
     }
   };
 
+  const ro = !isEditMode;
+
   return (
-    <>
-      <style>
-        {`
-    .main-content, .panel, .panel-body {
-      position: relative !important;
-      z-index: 1 !important;
-      height: auto !important;
-      min-height: auto !important;
-      overflow: visible !important;
-    }
-
-    /* Force remove any full-screen overlay from external CSS */
-    .main-content::before,
-    .main-content::after,
-    .panel::before,
-    .panel::after,
-    .panel-body::before,
-    .panel-body::after {
-      content: none !important;
-      display: none !important;
-    }
-  `}
-      </style>
-      <div
-        className="main-content"
-        style={{
-          position: "relative",
-          zIndex: 1,
-          overflow: "visible",
-        }}
-      >
-        <div className="panel">
-          <div className="panel-header">
-            <h5>Discharge Summary</h5>
-            <button
-              type="button"
-              onClick={() => {
-                const newState = !addEditState;
-                setAddEditState(newState);
-
-                if (newState === true) {
-                  // jodi Add mode e jay → field reset
-                  setFormData({
-                    pastHistory: [{ SlNo: 1, pasthistory: "" }],
-                    significantFindings: "",
-                    investigationResults: "",
-                    investigations: [{ SlNo: 1, Invest: "" }],
-                    conditionAtDischarge: "",
-                    followUpDate: "",
-                    diagnosis: [{ SlNo: 1, diagonisis: "" }],
-                    complaints: [{ SlNo: 1, chief: "" }],
-                    adviceMedicine: [
-                      {
-                        SlNo: 1,
-                        Type: "",
-                        Medicine: "",
-                        dose: "",
-                        unit: "",
-                        days: "",
-                      },
-                    ],
-                    generalFormat: [
-                      { test: "", rate: "", testPro: "", provalue: "" },
-                    ],
-                    bloodFormat: [{ slno: 1, proName: "", value: "" }],
-                    notesNarration: "",
-                  });
-                }
-              }}
-            >
-              {addEditState ? "Add" : "Edit"}
-            </button>
-          </div>
-
-          <div
-            className="panel-body "
-            style={{
-              backgroundColor: "#f0f0f0",
-              padding: "10px",
-              height: "auto",
-              overflow: "visible",
-            }}
-          >
-            <div className="row g-2">
-              {/* ================= LEFT COLUMN ================= */}
-              <div className="col-md-6">
-                {/* diagnosis========================= */}
-                <div
-                  className="mb-2 bg-primary"
-                  // style={{
-                  //   backgroundColor: "#0080FF",
-                  //   padding: "5px",
-                  //   border: "2px solid #000",
-                  // }}
-                >
-                  <div
-                    className=" "
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      borderBottom: "1px solid #000",
-                    }}
-                  >
-                    Diagnosis
-                  </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0"
-                      style={{ fontSize: "12px" }}
-                    >
-                      <thead style={{ backgroundColor: "#f0e2cd" }}>
-                        <tr>
-                          <th style={{ width: "50px", color: "#080000" }}>
-                            slno
-                          </th>
-                          <th style={{ color: "#080000" }}>Diagnosis</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.diagnosis.map((row, index) => (
-                          <tr key={index}>
-                            <td style={{ backgroundColor: "#f0e2cd" }}>
-                              {row.SlNo}
-                            </td>
-                            <td>
-                              <textarea
-                                className="form-control form-control-sm"
-                                rows="2"
-                                value={row.diagonisis}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "diagnosis",
-                                    index,
-                                    "diagonisis",
-                                    e.target.value
-                                  )
-                                }
-                                style={{
-                                  border: "none",
-                                  resize: "none",
-                                  color: "#080000",
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {addEditState && (
-                      <button
-                        className="btn btn-sm btn-success m-1"
-                        onClick={() => addRow("diagnosis")}
-                      >
-                        + Add
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Past History */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      borderBottom: "1px solid #000",
-                    }}
-                  >
-                    Past History
-                  </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0"
-                      style={{ fontSize: "12px" }}
-                    >
-                      <thead style={{ backgroundColor: "#f0e2cd" }}>
-                        <tr>
-                          <th style={{ width: "50px", color: "#080000" }}>
-                            slno
-                          </th>
-                          <th style={{ color: "#080000" }}>Past History</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.pastHistory.map((row, index) => (
-                          <tr key={index}>
-                            <td style={{ backgroundColor: "#f0e2cd" }}>
-                              {row.SlNo}
-                            </td>
-                            <td>
-                              <textarea
-                                className="form-control form-control-sm"
-                                rows="2"
-                                value={row.pasthistory}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "pastHistory",
-                                    index,
-                                    "pasthistory",
-                                    e.target.value
-                                  )
-                                }
-                                style={{
-                                  border: "none",
-                                  resize: "none",
-                                  color: "#080000",
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {addEditState && (
-                      <button
-                        className="btn btn-sm btn-success m-1"
-                        onClick={() => addRow("pastHistory")}
-                      >
-                        + Add
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Significant Findings */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                    }}
-                  >
-                    Significant Findings
-                  </div>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="3"
-                    value={formData.significantFindings}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        significantFindings: e.target.value,
-                      }))
-                    }
-                    style={{ backgroundColor: "#fff" }}
-                  />
-                </div>
-
-                {/* Investigation Results */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                    }}
-                  >
-                    Investigation Results
-                  </div>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="3"
-                    value={formData.investigationResults}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        investigationResults: e.target.value,
-                      }))
-                    }
-                    style={{ backgroundColor: "#fff" }}
-                  />
-                </div>
-
-                {/* Treatment Done */}
-                <div
-                  className="mb-2 "
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    className=""
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      borderBottom: "1px solid #000",
-                    }}
-                  >
-                    Treatment Done / Procedure
-                  </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0"
-                      style={{ fontSize: "12px" }}
-                    >
-                      <thead style={{ backgroundColor: "#f0e2cd" }}>
-                        <tr>
-                          <th style={{ width: "50px", color: "#080000" }}>
-                            slno
-                          </th>
-                          <th style={{ color: "#080000" }}>Advice</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.investigations.map((row, index) => (
-                          <tr key={index}>
-                            <td style={{ backgroundColor: "#f0e2cd" }}>
-                              {row.SlNo}
-                            </td>
-                            <td>
-                              <textarea
-                                className="form-control form-control-sm"
-                                rows="2"
-                                value={row.Invest}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "investigations",
-                                    index,
-                                    "Invest",
-                                    e.target.value
-                                  )
-                                }
-                                style={{
-                                  border: "none",
-                                  resize: "none",
-                                  color: "#080000",
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {addEditState && (
-                      <button
-                        className="btn btn-sm btn-success m-1"
-                        onClick={() => addRow("investigations")}
-                      >
-                        + Add
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* ================= RIGHT COLUMN ================= */}
-              <div className="col-md-6">
-                {/* complaints================================ */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      borderBottom: "1px solid #000",
-                    }}
-                  >
-                    Chief Complaint
-                  </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0"
-                      style={{ fontSize: "12px" }}
-                    >
-                      <thead
-                        style={{ backgroundColor: "#f0e2cd", color: "#080000" }}
-                      >
-                        <tr>
-                          <th style={{ width: "50px" }}>slno</th>
-                          <th>Chief Complaint</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.complaints.map((row, index) => (
-                          <tr key={index}>
-                            <td style={{ backgroundColor: "#f0e2cd" }}>
-                              {row.SlNo}
-                            </td>
-                            <td>
-                              <textarea
-                                className="form-control form-control-sm"
-                                rows="2"
-                                value={row.chief}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "complaints",
-                                    index,
-                                    "chief",
-                                    e.target.value
-                                  )
-                                }
-                                style={{
-                                  border: "none",
-                                  resize: "none",
-                                  color: "#080000",
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {addEditState && (
-                      <button
-                        className="btn btn-sm btn-success m-1"
-                        onClick={() => addRow("complaints")}
-                      >
-                        + Add
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {/* Advice on Discharge */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      borderBottom: "1px solid #000",
-                    }}
-                  >
-                    Advice on Discharge
-                  </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0 "
-                      style={{ fontSize: "11px", tableLayout: "fixed" }}
-                    >
-                      <thead style={{ backgroundColor: "#f0e2cd" }}>
-                        <tr>
-                          <th style={{ width: "40px" }}>slno</th>
-                          <th>Type</th>
-                          <th>Medicine</th>
-                          <th>Dose</th>
-                          <th>Unit</th>
-                          <th>Day</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.adviceMedicine.map((row, index) => (
-                          <tr key={index}>
-                            <td style={{ backgroundColor: "#f0e2cd" }}>
-                              {row.SlNo}
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.Type}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "adviceMedicine",
-                                    index,
-                                    "Type",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.Medicine}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "adviceMedicine",
-                                    index,
-                                    "Medicine",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.dose}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "adviceMedicine",
-                                    index,
-                                    "dose",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.unit}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "adviceMedicine",
-                                    index,
-                                    "unit",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.days}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "adviceMedicine",
-                                    index,
-                                    "days",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {addEditState && (
-                      <button
-                        className="btn btn-sm btn-success m-1"
-                        onClick={() => addRow("adviceMedicine")}
-                      >
-                        + Add
-                      </button>
-                    )}
-                  </div>
-                </div>
-                {/* Follow Up */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                    }}
-                  >
-                    Follow Up Date
-                  </div>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="2"
-                    value={formData.followUpDate}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        followUpDate: e.target.value,
-                      }))
-                    }
-                    style={{ backgroundColor: "#fff", color: "#080000" }}
-                  />
-                </div>
-                {/* Condition At Discharge */}
-                <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#f0e2cd",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#f0e2cd",
-                      color: "#080000",
-                      fontWeight: "bold",
-                      padding: "5px",
-                    }}
-                  >
-                    Condition At Discharge
-                  </div>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="2"
-                    value={formData.conditionAtDischarge}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        conditionAtDischarge: e.target.value,
-                      }))
-                    }
-                    style={{ backgroundColor: "#fff", color: "#080000" }}
-                  />
-                </div>
-                {/* General Format */}
-                {/* <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#0080FF",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      textAlign: "center",
-                    }}
-                  >
-                    General Format
-                  </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0"
-                      style={{ fontSize: "11px", tableLayout: "fixed" }}
-                    >
-                      <thead>
-                        <tr>
-                          <th>Test</th>
-                          <th>Rate</th>
-                          <th
-                            style={{
-                              backgroundColor: "#0080ff",
-                              color: "#fff",
-                            }}
-                          >
-                            TestPro
-                          </th>
-                          <th
-                            style={{
-                              backgroundColor: "#0080ff",
-                              color: "#fff",
-                            }}
-                          >
-                            Provalue
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.generalFormat.map((row, index) => (
-                          <tr key={index}>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.test}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "generalFormat",
-                                    index,
-                                    "test",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.rate}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "generalFormat",
-                                    index,
-                                    "rate",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                            <td style={{ backgroundColor: "#0080ff" }}>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.testPro}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "generalFormat",
-                                    index,
-                                    "testPro",
-                                    e.target.value
-                                  )
-                                }
-                                style={{
-                                  border: "none",
-                                  fontSize: "11px",
-                                  backgroundColor: "transparent",
-                                  color: "#fff",
-                                }}
-                              />
-                            </td>
-                            <td style={{ backgroundColor: "#0080ff" }}>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.provalue}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "generalFormat",
-                                    index,
-                                    "provalue",
-                                    e.target.value
-                                  )
-                                }
-                                style={{
-                                  border: "none",
-                                  fontSize: "11px",
-                                  backgroundColor: "transparent",
-                                  color: "#fff",
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <button
-                      className="btn btn-sm btn-success m-1"
-                      onClick={() => addRow("generalFormat")}
-                    >
-                      + Add
-                    </button>
-                  </div>
-                </div> */}
-
-                {/* Blood Format */}
-                {/* <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#0080FF",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      padding: "5px",
-                      textAlign: "center",
-                    }}
-                  >
-                    Blood Format
-                  </div>
-                  <div style={{ backgroundColor: "#fff" }}>
-                    <table
-                      className="table table-bordered mb-0"
-                      style={{ fontSize: "11px" }}
-                    >
-                      <thead>
-                        <tr>
-                          <th style={{ width: "50px" }}>SlNo</th>
-                          <th>Pro Name</th>
-                          <th
-                            style={{
-                              backgroundColor: "#0080ff",
-                              color: "#fff",
-                            }}
-                          >
-                            Value
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {formData.bloodFormat.map((row, index) => (
-                          <tr key={index}>
-                            <td>{row.slno}</td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.proName}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "bloodFormat",
-                                    index,
-                                    "proName",
-                                    e.target.value
-                                  )
-                                }
-                                style={{ border: "none", fontSize: "11px" }}
-                              />
-                            </td>
-                            <td style={{ backgroundColor: "#0080ff" }}>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={row.value}
-                                onChange={(e) =>
-                                  updateRow(
-                                    "bloodFormat",
-                                    index,
-                                    "value",
-                                    e.target.value
-                                  )
-                                }
-                                style={{
-                                  border: "none",
-                                  fontSize: "11px",
-                                  backgroundColor: "transparent",
-                                  color: "#fff",
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <button
-                      className="btn btn-sm btn-success m-1"
-                      onClick={() => addRow("bloodFormat")}
-                    >
-                      + Add
-                    </button>
-                  </div>
-                </div> */}
-
-                {/* Notes */}
-                {/* <div
-                  className="mb-2"
-                  style={{
-                    backgroundColor: "#0080FF",
-                    padding: "5px",
-                    border: "2px solid #000",
-                  }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: "#0080FF",
-                      color: "#fff",
-                      fontWeight: "bold",
-                      padding: "5px",
-                    }}
-                  >
-                    Notes / Narration
-                  </div>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="8"
-                    value={formData.notesNarration}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        notesNarration: e.target.value,
-                      }))
-                    }
-                    style={{ backgroundColor: "#c0c0c0" }}
-                  />
-                </div> */}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="d-flex justify-content-end gap-2 mt-3">
-              <button onClick={handleSave} className="btn btn-primary">
-                <i className="fa-light fa-save me-2"></i>Save
-              </button>
-              {/* <button className="btn btn-secondary">
-                <i className="fa-light fa-print me-2"></i>Print
-              </button> */}
-              {/* <button className="btn btn-danger">
-                <i className="fa-light fa-times me-2"></i>Clearrrrr
-              </button> */}
-            </div>
-          </div>
+    <div style={{ background: "#f0f2f5", minHeight: "100vh", paddingBottom: 40 }}>
+      <div style={{ background: "linear-gradient(135deg, #1a237e, #283593)", color: "#fff", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}>
+        <div>
+          <h5 style={{ margin: 0, fontWeight: 700 }}>📝 Discharge Summary & Advice</h5>
+          <small style={{ opacity: 0.8 }}>ID: {id}</small>
+        </div>
+        <div className="d-flex gap-2">
+          <button className={`btn btn-sm ${isEditMode ? "btn-warning" : "btn-outline-light"}`} onClick={() => setIsEditMode(!isEditMode)}>
+            {isEditMode ? "🔒 View Mode" : "✏️ Edit Mode"}
+          </button>
+          {!ro && <button className="btn btn-sm btn-success" onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "💾 Save"}</button>}
+          <button className="btn btn-sm btn-outline-light" onClick={() => navigate(`/discharge/${encodeURIComponent(id)}/print`)}>🖨 Print</button>
         </div>
       </div>
-    </>
+
+      <div style={{ textAlign: "center", padding: 6, background: isEditMode ? "#fff3e0" : "#e8f5e9", fontWeight: 600, fontSize: 12, color: isEditMode ? "#e65100" : "#2e7d32" }}>
+        {isEditMode ? "✏️ EDIT MODE — Press Enter for new numbered line" : "👁️ VIEW MODE — Read only"}
+      </div>
+
+      <div style={{ maxWidth: 1100, margin: "20px auto", padding: "0 16px" }}>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <SectionCard title="Diagnosis" icon="🩺" color="#2e7d32">
+              <NumberedTextArea value={form.diagnosis} onChange={set("diagnosis")} readOnly={ro} placeholder="Type diagnosis..." rows={4} />
+            </SectionCard>
+
+            <SectionCard title="Past History" icon="📜" color="#e65100">
+              <NumberedTextArea value={form.pastHistory} onChange={set("pastHistory")} readOnly={ro} placeholder="Type past history..." rows={3} />
+            </SectionCard>
+
+            <SectionCard title="Significant Findings (Vitals)" icon="📊" color="#0277bd">
+              <PlainTextArea value={form.significantFindings} onChange={set("significantFindings")} readOnly={ro} placeholder="BP= 120/70 MM OF HG&#10;P= 78 B/MIN..." rows={4} />
+            </SectionCard>
+
+            <SectionCard title="Investigation Results" icon="🧪" color="#6a1b9a">
+              <PlainTextArea value={form.investigationResults} onChange={set("investigationResults")} readOnly={ro} placeholder="ATTACHED / Enter results..." rows={2} />
+            </SectionCard>
+
+            <SectionCard title="Treatment Done / Procedure" icon="🔬" color="#7b1fa2">
+              <NumberedTextArea value={form.investigations} onChange={set("investigations")} readOnly={ro} placeholder="Type treatment done..." rows={3} />
+            </SectionCard>
+          </div>
+
+          <div className="col-md-6">
+            <SectionCard title="Chief Complaints" icon="📋" color="#1565c0">
+              <NumberedTextArea value={form.complaints} onChange={set("complaints")} readOnly={ro} placeholder="Type chief complaints..." rows={4} />
+            </SectionCard>
+
+            <SectionCard title="Advice on Discharge" icon="💊" color="#c62828">
+              <NumberedTextArea value={form.adviceMedicine} onChange={set("adviceMedicine")} readOnly={ro} placeholder="TAB PARACETAMOL 500MG — 1+0+1 — 5 DAYS" rows={8} />
+            </SectionCard>
+
+            <SectionCard title="Follow Up Date / Advice" icon="📅" color="#2e7d32">
+              <PlainTextArea value={form.followUpDate} onChange={set("followUpDate")} readOnly={ro} placeholder="REVIEW AFTER 7 DAYS" rows={2} />
+            </SectionCard>
+
+            <SectionCard title="Condition At Discharge" icon="🏥" color="#c62828">
+              <PlainTextArea value={form.conditionAtDischarge} onChange={set("conditionAtDischarge")} readOnly={ro} placeholder="PT IS HEMODYNAMICALLY STABLE..." rows={2} />
+            </SectionCard>
+          </div>
+        </div>
+
+        {!ro && (
+          <div style={{ textAlign: "center", marginTop: 24 }}>
+            <button className="btn btn-lg btn-success px-5" onClick={handleSave} disabled={saving} style={{ borderRadius: 30, fontWeight: 700, boxShadow: "0 4px 12px rgba(46,125,50,0.3)" }}>
+              {saving ? "⏳ Saving..." : "💾 Save Discharge Summary"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

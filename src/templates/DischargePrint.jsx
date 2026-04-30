@@ -97,86 +97,21 @@ const DischargePrint = () => {
       <span className="text-muted"></span>
     );
 
-  // helper: advice medicine table
-  const adviceTable = (arr) =>
-    arr?.length ? (
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th style={{ border: "1px solid #000", padding: "2px" }}>Sl</th>
-            <th style={{ border: "1px solid #000", padding: "2px" }}>Type</th>
-            <th style={{ border: "1px solid #000", padding: "2px" }}>
-              Medicine
-            </th>
-            <th style={{ border: "1px solid #000", padding: "2px" }}>Dose</th>
-            <th style={{ border: "1px solid #000", padding: "2px" }}>Unit</th>
-            <th style={{ border: "1px solid #000", padding: "2px" }}>Days</th>
-          </tr>
-        </thead>
-        {/* <tbody>
-          {arr
-            .sort((a, b) => a.SlNo - b.SlNo)
-            .map((m, i) => (
-              <tr key={i}>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.SlNo}
-                </td>
-               <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.Type}
-                </td> 
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.Medicine}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.dose}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.unit}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.days}
-                </td>
-              </tr>
-            ))}
-        </tbody> */}
-
-        <tbody>
-          {arr
-            .filter(
-              (m) =>
-                m.Type?.trim() ||
-                m.Medicine?.trim() ||
-                m.dose?.toString().trim() ||
-                m.unit?.trim()
-            )
-            .sort((a, b) => a.SlNo - b.SlNo)
-            .map((m, i) => (
-              <tr key={i}>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.SlNo}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.Type}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.Medicine}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.dose}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.unit}
-                </td>
-                <td style={{ border: "1px solid #000", padding: "2px" }}>
-                  {m.days}
-                </td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
-    ) : (
-      <></>
+  // helper: advice medicine as numbered list (plain text)
+  const adviceList = (arr) => {
+    if (!arr?.length) return <></>;
+    const filtered = arr
+      .filter((m) => (m.Type || m.Medicine)?.trim())
+      .sort((a, b) => (a.SlNo || 0) - (b.SlNo || 0));
+    if (filtered.length === 0) return <></>;
+    return (
+      <ol>
+        {filtered.map((m, i) => (
+          <li key={i}>{m.Type || m.Medicine}</li>
+        ))}
+      </ol>
     );
+  };
 
   return (
     <>
@@ -447,7 +382,7 @@ const DischargePrint = () => {
         <div className="section-title">Investigation Results :</div>
         {renderMultiline(dischargeData.C)}
 
-        <div className="section-title">Course in the Hospital :</div>
+        <div className="section-title">Treatment Done / Procedure :</div>
         {bulletList(
           emr?.investigations?.filter((i) => i.Invest?.trim() !== ""),
           "Invest"
@@ -462,7 +397,7 @@ const DischargePrint = () => {
             : "Advice (Diet & Medication) :"}
         </div>
 
-        {adviceTable(med)}
+        {adviceList(med)}
 
         <div className="section-title">
           Follow Up Date (With Instruction Notes) :

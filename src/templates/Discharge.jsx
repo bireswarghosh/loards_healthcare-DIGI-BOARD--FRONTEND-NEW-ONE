@@ -254,8 +254,7 @@ const Discharge = () => {
       <PaginationBar
         pageNo={pageNo}
         totalPages={totalPages}
-        // onPageChange={goToPage}
-        setPageNo={setPageNo}
+        onPageChange={setPageNo}
       />
     </div>
   );

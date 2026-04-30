@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import axiosInstance from '../../../../axiosInstance';
 import jsPDF from 'jspdf';
+
+const SimpleEditor = ({ content, onChange }) => {
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: content || '',
+    onUpdate: ({ editor: e }) => { onChange?.(e.getHTML()); },
+  });
+  useEffect(() => { if (editor && content !== editor.getHTML()) editor.commands.setContent(content || ''); }, [content]);
+  return <div style={{ minHeight: '200px' }}><EditorContent editor={editor} /></div>;
+};
 
 const CaseTestData = () => {
   const [formData, setFormData] = useState({
@@ -189,19 +199,7 @@ const CaseTestData = () => {
                 <div className="mb-3">
                   <label className="form-label">HTML Content (Rich Text Editor)</label>
                   <div style={{ border: '1px solid #ddd', borderRadius: '4px' }}>
-                    <CKEditor
-                      editor={ClassicEditor}
-                      data={formData.htmlContent}
-                      onChange={handleEditorChange}
-                      config={{
-                        toolbar: [
-                          'heading', '|',
-                          'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
-                          'blockQuote', 'insertTable', '|',
-                          'undo', 'redo'
-                        ]
-                      }}
-                    />
+                    <SimpleEditor content={formData.htmlContent} onChange={(html) => setFormData(prev => ({ ...prev, htmlContent: html }))} />
                   </div>
                 </div>
 

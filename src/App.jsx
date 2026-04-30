@@ -255,6 +255,8 @@ import Composition from "./templates/DiagnosisMaster/Composition.jsx";
 import CompanyMaster from "./templates/DiagnosisMaster/CompanyMaster.jsx";
 import Batch from "./templates/DiagnosisMaster/Batch.jsx";
 import TestMaster from "./templates/DiagnosisMaster/Test.jsx";
+import TestEditorPage from "./templates/DiagnosisMaster/TestEditorPage.jsx";
+import DocEditor from "./pages/DocEditor.jsx";
 import SpecialProperty from "./templates/DiagnosisMaster/SpecialProperty.jsx";
 import TypeOfService from "./templates/DiagnosisMaster/TypeOfService.jsx";
 
@@ -901,6 +903,7 @@ function App() {
   <Route path="/Composition" element={<ProtectedRoute><Composition/></ProtectedRoute>}/>
    <Route path="/CompanyMaster" element={<ProtectedRoute><CompanyMaster/></ProtectedRoute>}/>
       <Route path="/Batch" element={<ProtectedRoute><Batch/></ProtectedRoute>}/>  <Route path="/TestMaster" element={<ProtectedRoute><TestMaster/></ProtectedRoute>}/>
+<Route path="/doc-editor" element={<ProtectedRoute><DocEditor/></ProtectedRoute>}/>
 
  <Route path="/department" element={<DepartmentSubdepartment/>}/>
  <Route path="/doctor" element={<DoctorManagement/>}/>
@@ -1051,6 +1054,7 @@ function App() {
     
         </Route>
         <Route path="/login" element={<Login3 />} />
+        <Route path="/test-editor/:testId" element={<ProtectedRoute><TestEditorPage /></ProtectedRoute>} />
         <Route path="/login2" element={<Login2 />} />
         <Route path="/login3" element={<Login3 />} />
         <Route path="/login-old" element={<Login />} />

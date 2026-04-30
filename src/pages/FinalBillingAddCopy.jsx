@@ -547,6 +547,12 @@ const FinalBillingAdd = () => {
   const [printType, setPrintType] = useState("");
   const [allDiagWithTest, setAllDiagWithTest] = useState([]);
   const [dischrgType, setDischrgType] = useState("");
+  const [isPatientSelected, setIsPatientSelected] = useState(false);
+  const [selectedPatientOption, setSelectedPatientOption] = useState(null);
+
+  const handleClearPatient = () => {
+    window.location.href = window.location.pathname;
+  };
 
   const [otObjDetails, setOtObjDetails] = useState({});
   const [otChargeDetails, setOtChargeDetails] = useState([]);
@@ -1843,8 +1849,11 @@ const fetchOtSlots = async () => {
   };
 
   const onChange = (e) => {
-    // console.log("hi I am on change", e);
-    fetchAdm(e.value);
+    if (e) {
+      fetchAdm(e.value);
+      setSelectedPatientOption(e);
+      setIsPatientSelected(true);
+    }
   };
 
   const handleChange = (e) => {
@@ -2417,21 +2426,29 @@ const fetchOtSlots = async () => {
                     value={formData?.BillType || ""}
                   />
                 </div>
-                <div className="col-md-3 col-6">
-                  {/* <input
-                    type="text"
-                    style={styles.input}
-                    value={admData.PatientName || ""}
-                  /> */}
-
-                  <AsyncApiSelect
-                    api={"/admission"}
-                    searchKey={"name"}
-                    labelKey="PatientName"
-                    valueKey="AdmitionId"
-                    onChange={onChange}
-                  />
-                </div>
+                <div className="col-md-3 col-6 d-flex gap-1 align-items-center">
+                  <div style={{ flex: 1 }}>
+                    <AsyncApiSelect
+                      api={"/admission"}
+                      searchKey={"name"}
+                      labelKey="PatientName"
+                      valueKey="AdmitionId"
+                      onChange={onChange}
+                      value={selectedPatientOption}
+                      isDisabled={isPatientSelected}
+                    />
+                  </div>
+                  {isPatientSelected && (
+                    <button
+                      className="btn btn-sm btn-danger"
+                      title="Clear patient & search again"
+                      onClick={handleClearPatient}
+                      style={{ whiteSpace: "nowrap", height: "23px", fontSize: "10px", padding: "1px 6px" }}
+                    >
+                      ✕ Clear
+                    </button>
+                  )}
+                  </div>
 
                 <div className="col-md-1 col-4 text-end">
                   <span style={styles.label}>Deptment</span>
