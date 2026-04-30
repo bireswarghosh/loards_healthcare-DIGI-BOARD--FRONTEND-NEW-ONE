@@ -14,7 +14,7 @@ const axiosInstance = axios.create({
 
  baseURL: window.location.hostname === 'localhost'
    ? 'http://localhost:5000/api/v1'
-   : `${window.location.protocol}//${window.location.hostname.replace('-5173', '-5000')}:${window.location.port}/api/v1`,
+   : 'https://lords-backend.onrender.com/api/v1',
 
 
 
