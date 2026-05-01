@@ -24,6 +24,7 @@ const AgentWiseSaleReport = () => {
   const [selectedAgentIds, setSelectedAgentIds] = useState([]);
   const [agentSearch, setAgentSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dueFilter, setDueFilter] = useState("all"); // "all" | "due" | "nodue"
 
   useEffect(() => {
     axiosInstance.get("/agents?page=1&limit=1000").then((res) => {
@@ -74,12 +75,37 @@ const AgentWiseSaleReport = () => {
 
       setAgentGroups(groups);
       setGrandTotals({ bill: gBill, disc: gDisc, net: gNet, receipt: gReceipt, balance: gBalance });
+      setDueFilter("all");
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Filter groups based on due filter
+  const getFilteredGroups = () => {
+    if (dueFilter === "all") return agentGroups;
+    return agentGroups.map(g => ({
+      ...g,
+      cases: g.cases.filter(c => {
+        const bal = c.GrossAmt - c.Advance;
+        return dueFilter === "due" ? bal > 0 : bal <= 0;
+      })
+    })).filter(g => g.cases.length > 0);
+  };
+
+  const filteredGroups = getFilteredGroups();
+
+  // Recalculate grand totals for filtered data
+  const filteredTotals = (() => {
+    let bill = 0, disc = 0, net = 0, receipt = 0, balance = 0;
+    filteredGroups.forEach(g => g.cases.forEach(c => {
+      bill += c.Total; disc += c.DescAmt; net += c.GrossAmt;
+      receipt += c.Advance; balance += c.GrossAmt - c.Advance;
+    }));
+    return { bill, disc, net, receipt, balance };
+  })();
 
   const handlePrint = () => {
     const content = printRef.current.innerHTML;
@@ -169,6 +195,14 @@ const AgentWiseSaleReport = () => {
                   <i className="fa-light fa-print me-1"></i>Print
                 </button>
               )}
+              {agentGroups.length > 0 && (
+                <select className="form-select form-select-sm" style={{ width: 120 }}
+                  value={dueFilter} onChange={(e) => setDueFilter(e.target.value)}>
+                  <option value="all">All</option>
+                  <option value="due">Due Only</option>
+                  <option value="nodue">No Due</option>
+                </select>
+              )}
               <button className="btn btn-sm btn-danger" onClick={() => navigate(-1)}>Back</button>
             </div>
           </div>
@@ -216,7 +250,7 @@ const AgentWiseSaleReport = () => {
                   </thead>
                 </table>
 
-                {agentGroups.map((group, gi) => {
+                {filteredGroups.map((group, gi) => {
                   let subBill = 0, subDisc = 0, subNet = 0, subReceipt = 0, subBalance = 0;
                   group.cases.forEach((c) => {
                     subBill += c.Total;
@@ -297,11 +331,11 @@ const AgentWiseSaleReport = () => {
                     <tr style={{ color: "red", fontWeight: "bold", border: "2px solid red" }}>
                       <td style={{ width: "55%" }}></td>
                       <td className="text-end fw-bold">Grand Total :</td>
-                      <td className="text-end">{num(grandTotals.bill)}</td>
-                      <td className="text-end">{num(grandTotals.disc)}</td>
-                      <td className="text-end">{num(grandTotals.net)}</td>
-                      <td className="text-end">{num(grandTotals.receipt)}</td>
-                      <td className="text-end">{num(grandTotals.balance)}</td>
+                      <td className="text-end">{num(filteredTotals.bill)}</td>
+                      <td className="text-end">{num(filteredTotals.disc)}</td>
+                      <td className="text-end">{num(filteredTotals.net)}</td>
+                      <td className="text-end">{num(filteredTotals.receipt)}</td>
+                      <td className="text-end">{num(filteredTotals.balance)}</td>
                     </tr>
                   </tbody>
                 </table>
