@@ -1,17 +1,22 @@
 import React from "react";
 import { Minus, Plus, ZoomIn } from "lucide-react";
 
-const StatusBar = ({ editor, zoom, onZoomChange }) => {
+const StatusBar = ({ editor, zoom, onZoomChange, saveStatusLabel = "" }) => {
   const text = editor?.getText() || "";
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   const chars = text.length;
+  const charsNoSpaces = text.replace(/\s/g, "").length;
   const lines = text.split("\n").length;
+  const pages = Math.max(1, Math.ceil(lines / 47));
 
   return (
     <div style={{ height: "26px", background: "#185ABD", color: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", fontSize: "11px", userSelect: "none", flexShrink: 0 }}>
       <div style={{ display: "flex", alignItems: "center", gap: "16px", overflow: "hidden", whiteSpace: "nowrap" }}>
+        {saveStatusLabel && <span style={{ fontWeight: 500 }}>{saveStatusLabel}</span>}
+        <span>Page {pages} of {pages}</span>
         <span>{words} words</span>
         <span>{chars} characters</span>
+        <span>{charsNoSpaces} characters (no spaces)</span>
         <span>{lines} lines</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
@@ -19,7 +24,7 @@ const StatusBar = ({ editor, zoom, onZoomChange }) => {
         <input type="range" min={25} max={300} value={zoom} onChange={(e) => onZoomChange(Number(e.target.value))} style={{ width: "100px", height: "4px", cursor: "pointer" }} />
         <button onClick={() => onZoomChange(Math.min(300, zoom + 10))} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", padding: "2px", borderRadius: "4px" }} title="Zoom In"><Plus size={14} /></button>
         <span style={{ width: "40px", textAlign: "center" }}>{zoom}%</span>
-        <button onClick={() => onZoomChange(100)} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", padding: "2px", borderRadius: "4px" }} title="Reset"><ZoomIn size={14} /></button>
+        <button onClick={() => onZoomChange(100)} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", padding: "2px", borderRadius: "4px" }} title="Reset Zoom"><ZoomIn size={14} /></button>
       </div>
     </div>
   );

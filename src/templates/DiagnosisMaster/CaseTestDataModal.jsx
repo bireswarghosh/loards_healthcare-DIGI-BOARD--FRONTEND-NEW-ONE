@@ -469,6 +469,16 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
     }
   }, [records]);
 
+  // Rebuild editor header when doctorsMap loads (so Ref. By, dates etc. are filled)
+  useEffect(() => {
+    if (Object.keys(doctorsMap).length && editorInitHtml) {
+      const body = editorContentRef.current || formData.htmlContent || "";
+      const rebuilt = buildEditorContent(body);
+      setEditorInitHtml(rebuilt);
+      setEditorKey((k) => k + 1);
+    }
+  }, [doctorsMap]);
+
   /* ================= FETCH ================= */
   useEffect(() => {
     fetchDoctors();
@@ -564,7 +574,20 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
 
   /* ================= BUILD PRINT HTML ================= */
   const buildPrintHtml = () => {
-    const fullContent = editorContentRef.current || formData.htmlContent || records?.at(-1)?.html_content || "";
+    const rawContent = editorContentRef.current || formData.htmlContent || records?.at(-1)?.html_content || "";
+    // Strip old baked-in header and build fresh one with current data
+    const hrIdx = rawContent.indexOf('<hr');
+    const bodyOnly = hrIdx >= 0 ? rawContent.substring(rawContent.indexOf('>', hrIdx) + 1) : rawContent;
+    const pName = formData2?.PatientName || PatientName || "";
+    const age = (formData2?.Age || "") + (formData2?.AgeType || "");
+    const cNo = formData2?.CaseNo || "";
+    const sex = formData2?.Sex || "";
+    const addr = [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", ");
+    const bDate = formData2?.CaseDate ? formData2.CaseDate.split("T")[0] : "";
+    const rDate = formData2?.ReportDate ? formData2.ReportDate.split("T")[0] : new Date().toISOString().split("T")[0];
+    const refBy = doctorsMap[formData2?.DoctorId] || "";
+    const freshHeader = `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:13%;border:none"><b>Patient</b></td><td style="padding:4px 6px;width:37%;border:none">: ${pName}</td><td style="padding:4px 6px;width:13%;border:none"><b>Age</b></td><td style="padding:4px 6px;width:37%;border:none">: ${age}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No</b></td><td style="padding:4px 6px;border:none">: ${cNo}</td><td style="padding:4px 6px;border:none"><b>Sex</b></td><td style="padding:4px 6px;border:none">: ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By</b></td><td style="padding:4px 6px;border:none">: ${refBy}</td><td style="padding:4px 6px;border:none"><b>Billing Date</b></td><td style="padding:4px 6px;border:none">: ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Address</b></td><td style="padding:4px 6px;border:none">: ${addr}</td><td style="padding:4px 6px;border:none"><b>Report Date</b></td><td style="padding:4px 6px;border:none">: ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
+    const fullContent = freshHeader + bodyOnly;
     const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21)
       ? ""
       : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
@@ -579,7 +602,7 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 @page{size:A4;margin:10mm}
-body{padding:${topPad} 8mm 0 8mm;font-family:"Times New Roman",serif;font-size:13px;color:#000;line-height:1.5}
+body{padding:${topPad} 8mm 0 8mm;font-family:"Times New Roman",serif;font-size:13px;color:#000;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
 p{margin:0 0 3px}
 strong{font-weight:bold}
 table{width:100%;border-collapse:collapse}
@@ -619,27 +642,74 @@ window.addEventListener('beforeprint',function(){
 </html>`;
   };
 
-  /* ================= PRINT ================= */
+  /* ================= PRINT (WYSIWYG - exact editor clone) ================= */
+  const doPrint = (target) => {
+    const editorSurface = document.querySelector(".ProseMirror");
+    if (!editorSurface) return;
+    const cloned = editorSurface.cloneNode(true);
+    // Add signature if needed
+    const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21)
+      ? ""
+      : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
+    if (signatureBase64) {
+      const sigDiv = document.createElement("div");
+      sigDiv.style.cssText = "text-align:right;margin-top:30px;margin-right:40px;";
+      sigDiv.innerHTML = `<img src="${signatureBase64}" style="height:65px;"/>`;
+      cloned.appendChild(sigDiv);
+    }
+    const isCardioOrUSG = (SubDepartmentId == 19 || SubDepartmentId == 21);
+    const topPad = isCardioOrUSG ? '20mm' : '50mm';
+    const printHtml = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/><title>Print</title>
+<style>
+@page{size:A4;margin:0}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+html,body{margin:0;padding:0;background:#fff;overflow:visible!important;height:auto!important}
+body{font-family:Calibri,sans-serif;font-size:11pt;line-height:1.15}
+.print-root{width:210mm;margin:0;padding:${topPad} 12mm 10mm 12mm;background:#fff;overflow:visible!important}
+.print-root .ProseMirror{width:100%!important;height:auto!important;min-height:auto!important;max-height:none!important;overflow:visible!important;outline:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;transform:none!important;background:transparent!important;font-family:Calibri,sans-serif;font-size:11pt;line-height:1.15;white-space:pre-wrap;word-wrap:break-word}
+.print-root p{margin:0 0 3px!important;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word}
+.print-root div,.print-root li,.print-root span{white-space:pre-wrap;word-break:normal;overflow-wrap:break-word}
+.print-root table{width:100%;border-collapse:collapse;table-layout:auto;page-break-inside:avoid!important}
+.print-root td,.print-root th{border:1px solid #999;padding:3px 5px;vertical-align:middle;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word}
+.print-root img{max-width:100%;height:auto}
+.print-root hr{border:none;border-top:1px solid #000;margin:6px 0}
+.print-root strong,.print-root b{font-weight:bold}
+.print-root h1{font-size:2em;margin:6px 0}
+.print-root h2{font-size:1.4em;margin:6px 0}
+.print-root h3{font-size:1.2em;margin:5px 0}
+.print-root ul,.print-root ol{padding-left:18px;margin:3px 0}
+.print-root mark{background-color:yellow}
+.print-root [style*="background-color"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{html,body{margin:0!important;padding:0!important;overflow:visible!important;height:auto!important;background:#fff!important}.print-root{width:210mm!important;margin:0!important;padding:${topPad} 12mm 10mm 12mm!important;min-height:auto!important;background:#fff!important;overflow:visible!important}}
+</style>
+</head><body>
+<div class="print-root" id="print-root"></div>
+<script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},150)},300)};<\/script>
+</body></html>`;
+    target.document.open();
+    target.document.write(printHtml);
+    target.document.close();
+    const mount = () => {
+      const root = target.document.getElementById("print-root");
+      if (!root) { setTimeout(mount, 50); return; }
+      root.innerHTML = "";
+      root.appendChild(cloned);
+    };
+    mount();
+  };
+
   const handlePrint = () => {
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
-    document.body.appendChild(iframe);
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(buildPrintHtml());
-    doc.close();
-    iframe.contentWindow.focus();
-    setTimeout(() => {
-      iframe.contentWindow.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    }, 500);
+    const printWindow = window.open("", "_blank", "width=1200,height=900");
+    if (!printWindow) return;
+    doPrint(printWindow);
   };
 
   /* ================= PDF (same as print, opens in new tab for Save as PDF) ================= */
   const handlePdf = () => {
     const win = window.open("", "_blank");
-    win.document.write(buildPrintHtml());
-    win.document.close();
+    if (!win) return;
+    doPrint(win);
   };
 
   if (!open) return null;

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import Ribbon from "./Ribbon";
 import EditorCore from "./EditorCore";
 import StatusBar from "./StatusBar";
+import FindReplace from "./FindReplace";
 import { DEFAULT_DOCUMENT_CONTENT, saveDraftToStorage, printDocument } from "./utils";
 
 const DocumentEditor = ({ initialContent = "", documentTitle: initialTitle = "Untitled Document", onSave, onClose, onContentChange: onContentChangeProp }) => {
@@ -11,6 +12,11 @@ const DocumentEditor = ({ initialContent = "", documentTitle: initialTitle = "Un
   const [zoom, setZoom] = useState(100);
   const [formatPainterActive, setFormatPainterActive] = useState(false);
   const [showRuler, setShowRuler] = useState(false);
+  const [showGridlines, setShowGridlines] = useState(false);
+  const [showStatusBar, setShowStatusBar] = useState(true);
+  const [findOpen, setFindOpen] = useState(false);
+  const [findMode, setFindMode] = useState("find");
+  const [saveStatusLabel, setSaveStatusLabel] = useState("");
   const formatPainterMarks = useRef(null);
 
   const handleEditorReady = useCallback((ed) => { setEditor(ed); }, []);
@@ -26,7 +32,14 @@ const DocumentEditor = ({ initialContent = "", documentTitle: initialTitle = "Un
     } else {
       saveDraftToStorage(documentTitle, htmlToSave);
     }
+    setSaveStatusLabel("Saved");
+    setTimeout(() => setSaveStatusLabel(""), 2000);
   }, [editor, documentHtml, documentTitle, onSave]);
+
+  const handleFindOpen = useCallback((mode) => {
+    setFindMode(mode);
+    setFindOpen(true);
+  }, []);
 
   const handleFormatPainterToggle = useCallback(() => {
     if (!editor) return;
@@ -80,10 +93,18 @@ const DocumentEditor = ({ initialContent = "", documentTitle: initialTitle = "Un
         e.preventDefault();
         handleSaveDraft();
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        handleFindOpen("find");
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "h") {
+        e.preventDefault();
+        handleFindOpen("replace");
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [editor, handleSaveDraft]);
+  }, [editor, handleSaveDraft, handleFindOpen]);
 
   return (
     <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column", background: "#E8E8E8", overflow: "hidden" }}>
@@ -93,7 +114,14 @@ const DocumentEditor = ({ initialContent = "", documentTitle: initialTitle = "Un
         onDocumentTitleChange={setDocumentTitle}
         formatPainterActive={formatPainterActive}
         onFormatPainterToggle={handleFormatPainterToggle}
+        onFindOpen={handleFindOpen}
         onSaveDraft={handleSaveDraft}
+        showRuler={showRuler}
+        onToggleRuler={() => setShowRuler((v) => !v)}
+        showGridlines={showGridlines}
+        onToggleGridlines={() => setShowGridlines((v) => !v)}
+        showStatusBar={showStatusBar}
+        onToggleStatusBar={() => setShowStatusBar((v) => !v)}
       />
       <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
         <EditorCore
@@ -101,9 +129,17 @@ const DocumentEditor = ({ initialContent = "", documentTitle: initialTitle = "Un
           onContentChange={handleContentChange}
           initialContent={initialContent || DEFAULT_DOCUMENT_CONTENT}
           zoom={zoom}
+          showRuler={showRuler}
+          showGridlines={showGridlines}
+        />
+        <FindReplace
+          editor={editor}
+          isOpen={findOpen}
+          onClose={() => setFindOpen(false)}
+          mode={findMode}
         />
       </div>
-      <StatusBar editor={editor} zoom={zoom} onZoomChange={setZoom} />
+      {showStatusBar && <StatusBar editor={editor} zoom={zoom} onZoomChange={setZoom} saveStatusLabel={saveStatusLabel} />}
     </div>
   );
 };

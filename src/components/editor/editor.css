@@ -17,6 +17,8 @@
   font-size: 11pt;
   line-height: 1.15;
   overflow: visible !important;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .ProseMirror:focus {
