@@ -93,8 +93,8 @@ const MoneyReceipt = () => {
           // add mode: count previous receipt's discount + current form's discount
           setAdditionalDueAmt(Number(formData.DiscAmt || 0) + Number(allPreviouseReceipts[0].DiscAmt || 0));
         } else {
-          // edit mode: only current form's discount
-          setAdditionalDueAmt(Number(formData.DiscAmt) || 0);
+          // edit mode for 1st MR: do NOT subtract DiscAmt, just calculate baki as-is
+          setAdditionalDueAmt(0);
         }
         return;
       } else if (n > 1) {
@@ -103,9 +103,9 @@ const MoneyReceipt = () => {
 
         // if the selected mr is the 1st mr (editing it)
         if (lastEle.ReceiptId == formData.ReceiptId) {
-          // sum all discounts from all receipts
+          // edit mode for 1st MR: do NOT subtract its own DiscAmt, only sum discounts from other receipts
           let sum = 0;
-          for (let i = 0; i < n; i++) {
+          for (let i = 0; i < n - 1; i++) {
             sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
           }
           setAdditionalDueAmt(sum);
