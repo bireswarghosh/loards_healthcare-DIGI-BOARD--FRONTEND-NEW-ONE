@@ -89,16 +89,26 @@ const MoneyReceipt = () => {
 
       // if only one mr present then only 1st mr exists
       if (n == 1) {
-        // both edit and add should deduct discount
-        setAdditionalDueAmt(Number(formData.DiscAmt) || 0);
+        if (modalType == "add") {
+          // add mode: count previous receipt's discount + current form's discount
+          setAdditionalDueAmt(Number(formData.DiscAmt || 0) + Number(allPreviouseReceipts[0].DiscAmt || 0));
+        } else {
+          // edit mode: only current form's discount
+          setAdditionalDueAmt(Number(formData.DiscAmt) || 0);
+        }
         return;
       } else if (n > 1) {
         console.log("hoooo");
         let lastEle = allPreviouseReceipts[n - 1]; // this is the last element of allPreviouseReceipts and this is the 1st mr
 
-        // if the selected mr is the 1st mr
+        // if the selected mr is the 1st mr (editing it)
         if (lastEle.ReceiptId == formData.ReceiptId) {
-          setAdditionalDueAmt(Number(formData.DiscAmt) || 0);
+          // sum all discounts from all receipts
+          let sum = 0;
+          for (let i = 0; i < n; i++) {
+            sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
+          }
+          setAdditionalDueAmt(sum);
           return;
         }
 
@@ -134,10 +144,9 @@ const MoneyReceipt = () => {
             return;
           }
 
-          // if the type of the modal is add then we will calculate it from 2nd mr to the last mr
+          // if the type of the modal is add then we will calculate it from all previous receipts
           let sum = 0;
-          // this loop will calculate the sum of the DiscAmt from the last mr to the 2nd mr
-          for (let i = 0; i < n - 1; i++) {
+          for (let i = 0; i < n; i++) {
             sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
           }
           console.log("sum is :", sum);
@@ -264,8 +273,10 @@ const MoneyReceipt = () => {
         if (data[0].ReceiptId == ReceiptId) {
           setShowDisc(true);
         }
-        // console.log("data", data[0]);
-        if (data[0].ReceiptId == ReceiptId && calculatedDueAmount != 0) {
+
+        // Only allow editing the LAST (latest) receipt
+        // data is sorted ASC, so last element is the latest
+        if (data[data.length - 1].ReceiptId == ReceiptId) {
           setShowSaveBtnEdit(true);
         } else {
           setShowSaveBtnEdit(false);
@@ -380,8 +391,9 @@ const MoneyReceipt = () => {
           }));
           setPaymentMethods(loadedMethods);
 
-          // Fetch total paid from all receipts for correct due amount in edit mode
+  // Fetch total paid from all receipts for correct due amount in edit mode
           let totalSum = receipt.Amount || 0;
+          let totalSumExcludingCurrent = 0;
           if (receipt?.ReffId) {
             try {
               const resAll = await axiosInstance.get(
@@ -392,6 +404,10 @@ const MoneyReceipt = () => {
                   (acc, item) => acc + Number(item.Amount || 0),
                   0
                 );
+                // For last editable receipt, exclude current receipt's amount
+                totalSumExcludingCurrent = resAll.data.data
+                  .filter(item => item.ReceiptId !== receipt.ReceiptId)
+                  .reduce((acc, item) => acc + Number(item.Amount || 0), 0);
               }
             } catch (e) {
               console.error("Failed to fetch all receipts for total:", e);
@@ -405,7 +421,7 @@ const MoneyReceipt = () => {
             ReceiptDate: receipt.ReceiptDate?.slice(0, 10) || "",
             BillAmount: receipt.BillAmount || 0,
             BalanceAmt: receipt.BalanceAmt || 0,
-            Amount: totalSum,
+            Amount: showSaveBtnEdit ? totalSumExcludingCurrent : totalSum,
             DiscAmt: receipt.DiscAmt || 0,
             Desc: receipt.Desc || 0,
             AdjAmt: receipt.AdjAmt || 0,
@@ -461,6 +477,12 @@ const MoneyReceipt = () => {
             data.length != 0
               ? data.reduce((acc, item) => acc + Number(item.Amount || 0), 0)
               : 0;
+          let sumExcludingCurrent =
+            data.length != 0
+              ? data
+                  .filter(item => item.ReceiptId !== receipt.ReceiptId)
+                  .reduce((acc, item) => acc + Number(item.Amount || 0), 0)
+              : 0;
 
           // console.log("Sum is : ", sum);
           const defaultMethod = {
@@ -484,7 +506,7 @@ const MoneyReceipt = () => {
             BillAmount: receipt.BillAmount || 0,
             BalanceAmt: receipt.BalanceAmt || 0,
             // Amount: receipt.Amount || 0,
-            Amount: sum || 0,
+            Amount: showSaveBtnEdit ? sumExcludingCurrent : (sum || 0),
             DiscAmt: receipt.DiscAmt || 0,
             Desc: receipt.Desc || 0,
             AdjAmt: receipt.AdjAmt || 0,
@@ -928,9 +950,9 @@ const MoneyReceipt = () => {
   // console.log("Mode is ", modalType);
 
   const currentPayment =
-    modalType != "add"
-      ? 0
-      : paymentMethods.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+    modalType === "add" || (modalType === "edit" && showSaveBtnEdit)
+      ? paymentMethods.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0)
+      : 0;
 
   const totalReceivedAmount = currentPayment;
 
@@ -993,6 +1015,12 @@ const MoneyReceipt = () => {
       pages.push(tests.slice(i, i + testsPerPage));
     }
 
+    // Calculate totals from receipts BEFORE the current one only
+    const currentIndex = allPreviouseReceipts.findIndex(r => r.ReceiptId === formData.ReceiptId);
+    const receiptsBefore = currentIndex > 0 ? allPreviouseReceipts.slice(0, currentIndex) : [];
+    const totalAdvancedAmount = receiptsBefore.reduce((sum, r) => sum + Number(r.Amount || 0), 0);
+    const totalAdvancedDiscount = receiptsBefore.reduce((sum, r) => sum + Number(r.DiscAmt || 0), 0);
+
     let runningTotal = 0;
 
     const pagesHtml = pages
@@ -1019,6 +1047,9 @@ ${t.CancelTast == 1 ? "(Cancel)" : ""}
 `
           )
           .join("");
+
+        // B/F from previous pages
+        const prevPagesTotal = runningTotal - pageTestTotal;
 
         return `
 
@@ -1134,6 +1165,8 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 ${rows}
 
+${pageIndex > 0 ? `<tr><td></td><td colspan="2" style="text-align:right;font-weight:bold;">B/F :</td><td style="text-align:right;font-weight:bold;">${prevPagesTotal}</td></tr>` : ''}
+
 </tbody>
 
 <tfoot>
@@ -1141,13 +1174,14 @@ ${rows}
 <tr>
 <td></td>
 <td colspan="2" style="text-align:right;font-weight:bold;">
-Total Test Amount :
+${pageIndex < pages.length - 1 ? 'C/F :' : 'Total Test Amount :'}
 </td>
 <td style="text-align:right;font-weight:bold, margin-top:2px;">
 ${runningTotal}
 </td>
 </tr>
 
+${pageIndex === pages.length - 1 ? `
 <tr>
 <td></td>
 <td colspan="2" style="text-align:right;font-weight:bold;">
@@ -1159,13 +1193,13 @@ ${formData.DiscAmt || 0}
 </tr>
 
 <tr>
-<td></td>
-<td colspan="2" style="text-align:right;font-weight:bold;">
-Advanced Amount :
-</td>
-<td style="text-align:right;font-weight:bold;">
-${formData.Amount || 0}
-</td>
+<td colspan="2" style="font-weight:bold;">Advanced Amount : ${totalAdvancedAmount || 0}</td>
+<td colspan="2"></td>
+</tr>
+
+<tr>
+<td colspan="2" style="font-weight:bold;">Advanced Discount : ${totalAdvancedDiscount || 0}</td>
+<td colspan="2"></td>
 </tr>
 
 <tr>
@@ -1174,7 +1208,7 @@ ${formData.Amount || 0}
 Paid Amount :
 </td>
 <td style="text-align:right;font-weight:bold;">
-${formData.Amount || 0}
+${currentPayment || 0}
 </td>
 </tr>
 
@@ -1184,10 +1218,10 @@ ${formData.Amount || 0}
 Due Amount :
 </td>
 <td style="text-align:right;font-weight:bold;">
-
 ${Number((calculatedDueAmount || 0).toFixed(2)) - (additionalDueAmt || 0)}
 </td>
 </tr>
+` : ''}
 
 </tfoot>
 
@@ -2306,7 +2340,7 @@ ${pagesHtml}
                                   disabled={modalType === "view"}
                                 >
                                   <option value="0">CASH</option>
-                                  <option value="1">UPI/PHONE PE</option>
+                                  <option value="1">BANK</option>
                                   <option value="2">CHEQUE</option>
                                 </select>
                               </div>
