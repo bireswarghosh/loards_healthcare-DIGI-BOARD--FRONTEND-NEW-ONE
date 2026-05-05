@@ -642,60 +642,42 @@ window.addEventListener('beforeprint',function(){
 </html>`;
   };
 
-  /* ================= PRINT (WYSIWYG - exact editor clone) ================= */
+  /* ================= PRINT (WYSIWYG - editor CSS embedded) ================= */
   const doPrint = (target) => {
     const editorSurface = document.querySelector(".ProseMirror");
     if (!editorSurface) return;
     const cloned = editorSurface.cloneNode(true);
-    // Add signature if needed
-    const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21)
-      ? ""
-      : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
-    if (signatureBase64) {
-      const sigDiv = document.createElement("div");
-      sigDiv.style.cssText = "text-align:right;margin-top:30px;margin-right:40px;";
-      sigDiv.innerHTML = `<img src="${signatureBase64}" style="height:65px;"/>`;
-      cloned.appendChild(sigDiv);
-    }
+    cloned.removeAttribute("contenteditable");
+    cloned.removeAttribute("role");
+    const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21) ? "" : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
+    if (signatureBase64) { const sigDiv = document.createElement("div"); sigDiv.style.cssText = "text-align:right;margin-top:30px;margin-right:40px;"; sigDiv.innerHTML = `<img src="${signatureBase64}" style="height:65px;"/>`; cloned.appendChild(sigDiv); }
     const isCardioOrUSG = (SubDepartmentId == 19 || SubDepartmentId == 21);
-    const topPad = isCardioOrUSG ? '20mm' : '50mm';
-    const printHtml = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"/><title>Print</title>
+    const topPad = isCardioOrUSG ? "20mm" : "50mm";
+    const printHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Print</title>
 <style>
 @page{size:A4;margin:0}
 *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 html,body{margin:0;padding:0;background:#fff;overflow:visible!important;height:auto!important}
-body{font-family:Calibri,sans-serif;font-size:11pt;line-height:1.15}
-.print-root{width:210mm;margin:0;padding:${topPad} 12mm 10mm 12mm;background:#fff;overflow:visible!important}
-.print-root .ProseMirror{width:100%!important;height:auto!important;min-height:auto!important;max-height:none!important;overflow:visible!important;outline:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;transform:none!important;background:transparent!important;font-family:Calibri,sans-serif;font-size:11pt;line-height:1.15;white-space:pre-wrap;word-wrap:break-word}
-.print-root p{margin:0 0 3px!important;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word}
-.print-root div,.print-root li,.print-root span{white-space:pre-wrap;word-break:normal;overflow-wrap:break-word}
-.print-root table{width:100%;border-collapse:collapse;table-layout:auto;page-break-inside:avoid!important}
-.print-root td,.print-root th{border:1px solid #999;padding:3px 5px;vertical-align:middle;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word}
-.print-root img{max-width:100%;height:auto}
-.print-root hr{border:none;border-top:1px solid #000;margin:6px 0}
-.print-root strong,.print-root b{font-weight:bold}
-.print-root h1{font-size:2em;margin:6px 0}
-.print-root h2{font-size:1.4em;margin:6px 0}
-.print-root h3{font-size:1.2em;margin:5px 0}
-.print-root ul,.print-root ol{padding-left:18px;margin:3px 0}
-.print-root mark{background-color:yellow}
-.print-root [style*="background-color"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-@media print{html,body{margin:0!important;padding:0!important;overflow:visible!important;height:auto!important;background:#fff!important}.print-root{width:210mm!important;margin:0!important;padding:${topPad} 12mm 10mm 12mm!important;min-height:auto!important;background:#fff!important;overflow:visible!important}}
-</style>
-</head><body>
-<div class="print-root" id="print-root"></div>
+#print-root{width:210mm;margin:0;padding:${topPad} 8mm 10mm 8mm;background:#fff;overflow:visible!important}
+.ProseMirror{outline:none!important;min-height:auto!important;padding:0!important;margin:0!important;font-family:Calibri,sans-serif;font-size:11pt;line-height:1.15;overflow:visible!important;white-space:pre-wrap;word-wrap:break-word;width:100%!important;height:auto!important;max-height:none!important;border:0!important;box-shadow:none!important;transform:none!important;background:transparent!important}
+.ProseMirror table{border-collapse:collapse;width:100%}
+.ProseMirror td,.ProseMirror th{border:1px solid #999;padding:6px 8px;vertical-align:top;white-space:pre-wrap}
+.ProseMirror img{max-width:100%;height:auto}
+.ProseMirror p{margin:0 0 3px}
+.ProseMirror hr{border:none;border-top:2px solid #000;margin:8px 0}
+.ProseMirror strong,.ProseMirror b{font-weight:bold}
+.ProseMirror h1{font-size:2em;margin:6px 0}.ProseMirror h2{font-size:1.5em;margin:6px 0}.ProseMirror h3{font-size:1.17em;margin:5px 0}
+.ProseMirror ul,.ProseMirror ol{padding-left:18px;margin:3px 0}
+.ProseMirror mark,[style*="background"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{html,body{margin:0!important;padding:0!important;background:#fff!important}#print-root{width:210mm!important;margin:0!important;padding:${topPad} 8mm 10mm 8mm!important;background:#fff!important;overflow:visible!important}}
+</style></head><body>
+<div id="print-root"></div>
 <script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},150)},300)};<\/script>
 </body></html>`;
     target.document.open();
     target.document.write(printHtml);
     target.document.close();
-    const mount = () => {
-      const root = target.document.getElementById("print-root");
-      if (!root) { setTimeout(mount, 50); return; }
-      root.innerHTML = "";
-      root.appendChild(cloned);
-    };
+    const mount = () => { const root = target.document.getElementById("print-root"); if (!root) { setTimeout(mount, 50); return; } root.innerHTML = ""; root.appendChild(cloned); };
     mount();
   };
 

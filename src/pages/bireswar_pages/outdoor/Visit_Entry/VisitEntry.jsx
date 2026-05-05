@@ -2416,49 +2416,7 @@ const VisitEntry = () => {
                       {/* <button type="button" className="btn btn-warning me-2">
                         Print
                       </button> */}
-                      <button
-                        type="button"
-                        className="btn btn-warning me-2"
-                        onClick={() => {
-                          console.log("visit type: ", formData);
-                          let t;
-                          if (
-                            Number(formData.RegistrationTime.split(":")[0]) > 12
-                          ) {
-                            t = `${Number(formData.RegistrationTime.split(":")[0]) - 12}:${formData.RegistrationTime.split(":")[1]} PM`;
-                          } else {
-                            t = `${formData.RegistrationTime} AM`;
-                          }
-                          console.log("fo: ", formData);
-                          DrPressPrint({
-                            registrationNo: `S-${formData.RegistrationId}`,
-                            visitDate: formData.RegistrationDate,
-                            patientName: formData.PatientName,
-                            age: formData.Age,
-                            sex: formData.Sex,
-                            address: !formData?.fullAddress
-                              ?.split(",")
-                              .map((item) => item != "")[0]
-                              ? ""
-                              : formData?.fullAddress,
-                            phone: formData.PhoneNo,
-                            visitTime: t,
-                            // consultant: formData.VisitTypeName,
-                            consultant: docDetail.Doctor,
-                            doctorRegNo: docDetail.RegistrationNo,
-                            department:
-                              departmentName ||
-                              departments.find(
-                                (d) => d.SpecialityId == formData.DepartmentId,
-                              )?.Speciality ||
-                              "",
-                            qualification: docDetail.Qualification,
-                            barcodeValue: `S-${formData.RegistrationId}`,
-                          });
-                        }}
-                      >
-                        Dr Press
-                      </button>
+                     
                       {/* <button type="button" className="btn btn-warning me-2">
                         Dr Press 2
                       </button> */}
