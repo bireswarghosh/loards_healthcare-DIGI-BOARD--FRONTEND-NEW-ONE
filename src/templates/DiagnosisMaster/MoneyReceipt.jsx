@@ -45,6 +45,9 @@ const MoneyReceipt = () => {
   const [allReceipt, setAllReceipt] = useState(true);
   const [refund, setRefund] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchPatientName, setSearchPatientName] = useState("");
+  const [searchCaseNo, setSearchCaseNo] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
 
   // pagination
   const [page, setPage] = useState(1);
@@ -327,6 +330,9 @@ const MoneyReceipt = () => {
         // allReceipt,
         // refund,
         search: searchTerm,
+        ...(searchPatientName && { PatientName: searchPatientName }),
+        ...(searchCaseNo && { ReffId: searchCaseNo }),
+        ...(searchPhone && { Phone: searchPhone }),
       });
       // console.log("showRec", showRec);
       const res = await axiosInstance.get(`/money-receipt01/search?${params}`);
@@ -1194,32 +1200,14 @@ ${formData.DiscAmt || 0}
 
 <tr>
 <td colspan="2" style="font-weight:bold;">Advanced Amount : ${totalAdvancedAmount || 0}</td>
-<td colspan="2"></td>
+<td style="text-align:right;font-weight:bold;">Paid Amount :</td>
+<td style="text-align:right;font-weight:bold;">${currentPayment || 0}</td>
 </tr>
 
 <tr>
 <td colspan="2" style="font-weight:bold;">Advanced Discount : ${totalAdvancedDiscount || 0}</td>
-<td colspan="2"></td>
-</tr>
-
-<tr>
-<td></td>
-<td colspan="2" style="text-align:right;font-weight:bold;">
-Paid Amount :
-</td>
-<td style="text-align:right;font-weight:bold;">
-${currentPayment || 0}
-</td>
-</tr>
-
-<tr>
-<td></td>
-<td colspan="2" style="text-align:right;font-weight:bold;">
-Due Amount :
-</td>
-<td style="text-align:right;font-weight:bold;">
-${Number((calculatedDueAmount || 0).toFixed(2)) - (additionalDueAmt || 0)}
-</td>
+<td style="text-align:right;font-weight:bold;">Due Amount :</td>
+<td style="text-align:right;font-weight:bold;">${Number((calculatedDueAmount || 0).toFixed(2)) - (additionalDueAmt || 0)}</td>
 </tr>
 ` : ''}
 
@@ -1644,6 +1632,39 @@ ${pagesHtml}
                   className="form-control form-control-sm"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Patient Name</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Search name..."
+                  value={searchPatientName}
+                  onChange={(e) => setSearchPatientName(e.target.value)}
+                />
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Case No</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Case No..."
+                  value={searchCaseNo}
+                  onChange={(e) => setSearchCaseNo(e.target.value)}
+                />
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Phone</label>
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Phone..."
+                  value={searchPhone}
+                  onChange={(e) => setSearchPhone(e.target.value)}
                 />
               </div>
 

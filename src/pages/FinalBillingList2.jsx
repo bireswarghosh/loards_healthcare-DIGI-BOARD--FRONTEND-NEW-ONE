@@ -27,6 +27,11 @@ const FinalBillingListB = () => {
   );
   const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
   const [page, setPage] = useState(1);
+  const [searchName, setSearchName] = useState("");
+  const [searchAdmNo, setSearchAdmNo] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
+  const [searchBillNo, setSearchBillNo] = useState("");
+  const [searchBillType, setSearchBillType] = useState("");
 
 
   const [showConfirm, setShowConfirm] = useState(false)
@@ -36,18 +41,17 @@ const FinalBillingListB = () => {
   const fetchFinalBillings = async (fromDate,toDate) => {
     try {
       setLoading(true);
-      // Fetch logic here
-      const res = await axiosInstance.get(
-        `/fb?startDate=${fromDate}&endDate=${toDate}&page=${page}&limit=20`,
-      );
-      // const res = await axiosInstance.get(`/fb?page=${page}&limit=20`);
-
-
-      console.log("Final Billings Response:", res.data.data);
-
+      let url = `/fb?startDate=${fromDate}&endDate=${toDate}&page=${page}&limit=20`;
+      if (searchName) url += `&search=${encodeURIComponent(searchName)}`;
+      if (searchBillType) url += `&BillType=${encodeURIComponent(searchBillType)}`;
+      const res = await axiosInstance.get(url);
 
       if (res.data.success) {
-        setFinalBillings(res.data.data || []);
+        let data = res.data.data || [];
+        if (searchAdmNo) data = data.filter(d => d.ReffId && String(d.ReffId).includes(searchAdmNo));
+        if (searchPhone) data = data.filter(d => d.PhoneNo?.includes(searchPhone));
+        if (searchBillNo) data = data.filter(d => d.BillNo?.toLowerCase().includes(searchBillNo.toLowerCase()));
+        setFinalBillings(data);
 
 
         if (res.data.pagination) {
@@ -185,16 +189,57 @@ const handleDelte = async (id) => {
                 </div> */}
 
 
-                <div className="col-lg-8">
-                  <div className="input-group input-group-sm">
-                    {/* Date filters can be added here if needed */}
+                <div className="col-lg-12">
+                  <div className="d-flex flex-wrap gap-2 align-items-center">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Patient Name"
+                      value={searchName}
+                      onChange={(e) => setSearchName(e.target.value)}
+                      style={{ width: 140 }}
+                    />
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Admission No"
+                      value={searchAdmNo}
+                      onChange={(e) => setSearchAdmNo(e.target.value)}
+                      style={{ width: 120 }}
+                    />
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Bill No"
+                      value={searchBillNo}
+                      onChange={(e) => setSearchBillNo(e.target.value)}
+                      style={{ width: 110 }}
+                    />
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Phone"
+                      value={searchPhone}
+                      onChange={(e) => setSearchPhone(e.target.value)}
+                      style={{ width: 120 }}
+                    />
+                    <select
+                      className="form-control form-control-sm"
+                      value={searchBillType}
+                      onChange={(e) => setSearchBillType(e.target.value)}
+                      style={{ width: 110 }}
+                    >
+                      <option value="">All Type</option>
+                      <option value="F">Final</option>
+                      <option value="I">Interim</option>
+                    </select>
                     <input
                       type="date"
                       className="form-control form-control-sm"
                       value={fromDate}
                       onChange={(e) => setFromDate(e.target.value)}
                     />
-                    <span className="input-group-text">to</span>
+                    <span>to</span>
                     <input
                       type="date"
                       className="form-control form-control-sm"
@@ -202,7 +247,7 @@ const handleDelte = async (id) => {
                       onChange={(e) => setToDate(e.target.value)}
                     />
                     <button
-                      className="btn btn-sm btn-primary ms-2"
+                      className="btn btn-sm btn-primary"
                       onClick={() => {
                         setPage(1);
                         fetchFinalBillings(fromDate,toDate);
@@ -211,15 +256,20 @@ const handleDelte = async (id) => {
                       <i className="fa-solid fa-filter"></i> Filter
                     </button>
                     <button
-                      className="btn btn-sm btn-secondary ms-2"
+                      className="btn btn-sm btn-secondary"
                       onClick={() => {
                         setPage(1);
+                        setSearchName("");
+                        setSearchAdmNo("");
+                        setSearchPhone("");
+                        setSearchBillNo("");
+                        setSearchBillType("");
                         setFromDate(new Date().toISOString().split("T")[0]);
                         setToDate(new Date().toISOString().split("T")[0]);
                         fetchFinalBillings(new Date().toISOString().split("T")[0],new Date().toISOString().split("T")[0]);
                       }}
                     >
-                      <i className="fa-solid fa-arrows-rotate"></i> Refresh
+                      <i className="fa-solid fa-arrows-rotate"></i> Clear
                     </button>
                   </div>
                 </div>

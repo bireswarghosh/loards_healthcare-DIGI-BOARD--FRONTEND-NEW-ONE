@@ -33,6 +33,8 @@ const OtherCharges = () => {
     endDate: "",
     minAmount: "",
     maxAmount: "",
+    patientName: "",
+    phone: "",
   });
 
   const [deleteId, setDeleteId] = useState(null);
@@ -149,6 +151,8 @@ const OtherCharges = () => {
       endDate: "",
       minAmount: "",
       maxAmount: "",
+      patientName: "",
+      phone: "",
     });
 
     fetchCharges(1, {});
@@ -663,10 +667,31 @@ const OtherCharges = () => {
                 <div className="col-md-2">
                   <input
                     className="form-control"
+                    placeholder="Patient Name"
+                    value={searchFilters.patientName}
+                    onChange={(e) =>
+                      handleFilterChange("patientName", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="col-md-2">
+                  <input
+                    className="form-control"
                     placeholder="Registration ID"
                     value={searchFilters.registrationId}
                     onChange={(e) =>
                       handleFilterChange("registrationId", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="col-md-2">
+                  <input
+                    className="form-control"
+                    placeholder="Phone"
+                    value={searchFilters.phone}
+                    onChange={(e) =>
+                      handleFilterChange("phone", e.target.value)
                     }
                   />
                 </div>

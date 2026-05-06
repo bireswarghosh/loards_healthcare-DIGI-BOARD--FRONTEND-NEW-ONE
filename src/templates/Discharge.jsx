@@ -14,6 +14,10 @@ const Discharge = () => {
   const [endDate, setEndDate] = useState(getToday());
   const [userId, setUserId] = useState("");
   const [discType, setDiscType] = useState(null);
+  const [searchName, setSearchName] = useState("");
+  const [searchAdmNo, setSearchAdmNo] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
+  const [searchDisNo, setSearchDisNo] = useState("");
 
   const [pageNo, setPageNo] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -58,10 +62,17 @@ const Discharge = () => {
           startDate: startDate || undefined,
           endDate: endDate || undefined,
           page: pageNo,
+          ...(searchName && { PatientName: searchName }),
+          ...(searchAdmNo && { AdmitionId: searchAdmNo }),
+          ...(searchDisNo && { DisCerNo: searchDisNo }),
         },
       });
 
-      setDischargeList(res.data.data || []);
+      let data = res.data.data || [];
+      if (searchPhone) {
+        data = data.filter((d) => d.PhoneNo?.includes(searchPhone));
+      }
+      setDischargeList(data);
       setTotalPages(res.data.pagination?.totalPages || 1);
     } catch (error) {
       console.error("error fetching", error);
@@ -76,6 +87,10 @@ const Discharge = () => {
     const today = getToday();
     setStartDate(today);
     setEndDate(today);
+    setSearchName("");
+    setSearchAdmNo("");
+    setSearchPhone("");
+    setSearchDisNo("");
     setPageNo(1);
     fetchDischarge();
   };
@@ -94,12 +109,43 @@ const Discharge = () => {
       <div className="panel-header d-flex justify-content-between align-items-center">
         <h1></h1>
 
-        <div className="d-flex gap-2 align-items-center">
-          Form-
+        <div className="d-flex gap-2 align-items-center flex-wrap">
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Patient Name"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            style={{ width: 140 }}
+          />
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Admission No"
+            value={searchAdmNo}
+            onChange={(e) => setSearchAdmNo(e.target.value)}
+            style={{ width: 120 }}
+          />
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Discharge No"
+            value={searchDisNo}
+            onChange={(e) => setSearchDisNo(e.target.value)}
+            style={{ width: 120 }}
+          />
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Phone"
+            value={searchPhone}
+            onChange={(e) => setSearchPhone(e.target.value)}
+            style={{ width: 120 }}
+          />
+          From-
           <input
             type="date"
             className="form-control form-control-sm"
-            placeholder="Form"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             style={{ width: 150 }}
@@ -108,7 +154,6 @@ const Discharge = () => {
           <input
             type="date"
             className="form-control form-control-sm"
-            placeholder="Form"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             style={{ width: 150 }}

@@ -19,6 +19,10 @@ const SampleReceipt = () => {
   const [allReceipt, setAllReceipt] = useState(true);
   const [refund, setRefund] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [searchPhone, setSearchPhone] = useState("");
+  const [searchReceiptNo, setSearchReceiptNo] = useState("");
+  const [searchRefId, setSearchRefId] = useState("");
 
   const barcodeData = "OP/2425/08287";
 
@@ -46,7 +50,9 @@ const SampleReceipt = () => {
         allReceipt,
         allReceipt:false,
         refund,
-        search: searchTerm,
+        search: searchTerm || searchReceiptNo || searchRefId,
+        ...(searchName && { patientName: searchName }),
+        ...(searchPhone && { phone: searchPhone }),
       });
 
       const response = await axiosInstance.get(`/moneyreceipt/search?${params}&dateFrom=${from}&dateTo=${to}`);
@@ -136,6 +142,50 @@ const SampleReceipt = () => {
             </div>
 
             <div className="col-md-3">
+              <label className="form-label">Patient Name</label>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder="Search by name..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+              />
+            </div>
+
+            <div className="col-md-2">
+              <label className="form-label">Receipt No</label>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder="Receipt No"
+                value={searchReceiptNo}
+                onChange={(e) => setSearchReceiptNo(e.target.value)}
+              />
+            </div>
+
+            <div className="col-md-2">
+              <label className="form-label">Phone</label>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder="Phone No"
+                value={searchPhone}
+                onChange={(e) => setSearchPhone(e.target.value)}
+              />
+            </div>
+
+            <div className="col-md-2">
+              <label className="form-label">Ref ID</label>
+              <input
+                type="text"
+                className="form-control form-control-sm"
+                placeholder="Reference ID"
+                value={searchRefId}
+                onChange={(e) => setSearchRefId(e.target.value)}
+              />
+            </div>
+
+            <div className="col-md-3">
               {/* <label className="form-label "> </label>
               <input
                 type="date"
@@ -148,6 +198,10 @@ const SampleReceipt = () => {
               <button className="btn btn-sm btn-primary mt-4" onClick={() => {
                 setDateFrom(new Date(Date.now()).toISOString().slice(0, 10));
                 setDateTo(new Date(Date.now()).toISOString().slice(0, 10));
+                setSearchName("");
+                setSearchPhone("");
+                setSearchReceiptNo("");
+                setSearchRefId("");
                 fetchReceipts(new Date(Date.now()).toISOString().slice(0, 10), new Date(Date.now()).toISOString().slice(0, 10))}}>Clear</button>
             </div>
  
