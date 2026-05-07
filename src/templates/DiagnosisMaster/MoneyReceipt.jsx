@@ -101,61 +101,59 @@ const MoneyReceipt = () => {
         }
         return;
       } else if (n > 1) {
-        console.log("hoooo");
-        let lastEle = allPreviouseReceipts[n - 1]; // this is the last element of allPreviouseReceipts and this is the 1st mr
+        // Data is sorted ASC: index 0 = 1st/oldest MR, index n-1 = latest MR
+        let firstMR = allPreviouseReceipts[0]; // 1st MR (oldest)
 
         // if the selected mr is the 1st mr (editing it)
-        if (lastEle.ReceiptId == formData.ReceiptId) {
-          // edit mode for 1st MR: do NOT subtract its own DiscAmt, only sum discounts from other receipts
+        if (firstMR.ReceiptId == formData.ReceiptId) {
+          // edit mode for 1st MR: sum discounts from all other receipts
           let sum = 0;
-          for (let i = 0; i < n - 1; i++) {
+          for (let i = 1; i < n; i++) {
             sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
           }
           setAdditionalDueAmt(sum);
           return;
         }
 
-        // if the selected mr is not the 1st mr
-
-        // if the selected mr is 2nd mr
-        if (formData.ReceiptId == allPreviouseReceipts[n - 2].ReceiptId) {
-          setAdditionalDueAmt(Number(formData.DiscAmt));
-          return;
-        }
-        // if the selected mr is from 3rd mr to more than that then we will calculate it from 2nd to the selected one in edit mode and 2nd to last mr in add mode
-        else {
-          // if the modal is in edit mode
-          if (modalType == "edit") {
-            let idxSel; // this is the index of the selected mr
-
-            // this loop will find the index of the selected mr from the allPreviouseReceipts array
-            for (let i = 0; i < n; i++) {
-              if (formData.ReceiptId == allPreviouseReceipts[i].ReceiptId) {
-                idxSel = i;
-                break;
-              }
-            }
-
-            console.log("idx of sel:", idxSel);
-            let sum = 0;
-            // this loop will calculate the sum of the DiscAmt from the seleceted mr to the 2nd mr
-            for (let i = idxSel + 1; i < n - 1; i++) {
-              sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
-            }
-            console.log("sum is :", sum);
-            setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
-            return;
-          }
-
-          // if the type of the modal is add then we will calculate it from all previous receipts
+        // if the selected mr is the latest MR (last in array)
+        if (formData.ReceiptId == allPreviouseReceipts[n - 1].ReceiptId) {
+          // sum all discounts including current form's discount
           let sum = 0;
-          for (let i = 0; i < n; i++) {
+          for (let i = 0; i < n - 1; i++) {
             sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
           }
-          console.log("sum is :", sum);
           setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
           return;
         }
+
+        // if the selected mr is somewhere in the middle
+        if (modalType == "edit") {
+          let idxSel;
+          for (let i = 0; i < n; i++) {
+            if (formData.ReceiptId == allPreviouseReceipts[i].ReceiptId) {
+              idxSel = i;
+              break;
+            }
+          }
+
+          let sum = 0;
+          // sum discounts from all receipts except the selected one
+          for (let i = 0; i < n; i++) {
+            if (i !== idxSel) {
+              sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
+            }
+          }
+          setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
+          return;
+        }
+
+        // add mode: sum all previous discounts + current form's discount
+        let sum = 0;
+        for (let i = 0; i < n; i++) {
+          sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
+        }
+        setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
+        return;
       }
     }
     // console.log("hello",receipts)
@@ -400,20 +398,23 @@ const MoneyReceipt = () => {
   // Fetch total paid from all receipts for correct due amount in edit mode
           let totalSum = receipt.Amount || 0;
           let totalSumExcludingCurrent = 0;
+          let isLastReceipt = false;
           if (receipt?.ReffId) {
             try {
               const resAll = await axiosInstance.get(
                 `/money-receipt01/search?ReffId=${receipt.ReffId}`
               );
               if (resAll.data.success && resAll.data.data?.length) {
-                totalSum = resAll.data.data.reduce(
+                const allData = resAll.data.data;
+                totalSum = allData.reduce(
                   (acc, item) => acc + Number(item.Amount || 0),
                   0
                 );
-                // For last editable receipt, exclude current receipt's amount
-                totalSumExcludingCurrent = resAll.data.data
+                totalSumExcludingCurrent = allData
                   .filter(item => item.ReceiptId !== receipt.ReceiptId)
                   .reduce((acc, item) => acc + Number(item.Amount || 0), 0);
+                // Check if this is the last (latest) receipt
+                isLastReceipt = allData[allData.length - 1].ReceiptId === receipt.ReceiptId;
               }
             } catch (e) {
               console.error("Failed to fetch all receipts for total:", e);
@@ -427,7 +428,7 @@ const MoneyReceipt = () => {
             ReceiptDate: receipt.ReceiptDate?.slice(0, 10) || "",
             BillAmount: receipt.BillAmount || 0,
             BalanceAmt: receipt.BalanceAmt || 0,
-            Amount: showSaveBtnEdit ? totalSumExcludingCurrent : totalSum,
+            Amount: isLastReceipt ? totalSumExcludingCurrent : totalSum,
             DiscAmt: receipt.DiscAmt || 0,
             Desc: receipt.Desc || 0,
             AdjAmt: receipt.AdjAmt || 0,
@@ -489,8 +490,9 @@ const MoneyReceipt = () => {
                   .filter(item => item.ReceiptId !== receipt.ReceiptId)
                   .reduce((acc, item) => acc + Number(item.Amount || 0), 0)
               : 0;
+          // Check if this is the last (latest) receipt
+          let isLastRec = data.length > 0 && data[data.length - 1].ReceiptId === receipt.ReceiptId;
 
-          // console.log("Sum is : ", sum);
           const defaultMethod = {
             type:
               receipt.MRType === "B" ? "2" : receipt.MRType === "D" ? "1" : "0",
@@ -512,7 +514,7 @@ const MoneyReceipt = () => {
             BillAmount: receipt.BillAmount || 0,
             BalanceAmt: receipt.BalanceAmt || 0,
             // Amount: receipt.Amount || 0,
-            Amount: showSaveBtnEdit ? sumExcludingCurrent : (sum || 0),
+            Amount: isLastRec ? sumExcludingCurrent : (sum || 0),
             DiscAmt: receipt.DiscAmt || 0,
             Desc: receipt.Desc || 0,
             AdjAmt: receipt.AdjAmt || 0,
