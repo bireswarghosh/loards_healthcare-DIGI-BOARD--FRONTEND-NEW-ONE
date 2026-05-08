@@ -612,7 +612,7 @@ h3{font-size:1.2em;margin:5px 0}
 ul,ol{padding-left:18px;margin:3px 0}
 img{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid #000;margin:6px 0}
-.footer{position:fixed;bottom:10cm;right:5cm}
+.footer{position:fixed;bottom:15mm;left:8mm;right:8mm}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -621,9 +621,7 @@ hr{border:none;border-top:1px solid #000;margin:6px 0}
 <body>
 ${fullContent}
 <div class="footer">
-  <div style="display:flex;">
-    ${signatureBase64 ? `<div style="position:absolute;bottom:0;right:5cm;text-align:center;"><img src="${signatureBase64}" style="height:65px;"/></div>` : ""}
-  </div>
+    ${signatureBase64 ? `<div style="text-align:center;position:absolute;bottom:0;${Number(pathologist?.PathologistId) === 3 ? 'left:10mm' : Number(pathologist?.PathologistId) === 4 ? 'left:80mm' : 'right:10mm'};"><img src="${signatureBase64}" style="height:65px;"/></div>` : ''}
 </div>
 <script>
 window.addEventListener('beforeprint',function(){
@@ -650,7 +648,7 @@ window.addEventListener('beforeprint',function(){
     cloned.removeAttribute("contenteditable");
     cloned.removeAttribute("role");
     const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21) ? "" : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
-    if (signatureBase64) { const sigDiv = document.createElement("div"); sigDiv.style.cssText = "text-align:right;margin-top:30px;margin-right:40px;"; sigDiv.innerHTML = `<img src="${signatureBase64}" style="height:65px;"/>`; cloned.appendChild(sigDiv); }
+    if (signatureBase64) { const sigDiv = document.createElement("div"); sigDiv.style.cssText = `position:fixed;bottom:15mm;${Number(pathologist?.PathologistId) === 3 ? 'left:10mm' : Number(pathologist?.PathologistId) === 4 ? 'left:80mm' : 'right:10mm'};text-align:center;`; sigDiv.innerHTML = `<img src="${signatureBase64}" style="height:65px;"/>`; cloned.appendChild(sigDiv); }
     const isCardioOrUSG = (SubDepartmentId == 19 || SubDepartmentId == 21);
     const topPad = isCardioOrUSG ? "20mm" : "50mm";
     const printHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Print</title>
