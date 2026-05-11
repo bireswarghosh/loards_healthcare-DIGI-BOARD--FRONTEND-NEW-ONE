@@ -612,7 +612,7 @@ h3{font-size:1.2em;margin:5px 0}
 ul,ol{padding-left:18px;margin:3px 0}
 img{max-width:100%;height:auto}
 hr{border:none;border-top:1px solid #000;margin:6px 0}
-.footer{position:fixed;bottom:65mm;left:8mm;right:8mm}
+.footer{position:fixed;bottom:65mm;${Number(pathologist?.PathologistId) === 3 ? 'left:10mm' : Number(pathologist?.PathologistId) === 4 ? 'left:80mm' : 'right:10mm'};text-align:center}
 @media print{
   body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -621,7 +621,7 @@ hr{border:none;border-top:1px solid #000;margin:6px 0}
 <body>
 ${fullContent}
 <div class="footer">
-    ${signatureBase64 ? `<div style="text-align:center;position:absolute;bottom:0;${Number(pathologist?.PathologistId) === 3 ? 'left:10mm' : Number(pathologist?.PathologistId) === 4 ? 'left:80mm' : 'right:10mm'};"><img src="${signatureBase64}" style="height:65px;"/></div>` : ''}
+    ${signatureBase64 ? `<img src="${signatureBase64}" style="height:65px;"/>` : ''}
 </div>
 <script>
 window.addEventListener('beforeprint',function(){
