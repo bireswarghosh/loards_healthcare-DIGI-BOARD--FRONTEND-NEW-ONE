@@ -610,7 +610,12 @@ const BedTransfer = () => {
               {bedTransfers.length != 0 ? (
                 bedTransfers.map((bed, i) => {
                   const totalRows = bedTransfers.length;
-                  const isEditable = mode !== "view" && totalRows >= 2 && i !== 0 && (i === totalRows - 1 || i === totalRows - 2);
+                  // const isEditable = mode !== "view" && totalRows >= 2 && i !== 0 && (i === totalRows - 1 || i === totalRows - 2);
+
+const isEditable = mode !== "view";
+
+
+
 
                   return (
                   <tr key={i}>
@@ -645,7 +650,7 @@ const BedTransfer = () => {
                         <input
                           type="date"
                           className="form-control form-control-sm"
-                          value={bed?.AdmitionDate?.split("T")[0] || ""}
+                          value={bed?.AdmitionDate?.slice(0, 10) || ""}
                           onChange={(e) => {
                             const updated = [...bedTransfers];
                             updated[i] = { ...updated[i], AdmitionDate: e.target.value + "T00:00:00.000Z" };
@@ -680,7 +685,7 @@ const BedTransfer = () => {
                         <input
                           type="date"
                           className="form-control form-control-sm"
-                          value={bed?.ReleaseDate?.split("T")[0] || ""}
+                          value={bed?.ReleaseDate?.slice(0, 10) || ""}
                           onChange={(e) => {
                             const updated = [...bedTransfers];
                             updated[i] = { ...updated[i], ReleaseDate: e.target.value ? e.target.value + "T00:00:00.000Z" : "" };
