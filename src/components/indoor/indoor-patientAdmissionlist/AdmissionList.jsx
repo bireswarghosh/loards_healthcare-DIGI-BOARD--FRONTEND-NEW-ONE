@@ -375,7 +375,9 @@ const AdmissionList = () => {
                     <td className="no-print" style={{whiteSpace:'nowrap'}}>
                       <button className="btn-action btn-view me-1" onClick={() => navigate(`/PatientRegistrationDetail/${encodeURIComponent(a.AdmitionId)}?mode=view`)}>View</button>
                       <button className="btn-action btn-edit me-1" onClick={() => navigate(`/PatientRegistrationDetail/${encodeURIComponent(a.AdmitionId)}?mode=edit`)}>Edit</button>
-                      <button className="btn-action btn-del" onClick={() => handleDelete(a.AdmitionId)}>Del</button>
+                      <button className="btn-action btn-del me-1" onClick={() => handleDelete(a.AdmitionId)}>Del</button>
+                      <button className="btn-action me-1" style={{background:'linear-gradient(135deg,#4caf50,#388e3c)',color:'#fff'}} onClick={() => navigate(`/sampleReceipts`)}>MR</button>
+                      <button className="btn-action" style={{background:'linear-gradient(135deg,#9c27b0,#7b1fa2)',color:'#fff'}} onClick={() => navigate(`/initialFormData?admId=${a.AdmitionId}`)}>Receipt</button>
                     </td>
                     <td><span className="reg-no">{a.AdmitionNo}</span></td>
                     <td style={{whiteSpace:'nowrap'}}>{formatDate(a.AdmitionDate)}<br/><small style={{color:'#888'}}>{a.AdmitionTime || ''}</small></td>
