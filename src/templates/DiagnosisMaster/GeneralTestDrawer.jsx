@@ -1958,15 +1958,14 @@ const handlePrint = () => {
 if (signatureBase64) {
   const sigWidth = 30;
   const sigHeight = 20;
-  const sigY = 297 - 60 - sigHeight + 10; // 10mm lower
+  const sigY = 297 - 65 - sigHeight; // bottom:65mm match
   const pId = Number(pathologist.PathologistId);
-  const sigX = pId === 3 ? 10 : pId === 4 ? 90 : 150;
+  const sigX = pId === 3 ? 10 : pId === 4 ? 80 : 150;
   const imgType = signatureBase64.includes('image/png') ? 'PNG' : 'JPEG';
 
   const pageCount = doc.internal.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    // Thick page separator line (2cm = 20mm height)
     doc.setFillColor(0, 0, 0);
     doc.rect(L, 297 - 28, pageWidth - L - marginRight, 0.8, 'F');
     doc.addImage(signatureBase64, imgType, sigX, sigY, sigWidth, sigHeight);
