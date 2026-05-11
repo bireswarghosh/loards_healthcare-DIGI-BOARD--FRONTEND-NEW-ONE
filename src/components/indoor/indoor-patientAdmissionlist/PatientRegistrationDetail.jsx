@@ -2930,7 +2930,7 @@ window.onload = function () {
                         )?.Religion || "",
                       status:
                         formData.MStatus === "U" ? "UNMARRIED" : "MARRIED",
-                      area: formData.Add3,
+                      area: formData.Add2,
                       phone: formData.PhoneNo,
                       occupation: formData.Occupation,
                       nationality: formData.Passport,
