@@ -45,6 +45,8 @@ const DoctorManagement = () => {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [groupBySpeciality, setGroupBySpeciality] = useState(true);
   const [selectedSpecialityFilter, setSelectedSpecialityFilter] = useState("");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState("");
+  const [showVisitRates, setShowVisitRates] = useState(false);
   const [doctorStatuses, setDoctorStatuses] = useState({});
   const [pagination, setPagination] = useState({
     page: 1,
@@ -72,8 +74,9 @@ const DoctorManagement = () => {
     Phone: "",
     IndoorYN: "N",
     RMO: "N",
+    OPDYN: "N",
+    DiagnosticYN: "N",
     Photo: null,
-    // Add other fields
     Add1: "",
     Add2: "",
     Add3: "",
@@ -250,6 +253,8 @@ const DoctorManagement = () => {
       Phone: "",
       IndoorYN: "N",
       RMO: "N",
+      OPDYN: "N",
+      DiagnosticYN: "N",
       Photo: null,
       // Add other fields
       Add1: "",
@@ -322,6 +327,8 @@ const DoctorManagement = () => {
           Phone: doctorData.Phone || "",
           IndoorYN: doctorData.IndoorYN || "N",
           RMO: doctorData.RMO || "N",
+          OPDYN: doctorData.OPDYN || "N",
+          DiagnosticYN: doctorData.DiagnosticYN || "N",
           Photo: null,
           Add1: doctorData.Add1 || "",
           Add2: doctorData.Add2 || "",
@@ -700,12 +707,26 @@ setModalMode("create")
     { id: 6, name: "Saturday" },
   ];
 
-  // Filter doctors by selected speciality
+  // Filter doctors by selected speciality and type
   const filteredDoctors = () => {
-    if (!selectedSpecialityFilter) return doctors;
-    return doctors.filter(
-      (doctor) => doctor.SpecialityId == selectedSpecialityFilter
-    );
+    let filtered = doctors;
+    if (selectedSpecialityFilter) {
+      filtered = filtered.filter(
+        (doctor) => doctor.SpecialityId == selectedSpecialityFilter
+      );
+    }
+    if (selectedTypeFilter) {
+      filtered = filtered.filter((doctor) => {
+        switch (selectedTypeFilter) {
+          case "OPD": return doctor.OPDYN === "Y";
+          case "Diagnostic": return doctor.DiagnosticYN === "Y";
+          case "Indoor": return doctor.IndoorYN === "Y";
+          case "RMO": return doctor.RMO === "Y";
+          default: return true;
+        }
+      });
+    }
+    return filtered;
   };
 
   // Group doctors by speciality
@@ -886,7 +907,7 @@ useEffect(() => {
                   </InputGroup>
                 </Form>
               </Col>
-              <Col md={6}>
+              <Col md={3}>
                 <Form.Select
                   value={selectedSpecialityFilter}
                   onChange={(e) => setSelectedSpecialityFilter(e.target.value)}
@@ -901,6 +922,19 @@ useEffect(() => {
                       {speciality.Speciality}
                     </option>
                   ))}
+                </Form.Select>
+              </Col>
+              <Col md={3}>
+                <Form.Select
+                  value={selectedTypeFilter}
+                  onChange={(e) => setSelectedTypeFilter(e.target.value)}
+                  className="form-select"
+                >
+                  <option value="">All Types</option>
+                  <option value="OPD">OPD</option>
+                  <option value="Diagnostic">Diagnostic</option>
+                  <option value="Indoor">Indoor</option>
+                  <option value="RMO">RMO</option>
                 </Form.Select>
               </Col>
             </Row>
@@ -992,21 +1026,17 @@ useEffect(() => {
                                 )}
                                 <td>{doctor.Phone || "-"}</td>
                                 <td>
-                                  <Badge
-                                    bg={
-                                      doctor.IndoorYN === "Y"
-                                        ? "success"
-                                        : "secondary"
-                                    }
-                                  >
-                                    {doctor.IndoorYN === "Y"
-                                      ? "Indoor"
-                                      : "Outdoor"}
-                                  </Badge>
+                                  {doctor.OPDYN === "Y" && (
+                                    <Badge bg="primary" className="me-1">OPD</Badge>
+                                  )}
+                                  {doctor.DiagnosticYN === "Y" && (
+                                    <Badge bg="warning" className="me-1">Diagnostic</Badge>
+                                  )}
+                                  {doctor.IndoorYN === "Y" && (
+                                    <Badge bg="success" className="me-1">Indoor</Badge>
+                                  )}
                                   {doctor.RMO === "Y" && (
-                                    <Badge bg="info" className="ms-1">
-                                      RMO
-                                    </Badge>
+                                    <Badge bg="info" className="me-1">RMO</Badge>
                                   )}
                                 </td>
                                 <td>
@@ -1478,6 +1508,24 @@ useEffect(() => {
                       <div className="mt-2">
                         <Form.Check
                           type="checkbox"
+                          id="opdDoctor"
+                          label="OPD Doctor"
+                          name="OPDYN"
+                          checked={formData.OPDYN === "Y"}
+                          onChange={handleChange}
+                        />
+
+                        <Form.Check
+                          type="checkbox"
+                          id="diagnosticDoctor"
+                          label="Diagnostic Doctor"
+                          name="DiagnosticYN"
+                          checked={formData.DiagnosticYN === "Y"}
+                          onChange={handleChange}
+                        />
+
+                        <Form.Check
+                          type="checkbox"
                           id="indoorDoctor"
                           label="Indoor Doctor"
                           name="IndoorYN"
@@ -1499,8 +1547,17 @@ useEffect(() => {
 
                   <Col md={12}>
                     <hr className="my-4" />
-                    <h5 className="mb-3">Visit Type Rates</h5>
-                    {visitTypes.map((visitType) => {
+                    <div
+                      className="d-flex align-items-center justify-content-between mb-3"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setShowVisitRates(!showVisitRates)}
+                    >
+                      <h5 className="mb-0">Visit Type Rates</h5>
+                      <Button variant="outline-secondary" size="sm">
+                        {showVisitRates ? "▲ Collapse" : "▼ Expand"}
+                      </Button>
+                    </div>
+                    {showVisitRates && visitTypes.map((visitType) => {
                       const existingRate = doctorRates.find(
                         (r) => r.VisitTypeId === visitType.VisitTypeId
                       );

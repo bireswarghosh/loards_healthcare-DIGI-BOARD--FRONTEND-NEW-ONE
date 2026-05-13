@@ -679,7 +679,22 @@ const isEditable = mode !== "view";
                     </td>
                     <td>{departmentMap[bedDeptMap[bed.BedId]] || "NA"}</td>
                     <td>{bedNoMap[bed.BedId] || "Loading..."}</td>
-                    <td>{bed?.Rate || "NA"}</td>
+                    <td>
+                      {isEditable ? (
+                        <input
+                          type="number"
+                          className="form-control form-control-sm"
+                          value={bed?.Rate || ""}
+                          onChange={(e) => {
+                            const updated = [...bedTransfers];
+                            updated[i] = { ...updated[i], Rate: e.target.value };
+                            setBedTransfers(updated);
+                          }}
+                        />
+                      ) : (
+                        bed?.Rate || "NA"
+                      )}
+                    </td>
                     <td>
                       {isEditable ? (
                         <input

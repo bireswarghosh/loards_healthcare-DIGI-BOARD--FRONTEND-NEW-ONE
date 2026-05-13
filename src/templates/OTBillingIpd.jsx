@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ToastContainer, toast } from "react-toastify";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import Footer from "../components/footer/Footer";
 import "react-toastify/dist/ReactToastify.css";
 // import useAxiosFetch from "./Fetch";
@@ -637,17 +639,108 @@ useEffect(() => {
   chargeItems.map((i) => i.OtItemId).join(","),
 ]);
 
-  // ================= DELETE =================
-  // const confirmDelete = async () => {
-  //   try {
-  //     await axiosInstance.delete(`/opd-other-charges/${deleteId}`);
-  //     toast.success("Deleted");
-  //     setShowConfirm(false);
-  //     fetchCharges(page);
-  //   } catch {
-  //     toast.error("Delete failed");
-  //   }
-  // };
+  // ================= PDF GENERATE =================
+  const generateOTBillPDF = () => {
+    const doc = new jsPDF("p", "mm", "a4");
+    const pw = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("LORDS HEALTH CARE", pw / 2, 15, { align: "center" });
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("(A Unit of MJJ Enterprises Pvt. Ltd.)", pw / 2, 21, { align: "center" });
+
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text("OT BILLING", pw / 2, 30, { align: "center" });
+
+    // Bill Info
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    let y = 40;
+    doc.text(`Bill No: ${formData.OtBillNo || "-"}`, 15, y);
+    doc.text(`Bill Date: ${formData.BillDate || "-"}`, pw - 15, y, { align: "right" });
+    y += 6;
+    doc.text(`Admission No: ${formData.AdmitionId || "-"}`, 15, y);
+    doc.text(`Patient: ${formData.PatientName || "-"}`, pw - 15, y, { align: "right" });
+    y += 6;
+    doc.text(`OT Type: ${formData.OTType || "-"}`, 15, y);
+    doc.text(`OT Duration: ${formData.OTHr || 0}h ${formData.OTMinit || 0}m`, pw - 15, y, { align: "right" });
+
+    // Doctor charges table
+    y += 10;
+    doc.setFont("helvetica", "bold");
+    doc.text("Doctor Charges", 15, y);
+    y += 2;
+
+    const doctorRows = [];
+    if (Number(formData.AnesthesiaAmt)) doctorRows.push(["Anesthesia", formData.anttype || "-", `${formData.AnesthesiaAmt}`]);
+    if (Number(formData.SergonDocAmt)) doctorRows.push(["Surgeon", "-", `${formData.SergonDocAmt}`]);
+    if (Number(formData.OthersDocAmt)) doctorRows.push(["Under Care Doctor", "-", `${formData.OthersDocAmt}`]);
+    if (Number(formData.OTAmt)) doctorRows.push(["OT Charge", formData.OTType || "-", `${formData.OTAmt}`]);
+
+    if (doctorRows.length) {
+      autoTable(doc, {
+        startY: y,
+        head: [["Particular", "Type", "Amount (₹)"]],
+        body: doctorRows,
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
+        styles: { fontSize: 9 },
+        margin: { left: 15, right: 15 },
+      });
+      y = doc.lastAutoTable.finalY + 6;
+    }
+
+    // Charge Items table
+    if (chargeItems.length) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Charge Items", 15, y);
+      y += 2;
+
+      const itemRows = chargeItems.map((item, i) => {
+        const name = availableCharges.find((c) => c.OtItemId == item.OtItemId)?.OtItem || item.OtItem || "-";
+        return [i + 1, name, item.Unit || "-", item.Rate, item.Qty || 1, item.Amount];
+      });
+
+      autoTable(doc, {
+        startY: y,
+        head: [["#", "Item", "Unit", "Rate (₹)", "Qty", "Amount (₹)"]],
+        body: itemRows,
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
+        styles: { fontSize: 9 },
+        margin: { left: 15, right: 15 },
+      });
+      y = doc.lastAutoTable.finalY + 6;
+    }
+
+    // Summary
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    if (Number(formData.ServiceCharge)) {
+      doc.text(`Service Charge: ₹${formData.ServiceCharge}`, pw - 15, y, { align: "right" });
+      y += 6;
+    }
+    doc.setFontSize(12);
+    doc.text(`Total Amount: ₹${formData.TotalAmt || 0}`, pw - 15, y, { align: "right" });
+
+    return doc;
+  };
+
+  const handlePrintPDF = () => {
+    const doc = generateOTBillPDF();
+    doc.autoPrint();
+    window.open(doc.output("bloburl"), "_blank");
+  };
+
+  const handleDownloadPDF = () => {
+    const doc = generateOTBillPDF();
+    doc.save(`OT_Bill_${formData.OtBillNo || "new"}.pdf`);
+  };
 
   return (
     <div className="main-content">
@@ -1675,16 +1768,32 @@ useEffect(() => {
                     <div className="d-flex gap-2 mt-4">
                       <button
                         type="button"
-                        className="btn btn-secondary w-50"
+                        className="btn btn-secondary"
                         onClick={() => setShowDrawer(false)}
                       >
                         Cancel
                       </button>
                       {modalType !== "view" && (
-                        <button type="submit" className="btn btn-primary w-50">
+                        <button type="submit" className="btn btn-primary">
                           Save
                         </button>
                       )}
+                      <button
+                        type="button"
+                        className="btn btn-success"
+                        onClick={handleDownloadPDF}
+                        title="Download PDF"
+                      >
+                        <i className="fa-light fa-file-pdf me-1"></i> PDF
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-info"
+                        onClick={handlePrintPDF}
+                        title="Print"
+                      >
+                        <i className="fa-light fa-print me-1"></i> Print
+                      </button>
                     </div>
                   </form>
                 </div>

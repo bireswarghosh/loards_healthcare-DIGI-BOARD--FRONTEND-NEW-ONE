@@ -26,6 +26,7 @@ function InitialFormData() {
   const [patient, setPatient] = useState({});
 
   const [religion, setReligion] = useState({});
+  const [doctorName, setDoctorName] = useState("");
   // State for form fields
   // const [receiptData, setReceiptData] = useState({
   //   MoneyreeciptId: "",
@@ -709,6 +710,20 @@ function convertAmountToWords(amount) {
   }, [id]);
 
   useEffect(() => {
+    if (receiptData.admission?.UCDoctor1Id) {
+      fetchDoctorData().then((doctors) => {
+        if (doctors && doctors.length > 0) {
+          const names = [receiptData.admission.UCDoctor1Id, receiptData.admission.UCDoctor2Id, receiptData.admission.UCDoctor3Id]
+            .map(dId => doctors.find(d => d.DoctorId == dId)?.Doctor)
+            .filter(Boolean)
+            .join(", ");
+          setDoctorName(names);
+        }
+      });
+    }
+  }, [receiptData.admission?.UCDoctor1Id]);
+
+  useEffect(() => {
     if (admId) {
       fetchAdmData(admId);
       console.log("I am changed: ", admId);
@@ -1062,7 +1077,7 @@ function convertAmountToWords(amount) {
             {/* Patient Detail Section */}
             <h5 className="fw-bold text-info mb-3">Patient Detail</h5>
             {/* {console.log(mode)} */}
-            {mode !== "create" ? (
+            {mode === "view" ? (
               <div className="row g-3 mb-4 p-3 border rounded shadow-sm">
                 <div className="col-md-3">
                   <label className="form-label small">Patient Name</label>
@@ -1176,23 +1191,25 @@ function convertAmountToWords(amount) {
                     readOnly
                   />
                 </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Doctor Name</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={doctorName || ""}
+                    readOnly
+                  />
+                </div>
               </div>
             ) : (
               <div className="row g-3 mb-4 p-3 border rounded shadow-sm">
                 <div className="col-md-3">
                   <label className="form-label small">Patient Name</label>
-                  {/* <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={receiptData.admission?.PatientName}
-                  /> */}
-
                   <AsyncApiSelect
                     api={`https://lords-backend.onrender.com/api/v1/admission/search`}
-                    value={admId}
+                    value={admId || receiptData.admission?.AdmitionId || ""}
                     onChange={(value) => {
                       setAdmId(value.value);
-                      // console.log(value.value)
                     }}
                     labelKey="PatientName"
                     valueKey="AdmitionId"
@@ -1309,6 +1326,15 @@ function convertAmountToWords(amount) {
                     type="text"
                     className="form-control form-control-sm"
                     value={receiptData.admission?.PhoneNo || ""}
+                    readOnly
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label small">Doctor Name</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm"
+                    value={doctorName || ""}
                     readOnly
                   />
                 </div>
