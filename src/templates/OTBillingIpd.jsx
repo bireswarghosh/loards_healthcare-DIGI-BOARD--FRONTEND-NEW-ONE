@@ -640,93 +640,150 @@ useEffect(() => {
 ]);
 
   // ================= PDF GENERATE =================
+  const [doctorList, setDoctorList] = useState([]);
+
+  useEffect(() => {
+    axiosInstance.get("/doctormaster?page=1&limit=10000").then((res) => {
+      setDoctorList(res.data?.data || []);
+    }).catch(() => {});
+  }, []);
+
+  const getDoctorName = (docId) => {
+    if (!docId) return "-";
+    const d = doctorList.find((x) => x.DoctorId === docId);
+    return d?.Doctor || "-";
+  };
+
   const generateOTBillPDF = () => {
     const doc = new jsPDF("p", "mm", "a4");
     const pw = doc.internal.pageSize.getWidth();
+    const m = 15;
 
-    // Header
-    doc.setFontSize(16);
+    // ===== HEADER =====
+    doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text("LORDS HEALTH CARE", pw / 2, 15, { align: "center" });
-
+    doc.text("LORDS HEALTH CARE", pw / 2, 18, { align: "center" });
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("(A Unit of MJJ Enterprises Pvt. Ltd.)", pw / 2, 21, { align: "center" });
-
-    doc.setFontSize(13);
+    doc.text("(A Unit of MJJ Enterprises Pvt. Ltd.)", pw / 2, 24, { align: "center" });
+    doc.text("13/3, Circular 2nd Bye Lane, Kolkata", pw / 2, 29, { align: "center" });
+    doc.setLineWidth(0.5);
+    doc.line(m, 32, pw - m, 32);
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("OT BILLING", pw / 2, 30, { align: "center" });
+    doc.text("OT BILLING", pw / 2, 39, { align: "center" });
+    doc.setLineWidth(0.3);
+    doc.line(m, 42, pw - m, 42);
 
-    // Bill Info
+    // ===== BASIC INFO =====
+    let y = 50;
     doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    let y = 40;
-    doc.text(`Bill No: ${formData.OtBillNo || "-"}`, 15, y);
-    doc.text(`Bill Date: ${formData.BillDate || "-"}`, pw - 15, y, { align: "right" });
-    y += 6;
-    doc.text(`Admission No: ${formData.AdmitionId || "-"}`, 15, y);
-    doc.text(`Patient: ${formData.PatientName || "-"}`, pw - 15, y, { align: "right" });
-    y += 6;
-    doc.text(`OT Type: ${formData.OTType || "-"}`, 15, y);
-    doc.text(`OT Duration: ${formData.OTHr || 0}h ${formData.OTMinit || 0}m`, pw - 15, y, { align: "right" });
+    const lbl = (text, x, yy) => { doc.setFont("helvetica", "bold"); doc.text(text, x, yy); };
+    const val = (text, x, yy) => { doc.setFont("helvetica", "normal"); doc.text(text, x, yy); };
 
-    // Doctor charges table
-    y += 10;
+    lbl("OT Bill No:", m, y); val(formData.OtBillNo || "-", m + 28, y);
+    lbl("Bill Date:", 105, y); val(formData.BillDate || "-", 105 + 24, y);
+    y += 6;
+    lbl("Admission No:", m, y); val(formData.AdmitionId || "-", m + 34, y);
+    lbl("Patient Name:", 105, y); val(formData.PatientName || "-", 105 + 32, y);
+
+    // ===== DOCTORS (3 rows like form) =====
+    y += 12;
+    doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
-    doc.text("Doctor Charges", 15, y);
+    doc.text("Doctors", m, y);
     y += 2;
 
-    const doctorRows = [];
-    if (Number(formData.AnesthesiaAmt)) doctorRows.push(["Anesthesia", formData.anttype || "-", `${formData.AnesthesiaAmt}`]);
-    if (Number(formData.SergonDocAmt)) doctorRows.push(["Surgeon", "-", `${formData.SergonDocAmt}`]);
-    if (Number(formData.OthersDocAmt)) doctorRows.push(["Under Care Doctor", "-", `${formData.OthersDocAmt}`]);
-    if (Number(formData.OTAmt)) doctorRows.push(["OT Charge", formData.OTType || "-", `${formData.OTAmt}`]);
+    autoTable(doc, {
+      startY: y,
+      head: [["Role", "Doctor Name", "Type", "Amount (Rs.)"]],
+      body: [
+        ["Anesthesia Doctor", getDoctorName(formData.AnesthesiaDocId), formData.anttype || "-", Number(formData.AnesthesiaAmt || 0).toFixed(2)],
+        ["Surgeon Doctor", getDoctorName(formData.SergonDocId), "-", Number(formData.SergonDocAmt || 0).toFixed(2)],
+        ["Under Care Doctor", getDoctorName(formData.OthersDocId), "-", Number(formData.OthersDocAmt || 0).toFixed(2)],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [44, 62, 80], fontSize: 9, halign: "center" },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: { 3: { halign: "right" } },
+      margin: { left: m, right: m },
+    });
+    y = doc.lastAutoTable.finalY + 8;
 
-    if (doctorRows.length) {
-      autoTable(doc, {
-        startY: y,
-        head: [["Particular", "Type", "Amount (₹)"]],
-        body: doctorRows,
-        theme: "grid",
-        headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
-        styles: { fontSize: 9 },
-        margin: { left: 15, right: 15 },
-      });
-      y = doc.lastAutoTable.finalY + 6;
-    }
+    // ===== OT CHARGE =====
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.text("OT Charge", m, y);
+    y += 2;
 
-    // Charge Items table
+    autoTable(doc, {
+      startY: y,
+      head: [["OT Name", "OT Type", "OT Hour", "OT Minute", "Amount (Rs.)"]],
+      body: [
+        [formData.OTId || "-", formData.OTType || "-", formData.OTHr || "0", formData.OTMinit || "0", Number(formData.OTAmt || 0).toFixed(2)],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [44, 62, 80], fontSize: 9, halign: "center" },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: { 2: { halign: "center" }, 3: { halign: "center" }, 4: { halign: "right" } },
+      margin: { left: m, right: m },
+    });
+    y = doc.lastAutoTable.finalY + 8;
+
+    // ===== CHARGE ITEMS =====
     if (chargeItems.length) {
       doc.setFont("helvetica", "bold");
-      doc.text("Charge Items", 15, y);
+      doc.setFontSize(11);
+      doc.text("Charge Items", m, y);
       y += 2;
 
       const itemRows = chargeItems.map((item, i) => {
         const name = availableCharges.find((c) => c.OtItemId == item.OtItemId)?.OtItem || item.OtItem || "-";
-        return [i + 1, name, item.Unit || "-", item.Rate, item.Qty || 1, item.Amount];
+        return [i + 1, name, item.Unit || "-", Number(item.Rate).toFixed(2), item.Qty || 1, Number(item.Amount).toFixed(2)];
       });
 
       autoTable(doc, {
         startY: y,
-        head: [["#", "Item", "Unit", "Rate (₹)", "Qty", "Amount (₹)"]],
+        head: [["#", "Item", "Unit", "Rate (Rs.)", "Qty", "Amount (Rs.)"]],
         body: itemRows,
         theme: "grid",
-        headStyles: { fillColor: [41, 128, 185], fontSize: 9 },
-        styles: { fontSize: 9 },
-        margin: { left: 15, right: 15 },
+        headStyles: { fillColor: [44, 62, 80], fontSize: 9, halign: "center" },
+        styles: { fontSize: 9, cellPadding: 3 },
+        columnStyles: { 0: { halign: "center" }, 3: { halign: "right" }, 4: { halign: "center" }, 5: { halign: "right" } },
+        margin: { left: m, right: m },
       });
-      y = doc.lastAutoTable.finalY + 6;
+      y = doc.lastAutoTable.finalY + 8;
     }
 
-    // Summary
-    doc.setFont("helvetica", "bold");
+    // ===== SUMMARY =====
+    doc.setLineWidth(0.5);
+    doc.line(m, y, pw - m, y);
+    y += 8;
+
     doc.setFontSize(10);
     if (Number(formData.ServiceCharge)) {
-      doc.text(`Service Charge: ₹${formData.ServiceCharge}`, pw - 15, y, { align: "right" });
-      y += 6;
+      lbl("Service Charge:", pw - 85, y);
+      val(`Rs. ${Number(formData.ServiceCharge).toFixed(2)}`, pw - m, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Rs. ${Number(formData.ServiceCharge).toFixed(2)}`, pw - m, y, { align: "right" });
+      y += 8;
     }
-    doc.setFontSize(12);
-    doc.text(`Total Amount: ₹${formData.TotalAmt || 0}`, pw - 15, y, { align: "right" });
+
+    // Total Amount Box
+    doc.setFillColor(230, 230, 230);
+    doc.rect(pw - 110, y - 5, 95, 14, "F");
+    doc.setDrawColor(0);
+    doc.rect(pw - 110, y - 5, 95, 14, "S");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text("Total Amount:", pw - 105, y + 3);
+    doc.text(`Rs. ${Number(formData.TotalAmt || 0).toFixed(2)}`, pw - m, y + 3, { align: "right" });
+
+    // Footer
+    y += 30;
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text("This is a computer generated bill.", pw / 2, y, { align: "center" });
 
     return doc;
   };
