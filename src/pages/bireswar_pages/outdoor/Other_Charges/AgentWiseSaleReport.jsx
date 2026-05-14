@@ -54,13 +54,39 @@ const AgentWiseSaleReport = () => {
   const fetchReport = async () => {
     setLoading(true);
     try {
-      let url = `/case-dtl-01/agent-wise-report?fromDate=${startDate}&toDate=${endDate}`;
-      if (selectedAgentIds.length > 0) {
-        url += `&agentIds=${selectedAgentIds.join(",")}`;
+      // Split date range into 31-day chunks to avoid API limit
+      const chunks = [];
+      let chunkStart = new Date(startDate);
+      const end = new Date(endDate);
+      while (chunkStart <= end) {
+        let chunkEnd = new Date(chunkStart);
+        chunkEnd.setDate(chunkEnd.getDate() + 30);
+        if (chunkEnd > end) chunkEnd = end;
+        chunks.push({ from: chunkStart.toISOString().slice(0, 10), to: chunkEnd.toISOString().slice(0, 10) });
+        chunkStart = new Date(chunkEnd);
+        chunkStart.setDate(chunkStart.getDate() + 1);
       }
 
-      const res = await axiosInstance.get(url);
-      const groups = res.data?.data || [];
+      let allGroups = [];
+      for (const chunk of chunks) {
+        let url = `/case-dtl-01/agent-wise-report?fromDate=${chunk.from}&toDate=${chunk.to}`;
+        if (selectedAgentIds.length > 0) {
+          url += `&agentIds=${selectedAgentIds.join(",")}`;
+        }
+        const res = await axiosInstance.get(url);
+        const data = res.data?.data || [];
+        // Merge by agentName
+        data.forEach((g) => {
+          const existing = allGroups.find((x) => x.agentName === g.agentName);
+          if (existing) {
+            existing.cases.push(...g.cases);
+          } else {
+            allGroups.push({ ...g, cases: [...g.cases] });
+          }
+        });
+      }
+
+      const groups = allGroups;
 
       let gBill = 0, gDisc = 0, gNet = 0, gReceipt = 0, gBalance = 0;
       groups.forEach((g) => {
@@ -101,8 +127,9 @@ const AgentWiseSaleReport = () => {
   const filteredTotals = (() => {
     let bill = 0, disc = 0, net = 0, receipt = 0, balance = 0;
     filteredGroups.forEach(g => g.cases.forEach(c => {
-      bill += c.Total; disc += c.DescAmt; net += c.GrossAmt;
-      receipt += c.Advance; balance += c.GrossAmt - c.Advance;
+      const cancelAmt = c.tests.reduce((s, t) => s + (t.CancelTast === "1" ? parseFloat(t.Rate || 0) : 0), 0);
+      bill += c.Total - cancelAmt; disc += c.DescAmt; net += c.GrossAmt - cancelAmt;
+      receipt += c.Advance; balance += (c.GrossAmt - cancelAmt) - c.Advance;
     }));
     return { bill, disc, net, receipt, balance };
   })();
@@ -253,11 +280,12 @@ const AgentWiseSaleReport = () => {
                 {filteredGroups.map((group, gi) => {
                   let subBill = 0, subDisc = 0, subNet = 0, subReceipt = 0, subBalance = 0;
                   group.cases.forEach((c) => {
-                    subBill += c.Total;
+                    const cancelAmt = c.tests.reduce((s, t) => s + (t.CancelTast === "1" ? parseFloat(t.Rate || 0) : 0), 0);
+                    subBill += c.Total - cancelAmt;
                     subDisc += c.DescAmt;
-                    subNet += c.GrossAmt;
+                    subNet += c.GrossAmt - cancelAmt;
                     subReceipt += c.Advance;
-                    subBalance += c.GrossAmt - c.Advance;
+                    subBalance += (c.GrossAmt - cancelAmt) - c.Advance;
                   });
 
                   return (
@@ -270,7 +298,9 @@ const AgentWiseSaleReport = () => {
                       <table className="table table-sm mb-0" style={{ fontSize: "0.82rem" }}>
                         <tbody>
                           {group.cases.map((c, ci) => {
-                            const cNet = c.GrossAmt;
+                            const cancelledAmt = c.tests.reduce((sum, t) => sum + (t.CancelTast === "1" ? parseFloat(t.Rate || 0) : 0), 0);
+                            const cBill = c.Total - cancelledAmt;
+                            const cNet = c.GrossAmt - cancelledAmt;
                             const cReceipt = c.Advance;
                             const cBalance = cNet - cReceipt;
 
@@ -289,19 +319,22 @@ const AgentWiseSaleReport = () => {
                                   <td></td>
                                   <td></td><td></td><td></td><td></td><td></td>
                                 </tr>
-                                {c.tests.map((t, ti) => (
-                                  <tr key={ti}>
-                                    <td></td><td></td>
-                                    <td><em>{t.TestName}</em></td>
-                                    <td></td>
-                                    <td className="text-end">{num(t.Rate)}</td>
-                                    <td></td><td></td><td></td><td></td>
-                                  </tr>
-                                ))}
+                                {c.tests.map((t, ti) => {
+                                  const isCancelled = t.CancelTast === "1";
+                                  return (
+                                    <tr key={ti} style={isCancelled ? { color: "red", fontWeight: "bold" } : {}}>
+                                      <td></td><td></td>
+                                      <td><em>{t.TestName}{isCancelled && " (Cancel)"}</em></td>
+                                      <td></td>
+                                      <td className="text-end">{num(isCancelled ? 0 : t.Rate)}</td>
+                                      <td></td><td></td><td></td><td></td>
+                                    </tr>
+                                  );
+                                })}
                                 <tr style={{ color: "red", fontStyle: "italic" }}>
                                   <td></td><td></td><td></td>
                                   <td className="text-end fw-bold"><em>Test TOTAL :</em></td>
-                                  <td className="text-end">{num(c.Total)}</td>
+                                  <td className="text-end">{num(cBill)}</td>
                                   <td className="text-end">{num(c.DescAmt)}</td>
                                   <td className="text-end">{num(cNet)}</td>
                                   <td className="text-end">{num(cReceipt)}</td>
