@@ -135,7 +135,10 @@ const AgentWiseSaleReport = () => {
   })();
 
   const handlePrint = () => {
+    const headerEl = document.getElementById("print-header");
+    headerEl.style.display = "block";
     const content = printRef.current.innerHTML;
+    headerEl.style.display = "none";
     const win = window.open("", "_blank");
     win.document.write(`
       <html><head><title>Agent Wise Sale Report</title>
@@ -244,9 +247,13 @@ const AgentWiseSaleReport = () => {
               <div className="text-center text-muted py-5">Click Generate to load report</div>
             ) : (
               <div ref={printRef}>
-                <div className="header text-center mb-3">
-                  <div className="fw-bold fs-5">LORDS DIAGNOSTIC</div>
-                  <div className="small">13/3, CIRCULAR 2ND BYE LANE,</div>
+                <div className="header text-center mb-3" id="print-header" style={{ display: "none" }}>
+                  <div className="fw-bold fs-5">LORDS HEALTH CARE (NURSING HOME)</div>
+                  <div className="small fw-bold">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+                  <div className="small">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
+                  <div className="small">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+                  <div className="small">E-mail: patientdesk@lordshealthcare.org</div>
+                  <div className="small">Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895</div>
                   <div className="fw-bold text-danger mt-1" style={{ fontSize: "1rem" }}>
                     AGENT WISE SALE REPORT (DETAIL)
                   </div>

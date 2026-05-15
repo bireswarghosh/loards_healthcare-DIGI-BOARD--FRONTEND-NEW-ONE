@@ -660,23 +660,26 @@ useEffect(() => {
     const m = 15;
 
     // ===== HEADER =====
-    doc.setFontSize(18);
+    doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("LORDS HEALTH CARE", pw / 2, 18, { align: "center" });
+    doc.text("LORDS HEALTH CARE (NURSING HOME)", pw / 2, 14, { align: "center" });
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("(A Unit of MJJ Enterprises Pvt. Ltd.)", pw / 2, 24, { align: "center" });
-    doc.text("13/3, Circular 2nd Bye Lane, Kolkata", pw / 2, 29, { align: "center" });
+    doc.text("(A UNIT of MJJ Enterprises Pvt. Ltd.)", pw / 2, 19, { align: "center" });
+    doc.text("13/3, Circular 2nd Bye Lane, Kona Expressway,", pw / 2, 24, { align: "center" });
+    doc.text("(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.", pw / 2, 29, { align: "center" });
+    doc.text("E-mail: patientdesk@lordshealthcare.org", pw / 2, 34, { align: "center" });
+    doc.text("Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895", pw / 2, 39, { align: "center" });
     doc.setLineWidth(0.5);
-    doc.line(m, 32, pw - m, 32);
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("OT BILLING", pw / 2, 39, { align: "center" });
-    doc.setLineWidth(0.3);
     doc.line(m, 42, pw - m, 42);
+    doc.setFontSize(13);
+    doc.setFont("helvetica", "bold");
+    doc.text("OT BILLING", pw / 2, 48, { align: "center" });
+    doc.setLineWidth(0.3);
+    doc.line(m, 51, pw - m, 51);
 
     // ===== BASIC INFO =====
-    let y = 50;
+    let y = 58;
     doc.setFontSize(10);
     const lbl = (text, x, yy) => { doc.setFont("helvetica", "bold"); doc.text(text, x, yy); };
     const val = (text, x, yy) => { doc.setFont("helvetica", "normal"); doc.text(text, x, yy); };
