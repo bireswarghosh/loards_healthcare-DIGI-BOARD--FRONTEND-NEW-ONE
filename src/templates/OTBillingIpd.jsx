@@ -641,10 +641,14 @@ useEffect(() => {
 
   // ================= PDF GENERATE =================
   const [doctorList, setDoctorList] = useState([]);
+  const [otMasterList, setOtMasterList] = useState([]);
 
   useEffect(() => {
     axiosInstance.get("/doctormaster?page=1&limit=10000").then((res) => {
       setDoctorList(res.data?.data || []);
+    }).catch(() => {});
+    axiosInstance.get("/otMaster").then((res) => {
+      setOtMasterList(res.data?.data || []);
     }).catch(() => {});
   }, []);
 
@@ -652,6 +656,12 @@ useEffect(() => {
     if (!docId) return "-";
     const d = doctorList.find((x) => x.DoctorId === docId);
     return d?.Doctor || "-";
+  };
+
+  const getOtMasterName = (otId) => {
+    if (!otId) return "-";
+    const o = otMasterList.find((x) => x.OtMasterId === otId);
+    return o?.OtMaster || "-";
   };
 
   const generateOTBillPDF = () => {
@@ -723,7 +733,7 @@ useEffect(() => {
       startY: y,
       head: [["OT Name", "OT Type", "OT Hour", "OT Minute", "Amount (Rs.)"]],
       body: [
-        [formData.OTId || "-", formData.OTType || "-", formData.OTHr || "0", formData.OTMinit || "0", Number(formData.OTAmt || 0).toFixed(2)],
+        [getOtMasterName(formData.OTId), formData.OTType || "-", formData.OTHr || "0", formData.OTMinit || "0", Number(formData.OTAmt || 0).toFixed(2)],
       ],
       theme: "grid",
       headStyles: { fillColor: [44, 62, 80], fontSize: 9, halign: "center" },
