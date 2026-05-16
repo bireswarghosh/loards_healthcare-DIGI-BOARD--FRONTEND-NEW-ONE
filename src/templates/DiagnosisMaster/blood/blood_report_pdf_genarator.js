@@ -762,7 +762,7 @@ export const handlePrint = async (data, Remarks) => {
 
   if (hasValue(data.CoagulMin) || hasValue(data.CoagulSec)) {
     tableBody.push([
-      `Coagulation Time`,
+      `Clotting Time`,
       `${data.CoagulMin || 0} min ${data.CoagulSec || 0} sec`,
       `5-15 min`,
     ]);
