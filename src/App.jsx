@@ -61,6 +61,7 @@ import PricingTable2 from "./pages/PricingTable2";
 import UnderConstruction from "./pages/UnderConstruction";
 import UserManagement from "./pages/UserManagement";
 import AccessControl from "./pages/AccessControl";
+import ActivityLog from "./pages/ActivityLog";
 
 import Emr from "./pages/bireswar_pages/outdoor/Emr/Emr.jsx";
 
@@ -463,6 +464,7 @@ function App() {
           <Route path="/map" element={<Map />} />
           <Route path="/user-management" element={<AdminOnlyRoute><UserManagement /></AdminOnlyRoute>} />
           <Route path="/access-control" element={<AdminOnlyRoute><AccessControl /></AdminOnlyRoute>} />
+          <Route path="/activity-log" element={<AdminOnlyRoute><ActivityLog /></AdminOnlyRoute>} />
 
        
 

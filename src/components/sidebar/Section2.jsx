@@ -57,6 +57,18 @@ const Section2 = () => {
           </li>
         )}
 
+        {/* Activity Log */}
+        {(isSuperAdmin || permissions?.userManagement !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/activity-log" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-clock-rotate-left"></i>
+              </span>{" "}
+              <span className="sidebar-txt">Activity Log</span>
+            </NavLink>
+          </li>
+        )}
+
       </ul>
     </li>
   );

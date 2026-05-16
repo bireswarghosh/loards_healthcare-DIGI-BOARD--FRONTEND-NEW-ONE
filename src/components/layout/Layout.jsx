@@ -8,8 +8,10 @@ import RightSidebarButton from "../header/RightSidebarButton";
 import ProfileRightSidebar from "../sidebar/right-sidebar/ProfileRightSidebar";
 import { ToastContainer } from "react-toastify";
 import Confirm from "../confirm_component_bootstrap/Confirm";
+import useActivityTracker from "../../hooks/useActivityTracker";
 
 const Layout = () => {
+  useActivityTracker();
   const {
     isExpanded,
     layoutPosition,
