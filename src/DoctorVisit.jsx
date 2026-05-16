@@ -437,7 +437,7 @@ toast.error("Something went wrong");
                 </label>
                 {/* <input className="form-control form-control-sm" {...register("DoctorName")} /> */}
                 <ApiSelect
-                  api="/doctormaster?page=1&limit=10000"
+                  api="/doctors/indoor"
                   value={watch("DoctorId")} 
                   labelKey="Doctor" 
                   valueKey="DoctorId" 

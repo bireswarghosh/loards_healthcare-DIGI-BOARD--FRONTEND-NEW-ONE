@@ -644,7 +644,7 @@ useEffect(() => {
   const [otMasterList, setOtMasterList] = useState([]);
 
   useEffect(() => {
-    axiosInstance.get("/doctormaster?page=1&limit=10000").then((res) => {
+    axiosInstance.get("/doctors/indoor").then((res) => {
       setDoctorList(res.data?.data || []);
     }).catch(() => {});
     axiosInstance.get("/otMaster").then((res) => {
@@ -1130,7 +1130,7 @@ useEffect(() => {
       }
     /> */}
                         <ApiSelect
-                          api="/doctormaster?page=1&limit=10000"
+                          api="/doctors/indoor"
                           value={formData.AnesthesiaDocId || null}
                           labelKey="Doctor"
                           valueKey="DoctorId"
@@ -1209,7 +1209,7 @@ useEffect(() => {
                         <label className="form-label">Surgeon Doctor</label>
 
                         <ApiSelect
-                          api="/doctormaster?page=1&limit=10000"
+                          api="/doctors/indoor"
                           value={formData.SergonDocId || null}
                           labelKey="Doctor"
                           valueKey="DoctorId"
@@ -1245,7 +1245,7 @@ useEffect(() => {
                         <label className="form-label">Under Care Doctor</label>
 
                         <ApiSelect
-                          api="/doctormaster?page=1&limit=10000"
+                          api="/doctors/indoor"
                           value={formData.OthersDocId || null}
                           labelKey="Doctor"
                           valueKey="DoctorId"

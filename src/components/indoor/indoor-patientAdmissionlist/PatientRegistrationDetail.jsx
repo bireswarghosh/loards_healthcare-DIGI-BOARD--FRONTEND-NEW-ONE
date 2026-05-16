@@ -239,7 +239,7 @@ const PatientAdmission = () => {
 
   const fetchDoctors = async () => {
     try {
-      const fetchedDoctors = await axiosInstance.get("/doctors");
+      const fetchedDoctors = await axiosInstance.get("/doctors/indoor");
       if (fetchedDoctors.data.success) setDoctors(fetchedDoctors.data.data);
     } catch (error) {
       console.error("Error fetching doctors:", error);
@@ -554,7 +554,7 @@ const PatientAdmission = () => {
 
   const fetchRMO = async () => {
     try {
-      const fetchedRMO = await axiosInstance.get("/doctormaster/rmo");
+      const fetchedRMO = await axiosInstance.get("/doctors/rmo");
       if (fetchedRMO.data.success) setRmo(fetchedRMO.data.data);
     } catch (error) {
       console.error("Error fetching RMO:", error);

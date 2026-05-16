@@ -308,7 +308,7 @@ const VisitEntry = () => {
               }
 
               const doctorsResponse = await axiosInstance.get(
-                `/doctormaster/department/${billData.department}`,
+                `/doctors/opd/department/${billData.department}`,
                 {
                   headers: { Authorization: `Bearer ${token}` },
                 },
@@ -599,7 +599,7 @@ const VisitEntry = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axiosInstance.get(
-          `/doctormaster/department/${value}`,
+          `/doctors/opd/department/${value}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -864,7 +864,7 @@ const VisitEntry = () => {
     // ⭐ Load doctors for that department
     if (data.SpecialityId) {
       const res = await axiosInstance.get(
-        `/doctormaster/department/${data.SpecialityId}`,
+        `/doctors/opd/department/${data.SpecialityId}`,
       );
       setDoctors(res.data.data || []);
     }
@@ -909,7 +909,7 @@ const VisitEntry = () => {
         setFormData((prev) => ({ ...prev, DepartmentId: selectedDept }));
 
         const resDept = await axiosInstance.get(
-          `/doctormaster/department/${selectedDept}`,
+          `/doctors/opd/department/${selectedDept}`,
           // {
           //   headers: { Authorization: `Bearer ${token}` },
           // }
@@ -2457,3 +2457,4 @@ const VisitEntry = () => {
 };
 
 export default VisitEntry;
+
