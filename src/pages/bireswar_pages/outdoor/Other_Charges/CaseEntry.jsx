@@ -3565,11 +3565,11 @@ ${
                         />
                       </div>
                       <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
-                        <label style={labelStyle}>Gurdian Name</label>
+                        <label style={labelStyle}>Guardian Name</label>
                         <input
                           type="text"
-                          name="HusbandName"
-                          value={formData.HusbandName}
+                          name="FName"
+                          value={formData.FName}
                           onChange={handleInputChange}
                           style={{ ...inputStyle, flex: 1 }}
                         />
