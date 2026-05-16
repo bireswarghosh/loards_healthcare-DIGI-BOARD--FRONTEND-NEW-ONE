@@ -370,7 +370,7 @@ const CaseEntry = () => {
     ApprovNo: "",
     ValueEntryBy: "",
     CN: "",
-    OPDYN: "N",
+    OPDYN: "Y",
     OPDID: "",
     CardNo: "",
     FName: "",
@@ -412,7 +412,7 @@ const CaseEntry = () => {
   const [selectedTestMaster, setSelectedTestMaster] = useState(null);
   const [testSearchResults, setTestSearchResults] = useState([]);
   const [isSearchingTest, setIsSearchingTest] = useState(false);
-  const [indoor, setIndoor] = useState(true);
+  const [indoor, setIndoor] = useState(false);
   const inOutRate = indoor
     ? selectedTestMaster?.BRate
     : selectedTestMaster?.Rate;
@@ -1505,7 +1505,7 @@ const CaseEntry = () => {
       ApprovNo: "",
       ValueEntryBy: "",
       CN: "",
-      OPDYN: "N",
+      OPDYN: "Y",
       OPDID: "",
       CardNo: "",
       FName: "",
@@ -1528,6 +1528,7 @@ const CaseEntry = () => {
       DueBillPrint: "",
       PrintYN: "0",
     });
+    setIndoor(false);
     setSelectedTest("");
     setSelectedTestOPD("");
     setCompanyYN("N");
