@@ -40,12 +40,24 @@ const PermissionRoute = ({ children, section }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (username === 'lords') {
+  // Super admin bypass
+  if (username === 'lords' || username === 'lordsYou') {
     return children;
   }
 
-  if (permissions && permissions[section] === false) {
-    return <Navigate to="/" replace />;
+  if (permissions) {
+    // Check if the specific section is blocked
+    if (permissions[section] === false) {
+      return <Navigate to="/" replace />;
+    }
+
+    // Check parent permission - if section has underscore, check parent too
+    if (section.includes('_')) {
+      const parent = section.split('_')[0];
+      if (permissions[parent] === false) {
+        return <Navigate to="/" replace />;
+      }
+    }
   }
 
   return children;

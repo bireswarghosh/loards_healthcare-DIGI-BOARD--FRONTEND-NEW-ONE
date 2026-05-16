@@ -137,7 +137,6 @@ const UserManagement = () => {
               <tr>
                 <th>User ID</th>
                 <th>Username</th>
-                <th>Password</th>
                 <th>Status</th>
                 <th>Admin Level</th>
                 {canEdit && <th>Actions</th>}
@@ -151,7 +150,7 @@ const UserManagement = () => {
                     {u.UserName}
                     {user?.username === u.UserName && <span className="badge bg-info ms-2">You</span>}
                   </td>
-                  <td>{u.Password || 'N/A'}</td>
+
                   <td>
                     {canEdit ? (
                       <button

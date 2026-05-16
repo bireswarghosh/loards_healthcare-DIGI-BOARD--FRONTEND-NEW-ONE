@@ -306,11 +306,11 @@ const AdmissionList = () => {
               <div className="radio-group">
                 <label><input type="radio" name="stype" checked={searchType === 'name'} onChange={() => setSearchType('name')} /> Name</label>
                 <label><input type="radio" name="stype" checked={searchType === 'phone'} onChange={() => setSearchType('phone')} /> Phone</label>
-                <label><input type="radio" name="stype" checked={searchType === 'reg'} onChange={() => setSearchType('reg')} /> Reg No</label>
+                {/* <label><input type="radio" name="stype" checked={searchType === 'reg'} onChange={() => setSearchType('reg')} /> Reg No</label>
                 <label><input type="radio" name="stype" checked={searchType === 'bed'} onChange={() => setSearchType('bed')} /> Bed</label>
                 <label><input type="radio" name="stype" checked={searchType === 'doctor'} onChange={() => setSearchType('doctor')} /> Doctor</label>
                 <label><input type="radio" name="stype" checked={searchType === 'marketing'} onChange={() => setSearchType('marketing')} /> Marketing Exec</label>
-                <label><input type="radio" name="stype" checked={searchType === 'dept'} onChange={() => setSearchType('dept')} /> Department</label>
+                <label><input type="radio" name="stype" checked={searchType === 'dept'} onChange={() => setSearchType('dept')} /> Department</label> */}
               </div>
               <div className="search-box d-flex align-items-center gap-2">
                 <input 

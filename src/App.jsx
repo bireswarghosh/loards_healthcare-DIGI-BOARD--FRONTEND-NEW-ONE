@@ -330,6 +330,7 @@ import DischargePrint from "./templates/DischargePrint.jsx";
 
 
 // !  ai  
+import AiEditorPage from "./components/ai-editor/AiEditorPage";
 import AiChat from "./pages/AiChat";
 import AiChatDoctor from "./pages/AiChatDoctor";
 import AiSettings from "./pages/AiSettings";
@@ -1008,22 +1009,20 @@ function App() {
 
 {/* ai */}
 
+<Route path="/ai-editor" element={<PermissionRoute section="ai"><AiEditorPage /></PermissionRoute>} />
  <Route path="/" element={<AiChat />} />
-          <Route
-            path="/aiAppointmentHistory"
-            element={<AiAppointmentHistory />}
-          />
-          <Route path="/userAiBookings" element={<UserAiBookings />} />
-          <Route path="/aiUserChat" element={<AiChat />} />
-          <Route path="/aiDoctorChat" element={<AiChatDoctor />} />
-          <Route path="/aiChatOld" element={<AiChatOld />} />
-          <Route path="/aiSettings" element={<AiSettings />} />
-          <Route path="/aiPrescription" element={<AiPrescription />} />
-          <Route path="/aiMedicalImaging" element={<AiMedicalImaging />} />
-          <Route path="/aiTreatmentPlan" element={<AiTreatmentPlan />} />
-          <Route path="/aiDrugInteraction" element={<AiDrugInteraction />} />
-          <Route path="/aiHealthAnalytics" element={<AiHealthAnalytics />} />
-          <Route path="/aiScribe" element={<AiScribe />} />
+          <Route path="/aiAppointmentHistory" element={<PermissionRoute section="ai_appointmentHistory"><AiAppointmentHistory /></PermissionRoute>} />
+          <Route path="/userAiBookings" element={<PermissionRoute section="ai_userBookings"><UserAiBookings /></PermissionRoute>} />
+          <Route path="/aiUserChat" element={<PermissionRoute section="ai_userChat"><AiChat /></PermissionRoute>} />
+          <Route path="/aiDoctorChat" element={<PermissionRoute section="ai_doctorChat"><AiChatDoctor /></PermissionRoute>} />
+          <Route path="/aiChatOld" element={<PermissionRoute section="ai_userChat"><AiChatOld /></PermissionRoute>} />
+          <Route path="/aiSettings" element={<PermissionRoute section="ai_settings"><AiSettings /></PermissionRoute>} />
+          <Route path="/aiPrescription" element={<PermissionRoute section="ai_prescription"><AiPrescription /></PermissionRoute>} />
+          <Route path="/aiMedicalImaging" element={<PermissionRoute section="ai_medicalImaging"><AiMedicalImaging /></PermissionRoute>} />
+          <Route path="/aiTreatmentPlan" element={<PermissionRoute section="ai_treatmentPlan"><AiTreatmentPlan /></PermissionRoute>} />
+          <Route path="/aiDrugInteraction" element={<PermissionRoute section="ai_drugInteraction"><AiDrugInteraction /></PermissionRoute>} />
+          <Route path="/aiHealthAnalytics" element={<PermissionRoute section="ai_healthAnalytics"><AiHealthAnalytics /></PermissionRoute>} />
+          <Route path="/aiScribe" element={<PermissionRoute section="ai_scribe"><AiScribe /></PermissionRoute>} />
 {/* ai */}
 
 {/* WhatsApp API routes */}
