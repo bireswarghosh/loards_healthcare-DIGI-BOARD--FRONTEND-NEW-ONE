@@ -1,6 +1,6 @@
 
 import React from "react";
-import { handlePrint1, handlePrint2, handlePrint3, handlePrint4, handleprint6, handlePrint5 } from "./FinalBillPrintFunc";
+import { handlePrint1, handlePrint2, handlePrint3, handlePrint4, handleprint6, handlePrint5, handlePrint7 } from "./FinalBillPrintFunc";
 
 
 // Neutral, modern Radio Component
@@ -142,6 +142,12 @@ const ModernNeutralModal = ({
               printType={printType}
               setPrintType={setPrintType}
             />
+            <ModernRadio
+              id="dateWise"
+              label="Date Wise"
+              printType={printType}
+              setPrintType={setPrintType}
+            />
           </div>
 
 
@@ -235,6 +241,9 @@ const ModernNeutralModal = ({
                     break;
                   case "otBillDetail":
                    handleprint6(otObjDetails, otChargeDetails)
+                    break;
+                  case "dateWise":
+                    handlePrint7(billData1);
                     break;
 
                   default:

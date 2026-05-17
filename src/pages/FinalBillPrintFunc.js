@@ -1,5 +1,27 @@
 
 
+// Sort rows by date - smallest first
+// Handles formats: "dd/mm/yyyy", "DD 00:00:00/MM/YYYY", "dd/mm/yyyy to dd/mm/yyyy"
+function parseDateValue(d) {
+  if (!d) return 99999999;
+  const s = String(d).trim();
+  // Format: "DD 00:00:00/MM/YYYY" or "DD HH:MM:SS/MM/YYYY"
+  const match1 = s.match(/^(\d{1,2})\s+\d{2}:\d{2}:\d{2}\/(\d{2})\/(\d{4})/);
+  if (match1) return Number(match1[3] + match1[2] + match1[1].padStart(2, '0'));
+  // Format: "dd/mm/yyyy"
+  const parts = s.split("/");
+  if (parts.length === 3 && parts[2].length === 4) return Number(parts[2] + parts[1] + parts[0].padStart(2, '0'));
+  // Format: "dd/mm/yyyy to dd/mm/yyyy" - use first date
+  const rangeMatch = s.match(/^(\d{1,2})\/(\d{2})\/(\d{4})/);
+  if (rangeMatch) return Number(rangeMatch[3] + rangeMatch[2] + rangeMatch[1].padStart(2, '0'));
+  return 99999999;
+}
+
+function sortRowsByDate(rows) {
+  if (!rows || !rows.length) return rows;
+  return [...rows].sort((a, b) => parseDateValue(a[0]) - parseDateValue(b[0]));
+}
+
 function mergeConsecutive(arr) {
   const result = [];
 
@@ -41,6 +63,11 @@ function mergeConsecutive(arr) {
 
 // this print final bill summary (done)
 export const handlePrint1 = (data) => {
+  data.services.rows = sortRowsByDate(data.services.rows);
+  data.doctorVisits.rows = sortRowsByDate(data.doctorVisits.rows);
+  data.investigations.rows = sortRowsByDate(data.investigations.rows);
+  data.serviceCharges.rows = sortRowsByDate(data.serviceCharges.rows);
+  if (data.otCharges?.rows) data.otCharges.rows = sortRowsByDate(data.otCharges.rows);
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
   // console.log("data.bedCharges.rows", data.bedCharges.rows)
@@ -462,6 +489,13 @@ export const handlePrint2 = (invoiceData) => {
 
   let grandTotal = 0;
 
+  // Sort groups by CaseDate ascending
+  invoiceData.groups.sort((a, b) => {
+    const dA = new Date(a.CaseDate || 0);
+    const dB = new Date(b.CaseDate || 0);
+    return dA - dB;
+  });
+
   invoiceData.groups.forEach((group) => {
     // Group Header Row (Case Date/No)
     tableRows += `
@@ -619,6 +653,11 @@ export const handlePrint2 = (invoiceData) => {
 
 // this print final bill patient copy (done)
 export const handlePrint3 = (data) => {
+  data.services.rows = sortRowsByDate(data.services.rows);
+  data.doctorVisits.rows = sortRowsByDate(data.doctorVisits.rows);
+  data.investigations.rows = sortRowsByDate(data.investigations.rows);
+  data.serviceCharges.rows = sortRowsByDate(data.serviceCharges.rows);
+  if (data.otCharges?.rows) data.otCharges.rows = sortRowsByDate(data.otCharges.rows);
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
@@ -960,6 +999,11 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 
 // this print final bill Indoor Copy (done)
 export const handlePrint4 = (data) => {
+  data.services.rows = sortRowsByDate(data.services.rows);
+  data.doctorVisits.rows = sortRowsByDate(data.doctorVisits.rows);
+  data.investigations.rows = sortRowsByDate(data.investigations.rows);
+  data.serviceCharges.rows = sortRowsByDate(data.serviceCharges.rows);
+  if (data.otCharges?.rows) data.otCharges.rows = sortRowsByDate(data.otCharges.rows);
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
@@ -1295,6 +1339,11 @@ export const handlePrint5 = (data) => {
   console.log("data is : ", data);
   console.log("only bed data is:", data.bedCharges.rows);
 
+  data.services.rows = sortRowsByDate(data.services.rows);
+  data.doctorVisits.rows = sortRowsByDate(data.doctorVisits.rows);
+  data.investigations.rows = sortRowsByDate(data.investigations.rows);
+  data.serviceCharges.rows = sortRowsByDate(data.serviceCharges.rows);
+  if (data.otCharges?.rows) data.otCharges.rows = sortRowsByDate(data.otCharges.rows);
   let arr = mergeConsecutive(data.bedCharges.rows);
   data.bedCharges.rows = arr;
 
@@ -1655,6 +1704,158 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
       printWindow.print();
       printWindow.close();
     }, 500);
+  } else {
+    alert("Pop-up blocked. Please allow pop-ups for this website to print.");
+  }
+};
+
+// Date-wise all charges print (sorted small date → big date, with per-date & overall totals)
+export const handlePrint7 = (data) => {
+  let allRows = [];
+
+  // Bed Charges
+  if (data.bedCharges?.rows) {
+    data.bedCharges.rows.forEach((row) => {
+      allRows.push({ date: row[0], section: "BED CHARGES", desc: row[1], qty: row[2], rate: row[3], amount: Number(row[4]) || 0 });
+    });
+  }
+  // Doctor Visits
+  if (data.doctorVisits?.rows) {
+    data.doctorVisits.rows.forEach((row) => {
+      allRows.push({ date: row[0], section: "DOCTOR VISIT", desc: row[1], qty: row[2], rate: row[3], amount: Number(row[4]) || 0 });
+    });
+  }
+  // OT Charges
+  if (data.otCharges?.rows && Number(data.otCharges.total) > 0) {
+    data.otCharges.rows.forEach((row) => {
+      allRows.push({ date: row[0], section: "O.T. CHARGES", desc: row[1], qty: "1", rate: row[2], amount: Number(row[2]) || 0 });
+    });
+  }
+  // Other Services
+  if (data.services?.rows) {
+    data.services.rows.forEach((row) => {
+      allRows.push({ date: row[0], section: "OTHER CHARGES", desc: row[1], qty: row[2], rate: row[3], amount: Number(row[4]) || 0 });
+    });
+  }
+  // Investigations
+  if (data.investigations?.rows) {
+    data.investigations.rows.forEach((row) => {
+      allRows.push({ date: row[0], section: "INVESTIGATION", desc: row[1], qty: "1", rate: row[2], amount: Number(row[2]) || 0 });
+    });
+  }
+  // Service Charges
+  if (data.serviceCharges?.rows) {
+    data.serviceCharges.rows.forEach((row) => {
+      allRows.push({ date: row[0], section: "SERVICE CHARGES", desc: row[1], qty: row[2], rate: row[3], amount: Number(row[4]) || 0 });
+    });
+  }
+
+  const parseDate = (d) => {
+    return parseDateValue(d);
+  };
+
+  allRows.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+
+  const grouped = {};
+  allRows.forEach((row) => {
+    const key = row.date || "N/A";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(row);
+  });
+
+  const overallTotal = allRows.reduce((s, r) => s + r.amount, 0);
+
+  const styles = `
+    <style>
+      @page { size: A4; margin: 10mm; }
+      body { font-family: Arial, sans-serif; font-size: 11px; font-weight: 700; color: #000; line-height: 1.3; }
+      .container { width: 100%; max-width: 210mm; margin: 0 auto; }
+      .header-table { width: 100%; border: none; margin-bottom: 10px; }
+      .header-table td { border: none; vertical-align: top; }
+      .company-info { text-align: center; width: 70%; }
+      .company-name { font-size: 22px; font-weight: 700; margin: 0; }
+      .company-pvt { font-size: 18px; font-weight: 700; }
+      .company-address { font-size: 10px; font-weight: 700; }
+      .company-contact { font-size: 10px; font-weight: bold; }
+      .info-box { margin-top:20px; width: 100%; border: 1px solid #000; padding: 4px; margin-bottom: 10px; }
+      .info-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+      .info-col { width: 48%; display: flex; }
+      .label { font-weight: bold; width: 130px; }
+      .value { flex: 1; font-weight: 700; }
+      table.data-table { width: 100%; border-collapse: collapse; margin-bottom: 5px; font-size: 10px; font-weight: bold; }
+      table.data-table th, table.data-table td { border: 1px solid #000; padding: 3px 5px; }
+      table.data-table th { background-color: #f0f0f0; text-align: left; }
+      .text-right { text-align: right; }
+      .date-header { background: #e0e0e0; font-weight: bold; font-size: 11px; padding: 4px 5px; }
+      .date-total { background: #d0d0d0; font-weight: bold; }
+      .footer-totals { width: 100%; margin-top: 15px; border-top: 2px solid #000; padding-top: 5px; }
+      .total-row { display: flex; justify-content: flex-end; font-weight: bold; font-size: 12px; margin-bottom: 5px; }
+      .total-label { margin-right: 20px; }
+    </style>
+  `;
+
+  let html = `<html><head><title>Date Wise Bill</title>${styles}</head><body><div class="container">`;
+
+  html += `
+    <table class="header-table"><tr>
+      <td><img src="/assets/lords.png" style="width:80px;" /></td>
+      <td class="company-info">
+        <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
+        <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+        <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
+        <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+        <div class="company-contact">E-mail: patientdesk@lordshealthcare.org<br>Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895</div>
+      </td>
+      <td><img src="/assets/nabh.png" style="width:120px;" /></td>
+    </tr></table>
+  `;
+
+  html += `<div style="text-align:center;font-weight:bold;font-size:14px;text-decoration:underline;margin:10px 0;">DATE WISE BILL DETAILS</div>`;
+
+  html += `
+    <div class="info-box">
+      <div class="info-row"><div class="info-col"><span class="label">PATIENT NAME</span>: <span class="value">${data.patient?.name || ""}</span></div><div class="info-col"><span class="label">BILL NO.</span>: <span class="value">${data.billNo || ""}</span></div></div>
+      <div class="info-row"><div class="info-col"><span class="label">IPD NO</span>: <span class="value">${data.ipdNo || ""}</span></div><div class="info-col"><span class="label">Bill Date</span>: <span class="value">${data.billDate || ""}</span></div></div>
+      <div class="info-row"><div class="info-col"><span class="label">ADMISSION DATE</span>: <span class="value">${data.admissionDate || ""}</span></div><div class="info-col"><span class="label">DISCHARGE DATE</span>: <span class="value">${data.dischargeDate || ""}</span></div></div>
+    </div>
+  `;
+
+  html += `<table class="data-table"><thead><tr><th>Section</th><th>Description</th><th>Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead><tbody>`;
+
+  const sortedDates = Object.keys(grouped).sort((a, b) => parseDate(a) - parseDate(b));
+
+  sortedDates.forEach((date) => {
+    const rows = grouped[date];
+    const dateTotal = rows.reduce((s, r) => s + r.amount, 0);
+    html += `<tr><td colspan="5" class="date-header">${date}</td></tr>`;
+    rows.forEach((r) => {
+      html += `<tr><td>${r.section}</td><td>${r.desc || ""}</td><td>${r.qty || ""}</td><td class="text-right">${r.rate || ""}</td><td class="text-right">${r.amount.toFixed(2)}</td></tr>`;
+    });
+    html += `<tr class="date-total"><td colspan="4" class="text-right">Date Total:</td><td class="text-right">${dateTotal.toFixed(2)}</td></tr>`;
+  });
+
+  html += `</tbody></table>`;
+
+  html += `
+    <div class="footer-totals">
+      <div class="total-row"><span class="total-label">Grand Total :</span><span>${overallTotal.toFixed(2)}</span></div>
+      <div class="total-row"><span class="total-label">Less Advance Paid :</span><span>${data.advancePaid || 0}</span></div>
+      <div class="total-row"><span class="total-label">Insurance Approval :</span><span>${data.insuranceApproval || 0}</span></div>
+      <div class="total-row"><span class="total-label">Discount :</span><span>${data.discount || 0}</span></div>
+      <div class="total-row"><span class="total-label">Due :</span><span>${data.due || 0}</span></div>
+    </div>
+  `;
+
+  html += `<div style="margin-top:30px;display:flex;align-items:center;gap:100px;"><span>For:</span><span style="margin-left:350px;">E. & O. E.</span><span>Billed By: ${data.billedBy || ""}</span></div>`;
+
+  html += `</div></body></html>`;
+
+  const printWindow = window.open("", "_blank");
+  if (printWindow) {
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
   } else {
     alert("Pop-up blocked. Please allow pop-ups for this website to print.");
   }
