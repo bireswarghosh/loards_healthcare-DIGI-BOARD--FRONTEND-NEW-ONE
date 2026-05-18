@@ -43,9 +43,12 @@ const CaseTestDataModal = ({
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
-    const d = dateStr.split("T")[0];
-    const [y, m, dd] = d.split("-");
-    return `${dd}-${m}-${y}`;
+    const dt = new Date(dateStr);
+    if (isNaN(dt)) return "";
+    const dd = String(dt.getDate()).padStart(2, "0");
+    const mm = String(dt.getMonth() + 1).padStart(2, "0");
+    const yyyy = dt.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
   };
 
   const buildPatientHeaderHtml = () => {
@@ -56,7 +59,7 @@ const CaseTestDataModal = ({
     const bDate = formData2?.CaseDate ? formatDate(formData2.CaseDate) : "";
     const rDate = formData2?.ReportDate ? formatDate(formData2.ReportDate) : formatDate(new Date().toISOString());
     const refBy = doctorsMap[formData2?.DoctorId] || "";
-    return `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:13%;border:none"><b>Patient</b></td><td style="padding:4px 6px;width:20%;border:none">: ${pName}</td><td style="padding:4px 6px;width:10%;border:none"><b>Age</b></td><td style="padding:4px 6px;width:20%;border:none">: ${age}</td><td style="padding:4px 6px;width:10%;border:none"><b>Sex</b></td><td style="padding:4px 6px;width:27%;border:none">: ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No</b></td><td style="padding:4px 6px;border:none">: ${cNo}</td><td style="padding:4px 6px;border:none"><b>Billing Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By</b></td><td style="padding:4px 6px;border:none">: ${refBy}</td><td style="padding:4px 6px;border:none"><b>Report Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
+    return `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:33%;border:none"><b>Patient :</b> ${pName}</td><td style="padding:4px 6px;width:33%;border:none"><b>Age :</b> ${age}</td><td style="padding:4px 6px;width:34%;border:none"><b>Sex :</b> ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No :</b> ${cNo}</td><td colspan="2" style="padding:4px 6px;border:none"><b>Billing Date :</b> ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By :</b> ${refBy}</td><td colspan="2" style="padding:4px 6px;border:none"><b>Report Date :</b> ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
   };
 
   const buildEditorContent = (bodyContent) => {
@@ -273,7 +276,7 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
     const bDate = formData2?.CaseDate ? formatDate(formData2.CaseDate) : "";
     const rDate = formData2?.ReportDate ? formatDate(formData2.ReportDate) : formatDate(new Date().toISOString());
     const refBy = doctorsMap[formData2?.DoctorId] || "";
-    const freshHeader = `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:13%;border:none"><b>Patient</b></td><td style="padding:4px 6px;width:20%;border:none">: ${pName}</td><td style="padding:4px 6px;width:10%;border:none"><b>Age</b></td><td style="padding:4px 6px;width:20%;border:none">: ${age}</td><td style="padding:4px 6px;width:10%;border:none"><b>Sex</b></td><td style="padding:4px 6px;width:27%;border:none">: ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No</b></td><td style="padding:4px 6px;border:none">: ${cNo}</td><td style="padding:4px 6px;border:none"><b>Billing Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By</b></td><td style="padding:4px 6px;border:none">: ${refBy}</td><td style="padding:4px 6px;border:none"><b>Report Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
+    const freshHeader = `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:33%;border:none"><b>Patient :</b> ${pName}</td><td style="padding:4px 6px;width:33%;border:none"><b>Age :</b> ${age}</td><td style="padding:4px 6px;width:34%;border:none"><b>Sex :</b> ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No :</b> ${cNo}</td><td colspan="2" style="padding:4px 6px;border:none"><b>Billing Date :</b> ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By :</b> ${refBy}</td><td colspan="2" style="padding:4px 6px;border:none"><b>Report Date :</b> ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
     const fullContent = freshHeader + bodyOnly;
     const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21)
       ? ""
