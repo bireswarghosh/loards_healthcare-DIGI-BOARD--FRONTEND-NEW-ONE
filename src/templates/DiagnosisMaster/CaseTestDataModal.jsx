@@ -1,338 +1,3 @@
-// import { useEffect, useMemo, useState, useRef } from "react";
-// import { RichTextEditorComponent, Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count } from '@syncfusion/ej2-react-richtexteditor';
-// import { Inject as RteInject } from '@syncfusion/ej2-react-richtexteditor';
-// import axiosInstance from "../../axiosInstance";
-// import { toast } from "react-toastify";
-// import JsBarcode from "jsbarcode";
-
-// const CaseTestDataModal = ({
-//   open,
-//   onClose,
-//   caseId,
-//   testId,
-//   SubDepartmentId,
-//   PatientName,
-//   formData2,
-//   htmlContent,
-// }) => {
-//   const [records, setRecords] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [formData, setFormData] = useState({ htmlContent: "" });
-//   const [editId, setEditId] = useState(null);
-//   const rteRef = useRef(null);
-
-//   /* ================= BARCODE ================= */
-//   const barcodeImg = useMemo(() => {
-//     if (!formData2?.CaseNo) return "";
-//     const canvas = document.createElement("canvas");
-//     JsBarcode(canvas, formData2.CaseNo, {
-//       format: "CODE128",
-//       width: 2,
-//       height: 40,
-//       displayValue: true,
-//     });
-//     return canvas.toDataURL("image/png");
-//   }, [formData2?.CaseNo]);
-
-//   const [doctorsMap, setDoctorsMap] = useState({});
-
-//   const fetchDoctors = async () => {
-//     try {
-//       const res = await axiosInstance.get("/doctors");
-//       if (res.data.success) {
-//         let data = res.data.data;
-//         let hashMap = {};
-//         for (let i = 0; i < data.length; i++) {
-//           hashMap[data[i].DoctorId] = data[i].Doctor;
-//         }
-//         setDoctorsMap(hashMap);
-//       } else {
-//         setDoctorsMap({});
-//       }
-//     } catch (error) {
-//       console.log("Error fetching doctors:", error);
-//     }
-//   };
-
-//   /* ================= TOOLBAR CONFIG ================= */
-//   const rteToolbarSettings = {
-//     items: [
-//       'Undo', 'Redo', '|',
-//       'ImportWord', 'ExportWord', 'ExportPdf', '|',
-//       'Bold', 'Italic', 'Underline', 'StrikeThrough', '|',
-//       'FontName', 'FontSize', 'FontColor', 'BackgroundColor', '|',
-//       'Formats', 'Alignments', 'Blockquote', '|',
-//       'NumberFormatList', 'BulletFormatList', '|',
-//       'Outdent', 'Indent', '|',
-//       'CreateLink', 'Image', 'CreateTable', '|',
-//       'FormatPainter', 'ClearFormat', '|',
-//       'EmojiPicker', '|',
-//       'SourceCode', 'FullScreen'
-//     ],
-//   };
-
-//   const rteImportWord = {
-//     serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ImportFromWord',
-//   };
-
-//   const rteExportWord = {
-//     serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToDocx',
-//     fileName: 'test-report.docx',
-//   };
-
-//   const rteExportPdf = {
-//     serviceUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/ExportToPdf',
-//     fileName: 'test-report.pdf',
-//   };
-
-//   const rteInsertImageSettings = {
-//     saveUrl: 'https://services.syncfusion.com/react/production/api/RichTextEditor/SaveFile',
-//     path: 'https://services.syncfusion.com/react/production/api/RichTextEditor/GetImage',
-//   };
-
-//   const handleEditorChange = () => {
-//     if (rteRef.current) {
-//       setFormData({ htmlContent: rteRef.current.value });
-//     }
-//   };
-
-//   /* ================= FETCH ================= */
-//   useEffect(() => {
-//     fetchDoctors();
-//   }, []);
-
-//   useEffect(() => {
-//     if (open && caseId && testId) {
-//       fetchAndLoad();
-//     }
-//   }, [open, caseId, testId]);
-
-//   const fetchAndLoad = async () => {
-//     try {
-//       const res = await axiosInstance.get(
-//         `/case-test-data?caseId=${caseId}&testId=${testId}`
-//       );
-//       const list = res.data.data || [];
-//       setRecords(list);
-
-//       if (list.length > 0) {
-//         const latest = list[list.length - 1];
-//         setEditId(latest.id);
-//         setFormData({ htmlContent: latest.html_content || "" });
-//       } else {
-//         setEditId(null);
-//         setFormData({ htmlContent: htmlContent || "" });
-//       }
-//     } catch {
-//       toast.error("Failed to load data");
-//       setEditId(null);
-//       setFormData({ htmlContent: htmlContent || "" });
-//     }
-//   };
-
-//   const fetchRecords = async () => {
-//     try {
-//       const res = await axiosInstance.get(
-//         `/case-test-data?caseId=${caseId}&testId=${testId}`
-//       );
-//       setRecords(res.data.data || []);
-//     } catch {
-//       toast.error("Failed to load data");
-//     }
-//   };
-
-//   /* ================= SAVE ================= */
-//   const handleSubmit = async () => {
-//     if (!formData.htmlContent.trim()) {
-//       toast.warn("Content required");
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       const fd = new FormData();
-//       fd.append("caseId", caseId);
-//       fd.append("testId", testId);
-//       fd.append("htmlContent", formData.htmlContent);
-
-//       if (editId) {
-//         await axiosInstance.put(`/case-test-data/${editId}`, fd);
-//         toast.success("Updated successfully");
-//       } else {
-//         const res = await axiosInstance.post(`/case-test-data`, fd);
-//         toast.success("Saved successfully");
-//         const newId = res.data?.data?.id;
-//         if (newId) setEditId(newId);
-//       }
-
-//       fetchRecords();
-//     } catch {
-//       toast.error("Save failed");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   /* ================= PRINT ================= */
-//   const handlePrint = () => {
-//     if (!records?.length) {
-//       toast.warn("No content to print");
-//       return;
-//     }
-
-//     const contentHtml = (rteRef.current ? rteRef.current.value : formData.htmlContent) || records?.at(-1)?.html_content || "";
-
-//     const pName = formData2?.PatientName || PatientName || "";
-//     const age = (formData2?.Age || "") + (formData2?.AgeType || "");
-//     const cNo = formData2?.CaseNo || "";
-//     const sex = formData2?.Sex || "";
-//     const refBy = doctorsMap[formData2?.DoctorId || ""] || "";
-//     const bDate = new Date().toISOString().split("T")[0];
-//     const addr = [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", ");
-//     const rDate = records[0]?.created_at?.split("T")[0] || "";
-
-//     const iframe = document.createElement("iframe");
-//     iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
-//     document.body.appendChild(iframe);
-// // subDepartmentId 19 or 21 -> 20mm top margin, no bottom margin (for better fit on A4)
-// // 19 is for CARDIOLOGY, 21 is for ULTRASONOGRAPHY
-//     const doc = iframe.contentWindow.document;
-//     doc.open();
-//     doc.write(`<!DOCTYPE html>
-// <html>
-// <head>
-// <meta charset="utf-8">
-// <title>Report</title>
-// <style>
-// *{margin:0;padding:0;box-sizing:border-box}
-// @page{size:A4;margin:10mm}
-// body{ padding:${(SubDepartmentId == 19 || SubDepartmentId == 21) ? "20mm 8mm 0mm 8mm" : "50mm 8mm 60mm 8mm"};font-family:"Times New Roman",serif;font-size:13px;color:#000}
-// .bc{text-align:right;margin-bottom:4px}
-// .bc img{height:45px}
-// .pi{width:100%;border:1px solid #000;border-collapse:collapse;font-size:11px}
-// .pi td{border:none;padding:2px 4px}
-// hr.sep{border:none;border-top:1px solid #000;margin:6px 0}
-// .cc{font-family:"Times New Roman",serif;font-size:13px;line-height:1.6}
-// .cc p{margin:0 0 3px}
-// .cc strong{font-weight:bold}
-// .cc table{width:100%;border-collapse:collapse;margin:8px 0}
-// .cc table td,.cc table th{border:1px solid #bfbfbf;padding:4px 6px;vertical-align:middle}
-// .cc h2{font-size:1.4em;margin:6px 0}
-// .cc h3{font-size:1.2em;margin:5px 0}
-// .cc ul,.cc ol{padding-left:18px;margin:3px 0}
-// .cc img{max-width:100%;height:auto}
-// </style>
-// </head>
-// <body>
-// <div class="bc"><img src="${barcodeImg}" /></div>
-// <table class="pi">
-// <tr><td style="width:13%"><b>Patient</b></td><td style="width:37%">: ${pName}</td><td style="width:13%"><b>Age</b></td><td style="width:37%">: ${age}</td></tr>
-// <tr><td><b>Case No</b></td><td>: ${cNo}</td><td><b>Sex</b></td><td>: ${sex}</td></tr>
-// <tr><td><b>Ref. By</b></td><td>: ${refBy}</td><td><b>Billing Date</b></td><td>: ${bDate}</td></tr>
-// <tr><td><b>Address</b></td><td>: ${addr}</td><td><b>Report Date</b></td><td>: ${rDate}</td></tr>
-// </table>
-// <hr class="sep">
-// <div class="cc">${contentHtml}</div>
-// </body>
-// </html>`);
-//     doc.close();
-
-//     iframe.contentWindow.focus();
-//     setTimeout(() => {
-//       iframe.contentWindow.print();
-//       setTimeout(() => document.body.removeChild(iframe), 1000);
-//     }, 500);
-//   };
-
-//   if (!open) return null;
-
-//   return (
-//     <>
-//       {/* ================= BACKDROP ================= */}
-//       <div
-//         onClick={onClose}
-//         style={{
-//           position: "fixed",
-//           inset: 0,
-//           zIndex: 999998,
-//           backgroundColor: "rgba(0,0,0,0.4)",
-//         }}
-//       />
-
-//       {/* ================= MODAL ================= */}
-//       <div
-//         style={{
-//           position: "fixed",
-//           top: 0,
-//           right: 0,
-//           bottom: 0,
-//           width: "80%",
-//           zIndex: 999999,
-//           backgroundColor: "#fff",
-//           display: "flex",
-//           flexDirection: "column",
-//           overflow: "hidden",
-//           boxShadow: "-2px 0 10px rgba(0,0,0,0.2)",
-//         }}
-//       >
-//         {/* HEADER */}
-//         <div className="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
-//           <h6 className="m-0 fw-bold">
-//             Case: {caseId} | Test: {testId} | {PatientName}
-//           </h6>
-//           <button className="btn-close" onClick={onClose}></button>
-//         </div>
-
-//         {/* BODY - Editor */}
-//         <div className="flex-grow-1 p-2" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-//           <div className="mb-1">
-//             <strong className="small">✏️ Editor</strong>
-//           </div>
-//           <div style={{ flex: 1, overflow: "auto" }}>
-//             <RichTextEditorComponent
-//               ref={rteRef}
-//               value={formData.htmlContent || htmlContent || ""}
-//               change={handleEditorChange}
-//               toolbarSettings={rteToolbarSettings}
-//               importWord={rteImportWord}
-//               exportWord={rteExportWord}
-//               exportPdf={rteExportPdf}
-//               insertImageSettings={rteInsertImageSettings}
-//               height="100%"
-//               enableResize={false}
-//             >
-//               <RteInject services={[Toolbar, Link, Image, HtmlEditor, Table, QuickToolbar, PasteCleanup, ImportExport, FormatPainter, EmojiPicker, Audio, Video, Count]} />
-//             </RichTextEditorComponent>
-//           </div>
-//         </div>
-
-//         {/* FOOTER */}
-//         <div className="d-flex justify-content-end gap-2 px-3 py-2 border-top bg-light">
-//           <button
-//             className="btn btn-success"
-//             onClick={handleSubmit}
-//             disabled={loading}
-//           >
-//             {editId ? "Update" : "Save"}
-//           </button>
-//           <button className="btn btn-primary" onClick={handlePrint}>
-//             Print
-//           </button>
-//           <button className="btn btn-secondary" onClick={onClose}>
-//             Close
-//           </button>
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default CaseTestDataModal;
-
-
-
-
-
 
 
 
@@ -376,16 +41,22 @@ const CaseTestDataModal = ({
   const [editorInitHtml, setEditorInitHtml] = useState("");
   const [printData, setPrintData] = useState({});
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = dateStr.split("T")[0];
+    const [y, m, dd] = d.split("-");
+    return `${dd}-${m}-${y}`;
+  };
+
   const buildPatientHeaderHtml = () => {
     const pName = formData2?.PatientName || PatientName || "";
     const age = (formData2?.Age || "") + (formData2?.AgeType || "");
     const cNo = formData2?.CaseNo || "";
     const sex = formData2?.Sex || "";
-    const addr = [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", ");
-    const bDate = formData2?.CaseDate ? formData2.CaseDate.split("T")[0] : "";
-    const rDate = formData2?.ReportDate ? formData2.ReportDate.split("T")[0] : new Date().toISOString().split("T")[0];
+    const bDate = formData2?.CaseDate ? formatDate(formData2.CaseDate) : "";
+    const rDate = formData2?.ReportDate ? formatDate(formData2.ReportDate) : formatDate(new Date().toISOString());
     const refBy = doctorsMap[formData2?.DoctorId] || "";
-    return `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:13%;border:none"><b>Patient</b></td><td style="padding:4px 6px;width:37%;border:none">: ${pName}</td><td style="padding:4px 6px;width:13%;border:none"><b>Age</b></td><td style="padding:4px 6px;width:37%;border:none">: ${age}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No</b></td><td style="padding:4px 6px;border:none">: ${cNo}</td><td style="padding:4px 6px;border:none"><b>Sex</b></td><td style="padding:4px 6px;border:none">: ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By</b></td><td style="padding:4px 6px;border:none">: ${refBy}</td><td style="padding:4px 6px;border:none"><b>Billing Date</b></td><td style="padding:4px 6px;border:none">: ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Address</b></td><td style="padding:4px 6px;border:none">: ${addr}</td><td style="padding:4px 6px;border:none"><b>Report Date</b></td><td style="padding:4px 6px;border:none">: ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
+    return `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:13%;border:none"><b>Patient</b></td><td style="padding:4px 6px;width:20%;border:none">: ${pName}</td><td style="padding:4px 6px;width:10%;border:none"><b>Age</b></td><td style="padding:4px 6px;width:20%;border:none">: ${age}</td><td style="padding:4px 6px;width:10%;border:none"><b>Sex</b></td><td style="padding:4px 6px;width:27%;border:none">: ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No</b></td><td style="padding:4px 6px;border:none">: ${cNo}</td><td style="padding:4px 6px;border:none"><b>Billing Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By</b></td><td style="padding:4px 6px;border:none">: ${refBy}</td><td style="padding:4px 6px;border:none"><b>Report Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
   };
 
   const buildEditorContent = (bodyContent) => {
@@ -449,9 +120,8 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
       CaseNo: formData2?.CaseNo || "",
       Sex: formData2?.Sex || "",
       ReferredBy: "",
-      BillingDate: formData2?.CaseDate ? formData2.CaseDate.split("T")[0] : "",
-      Address: [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", "),
-      ReportDate: formData2?.ReportDate ? formData2.ReportDate.split("T")[0] : "",
+      BillingDate: formData2?.CaseDate ? formatDate(formData2.CaseDate) : "",
+      ReportDate: formData2?.ReportDate ? formatDate(formData2.ReportDate) : "",
     });
   }, [open, formData2, PatientName]);
 
@@ -465,7 +135,7 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
   // Update ReportDate once records loaded
   useEffect(() => {
     if (records.length) {
-      setPrintData((prev) => ({ ...prev, ReportDate: prev.ReportDate || records[0]?.created_at?.split("T")[0] || "" }));
+      setPrintData((prev) => ({ ...prev, ReportDate: prev.ReportDate || formatDate(records[0]?.created_at) || "" }));
     }
   }, [records]);
 
@@ -539,20 +209,34 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
   };
 
   /* ================= SAVE ================= */
+  // Strip the baked-in patient header so only body content is stored in DB
+  const stripHeader = (html) => {
+    if (!html) return html;
+    const hrIdx = html.indexOf('<hr');
+    if (hrIdx >= 0) {
+      const closeIdx = html.indexOf('>', hrIdx);
+      if (closeIdx >= 0) return html.substring(closeIdx + 1);
+    }
+    return html;
+  };
+
   const handleSubmit = async () => {
     const currentHtml = editorContentRef.current || formData.htmlContent;
     if (!currentHtml.trim()) {
       toast.warn("Content required");
       return;
     }
-    setFormData({ htmlContent: currentHtml });
+    // Save only the body (without header) so header doesn't duplicate
+    const bodyOnly = stripHeader(currentHtml);
+    setFormData({ htmlContent: bodyOnly });
+    editorContentRef.current = bodyOnly;
 
     setLoading(true);
     try {
       const fd = new FormData();
       fd.append("caseId", caseId);
       fd.append("testId", testId);
-      fd.append("htmlContent", currentHtml);
+      fd.append("htmlContent", bodyOnly);
 
       if (editId) {
         await axiosInstance.put(`/case-test-data/${editId}`, fd);
@@ -564,6 +248,10 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
         if (newId) setEditId(newId);
       }
 
+      // Rebuild editor with fresh header + saved body
+      const rebuilt = buildEditorContent(bodyOnly);
+      setEditorInitHtml(rebuilt);
+      setEditorKey((k) => k + 1);
       fetchRecords();
     } catch {
       toast.error("Save failed");
@@ -582,11 +270,10 @@ let pathologist = JSON.parse(localStorage.getItem("SelectedPathologistData")) ||
     const age = (formData2?.Age || "") + (formData2?.AgeType || "");
     const cNo = formData2?.CaseNo || "";
     const sex = formData2?.Sex || "";
-    const addr = [formData2?.Add1, formData2?.Add2, formData2?.Add3].filter(Boolean).join(", ");
-    const bDate = formData2?.CaseDate ? formData2.CaseDate.split("T")[0] : "";
-    const rDate = formData2?.ReportDate ? formData2.ReportDate.split("T")[0] : new Date().toISOString().split("T")[0];
+    const bDate = formData2?.CaseDate ? formatDate(formData2.CaseDate) : "";
+    const rDate = formData2?.ReportDate ? formatDate(formData2.ReportDate) : formatDate(new Date().toISOString());
     const refBy = doctorsMap[formData2?.DoctorId] || "";
-    const freshHeader = `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:13%;border:none"><b>Patient</b></td><td style="padding:4px 6px;width:37%;border:none">: ${pName}</td><td style="padding:4px 6px;width:13%;border:none"><b>Age</b></td><td style="padding:4px 6px;width:37%;border:none">: ${age}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No</b></td><td style="padding:4px 6px;border:none">: ${cNo}</td><td style="padding:4px 6px;border:none"><b>Sex</b></td><td style="padding:4px 6px;border:none">: ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By</b></td><td style="padding:4px 6px;border:none">: ${refBy}</td><td style="padding:4px 6px;border:none"><b>Billing Date</b></td><td style="padding:4px 6px;border:none">: ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Address</b></td><td style="padding:4px 6px;border:none">: ${addr}</td><td style="padding:4px 6px;border:none"><b>Report Date</b></td><td style="padding:4px 6px;border:none">: ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
+    const freshHeader = `<div style="text-align:right;margin-bottom:4px"><img src="${barcodeImg}" style="height:45px" /></div><table style="width:100%;border:1px solid #000;border-collapse:collapse;font-size:16px;font-weight:900;-webkit-text-stroke:1px #000;margin-bottom:8px"><tr><td style="padding:4px 6px;width:13%;border:none"><b>Patient</b></td><td style="padding:4px 6px;width:20%;border:none">: ${pName}</td><td style="padding:4px 6px;width:10%;border:none"><b>Age</b></td><td style="padding:4px 6px;width:20%;border:none">: ${age}</td><td style="padding:4px 6px;width:10%;border:none"><b>Sex</b></td><td style="padding:4px 6px;width:27%;border:none">: ${sex}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Case No</b></td><td style="padding:4px 6px;border:none">: ${cNo}</td><td style="padding:4px 6px;border:none"><b>Billing Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${bDate}</td></tr><tr><td style="padding:4px 6px;border:none"><b>Ref. By</b></td><td style="padding:4px 6px;border:none">: ${refBy}</td><td style="padding:4px 6px;border:none"><b>Report Date</b></td><td colspan="3" style="padding:4px 6px;border:none">: ${rDate}</td></tr></table><hr style="border:none;border-top:2px solid #000;margin:8px 0" />`;
     const fullContent = freshHeader + bodyOnly;
     const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21)
       ? ""
