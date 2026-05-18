@@ -4,7 +4,7 @@ import axiosInstance from "../../axiosInstance";
 
 const useAxiosFetch = (url, deps = []) => {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!!url);
   const [error, setError] = useState(null);
 
   const fetchData = async () => {

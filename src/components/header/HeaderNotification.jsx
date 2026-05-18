@@ -41,7 +41,7 @@ const HeaderNotification = () => {
         <li>
           <Link to="#" className="d-flex align-items-center">
             <div className="avatar">
-              <img src="assets/images/avatar.png" alt="image" />
+              <img src="/assets/images/avatar.png" alt="image" />
             </div>
             <div className="notification-txt">
               <span className="notification-icon text-primary">
@@ -54,7 +54,7 @@ const HeaderNotification = () => {
         <li>
           <Link to="#" className="d-flex align-items-center">
             <div className="avatar">
-              <img src="assets/images/avatar-2.png" alt="image" />
+              <img src="/assets/images/avatar-2.png" alt="image" />
             </div>
             <div className="notification-txt">
               <span className="notification-icon text-success">
@@ -67,7 +67,7 @@ const HeaderNotification = () => {
         <li>
           <Link to="#" className="d-flex align-items-center">
             <div className="avatar">
-              <img src="assets/images/avatar-3.png" alt="image" />
+              <img src="/assets/images/avatar-3.png" alt="image" />
             </div>
             <div className="notification-txt">
               <span className="notification-icon">
@@ -80,7 +80,7 @@ const HeaderNotification = () => {
         <li>
           <Link to="#" className="d-flex align-items-center">
             <div className="avatar">
-              <img src="assets/images/avatar-4.png" alt="image" />
+              <img src="/assets/images/avatar-4.png" alt="image" />
             </div>
             <div className="notification-txt">
               <span className="notification-icon text-primary">
@@ -93,7 +93,7 @@ const HeaderNotification = () => {
         <li>
           <Link to="#" className="d-flex align-items-center">
             <div className="avatar">
-              <img src="assets/images/avatar-5.png" alt="image" />
+              <img src="/assets/images/avatar-5.png" alt="image" />
             </div>
             <div className="notification-txt">
               <span className="notification-icon text-success">
@@ -106,7 +106,7 @@ const HeaderNotification = () => {
         <li>
           <Link to="#" className="d-flex align-items-center">
             <div className="avatar">
-              <img src="assets/images/avatar-6.png" alt="image" />
+              <img src="/assets/images/avatar-6.png" alt="image" />
             </div>
             <div className="notification-txt">
               <span className="notification-icon">

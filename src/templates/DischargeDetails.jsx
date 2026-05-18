@@ -13,10 +13,15 @@ import useAxiosFetch from "./DiagnosisMaster/Fetch";
 // import axiosInstance from "../axiosInstance";
 
 const DischargeDetails = ({ mode }) => {
-  // console.log("mode",mode);
-
   const navigate = useNavigate();
   const { id } = useParams();
+
+  // Helper to safely extract yyyy-MM-dd from date strings like "2026-05-11 00:00:00" or ISO
+  const toDateInput = (val) => {
+    if (!val || val === "undefined" || val === "null") return "";
+    const d = val.split("T")[0].split(" ")[0];
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : "";
+  };
 
   const { register, control, handleSubmit, reset, watch, setValue } = useForm({
     defaultValues: {
@@ -119,13 +124,14 @@ const DischargeDetails = ({ mode }) => {
         }));
 
       const emrPayload = {
-        RegistrationId: selectedPatient?.RegistrationId || "",
-        VisitId: "",
-        admissionid: null,
+        RegistrationId: `D-${postId}`,
+        VisitId: "null",
+        admissionid: data.AdmitionId || sessionStorage.getItem("selectedAdmitionId") || null,
         diagnosis: diagnosisPayload,
         complaints: complaintPayload,
       };
 
+      // POST now does DELETE+INSERT so no duplication
       await axiosInstance.post("/emr/bulk", emrPayload);
 
       // ================= NAVIGATION =================
@@ -146,21 +152,21 @@ const DischargeDetails = ({ mode }) => {
 
   useEffect(() => {
     if (!dischargeData && mode !== "edit") return;
+    if (!dischargeData) return;
 
     reset({
-      DisCerNo: dischargeData.DisCerNo,
-      DisCerTime: dischargeData.DisCerTime,
-      DisCerDate: dischargeData?.DisCerDate?.split("T")[0],
-      DiscType: dischargeData.DiscType,
-      OTTypeId: dischargeData.OTTypeId,
-      Remarks: dischargeData.Remarks,
-      DischargedBy: dischargeData.DischargedBy,
-      AdmitionId: dischargeData.AdmitionId,
-      UserId: dischargeData.UserId,
-      AdmitionObj: {
-        label: dischargeData.AdmitionId,
-        value: dischargeData.AdmitionId,
-      },
+      DisCerNo: dischargeData.DisCerNo || "",
+      DisCerTime: dischargeData.DisCerTime || "",
+      DisCerDate: toDateInput(dischargeData?.DisCerDate),
+      DiscType: dischargeData.DiscType || "",
+      OTTypeId: dischargeData.OTTypeId || "",
+      Remarks: dischargeData.Remarks || "",
+      DischargedBy: dischargeData.DischargedBy || "",
+      AdmitionId: dischargeData.AdmitionId || "",
+      UserId: dischargeData.UserId || "",
+      AdmitionObj: dischargeData.AdmitionId
+        ? { label: dischargeData.AdmitionId, value: dischargeData.AdmitionId }
+        : null,
     });
   }, [dischargeData, mode, reset]);
 
@@ -333,7 +339,8 @@ const DischargeDetails = ({ mode }) => {
                       type="text"
                       className="form-control form-control-sm fw-bold"
                       style={inputStyle}
-                      value={patient?.PatientName}
+                      value={patient?.PatientName || ""}
+                      readOnly
                     />
                   </div>
                   <div className="col-md-4 ">
@@ -376,14 +383,16 @@ const DischargeDetails = ({ mode }) => {
                       type="text"
                       className="form-control form-control-sm"
                       style={{ ...inputStyle, width: "60px" }}
-                      value={bed?.Bed}
+                      value={bed?.Bed || ""}
+                      readOnly
                     />
                     <label style={labelStyle}>AdmTime</label>
                     <input
                       type="text"
                       className="form-control form-control-sm"
                       style={{ ...inputStyle, width: "80px" }}
-                      value={patient?.AdmitionTime}
+                      value={patient?.AdmitionTime || ""}
+                      readOnly
                     />
                   </div>
                 </div>
@@ -406,14 +415,16 @@ const DischargeDetails = ({ mode }) => {
                           type="text"
                           className="form-control form-control-sm"
                           style={{ ...inputStyle, width: "40px" }}
-                          value={patient?.Age}
+                          value={patient?.Age || ""}
+                          readOnly
                         />
 
                         <label style={labelStyle}>Sex</label>
                         <select
                           className="form-select form-select-sm p-0 ps-1"
                           style={{ ...inputStyle, width: "50px" }}
-                          value={patient?.Sex}
+                          value={patient?.Sex || ""}
+                          disabled
                         >
                           <option value="">Select</option>
                           <option value="M">M</option>
@@ -427,7 +438,8 @@ const DischargeDetails = ({ mode }) => {
                           type="text"
                           className="form-control form-control-sm"
                           style={inputStyle}
-                          value={patient?.PhoneNo}
+                          value={patient?.PhoneNo || ""}
+                          readOnly
                         />
                       </div>
                       <div className="col-md-4 d-flex align-items-center gap-1">
@@ -435,7 +447,8 @@ const DischargeDetails = ({ mode }) => {
                         <select
                           className="form-select form-select-sm p-0 ps-1"
                           style={inputStyle}
-                          value={patient?.MStatus}
+                          value={patient?.MStatus || ""}
+                          disabled
                         >
                           <option value="">Select</option>
                           <option value="M">M</option>
@@ -450,7 +463,8 @@ const DischargeDetails = ({ mode }) => {
                           type="date"
                           className="form-control form-control-sm"
                           style={inputStyle}
-                          value={patient?.AdmitionDate?.split("T")[0]}
+                          value={toDateInput(patient?.AdmitionDate)}
+                          readOnly
                         />
                       </div>
                       <div className="col-md-4 d-flex align-items-center gap-1">
@@ -459,7 +473,8 @@ const DischargeDetails = ({ mode }) => {
                           type="text"
                           className="form-control form-control-sm"
                           style={inputStyle}
-                          value={patient?.RelativeName}
+                          value={patient?.RelativeName || ""}
+                          readOnly
                         />
                       </div>
                       <div className="col-md-4 d-flex align-items-center gap-1">
@@ -468,7 +483,8 @@ const DischargeDetails = ({ mode }) => {
                           type="text"
                           className="form-control form-control-sm"
                           style={inputStyle}
-                          value={patient?.Relation}
+                          value={patient?.Relation || ""}
+                          readOnly
                         />
                       </div>
                     </div>
@@ -482,6 +498,7 @@ const DischargeDetails = ({ mode }) => {
                           value={`${patient?.Add1 || ""}-${
                             patient?.Add2 || ""
                           }-${patient?.Add3 || ""}`}
+                          readOnly
                         />
                       </div>
                     </div>
@@ -499,7 +516,8 @@ const DischargeDetails = ({ mode }) => {
                       type="text"
                       className="form-control form-control-sm"
                       style={inputStyle}
-                      value={patient?.Passport}
+                      value={patient?.Passport || ""}
+                      readOnly
                     />
                   </div>
                   <div className="col-md-4 d-flex align-items-center gap-1">
@@ -508,7 +526,8 @@ const DischargeDetails = ({ mode }) => {
                       type="text"
                       className="form-control form-control-sm"
                       style={inputStyle}
-                      value={doctor.Doctor}
+                      value={doctor?.Doctor || ""}
+                      readOnly
                     />
                   </div>
                   <div className="col-md-3 d-flex align-items-center gap-1">
@@ -517,7 +536,8 @@ const DischargeDetails = ({ mode }) => {
                       type="text"
                       className="form-control form-control-sm"
                       style={inputStyle}
-                      value={patient?.Referral}
+                      value={patient?.Referral || ""}
+                      readOnly
                     />
                   </div>
                   <div className="col-md-2 d-flex align-items-center gap-1">
@@ -555,7 +575,8 @@ const DischargeDetails = ({ mode }) => {
                     type="date"
                     className="form-control form-control-sm"
                     style={inputStyle}
-                    value={patient?.oprationdate?.split("T")[0]}
+                    value={toDateInput(patient?.oprationdate)}
+                    readOnly
                   />
                 </div>
                 <div className="col-md-5 d-flex align-items-center gap-1">

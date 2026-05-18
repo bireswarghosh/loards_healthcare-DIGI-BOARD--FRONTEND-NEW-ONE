@@ -44,7 +44,7 @@ const HeaderChat = () => {
           <li>
             <Link to="#" className="d-flex">
               <div className="avatar">
-                <img src="assets/images/avatar.png" alt="image" />
+                <img src="/assets/images/avatar.png" alt="image" />
               </div>
               <div className="msg-txt">
                 <span className="name">Archer Cowie</span>
@@ -58,7 +58,7 @@ const HeaderChat = () => {
           <li>
             <Link to="#" className="d-flex">
               <div className="avatar">
-                <img src="assets/images/avatar-2.png" alt="image" />
+                <img src="/assets/images/avatar-2.png" alt="image" />
               </div>
               <div className="msg-txt">
                 <span className="name">Cody Rodway</span>
@@ -72,7 +72,7 @@ const HeaderChat = () => {
           <li>
             <Link to="#" className="d-flex">
               <div className="avatar">
-                <img src="assets/images/avatar-3.png" alt="image" />
+                <img src="/assets/images/avatar-3.png" alt="image" />
               </div>
               <div className="msg-txt">
                 <span className="name">Zane Bain</span>

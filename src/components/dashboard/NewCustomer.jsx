@@ -14,7 +14,7 @@ const NewCustomer = () => {
                             <td>
                                 <div className="new-customer">
                                     <div className="part-img">
-                                        <img src="assets/images/avatar.png" alt="Image"/>
+                                        <img src="/assets/images/avatar.png" alt="Image"/>
                                     </div>
                                     <div className="part-txt">
                                         <p className="customer-name">Iftikar Ammed</p>
@@ -29,7 +29,7 @@ const NewCustomer = () => {
                             <td>
                                 <div className="new-customer">
                                     <div className="part-img">
-                                        <img src="assets/images/avatar-2.png" alt="Image"/>
+                                        <img src="/assets/images/avatar-2.png" alt="Image"/>
                                     </div>
                                     <div className="part-txt">
                                         <p className="customer-name">Sadab Khan</p>
@@ -44,7 +44,7 @@ const NewCustomer = () => {
                             <td>
                                 <div className="new-customer">
                                     <div className="part-img">
-                                        <img src="assets/images/avatar-3.png" alt="Image"/>
+                                        <img src="/assets/images/avatar-3.png" alt="Image"/>
                                     </div>
                                     <div className="part-txt">
                                         <p className="customer-name">Hoyder Ali</p>
@@ -59,7 +59,7 @@ const NewCustomer = () => {
                             <td>
                                 <div className="new-customer">
                                     <div className="part-img">
-                                        <img src="assets/images/avatar-4.png" alt="Image"/>
+                                        <img src="/assets/images/avatar-4.png" alt="Image"/>
                                     </div>
                                     <div className="part-txt">
                                         <p className="customer-name">Hardik Ali</p>
@@ -74,7 +74,7 @@ const NewCustomer = () => {
                             <td>
                                 <div className="new-customer">
                                     <div className="part-img">
-                                        <img src="assets/images/avatar-5.png" alt="Image"/>
+                                        <img src="/assets/images/avatar-5.png" alt="Image"/>
                                     </div>
                                     <div className="part-txt">
                                         <p className="customer-name">Alaysa Haly</p>
@@ -89,7 +89,7 @@ const NewCustomer = () => {
                             <td>
                                 <div className="new-customer">
                                     <div className="part-img">
-                                        <img src="assets/images/avatar-6.png" alt="Image"/>
+                                        <img src="/assets/images/avatar-6.png" alt="Image"/>
                                     </div>
                                     <div className="part-txt">
                                         <p className="customer-name">Natalush Khan</p>
@@ -104,7 +104,7 @@ const NewCustomer = () => {
                             <td>
                                 <div className="new-customer">
                                     <div className="part-img">
-                                        <img src="assets/images/avatar-7.png" alt="Image"/>
+                                        <img src="/assets/images/avatar-7.png" alt="Image"/>
                                     </div>
                                     <div className="part-txt">
                                         <p className="customer-name">Rafikul Sarker</p>
