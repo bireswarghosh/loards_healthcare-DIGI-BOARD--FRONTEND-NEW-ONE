@@ -741,9 +741,10 @@ const CaseEntry = () => {
         `/money-receipt01/search?ReffId=${id}`,
       );
       if (res.data.success) {
-        // console.log("History data: ", res.data.data);
+        console.log("History data: ", res.data.data);
         const data = res.data.data;
         setAllPrevData(data);
+        console.log("setAllPrevData  data",setAllPrevData)
 
         let newData = data.map((item) => ({
           no: item.ReceiptNo,
@@ -875,7 +876,9 @@ const CaseEntry = () => {
 
     if (orgId && orgId !== "undefined") {
       try {
-        const mrRes = await axiosInstance.get(`/moneyreceipt/case/${orgId}`);
+        const mrRes = await axiosInstance.get(
+          `/money-receipt01/search?ReffId=${encodeURIComponent(orgId)}`,
+        );
 
         if (mrRes.data.success && mrRes.data.data) {
           totalReceived = mrRes.data.data.reduce(
@@ -1319,8 +1322,11 @@ const CaseEntry = () => {
             });
           }
 
-          // this will update the 1st mr
-          const firstMR = allPrevData[allPrevData.length - 1];
+          // this will update the 1st mr (smallest ReceiptId = oldest/first created)
+          const firstMR = allPrevData.reduce((oldest, item) => {
+            if (!oldest) return item;
+            return item.ReceiptId < oldest.ReceiptId ? item : oldest;
+          }, null);
           const { PatientName, Phone, DoctorId, CaseDate, ReceiptId, ...res } =
             firstMR;
 
