@@ -82,82 +82,31 @@ const MoneyReceipt = () => {
 
   // }, [allPreviouseReceipts]);
 
-  // this is used for calculating discount and deduct it from the due the amount
+  // IMPORTANT: BillAmount = GrossAmt from Case01 which is ALREADY net of discount
+  // (Total 2350 - Disc 235 = GrossAmt 2115 = BillAmount)
+  // The ORIGINAL discount is already baked into BillAmount — never subtract it again.
+  // BUT if user gives a NEW discount on ADD mode (or editing last MR), that's additional
+  // and should reduce the due amount.
   useEffect(() => {
-    let n = allPreviouseReceipts.length; // this is the length of the allPreviouseReceipts array
-    if (formData?.ReffId && n != 0) {
-      console.log("This is modal type", modalType);
-      console.log("this is changed form data", formData);
-      console.log("this is changed prev recp:", allPreviouseReceipts);
-
-      // if only one mr present then only 1st mr exists
-      if (n == 1) {
-        if (modalType == "add") {
-          // add mode: count previous receipt's discount + current form's discount
-          setAdditionalDueAmt(Number(formData.DiscAmt || 0) + Number(allPreviouseReceipts[0].DiscAmt || 0));
-        } else {
-          // edit mode for 1st MR: do NOT subtract DiscAmt, just calculate baki as-is
-          setAdditionalDueAmt(0);
-        }
-        return;
-      } else if (n > 1) {
-        // Data is sorted ASC: index 0 = 1st/oldest MR, index n-1 = latest MR
-        let firstMR = allPreviouseReceipts[0]; // 1st MR (oldest)
-
-        // if the selected mr is the 1st mr (editing it)
-        if (firstMR.ReceiptId == formData.ReceiptId) {
-          // edit mode for 1st MR: sum discounts from all other receipts
-          let sum = 0;
-          for (let i = 1; i < n; i++) {
-            sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
-          }
-          setAdditionalDueAmt(sum);
-          return;
-        }
-
-        // if the selected mr is the latest MR (last in array)
-        if (formData.ReceiptId == allPreviouseReceipts[n - 1].ReceiptId) {
-          // sum all discounts including current form's discount
-          let sum = 0;
-          for (let i = 0; i < n - 1; i++) {
-            sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
-          }
-          setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
-          return;
-        }
-
-        // if the selected mr is somewhere in the middle
-        if (modalType == "edit") {
-          let idxSel;
-          for (let i = 0; i < n; i++) {
-            if (formData.ReceiptId == allPreviouseReceipts[i].ReceiptId) {
-              idxSel = i;
-              break;
-            }
-          }
-
-          let sum = 0;
-          // sum discounts from all receipts except the selected one
-          for (let i = 0; i < n; i++) {
-            if (i !== idxSel) {
-              sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
-            }
-          }
-          setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
-          return;
-        }
-
-        // add mode: sum all previous discounts + current form's discount
-        let sum = 0;
-        for (let i = 0; i < n; i++) {
-          sum += Number(allPreviouseReceipts[i].DiscAmt || 0);
-        }
-        setAdditionalDueAmt(Number(formData.DiscAmt) + sum);
-        return;
+    if (modalType === "add") {
+      // In ADD mode, any DiscAmt entered is a NEW discount being given now
+      setAdditionalDueAmt(Number(formData.DiscAmt || 0));
+    } else if (modalType === "edit" && showSaveBtnEdit) {
+      // For last MR edit: check if this is the FIRST receipt (original disc already in BillAmount)
+      // If it's MR#1, the DiscAmt is the original discount — don't subtract
+      // If it's MR#2+, any DiscAmt is a new discount — subtract it
+      const isFirstReceipt = allPreviouseReceipts.length > 0 && 
+        allPreviouseReceipts[0]?.ReceiptId === formData.ReceiptId;
+      if (isFirstReceipt) {
+        // Original discount already in BillAmount, don't subtract
+        setAdditionalDueAmt(0);
+      } else {
+        setAdditionalDueAmt(Number(formData.DiscAmt || 0));
       }
+    } else {
+      setAdditionalDueAmt(0);
     }
-    // console.log("hello",receipts)
-  }, [formData.ReffId, allPreviouseReceipts, modalType, formData.DiscAmt]);
+  }, [formData.ReffId, allPreviouseReceipts, modalType, formData.DiscAmt, formData.ReceiptId, showSaveBtnEdit]);
 
   // useEffect(() => {
   //   console.log("additionalDueAmt", additionalDueAmt);
@@ -190,12 +139,15 @@ const MoneyReceipt = () => {
         0
       );
 
-      setFormData((prev) => ({
-        ...prev,
-        Amount: totalPaid,
-      }));
+      // Only set Amount (prev paid) for ADD mode
+      // For EDIT mode, Amount is set by fetchReceiptByNo with correct logic
+      if (modalType === "add") {
+        setFormData((prev) => ({
+          ...prev,
+          Amount: totalPaid,
+        }));
+      }
     }
-    // console.log("Total paid: ", totalPaid);
   }, [allPrevReceipts]);
 
   const fetchUsers = async () => {
@@ -964,8 +916,7 @@ const MoneyReceipt = () => {
 
   const totalReceivedAmount = currentPayment;
 
-  const calculatedDueAmount = billAmount - previousPaid - totalReceivedAmount;
-  // const calculatedDueAmount = billAmount - previousPaid - totalReceivedAmount - formData.DiscAmt;
+  const calculatedDueAmount = billAmount - previousPaid - totalReceivedAmount - additionalDueAmt;
   const isDueAmountPositive = calculatedDueAmount > 0;
 
   useEffect(() => {
@@ -1023,11 +974,15 @@ const MoneyReceipt = () => {
       pages.push(tests.slice(i, i + testsPerPage));
     }
 
-    // Calculate totals from receipts BEFORE the current one only
+    // Calculate totals from ALL receipts for this case
     const currentIndex = allPreviouseReceipts.findIndex(r => r.ReceiptId === formData.ReceiptId);
     const receiptsBefore = currentIndex > 0 ? allPreviouseReceipts.slice(0, currentIndex) : [];
     const totalAdvancedAmount = receiptsBefore.reduce((sum, r) => sum + Number(r.Amount || 0), 0);
     const totalAdvancedDiscount = receiptsBefore.reduce((sum, r) => sum + Number(r.DiscAmt || 0), 0);
+    // Current receipt's actual paid amount (from stored paymentMethods)
+    const currentReceiptAmount = currentIndex >= 0 ? Number(allPreviouseReceipts[currentIndex].Amount || 0) : currentPayment;
+    // Total paid including current
+    const totalPaidAll = allPreviouseReceipts.reduce((sum, r) => sum + Number(r.Amount || 0), 0);
 
     let runningTotal = 0;
 
@@ -1203,13 +1158,13 @@ ${formData.DiscAmt || 0}
 <tr>
 <td colspan="2" style="font-weight:bold;">Advanced Amount : ${totalAdvancedAmount || 0}</td>
 <td style="text-align:right;font-weight:bold;">Paid Amount :</td>
-<td style="text-align:right;font-weight:bold;">${currentPayment || 0}</td>
+<td style="text-align:right;font-weight:bold;">${currentReceiptAmount || 0}</td>
 </tr>
 
 <tr>
 <td colspan="2" style="font-weight:bold;">Advanced Discount : ${totalAdvancedDiscount || 0}</td>
 <td style="text-align:right;font-weight:bold;">Due Amount :</td>
-<td style="text-align:right;font-weight:bold;">${Number((calculatedDueAmount || 0).toFixed(2)) - (additionalDueAmt || 0)}</td>
+<td style="text-align:right;font-weight:bold;">${Math.max(0, Number(formData.BillAmount || 0) - totalPaidAll - Number(formData.DiscAmt || 0))}</td>
 </tr>
 ` : ''}
 
@@ -1585,19 +1540,20 @@ ${pagesHtml}
 
       <div className="panel">
         {/* Header */}
-        <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>Sample Receipt</h5>
+        <div className="panel-header d-flex justify-content-between align-items-center" style={{ background: "linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)", padding: "14px 20px", borderRadius: "12px 12px 0 0" }}>
+          <h5 style={{ color: "#fff", margin: 0, fontWeight: 700, letterSpacing: "0.5px" }}>💳 Sample Receipt</h5>
           <div className="d-flex gap-2">
             <button
-              className="btn btn-sm btn-primary"
+              className="btn btn-sm"
+              style={{ background: "rgba(255,255,255,0.2)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.5)", fontWeight: 600, borderRadius: "8px", backdropFilter: "blur(4px)" }}
               onClick={() => openDrawer(null, "add")}
             >
               <i className="fa fa-plus me-2"></i>Add Receipt
             </button>
             <button
-              className="btn btn-sm btn-danger"
+              className="btn btn-sm"
+              style={{ background: "rgba(244,67,54,0.8)", color: "#fff", border: "none", fontWeight: 600, borderRadius: "8px" }}
               onClick={() => {
-                // setRefund(1)
                 setRefundMode(1);
                 openDrawer(null, "add");
               }}
@@ -1615,8 +1571,8 @@ ${pagesHtml}
 
         <div className="panel-body">
           {/* Filters */}
-          <div className="panel border rounded p-3 mb-3">
-            <div className="row g-3  align-items-center justify-content-center">
+          <div className="panel p-3 mb-3" style={{ background: "linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)", borderRadius: "16px", border: "1px solid #e0e0e0", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+            <div className="row g-3 align-items-center justify-content-center">
               <div className="col-md-2">
                 <label className="form-label">Date From</label>
                 <input
@@ -1730,54 +1686,57 @@ ${pagesHtml}
 
           {/* Table */}
           {loading ? (
-            // <div className="text-center py-5">
-            //   <div className="spinner-border text-primary"></div>
-            // </div>
-            <div>
-              <div className="spinner-grow text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
+            <div className="text-center py-5">
+              <div style={{ display: "inline-block", position: "relative", width: "80px", height: "80px" }}>
+                <div style={{
+                  position: "absolute", inset: 0,
+                  border: "4px solid transparent",
+                  borderTop: "4px solid #667eea",
+                  borderRight: "4px solid #764ba2",
+                  borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                }}></div>
+                <div style={{
+                  position: "absolute", inset: "10px",
+                  border: "4px solid transparent",
+                  borderBottom: "4px solid #f093fb",
+                  borderLeft: "4px solid #f5576c",
+                  borderRadius: "50%",
+                  animation: "spin 1.2s linear infinite reverse",
+                }}></div>
+                <div style={{
+                  position: "absolute", inset: "20px",
+                  background: "linear-gradient(135deg, #667eea, #764ba2)",
+                  borderRadius: "50%",
+                  animation: "pulse 1s ease-in-out infinite",
+                }}></div>
               </div>
-              <div className="spinner-grow text-secondary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <div className="spinner-grow text-success" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <div className="spinner-grow text-danger" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <div className="spinner-grow text-warning" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <div className="spinner-grow text-info" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <div className="spinner-grow text-light" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <div className="spinner-grow text-dark" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <div style={{ marginTop: "16px", fontSize: "14px", fontWeight: 600, color: "#667eea", letterSpacing: "1px" }}>Loading Receipts...</div>
+              <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+                @keyframes pulse { 0%,100% { transform: scale(0.8); opacity:0.5; } 50% { transform: scale(1); opacity:1; } }
+              `}</style>
             </div>
           ) : (
             <OverlayScrollbarsComponent>
-              <table className="table table-striped table-hover table-dashed">
-                <thead>
+              <table className="table table-hover" style={{ borderRadius: "12px", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                <thead style={{ background: "linear-gradient(135deg, #1a237e, #3f51b5)", color: "#fff" }}>
                   <tr>
-                    <th>Action</th>
-                    <th>Sl No</th>
-                    <th>Receipt No</th>
-                    <th>Receipt Date</th>
-                    <th>Patient Name</th>
-                    <th className="text-end">Bill Amount</th>
-                    <th>Receipt</th>
-                    <th>Reff No</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>Action</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>Sl No</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>MR#</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>Receipt No</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>Receipt Date</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>Patient Name</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }} className="text-end">Bill Amount</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>Receipt</th>
+                    <th style={{ color: "#fff", fontWeight: 600, fontSize: "12px" }}>Reff No</th>
                   </tr>
                 </thead>
                 <tbody>
                   {receipts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center p-4">
+                      <td colSpan={8} className="text-center p-4">
                         No data found
                       </td>
                     </tr>
@@ -1786,17 +1745,9 @@ ${pagesHtml}
                       <tr key={r.MoneyreeciptId || index}>
                         <td>
                           <div className="d-flex gap-2">
-                            {/* <button
-                              className="btn btn-sm btn-outline-info"
-                              onClick={() => openDrawer(r, "view")}
-                            >
-                              <i className="fa-light fa-eye"></i>
-                            </button> */}
-
                             <button
                               className="btn btn-sm btn-outline-primary"
                               onClick={() => {
-                                // console.log("row is: ", r);
                                 if (r.Amount < 0) {
                                   setRefundMode(1);
                                   openDrawer(r, "edit");
@@ -1807,29 +1758,21 @@ ${pagesHtml}
                             >
                               <i className="fa-light fa-pen-to-square"></i>
                             </button>
-
-                            {/* <button
-                              className="btn btn-sm btn-outline-danger"
-                              // onClick={() => handleDelete(r.MoneyreeciptId)}
-                               onClick={() => {
-                                setDeleteId(r.MoneyreeciptId);
-                                setShowConfirm(true);
-                              }}
-                            >
-                              <i className="fa-light fa-trash-can"></i>
-                            </button> */}
                           </div>
                         </td>
                         <td>{(page - 1) * limit + index + 1}</td>
+                        <td>
+                          <span className="badge" style={{ background: "#3f51b5", fontSize: "10px" }}>
+                            #{r.MRSeqNo || "-"}
+                          </span>
+                        </td>
                         <td>{r.ReceiptNo}</td>
                         <td>
                           {r.ReceiptDate
                             ? new Date(r.ReceiptDate).toLocaleDateString()
                             : "-"}
                         </td>
-
                         <td>{r.PatientName || "-"}</td>
-                        {/* <td className="text-end">{r.BillAmount?.toFixed(2)}</td> */}
                         <td className="text-end">{r.BillAmount?.toFixed(2)}</td>
                         <td>{r.Amount?.toFixed(2)}</td>
                         <td>{r.ReffId || "-"}</td>
@@ -1862,7 +1805,7 @@ ${pagesHtml}
             style={{
               zIndex: 9999,
               width: "100%",
-              maxWidth: "950px",
+              maxWidth: "1200px",
               right: showDrawer ? "0" : "-100%",
               top: "70px",
               height: "calc(100vh - 70px)",
@@ -1887,7 +1830,13 @@ ${pagesHtml}
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
-                  padding: "5px",
+                  padding: "12px 20px",
+                  background: "linear-gradient(135deg, #1a237e 0%, #3f51b5 50%, #7c4dff 100%)",
+                  color: "#fff",
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  letterSpacing: "0.5px",
+                  boxShadow: "0 4px 20px rgba(63,81,181,0.3)",
                 }}
               >
                 {modalType === "view"
@@ -1905,9 +1854,9 @@ ${pagesHtml}
               <OverlayScrollbarsComponent
                 style={{ height: "calc(100% - 60px)" }}
               >
-                <div className="mx-3">
+                <div className="mx-3" style={{ paddingTop: "15px" }}>
                   {/* Row 1 */}
-                  <div className="row g-2 mb-1 align-items-end">
+                  <div className="row g-2 mb-2 align-items-end p-3" style={{ background: "linear-gradient(135deg, #f5f7fa 0%, #e8eaf6 100%)", borderRadius: "12px", border: "1px solid #e0e0e0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
                     {/* Receipt No */}
                     <div className="col-md-3">
                       <label className="form-label">Receipt </label>
@@ -2000,7 +1949,7 @@ ${pagesHtml}
                   </div>
 
                   {/* Receipt / Case */}
-                  <div className="row g-2 mb-1">
+                  <div className="row g-2 mb-2 p-3" style={{ background: "#fff", borderRadius: "12px", border: "1px solid #e3f2fd", boxShadow: "0 2px 12px rgba(33,150,243,0.08)" }}>
                     {/* <div className="col-md-1 ">
      
       <label className="form-label">Receipt</label>
@@ -2093,7 +2042,7 @@ ${pagesHtml}
                   </div>
 
                   {/* Patient info */}
-                  <div className="row g-2 mb-1">
+                  <div className="row g-2 mb-2 p-3" style={{ background: "linear-gradient(135deg, #fafafa 0%, #f3e5f5 100%)", borderRadius: "12px", border: "1px solid #f0e0f5" }}>
                     <div className="col-md-2">
                       <label className="form-label">Received By</label>
                       <select
@@ -2124,7 +2073,7 @@ ${pagesHtml}
 
                   {/* Amount Section */}
                   {modalType === "refund" ? (
-                    <div className="row g-2 mb-2">
+                    <div className="row g-2 mb-2 p-3" style={{ background: "linear-gradient(135deg, #fff3e0 0%, #fbe9e7 100%)", borderRadius: "12px", border: "1px solid #ffccbc", boxShadow: "0 2px 12px rgba(255,87,34,0.08)" }}>
                       <div className="col-md-12">
                         <label className="form-label">Refund Amount</label>
                         <input
@@ -2137,9 +2086,9 @@ ${pagesHtml}
                       </div>
                     </div>
                   ) : (
-                    <div className="row g-2 mb-2">
+                    <div className="row g-2 mb-2 p-3" style={{ background: "linear-gradient(135deg, #e8f5e9 0%, #e3f2fd 100%)", borderRadius: "12px", border: "1px solid #c8e6c9", boxShadow: "0 2px 12px rgba(76,175,80,0.08)" }}>
                       <div className="col-md-1">
-                        <label className="form-label">Bill Amt</label>
+                        <label className="form-label" style={{ fontWeight: 600, color: "#2e7d32", fontSize: "11px" }}>Bill Amt</label>
                         <input
                           type="number"
                           className="form-control form-control-sm text-end"
@@ -2253,80 +2202,305 @@ ${pagesHtml}
                   {/* --------------------------------------------------------- */}
 
                   {/* Payment Details */}
-                  <h6 className="text-primary fw-bold border-bottom pb-1 mt-4 mb-3">
-                    Payment
+                  <h6 className="fw-bold pb-1 mt-4 mb-3" style={{ color: "#1a237e", borderBottom: "2px solid #3f51b5" }}>
+                    💰 Payment Breakdown
+                    {allPreviouseReceipts.length > 0 && (
+                      <span className="badge ms-2" style={{ background: "#3f51b5", fontSize: "11px", verticalAlign: "middle" }}>
+                        MR #{modalType === "add" ? allPreviouseReceipts.length + 1 : (() => { const idx = allPreviouseReceipts.findIndex(r => r.ReceiptId === formData.ReceiptId); return idx >= 0 ? idx + 1 : allPreviouseReceipts.length; })()}
+                      </span>
+                    )}
                   </h6>
 
-                  {/* Payment Summary */}
-                  <div className="row g-3 mb-3">
-                    <div className="col-md-2">
-                      <label className="form-label">Total Bill Amount</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={formData.BillAmount || 0}
-                        disabled
-                      />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label">Previous Paid</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={previousPaid.toFixed(2)}
-                        readOnly
-                      />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label">Current Payment</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={currentPayment.toFixed(2)}
-                        readOnly
-                      />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label">Total Received</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={totalReceivedAmount.toFixed(2)}
-                        readOnly
-                      />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label">Due Amount</label>
+                  {/* Premium Payment Flow Card */}
+                  <div
+                    className="mb-3"
+                    style={{
+                      borderRadius: "24px",
+                      overflow: "hidden",
+                      position: "relative",
+                      boxShadow: calculatedDueAmount <= 0
+                        ? "0 20px 60px rgba(16,185,129,0.35), 0 0 0 1px rgba(16,185,129,0.1)"
+                        : "0 20px 60px rgba(99,102,241,0.35), 0 0 0 1px rgba(99,102,241,0.1)",
+                    }}
+                  >
+                    {/* Glass Background */}
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: calculatedDueAmount <= 0
+                        ? "linear-gradient(160deg, #064e3b 0%, #065f46 25%, #047857 50%, #059669 75%, #10b981 100%)"
+                        : "linear-gradient(160deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4f46e5 75%, #6366f1 100%)",
+                    }}></div>
+                    {/* Animated gradient overlay */}
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: "radial-gradient(ellipse at 20% 50%, rgba(255,255,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 40%)",
+                    }}></div>
+                    {/* Mesh dots pattern */}
+                    <div style={{
+                      position: "absolute", inset: 0, opacity: 0.03,
+                      backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
+                      backgroundSize: "20px 20px",
+                    }}></div>
 
-                      <input
-                        type="number"
-                        className="form-control text-danger fw-bold"
-                        // value={calculatedDueAmount.toFixed(2)}
+                    {/* Full Paid Notification */}
+                    {calculatedDueAmount <= 0 && (
+                      <div style={{
+                        position: "relative",
+                        background: "linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02), rgba(255,255,255,0.1))",
+                        padding: "14px 20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        backdropFilter: "blur(10px)",
+                      }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#34d399", boxShadow: "0 0 12px #34d399", animation: "blink 1.5s infinite" }}></div>
+                        <span style={{ fontSize: "13px", fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "#ecfdf5" }}>PAYMENT COMPLETE • ZERO DUE</span>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#34d399", boxShadow: "0 0 12px #34d399", animation: "blink 1.5s infinite 0.75s" }}></div>
+                      </div>
+                    )}
 
-                        value={
-                          Number(calculatedDueAmount.toFixed(2)) -
-                          additionalDueAmt
-                        }
-                        readOnly
-                      />
-                    </div>
-                    <div className="col-md-2">
-                      <label className="form-label d-block">&nbsp;</label>
-                      {isDueAmountPositive && modalType !== "view" && (
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-success w-100"
-                          onClick={addPaymentMethod}
-                        >
-                          + Add Payment
-                        </button>
-                      )}
+                    <div style={{ position: "relative", padding: "24px 28px" }}>
+                      {/* Flow Items */}
+                      <div className="d-flex align-items-center justify-content-center flex-wrap" style={{ gap: "16px" }}>
+                        
+                        {/* Bill Amount */}
+                        <div className="text-center" style={{ minWidth: "100px" }}>
+                          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Bill Amount</div>
+                          <div style={{
+                            fontSize: "28px", fontWeight: 900, color: "#fff",
+                            background: "rgba(255,255,255,0.08)",
+                            borderRadius: "16px",
+                            padding: "10px 20px",
+                            border: "1px solid rgba(255,255,255,0.12)",
+                            backdropFilter: "blur(4px)",
+                            lineHeight: 1.2,
+                          }}>
+                            ₹{Number(formData.BillAmount || 0).toLocaleString()}
+                          </div>
+                          {Number(formData.DiscAmt || 0) > 0 && (
+                            <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", marginTop: "5px" }}>
+                              Disc {Number(formData.Desc || 0).toFixed(0)}% = ₹{Number(formData.DiscAmt || 0).toLocaleString()}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Prev Paid */}
+                        {previousPaid > 0 && (
+                          <>
+                            <div style={{ fontSize: "24px", fontWeight: 300, color: "rgba(255,255,255,0.3)" }}>−</div>
+                            <div className="text-center" style={{ minWidth: "80px" }}>
+                              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Prev Paid</div>
+                              <div style={{
+                                fontSize: "20px", fontWeight: 800, color: "#fff",
+                                background: "rgba(168,85,247,0.2)",
+                                borderRadius: "12px",
+                                padding: "8px 14px",
+                                border: "1px dashed rgba(168,85,247,0.4)",
+                                lineHeight: 1.2,
+                              }}>
+                                ₹{previousPaid.toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Current Payment */}
+                        {currentPayment > 0 && (
+                          <>
+                            <div style={{ fontSize: "24px", fontWeight: 300, color: "rgba(255,255,255,0.3)" }}>−</div>
+                            <div className="text-center" style={{ minWidth: "80px" }}>
+                              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Now Paying</div>
+                              <div style={{
+                                fontSize: "20px", fontWeight: 800, color: "#fff",
+                                background: "rgba(56,189,248,0.2)",
+                                borderRadius: "12px",
+                                padding: "8px 14px",
+                                border: "1px solid rgba(56,189,248,0.4)",
+                                boxShadow: "0 0 20px rgba(56,189,248,0.15)",
+                                lineHeight: 1.2,
+                              }}>
+                                ₹{currentPayment.toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* New Discount */}
+                        {additionalDueAmt > 0 && (
+                          <>
+                            <div style={{ fontSize: "24px", fontWeight: 300, color: "rgba(255,255,255,0.3)" }}>−</div>
+                            <div className="text-center" style={{ minWidth: "80px" }}>
+                              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Discount</div>
+                              <div style={{
+                                fontSize: "20px", fontWeight: 800, color: "#fff",
+                                background: "rgba(251,146,60,0.2)",
+                                borderRadius: "12px",
+                                padding: "8px 14px",
+                                border: "1px dashed rgba(251,146,60,0.5)",
+                                lineHeight: 1.2,
+                              }}>
+                                ₹{additionalDueAmt.toLocaleString()}
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Result */}
+                        <div style={{ fontSize: "24px", fontWeight: 300, color: "rgba(255,255,255,0.3)" }}>=</div>
+                        <div className="text-center" style={{ minWidth: "110px" }}>
+                          <div style={{
+                            fontSize: "10px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px",
+                            color: calculatedDueAmount <= 0 ? "#6ee7b7" : "#fca5a5",
+                          }}>
+                            {calculatedDueAmount <= 0 ? "PAID IN FULL" : "BALANCE DUE"}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "30px",
+                              fontWeight: 900,
+                              color: "#fff",
+                              background: calculatedDueAmount <= 0
+                                ? "linear-gradient(135deg, rgba(16,185,129,0.3), rgba(52,211,153,0.15))"
+                                : "linear-gradient(135deg, rgba(239,68,68,0.3), rgba(248,113,113,0.15))",
+                              borderRadius: "16px",
+                              padding: "10px 22px",
+                              border: `2px solid ${calculatedDueAmount <= 0 ? "rgba(52,211,153,0.5)" : "rgba(248,113,113,0.5)"}`,
+                              boxShadow: calculatedDueAmount <= 0
+                                ? "0 8px 30px rgba(16,185,129,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
+                                : "0 8px 30px rgba(239,68,68,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+                              lineHeight: 1.2,
+                            }}
+                          >
+                            ₹{Math.max(0, calculatedDueAmount).toLocaleString()}
+                          </div>
+                        </div>
+
+                        {/* Add Payment - only when due > 0 */}
+                        {isDueAmountPositive && modalType !== "view" && (
+                          <div className="text-center">
+                            <button
+                              type="button"
+                              onClick={addPaymentMethod}
+                              style={{
+                                borderRadius: "30px",
+                                padding: "10px 22px",
+                                fontWeight: 800,
+                                fontSize: "11px",
+                                background: "rgba(255,255,255,0.95)",
+                                color: "#312e81",
+                                boxShadow: "0 8px 25px rgba(0,0,0,0.2)",
+                                border: "none",
+                                letterSpacing: "0.5px",
+                                cursor: "pointer",
+                                transition: "transform 0.2s",
+                              }}
+                              onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                              onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+                            >
+                              + ADD PAYMENT
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Multiple Payment Methods */}
+                  <style>{`
+                    @keyframes blink {
+                      0%, 100% { opacity: 1; }
+                      50% { opacity: 0.3; }
+                    }
+                  `}</style>
+
+                  {/* Previous MR History Preview */}
+                  {allPreviouseReceipts.length > 0 && (
+                    <div
+                      className="mb-3"
+                      style={{
+                        background: "#f8f9fa",
+                        borderRadius: "12px",
+                        border: "1px solid #e0e0e0",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          background: "linear-gradient(90deg, #1a237e, #3f51b5)",
+                          color: "#fff",
+                          padding: "8px 14px",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span>📋 Payment History ({allPreviouseReceipts.length} Receipt{allPreviouseReceipts.length > 1 ? "s" : ""})</span>
+                        <span style={{ opacity: 0.8, fontSize: "11px" }}>Case: {formData.ReffId}</span>
+                      </div>
+                      <div style={{ padding: "8px 12px", maxHeight: "140px", overflowY: "auto" }}>
+                        {allPreviouseReceipts.map((r, idx) => {
+                          const isCurrent = r.ReceiptId === formData.ReceiptId;
+                          return (
+                            <div
+                              key={r.ReceiptId || idx}
+                              className="d-flex align-items-center justify-content-between"
+                              style={{
+                                padding: "5px 10px",
+                                marginBottom: "4px",
+                                borderRadius: "8px",
+                                background: isCurrent ? "#e3f2fd" : "#fff",
+                                border: isCurrent ? "1.5px solid #2196f3" : "1px solid #eee",
+                                fontSize: "12px",
+                                transition: "all 0.2s",
+                              }}
+                            >
+                              <div className="d-flex align-items-center gap-2">
+                                <span
+                                  style={{
+                                    background: isCurrent ? "#2196f3" : "#9e9e9e",
+                                    color: "#fff",
+                                    borderRadius: "50%",
+                                    width: "20px",
+                                    height: "20px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "10px",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {idx + 1}
+                                </span>
+                                <span style={{ fontWeight: isCurrent ? 700 : 500 }}>
+                                  {r.ReceiptNo || "—"}
+                                </span>
+                                <span style={{ color: "#888", fontSize: "11px" }}>
+                                  {r.ReceiptDate ? r.ReceiptDate.slice(0, 10).split("-").reverse().join("/") : ""}
+                                </span>
+                                {isCurrent && <span className="badge bg-primary" style={{ fontSize: "9px" }}>Current</span>}
+                              </div>
+                              <div className="d-flex align-items-center gap-2">
+                                <span style={{ fontWeight: 700, color: "#2e7d32" }}>₹{Number(r.Amount || 0).toFixed(0)}</span>
+                                {Number(r.DiscAmt || 0) > 0 && (
+                                  <span style={{ fontSize: "10px", color: "#e65100", background: "#fff3e0", padding: "1px 6px", borderRadius: "4px" }}>
+                                    Disc: ₹{Number(r.DiscAmt).toFixed(0)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+
+                  {/* Multiple Payment Methods - Only show if due > 0 */}
                   {refundMode == 0
-                    ? calculatedDueAmount != 0 &&
+                    ? calculatedDueAmount > 0 &&
                       paymentMethods.map((payment, index) => (
                         <div key={index} className="payment-card card mb-3">
                           <div className="card-header d-flex justify-content-between align-items-center">
@@ -2699,66 +2873,52 @@ ${pagesHtml}
                     </div>
                   )} */}
 
-                  <div className="mb-1">
-                    <label className="form-label">Narration</label>
+                  <div className="mb-2 p-3" style={{ background: "#f8f9fa", borderRadius: "10px", border: "1px solid #e0e0e0" }}>
+                    <label className="form-label" style={{ fontWeight: 600, color: "#455a64", fontSize: "12px" }}>📝 Narration</label>
                     <textarea
                       className="form-control form-control-sm"
-                      rows={1}
+                      rows={2}
                       name="Narration"
                       value={formData.Narration}
                       disabled={modalType === "view"}
                       onChange={handleChange}
+                      style={{ borderRadius: "8px", border: "1px solid #cfd8dc" }}
                     ></textarea>
                   </div>
 
                   {/* Buttons */}
-                  <div className="d-flex gap-2 mt-1">
+                  <div className="d-flex gap-2 mt-2 mb-3 p-3" style={{ background: "linear-gradient(135deg, #f5f5f5, #eeeeee)", borderRadius: "12px", border: "1px solid #e0e0e0" }}>
                     <button
-                      className="btn btn-secondary w-50"
+                      className="btn w-50"
+                      style={{ background: "linear-gradient(135deg, #546e7a, #37474f)", color: "#fff", fontWeight: 600, borderRadius: "10px", padding: "10px", fontSize: "14px", boxShadow: "0 4px 12px rgba(84,110,122,0.3)" }}
                       onClick={() => {
                         setRefundMode(0);
                         setShowDrawer(false);
                         setShowDisc(false);
                       }}
                     >
-                      Cancel
+                      ✖ Cancel
                     </button>
 
                     {modalType !== "view" && (
                       <>
                         {modalType == "add" && (
-                          // (refundMode === 0 ? (
-                          //   calculatedDueAmount != 0 && (
-                          //     <button
-                          //       onClick={handleSave}
-                          //       className="btn btn-primary w-50"
-                          //     >
-                          //       Save
-                          //     </button>
-                          //   )
-                          // ) : (
-                          //   <button
-                          //     onClick={handleSave}
-                          //     className="btn btn-primary w-50"
-                          //   >
-                          //     Save
-                          //   </button>
-                          // ))
-
                           <button
                             onClick={handleSave}
-                            className="btn btn-primary w-50"
+                            className="btn w-50"
+                            style={{ background: "linear-gradient(135deg, #667eea, #764ba2)", color: "#fff", fontWeight: 700, borderRadius: "10px", padding: "10px", fontSize: "14px", boxShadow: "0 4px 15px rgba(102,126,234,0.4)", border: "none" }}
                           >
-                            Save
+                            💾 Save
                           </button>
                         )}
 
                         {modalType == "edit" && showSaveBtnEdit && (
                           <button
                             onClick={handleSave}
-                            className="btn btn-primary w-50"
+                            className="btn w-50"
+                            style={{ background: "linear-gradient(135deg, #667eea, #764ba2)", color: "#fff", fontWeight: 700, borderRadius: "10px", padding: "10px", fontSize: "14px", boxShadow: "0 4px 15px rgba(102,126,234,0.4)", border: "none" }}
                           >
-                            Save
+                            💾 Save
                           </button>
                         )}
 
@@ -2838,9 +2998,10 @@ ${pagesHtml}
                               );
                             }
                           }}
-                          className="btn btn-warning w-50"
+                          className="btn w-50"
+                          style={{ background: "linear-gradient(135deg, #ff9800, #f57c00)", color: "#fff", fontWeight: 700, borderRadius: "10px", padding: "10px", fontSize: "14px", boxShadow: "0 4px 15px rgba(255,152,0,0.4)", border: "none" }}
                         >
-                          Print
+                          🖨️ Print
                         </button>
                       </>
                     )}
@@ -2860,10 +3021,10 @@ ${pagesHtml}
             style={{ zIndex: 10000 }}
           ></div>
           <div className="modal d-block" style={{ zIndex: 10001 }}>
-            <div className="modal-dialog modal-dialog-centered modal-lg">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Select Patient</h5>
+            <div className="modal-dialog modal-dialog-centered modal-xl">
+              <div className="modal-content" style={{ borderRadius: "16px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+                <div className="modal-header" style={{ background: "linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)", color: "#fff", border: "none", padding: "16px 24px" }}>
+                  <h5 className="modal-title" style={{ fontWeight: 700, letterSpacing: "0.5px" }}>👤 Select Patient</h5>
                   <button
                     className="btn-close"
                     onClick={() => setShowPatientModal(false)}
@@ -3002,26 +3163,17 @@ ${pagesHtml}
       )}
 
       {/* Pagination */}
-      <div className="d-flex justify-content-center mt-3">
-        <ul className="pagination pagination-sm">
+      <div className="d-flex justify-content-center mt-3 mb-3">
+        <ul className="pagination pagination-sm" style={{ gap: "4px" }}>
           <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => goToPage(page - 1)}>
-              Prev
+            <button className="page-link" style={{ borderRadius: "8px", fontWeight: 600 }} onClick={() => goToPage(page - 1)}>
+              ◀ Prev
             </button>
           </li>
-
-          {/* {[...Array(totalPages)].map((_, i) => (
-            <li key={i} className={`page-item ${page === i + 1 ? "active" : ""}`}>
-              <button className="page-link" onClick={() => goToPage(i + 1)}>
-                {i + 1}
-              </button>
-            </li>
-          ))} */}
-          <button className="page-link">{`${page}/${totalPages}`}</button>
-
+          <button className="page-link" style={{ borderRadius: "8px", background: "linear-gradient(135deg, #667eea, #764ba2)", color: "#fff", fontWeight: 700, border: "none", padding: "6px 16px" }}>{`${page} / ${totalPages}`}</button>
           <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
-            <button className="page-link" onClick={() => goToPage(page + 1)}>
-              Next
+            <button className="page-link" style={{ borderRadius: "8px", fontWeight: 600 }} onClick={() => goToPage(page + 1)}>
+              Next ▶
             </button>
           </li>
         </ul>
