@@ -69,6 +69,7 @@ import Emr from "./pages/bireswar_pages/outdoor/Emr/Emr.jsx";
 
 import VisitEntry from "./pages/bireswar_pages/outdoor/Visit_Entry/VisitEntry.jsx";
 import DrRectVisitDetail from "./pages/bireswar_pages/outdoor/Dr_Rect_Visit_Detail/DrRectVisitDetail.jsx";
+import OpdReportSection from "./pages/bireswar_pages/outdoor/OPD_Report_Section/OpdReportSection.jsx";
 import OtherCharges from "./pages/bireswar_pages/outdoor/Other_Charges/OtherCharges.jsx";
 import OtherChargesIPD from "./pages/bireswar_pages/outdoor/Other_Charges/OtherChargesIPD.jsx";
 import CaseList from "./pages/bireswar_pages/outdoor/Other_Charges/CaseList.jsx";
@@ -472,9 +473,10 @@ function App() {
           <Route path="/visit_entry" element={<PermissionRoute section="outdoor_visitEntry"><VisitEntry /></PermissionRoute>} />
           <Route path="/table-data" element={<PermissionRoute section="outdoor_visitList"><VisitList /></PermissionRoute>} />
           <Route path="/dr-rect-visit-detail" element={<PermissionRoute section="outdoor_drRectVisit"><DrRectVisitDetail /></PermissionRoute>} />
+          <Route path="/opd-report-section" element={<OpdReportSection />} />
           <Route path="/emr" element={<PermissionRoute section="outdoor_emr"><Emr /></PermissionRoute>} />
           <Route path="/Opd_Other_Charges" element={<PermissionRoute section="outdoor_otherCharge"><OtherChargesss /></PermissionRoute>} />
-          <Route path="/IVFBiodataMaster" element={<PermissionRoute section="outdoor_ivfBiodata"><IVFBIODATAMASTER /></PermissionRoute>} />
+          <Route path="/IVFBiodataMaster" element={<PermissionRoute section="outdoor_ivfBiodata"><IVFBIODATAMASTER /></PermissionRoute>}  />
           <Route path="/other_charges" element={<PermissionRoute section="outdoor"><OtherCharges /></PermissionRoute>} />
           <Route path="/date-wise-registration-charge" element={<PermissionRoute section="outdoor"><DateWiseRegistrationCharge /></PermissionRoute>} />
 
@@ -1011,7 +1013,7 @@ function App() {
 
 {/* ai */}
 
-<Route path="/ai-editor" element={<PermissionRoute section="ai"><AiEditorPage /></PermissionRoute>} />
+<Route path="/ai-editor" element={<ProtectedRoute><AiEditorPage /></ProtectedRoute>} />
  <Route path="/" element={<AiChat />} />
           <Route path="/aiAppointmentHistory" element={<PermissionRoute section="ai_appointmentHistory"><AiAppointmentHistory /></PermissionRoute>} />
           <Route path="/userAiBookings" element={<PermissionRoute section="ai_userBookings"><UserAiBookings /></PermissionRoute>} />

@@ -77,6 +77,8 @@ const MoneyReceipt = () => {
 
   const [additionalDueAmt, setAdditionalDueAmt] = useState(0); // this will be minus from the calculated due amount
 
+  const [forceUnlock, setForceUnlock] = useState(false); // unlock payment section even when due is 0
+
   // useEffect(() => {
   //   console.log("I am changed:", allPreviouseReceipts);
 
@@ -128,6 +130,7 @@ const MoneyReceipt = () => {
       setHistData([]);
       setAllPreviouseReceipts([]);
       setAdditionalDueAmt(0);
+      setForceUnlock(false);
     }
   }, [showDrawer]);
 
@@ -1855,6 +1858,40 @@ ${pagesHtml}
                 style={{ height: "calc(100% - 60px)" }}
               >
                 <div className="mx-3" style={{ paddingTop: "15px" }}>
+                  {/* Locked Alert - shows in view mode OR edit mode when not last receipt */}
+                  {(modalType === "view" || (modalType === "edit" && !showSaveBtnEdit)) && (
+                    <div
+                      className="alert d-flex align-items-center gap-3 mb-3"
+                      style={{
+                        background: "linear-gradient(135deg, #ff1744 0%, #d50000 100%)",
+                        color: "#fff",
+                        borderRadius: "14px",
+                        padding: "16px 24px",
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        boxShadow: "0 8px 30px rgba(213,0,0,0.4)",
+                        border: "2px solid rgba(255,255,255,0.3)",
+                        animation: "pulse-alert 2s infinite",
+                      }}
+                    >
+                      <span style={{ fontSize: "28px" }}>🔒</span>
+                      <div>
+                        <div style={{ fontSize: "15px", letterSpacing: "1px" }}>⚠️ THIS RECEIPT IS LOCKED</div>
+                        <div style={{ fontSize: "12px", fontWeight: 500, opacity: 0.9 }}>
+                          {modalType === "view" 
+                            ? "View mode only — editing is not allowed. To make changes, click the Edit button."
+                            : "This is not the last receipt, so editing is not allowed. Only the last receipt can be edited."
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <style>{`
+                    @keyframes pulse-alert {
+                      0%, 100% { transform: scale(1); }
+                      50% { transform: scale(1.01); box-shadow: 0 8px 40px rgba(213,0,0,0.6); }
+                    }
+                  `}</style>
                   {/* Row 1 */}
                   <div className="row g-2 mb-2 align-items-end p-3" style={{ background: "linear-gradient(135deg, #f5f7fa 0%, #e8eaf6 100%)", borderRadius: "12px", border: "1px solid #e0e0e0", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
                     {/* Receipt No */}
@@ -2050,7 +2087,7 @@ ${pagesHtml}
                         name="UserId"
                         value={formData.UserId || ""}
                         onChange={handleChange}
-                        disabled={modalType === "view"}
+                        disabled={modalType === "view" || (modalType === "edit" && !showSaveBtnEdit)}
                       >
                         <option value="">Select User</option>
                         {users.map((u) => (
@@ -2137,7 +2174,7 @@ ${pagesHtml}
                               }));
                               handleChange(e);
                             }}
-                            disabled={modalType === "view"}
+                            disabled={modalType === "view" || (modalType === "edit" && !showSaveBtnEdit)}
                           />
                         </div>
                       }
@@ -2158,7 +2195,7 @@ ${pagesHtml}
                               }));
                               handleChange(e);
                             }}
-                            disabled={modalType === "view"}
+                            disabled={modalType === "view" || (modalType === "edit" && !showSaveBtnEdit)}
                           />
                         </div>
                       }
@@ -2193,7 +2230,7 @@ ${pagesHtml}
                           // value={formData.Amount}
                           value={currentPayment.toFixed(2)}
                           onChange={handleChange}
-                          disabled={modalType === "view"}
+                          disabled={modalType === "view" || (modalType === "edit" && !showSaveBtnEdit)}
                         />
                       </div>
                     </div>
@@ -2219,16 +2256,16 @@ ${pagesHtml}
                       overflow: "hidden",
                       position: "relative",
                       boxShadow: calculatedDueAmount <= 0
-                        ? "0 20px 60px rgba(16,185,129,0.35), 0 0 0 1px rgba(16,185,129,0.1)"
-                        : "0 20px 60px rgba(99,102,241,0.35), 0 0 0 1px rgba(99,102,241,0.1)",
+                        ? "0 20px 60px rgba(5,150,105,0.4), 0 0 0 1px rgba(52,211,153,0.2)"
+                        : "0 20px 60px rgba(108,92,231,0.4), 0 0 0 1px rgba(108,92,231,0.2)",
                     }}
                   >
                     {/* Glass Background */}
                     <div style={{
                       position: "absolute", inset: 0,
                       background: calculatedDueAmount <= 0
-                        ? "linear-gradient(160deg, #064e3b 0%, #065f46 25%, #047857 50%, #059669 75%, #10b981 100%)"
-                        : "linear-gradient(160deg, #1e1b4b 0%, #312e81 25%, #3730a3 50%, #4f46e5 75%, #6366f1 100%)",
+                        ? "linear-gradient(160deg, #0d3320 0%, #064e3b 20%, #047857 45%, #059669 70%, #34d399 100%)"
+                        : "linear-gradient(160deg, #0f0c29 0%, #1a1a4e 20%, #302b63 45%, #4834d4 70%, #6c5ce7 100%)",
                     }}></div>
                     {/* Animated gradient overlay */}
                     <div style={{
@@ -2498,43 +2535,104 @@ ${pagesHtml}
                   )}
 
 
-                  {/* Multiple Payment Methods - Only show if due > 0 */}
+                  {/* Force Unlock Warning */}
+                  {forceUnlock && (
+                    <div
+                      className="alert d-flex align-items-center gap-2 mb-3"
+                      style={{
+                        background: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
+                        color: "#fff",
+                        borderRadius: "12px",
+                        padding: "12px 18px",
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        boxShadow: "0 4px 16px rgba(255,152,0,0.4)",
+                        border: "1.5px solid rgba(255,255,255,0.3)",
+                      }}
+                    >
+                      <span style={{ fontSize: "22px" }}>⚠️</span>
+                      <span>Payment section unlocked! Please change the amount carefully.</span>
+                      <button
+                        type="button"
+                        className="btn btn-sm ms-auto"
+                        style={{ background: "rgba(255,255,255,0.9)", color: "#e65100", fontWeight: 700, borderRadius: "8px", fontSize: "11px" }}
+                        onClick={() => setForceUnlock(false)}
+                      >
+                        🔒 Lock Again
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Multiple Payment Methods - Show locked when due <= 0 */}
                   {refundMode == 0
-                    ? calculatedDueAmount > 0 &&
-                      paymentMethods.map((payment, index) => (
-                        <div key={index} className="payment-card card mb-3">
-                          <div className="card-header d-flex justify-content-between align-items-center">
-                            <small className="mb-0 fw-bold">
+                    ? paymentMethods.map((payment, index) => {
+                        const isLocked = (calculatedDueAmount <= 0 && !forceUnlock) || (modalType === "edit" && !showSaveBtnEdit);
+                        const canUnlock = calculatedDueAmount <= 0 && !forceUnlock && modalType === "edit" && showSaveBtnEdit;
+                        return (
+                        <div key={index} className="payment-card card mb-3" style={{
+                          borderRadius: "14px",
+                          border: isLocked ? "1.5px solid #e0e0e0" : "1.5px solid #c5cae9",
+                          overflow: "hidden",
+                          opacity: isLocked ? 0.55 : 1,
+                          pointerEvents: isLocked ? "none" : "auto",
+                          position: "relative",
+                          boxShadow: isLocked ? "none" : "0 4px 16px rgba(63,81,181,0.1)",
+                          transition: "all 0.4s ease",
+                        }}>
+                          {isLocked && (
+                            <div style={{
+                              position: "absolute", inset: 0, zIndex: 2,
+                              background: "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.015) 10px, rgba(0,0,0,0.015) 20px)",
+                              borderRadius: "14px",
+                              display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "8px",
+                            }}>
+                              <span style={{ background: "rgba(0,0,0,0.7)", color: "#fff", padding: "6px 18px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, letterSpacing: "1px" }}>
+                                🔒 LOCKED — NO DUE
+                              </span>
+                              {canUnlock && (
+                                <button
+                                  type="button"
+                                  style={{ pointerEvents: "auto", background: "linear-gradient(135deg, #ff9800, #f57c00)", color: "#fff", border: "none", borderRadius: "20px", padding: "6px 16px", fontSize: "11px", fontWeight: 700, cursor: "pointer" }}
+                                  onClick={() => {
+                                    setForceUnlock(true);
+                                    toast.warn("⚠️ Payment section unlocked! You can now increase or decrease the amount.", { autoClose: 4000 });
+                                  }}
+                                >
+                                  🔓 Unlock to Edit
+                                </button>
+                              )}
+                            </div>
+                          )}
+                          <div className="card-header d-flex justify-content-between align-items-center" style={{ background: "linear-gradient(135deg, #e8eaf6, #f5f5f5)", padding: "10px 16px" }}>
+                            <small className="mb-0 fw-bold" style={{ color: "#3f51b5" }}>
                               Payment #{index + 1}
                             </small>
                             {paymentMethods.length > 1 &&
-                              modalType !== "view" && (
+                              modalType !== "view" && !isLocked && (
                                 <button
                                   type="button"
                                   className="btn btn-sm btn-danger"
+                                  style={{ borderRadius: "8px" }}
                                   onClick={() => removePaymentMethod(index)}
                                 >
                                   <i className="fa-light fa-trash-can"></i>
                                 </button>
                               )}
                           </div>
-                          <div className="card-body">
+                          <div className="card-body" style={{ padding: "14px 16px" }}>
                             <div className="row g-3">
                               <div className="col-md-2">
-                                <label className="form-label">
+                                <label className="form-label" style={{ fontSize: "11px", fontWeight: 600, color: "#455a64" }}>
                                   Payment Type
                                 </label>
                                 <select
-                                  className="form-control"
+                                  className="form-control form-control-sm"
                                   value={payment.type}
                                   onChange={(e) =>
-                                    updatePaymentMethod(
-                                      index,
-                                      "type",
-                                      e.target.value
-                                    )
+                                    updatePaymentMethod(index, "type", e.target.value)
                                   }
                                   disabled={modalType === "view"}
+                                  style={{ borderRadius: "8px" }}
                                 >
                                   <option value="0">CASH</option>
                                   <option value="1">BANK</option>
@@ -2542,122 +2640,52 @@ ${pagesHtml}
                                 </select>
                               </div>
                               <div className="col-md-2">
-                                <label className="form-label">Amount</label>
+                                <label className="form-label" style={{ fontSize: "11px", fontWeight: 600, color: "#455a64" }}>Amount</label>
                                 <input
                                   type="number"
-                                  className="form-control"
+                                  className="form-control form-control-sm"
                                   value={payment.amount}
                                   onChange={(e) => {
-                                    updatePaymentMethod(
-                                      index,
-                                      "amount",
-                                      refundMode === 1
-                                        ? e.target.value * -1
-                                        : e.target.value
-                                    );
-                                    // console.log("value",e.target.value)
+                                    updatePaymentMethod(index, "amount", refundMode === 1 ? e.target.value * -1 : e.target.value);
                                   }}
                                   disabled={modalType === "view"}
+                                  style={{ borderRadius: "8px" }}
                                 />
                               </div>
-
-                              {/* Conditional fields based on payment type */}
                               {payment.type === "1" && (
                                 <>
                                   <div className="col-md-2">
-                                    <label className="form-label">
-                                      UPI App
-                                    </label>
-                                    <input
-                                      className="form-control"
-                                      value={payment.upiApp}
-                                      placeholder="PHONE PE - RAHUL BAR"
-                                      onChange={(e) =>
-                                        updatePaymentMethod(
-                                          index,
-                                          "upiApp",
-                                          e.target.value
-                                        )
-                                      }
-                                      disabled={modalType === "view"}
-                                    />
+                                    <label className="form-label" style={{ fontSize: "11px", fontWeight: 600, color: "#455a64" }}>UPI App</label>
+                                    <input className="form-control form-control-sm" value={payment.upiApp} placeholder="PHONE PE" onChange={(e) => updatePaymentMethod(index, "upiApp", e.target.value)} disabled={modalType === "view"} style={{ borderRadius: "8px" }} />
                                   </div>
                                   <div className="col-md-2">
-                                    <label className="form-label">
-                                      UTR Number
-                                    </label>
-                                    <input
-                                      className="form-control"
-                                      value={payment.utrNumber}
-                                      placeholder="211839452746"
-                                      onChange={(e) =>
-                                        updatePaymentMethod(
-                                          index,
-                                          "utrNumber",
-                                          e.target.value
-                                        )
-                                      }
-                                      disabled={modalType === "view"}
-                                    />
+                                    <label className="form-label" style={{ fontSize: "11px", fontWeight: 600, color: "#455a64" }}>UTR Number</label>
+                                    <input className="form-control form-control-sm" value={payment.utrNumber} placeholder="211839452746" onChange={(e) => updatePaymentMethod(index, "utrNumber", e.target.value)} disabled={modalType === "view"} style={{ borderRadius: "8px" }} />
                                   </div>
                                 </>
                               )}
-
                               {payment.type === "2" && (
                                 <>
                                   <div className="col-md-2">
-                                    <label className="form-label">
-                                      Bank Name
-                                    </label>
-                                    <input
-                                      className="form-control"
-                                      value={payment.bankName}
-                                      onChange={(e) =>
-                                        updatePaymentMethod(
-                                          index,
-                                          "bankName",
-                                          e.target.value
-                                        )
-                                      }
-                                      disabled={modalType === "view"}
-                                    />
+                                    <label className="form-label" style={{ fontSize: "11px", fontWeight: 600, color: "#455a64" }}>Bank Name</label>
+                                    <input className="form-control form-control-sm" value={payment.bankName} onChange={(e) => updatePaymentMethod(index, "bankName", e.target.value)} disabled={modalType === "view"} style={{ borderRadius: "8px" }} />
                                   </div>
                                   <div className="col-md-2">
-                                    <label className="form-label">
-                                      Cheque Number
-                                    </label>
-                                    <input
-                                      className="form-control"
-                                      value={payment.chequeNumber}
-                                      onChange={(e) =>
-                                        updatePaymentMethod(
-                                          index,
-                                          "chequeNumber",
-                                          e.target.value
-                                        )
-                                      }
-                                      disabled={modalType === "view"}
-                                    />
+                                    <label className="form-label" style={{ fontSize: "11px", fontWeight: 600, color: "#455a64" }}>Cheque Number</label>
+                                    <input className="form-control form-control-sm" value={payment.chequeNumber} onChange={(e) => updatePaymentMethod(index, "chequeNumber", e.target.value)} disabled={modalType === "view"} style={{ borderRadius: "8px" }} />
                                   </div>
                                 </>
                               )}
-
                               {payment.type === "0" && (
                                 <div className="col-md-4">
-                                  <label className="form-label">
-                                    Cash Payment
-                                  </label>
-                                  <input
-                                    className="form-control"
-                                    value="Cash Payment"
-                                    readOnly
-                                  />
+                                  <label className="form-label" style={{ fontSize: "11px", fontWeight: 600, color: "#455a64" }}>Cash Payment</label>
+                                  <input className="form-control form-control-sm" value="Cash Payment" readOnly style={{ borderRadius: "8px", background: "#f5f5f5" }} />
                                 </div>
                               )}
                             </div>
                           </div>
                         </div>
-                      ))
+                      );})
                     : paymentMethods.map((payment, index) => (
                         <div key={index} className="payment-card card mb-3">
                           <div className="card-header d-flex justify-content-between align-items-center">
@@ -2880,7 +2908,7 @@ ${pagesHtml}
                       rows={2}
                       name="Narration"
                       value={formData.Narration}
-                      disabled={modalType === "view"}
+                      disabled={modalType === "view" || (modalType === "edit" && !showSaveBtnEdit)}
                       onChange={handleChange}
                       style={{ borderRadius: "8px", border: "1px solid #cfd8dc" }}
                     ></textarea>
