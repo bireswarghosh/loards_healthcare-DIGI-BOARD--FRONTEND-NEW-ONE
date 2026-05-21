@@ -1160,7 +1160,7 @@ const FinalBillingAdd = () => {
           ? otherChargesData
               .filter((row) => row.scharge === 1)
               .reduce((sum, row) => sum + Number(row.Amount || 0), 0)
-          : 0;
+          : 0;  
         return (
           <table
             className="table table-bordered table-sm mb-0"
@@ -1177,13 +1177,15 @@ const FinalBillingAdd = () => {
                 </th>
                 <th style={styles.tableHeader}>SC</th>
               </tr>
+                 
             </thead>
             <tbody>
+          
               {otherChargesData ? (
                 otherChargesData.map((row, idx) => (
                   <tr key={idx} style={styles.tableRowSelected}>
                     <td>
-                      {row.AdmitionDate?.split("T")[0]
+                      {(row.AdmitionDate?.split("T")[0] || row.AdmitionDate?.split(" ")[0] || "")
                         ?.split("-")
                         ?.reverse()
                         ?.join("/") || ""}
@@ -1916,7 +1918,7 @@ const fetchOtSlots = async () => {
         Age: patientInfo?.Age || "",
         AgeType: patientInfo?.AgeType || "",
         Sex: patientInfo?.Sex || "",
-        AdmitionDate: patientInfo?.AdmitionDate || "",
+        AdmitionDate: item.EDate || patientInfo?.AdmitionDate || "",
         PrintHead: " ",
         // SubHead: matched?.OtherCharges || "",
         SubHead: allOtherCharges1[item.OtherChargesId]?.OtherCharges || "",
@@ -2016,7 +2018,7 @@ const fetchOtSlots = async () => {
 
     services: {
       rows: ocDeatails.map((row) => [
-        row.AdmitionDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
+        (row.AdmitionDate?.split("T")[0] || row.AdmitionDate?.split(" ")[0] || "")?.split("-")?.reverse()?.join("/") || "",
         row.SubHead || "",
         row.Particular?.trim()?.split("x")[0] || "",
         row.Particular?.trim()?.split("x")[1] || "",
