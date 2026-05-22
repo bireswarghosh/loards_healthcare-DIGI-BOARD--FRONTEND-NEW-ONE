@@ -2436,10 +2436,10 @@ ${list.reduce(
   };
 
   const handleBillPrint = () => {
-    const logoUrl = "/assets/images/logo-small.png";
-
     const doctorName =
       doctorData.find((d) => d.DoctorId == formData.DoctorId)?.Doctor || "";
+
+    const paymentModeLabel = formData.PaymentType === "C" ? "Cash" : formData.PaymentType === "B" ? "Bank" : formData.PaymentType === "D" ? "Credit Card" : formData.PaymentType === "W" ? "UPI" : "";
 
     const printContent = `
 <html>
@@ -2449,14 +2449,13 @@ ${list.reduce(
 <style>
 
 @page{
- 
   margin:10mm;
 }
 
 body{
   font-family:Arial, sans-serif;
   font-size:12px;
-  font-weigt:700
+  font-weight:700;
   margin:0;
 }
 
@@ -2505,7 +2504,7 @@ body{
 }
 
 .patient-col{
-    margin:4px 0;
+  margin:4px 0;
   font-size:13px;
   font-weight:bold;
 }
@@ -2517,7 +2516,7 @@ body{
 
 .patient-label{
   font-weight:700;
-  width:85px;
+  width:100px;
 }
 
 .patient-value{
@@ -2626,8 +2625,8 @@ Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
 </div>
 
 <div class="patient-row">
-<span class="patient-label">Date</span>
-<span class="patient-value">${utcToISTDateOnly(new Date())}</span>
+<span class="patient-label">Date & Time</span>
+<span class="patient-value">${formData.CaseDate} ${formData.CaseTime}</span>
 </div>
 
 <div class="patient-row">
@@ -2664,7 +2663,7 @@ ${
 <tr>
 <td style="text-align:center;">${i + 1}</td>
 <td>${t.TestName} ${t.CancelTast == 1 ? "(Cancel)" : ""}</td>
-<td>${t.DeliveryDate}</td>
+<td>${t.DeliveryDate} ${t.DeliveryTime || ""}</td>
 <td style="text-align:right;">${t.CancelTast == 1 ? 0 : t.NetRate}</td>
 </tr>
 `,
@@ -2679,20 +2678,50 @@ ${
 
 <tr>
 <td></td>
-<td colspan="2" style="text-align:right;font-weight:bold;">Total Test Amount</td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Total Amount</td>
+<td style="text-align:right;font-weight:bold;">${formData.Total}</td>
+</tr>
+
+${Number(formData.DescAmt) > 0 ? `<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Discount (${formData.Desc || 0}%)</td>
+<td style="text-align:right;font-weight:bold;">-${formData.DescAmt}</td>
+</tr>` : ""}
+
+${Number(formData.CTestAmt) > 0 ? `<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Cancel Test Amount</td>
+<td style="text-align:right;font-weight:bold;">-${formData.CTestAmt}</td>
+</tr>` : ""}
+
+<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Net Amount (G.Total)</td>
 <td style="text-align:right;font-weight:bold;">${formData.GrossAmt}</td>
 </tr>
 
 <tr>
 <td></td>
-<td colspan="2" style="text-align:right;font-weight:bold;">Paid Amount</td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Paid Amount (${paymentModeLabel})</td>
 <td style="text-align:right;font-weight:bold;">${formData.Advance}</td>
 </tr>
 
-<tr>
+${formData.BankName ? `<tr>
 <td></td>
-<td colspan="2" style="text-align:right;font-weight:bold;">Due Amount</td>
-<td style="text-align:right;font-weight:bold;">${formData.Balance}</td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Bank</td>
+<td style="text-align:right;font-weight:bold;">${formData.BankName}</td>
+</tr>` : ""}
+
+${formData.ChequeNo ? `<tr>
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;">Cheque/Card No</td>
+<td style="text-align:right;font-weight:bold;">${formData.ChequeNo}</td>
+</tr>` : ""}
+
+<tr style="background:#fff3cd;">
+<td></td>
+<td colspan="2" style="text-align:right;font-weight:bold;color:red;">Due Amount</td>
+<td style="text-align:right;font-weight:bold;color:red;">${formData.Balance}</td>
 </tr>
 
 </tfoot>
