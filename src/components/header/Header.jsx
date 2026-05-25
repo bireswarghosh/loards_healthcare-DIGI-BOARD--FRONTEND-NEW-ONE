@@ -45,7 +45,7 @@ const Header = () => {
               id='settingsToggle'
               onClick={handleSettingsToggle}
             >
-              <i className='fa-light fa-gear'></i>
+               {/* <i className='fa-light fa-gear'></i> */}  
             </button>
 
            
@@ -136,7 +136,7 @@ const Header = () => {
               id='settingsToggle'
               onClick={handleSettingsToggle}
             >
-              <i className='fa-light fa-gear'></i>
+               <i className='fa-light fa-gear'></i>
             </button>
 
             
@@ -186,7 +186,7 @@ const Header = () => {
               className='header-btn theme-settings-btn d-none'
               onClick={handleSettingsToggle}
             >
-              <i className='fa-light fa-gear'></i>
+               <i className='fa-light fa-gear'></i>
             </button>
             <HeaderProfile />
           </div>

@@ -1,11 +1,19 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
+import { Editor } from "@tiptap/react";
 import { X, ChevronDown, ChevronUp, Replace } from "lucide-react";
 
-function escapeRegex(text) {
+interface FindReplaceProps {
+  editor: Editor | null;
+  isOpen: boolean;
+  onClose: () => void;
+  mode: "find" | "replace";
+}
+
+function escapeRegex(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-const FindReplace = ({ editor, isOpen, onClose, mode: initialMode }) => {
+const FindReplace: React.FC<FindReplaceProps> = ({ editor, isOpen, onClose, mode: initialMode }) => {
   const [searchText, setSearchText] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [matchCase, setMatchCase] = useState(false);
@@ -34,7 +42,7 @@ const FindReplace = ({ editor, isOpen, onClose, mode: initialMode }) => {
   const editorText = editor?.getText() || "";
 
   const matchPositions = useMemo(() => {
-    if (!searchText.trim()) return [];
+    if (!searchText.trim()) return [] as number[];
 
     let haystack = editorText;
     let needle = searchText;
@@ -44,7 +52,7 @@ const FindReplace = ({ editor, isOpen, onClose, mode: initialMode }) => {
       needle = needle.toLowerCase();
     }
 
-    const positions = [];
+    const positions: number[] = [];
     let pos = 0;
 
     while (true) {
@@ -67,7 +75,7 @@ const FindReplace = ({ editor, isOpen, onClose, mode: initialMode }) => {
     return positions;
   }, [editorText, searchText, matchCase, wholeWord]);
 
-  const selectMatch = useCallback((matchIndex) => {
+  const selectMatch = useCallback((matchIndex: number) => {
     if (!editor || matchIndex < 0 || matchIndex >= matchPositions.length) return;
 
     const matchPos = matchPositions[matchIndex];
@@ -164,7 +172,7 @@ const FindReplace = ({ editor, isOpen, onClose, mode: initialMode }) => {
 
     const ranges = matchPositions.map((position) => {
       let charCount = 0;
-      let range = null;
+      let range: { from: number; to: number } | null = null;
 
       editor.state.doc.descendants((node, nodePos) => {
         if (range) return false;
@@ -186,7 +194,7 @@ const FindReplace = ({ editor, isOpen, onClose, mode: initialMode }) => {
       });
 
       return range;
-    }).filter(Boolean);
+    }).filter(Boolean) as Array<{ from: number; to: number }>;
 
     for (let i = ranges.length - 1; i >= 0; i -= 1) {
       const range = ranges[i];

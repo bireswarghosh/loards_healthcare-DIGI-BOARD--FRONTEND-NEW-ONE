@@ -2250,14 +2250,16 @@ const [isDarkTheme, setIsDarkTheme] = useState(false);
       }
     };
 
-    document
-      .getElementById("dgbCalcResult")
-      .addEventListener("keydown", handleKeydown);
+    const calcResultElement = document.getElementById("dgbCalcResult");
+    if (calcResultElement) {
+      calcResultElement.addEventListener("keydown", handleKeydown);
+    }
 
     return () => {
-      document
-        .getElementById("dgbCalcResult")
-        .removeEventListener("keydown", handleKeydown);
+      const calcResultElementCleanup = document.getElementById("dgbCalcResult");
+      if (calcResultElementCleanup) {
+        calcResultElementCleanup.removeEventListener("keydown", handleKeydown);
+      }
     };
   }, [inputCalculator]);
 

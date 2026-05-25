@@ -6,12 +6,12 @@ const RightSidebarButton = () => {
   return (
     <div 
     className="right-sidebar-btn d-lg-block d-none">
-        <button 
+        {/* <button 
         className="header-btn theme-settings-btn"
         onClick={handleSettingsToggle}
         >
             <i className="fa-light fa-gear"></i>
-        </button>
+        </button> */}
     </div>
   )
 }

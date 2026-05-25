@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Underline } from "@tiptap/extension-underline";
 import { TextStyle, FontSize } from "@tiptap/extension-text-style";
@@ -28,10 +28,19 @@ import {
   pasteFromClipboard,
 } from "./utils";
 
+interface EditorCoreProps {
+  onEditorReady: (editor: Editor | null) => void;
+  onContentChange: (payload: { html: string; text: string }) => void;
+  initialContent: string;
+  zoom: number;
+  showRuler: boolean;
+  showGridlines: boolean;
+}
+
 const BASE_PAGE_WIDTH = 816;
 const BASE_PAGE_HEIGHT = 1056;
 
-const EditorCore = ({
+const EditorCore: React.FC<EditorCoreProps> = ({
   onEditorReady,
   onContentChange,
   initialContent,
@@ -123,7 +132,7 @@ const EditorCore = ({
   }, [editor, onEditorReady, onContentChange]);
 
   const handleContextMenu = useCallback(
-    (e) => {
+    (e: React.MouseEvent) => {
       e.preventDefault();
       if (!editor) return;
 
@@ -195,8 +204,8 @@ const EditorCore = ({
 
       document.body.appendChild(menu);
 
-      const removeMenu = (ev) => {
-        if (!menu.contains(ev.target)) {
+      const removeMenu = (ev: MouseEvent) => {
+        if (!menu.contains(ev.target as Node)) {
           menu.remove();
           document.removeEventListener("click", removeMenu);
         }

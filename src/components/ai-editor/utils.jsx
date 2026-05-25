@@ -397,58 +397,198 @@ export function exportTxt(text, title) {
   saveAs(blob, `${sanitizeFileName(title || "document")}.txt`);
 }
 
-export function printDocument(html, title) {
-  const editorSurface =
-    document.querySelector(".ProseMirror") ||
+export function printDocument(html, title = "Print") {
+  const source =
+    document.querySelector("#editor-scroll-container > div") ||
+    document.querySelector(".editor-page-layout") ||
+    document.querySelector(".editor-page-layout-content") ||
     document.querySelector(".page-content") ||
+    document.querySelector(".ProseMirror") ||
     document.querySelector("[contenteditable='true']");
 
-  if (!editorSurface) {
-    window.print();
+  if (!source && !html) {
+    alert("Print content not found.");
     return;
   }
 
-  const printWindow = window.open("", "_blank", "width=1200,height=900");
-  if (!printWindow) return;
+  const oldFrame = document.getElementById("print-iframe-frame");
+  if (oldFrame) oldFrame.remove();
 
-  const cloned = editorSurface.cloneNode(true);
+  const iframe = document.createElement("iframe");
+  iframe.id = "print-iframe-frame";
+  iframe.style.position = "fixed";
+  iframe.style.left = "-10000px";
+  iframe.style.top = "0";
+  iframe.style.width = "210mm";
+  iframe.style.height = "297mm";
+  iframe.style.border = "0";
+  iframe.style.background = "#fff";
 
-  printWindow.document.open();
-  printWindow.document.write(`
+  document.body.appendChild(iframe);
+
+  const printDoc = iframe.contentDocument || iframe.contentWindow?.document;
+  const printWin = iframe.contentWindow;
+
+  if (!printDoc || !printWin) {
+    iframe.remove();
+    alert("Print iframe create nahi hua.");
+    return;
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  printDoc.open();
+  printDoc.write(`
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8" />
-<title>Print</title>
-<style>
-@page { size: A4; margin: 0; }
-html, body { margin: 0; padding: 0; background: #ffffff; overflow: visible !important; height: auto !important; }
-* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { font-family: Calibri, "Segoe UI", sans-serif; font-size: 9pt; line-height: 1.0; }
-.print-root { width: 210mm; min-height: auto; margin: 0; padding: 4mm 12mm 12mm 12mm; background: #fff; overflow: visible !important; }
-.print-root p { margin-top: 0 !important; margin-bottom: 0.1em !important; white-space: normal; word-break: normal; overflow-wrap: break-word; }
-.print-root table { width: 100%; margin-top: 0 !important; border-collapse: collapse; table-layout: fixed; page-break-inside: avoid !important; }
-.print-root td, .print-root th { border: 1px solid #999; padding: 4px 5px; white-space: normal; word-break: normal; overflow-wrap: break-word; vertical-align: top; }
-.print-root img { max-width: 100%; height: auto; }
-@media print { html, body { margin: 0 !important; padding: 0 !important; } .print-root { width: 210mm !important; margin: 0 !important; padding: 4mm 12mm 12mm 12mm !important; } }
-</style>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    @page { size: A4 portrait; margin: 0; }
+    html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: visible !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    * { box-sizing: border-box !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { width: 210mm !important; min-height: 297mm !important; background: #ffffff !important; }
+    #print-root { width: 210mm !important; min-height: 297mm !important; margin: 0 !important; padding: 0 !important; background: #ffffff !important; overflow: visible !important; }
+    .print-page { width: 210mm !important; min-height: 297mm !important; margin: 0 !important; background: #ffffff !important; box-shadow: none !important; overflow: visible !important; transform: none !important; zoom: 1 !important; }
+    .print-page * { visibility: visible !important; }
+    img, canvas, svg { max-width: 100% !important; height: auto !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+    table { border-collapse: collapse; page-break-inside: avoid !important; break-inside: avoid !important; }
+    tr, td, th { page-break-inside: avoid !important; break-inside: avoid !important; }
+    button, input, textarea, select, header, nav, .ribbon, .status-bar, .toolbar, .editor-toolbar, .print-hide { display: none !important; }
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      html, body, #root { height: auto !important; min-height: auto !important; overflow: visible !important; background: #ffffff !important; margin: 0 !important; padding: 0 !important; }
+      .ProseMirror { height: auto !important; max-height: none !important; overflow: visible !important; outline: none !important; box-shadow: none !important; border: 0 !important; transform: none !important; zoom: 1 !important; font-family: "Calibri", "Segoe UI", sans-serif !important; font-size: 11pt !important; line-height: 1.15 !important; color: #333 !important; white-space: pre-wrap !important; word-wrap: break-word !important; }
+      .ProseMirror p { margin: 0 0 0.15em 0 !important; }
+      .ProseMirror h1 { font-size: 24pt !important; font-weight: 700 !important; margin: 0.5em 0 0.3em 0 !important; color: #1a1a2e !important; }
+      .ProseMirror h2 { font-size: 18pt !important; font-weight: 600 !important; margin: 0.4em 0 0.25em 0 !important; color: #185ABD !important; }
+      .ProseMirror h3 { font-size: 14pt !important; font-weight: 600 !important; margin: 0.35em 0 0.2em 0 !important; color: #333 !important; }
+      .ProseMirror table { width: 100% !important; border-collapse: collapse !important; table-layout: auto !important; margin: 0.5em 0 !important; overflow: visible !important; page-break-inside: avoid !important; }
+      .ProseMirror td, .ProseMirror th { border: 1px solid #bbb !important; padding: 6px 8px !important; vertical-align: top !important; min-width: 50px !important; white-space: normal !important; word-break: normal !important; overflow-wrap: break-word !important; }
+      .ProseMirror th { background-color: #f0f0f0 !important; font-weight: 600 !important; }
+      .ProseMirror img, .ProseMirror canvas, .ProseMirror svg { max-width: 100% !important; height: auto !important; page-break-inside: avoid !important; }
+    }
+  </style>
 </head>
 <body>
-<div class="print-root" id="print-root"></div>
-<script>
-window.onload = function () { setTimeout(function () { window.print(); setTimeout(function () { window.close(); }, 150); }, 300); };
-</script>
+  <div id="print-root"></div>
 </body>
-</html>`);
-  printWindow.document.close();
+</html>
+  `);
+  printDoc.close();
 
-  const mount = () => {
-    const root = printWindow.document.getElementById("print-root");
-    if (!root) { setTimeout(mount, 50); return; }
-    root.innerHTML = "";
+  const root = printDoc.getElementById("print-root");
+  if (!root) {
+    iframe.remove();
+    alert("Print root create nahi hua.");
+    return;
+  }
+
+  if (html && html.trim()) {
+    const wrapper = printDoc.createElement("div");
+    wrapper.className = "print-page";
+    wrapper.innerHTML = html;
+    root.appendChild(wrapper);
+  } else if (source) {
+    const cloned = source.cloneNode(true);
+    copyComputedStyles(source, cloned, printDoc);
+    cloned.classList.add("print-page");
+    replaceCanvasWithImages(source, cloned, printDoc);
     root.appendChild(cloned);
-  };
-  mount();
+  }
+
+  const hasContent =
+    root.children.length > 0 ||
+    root.innerText.trim().length > 0 ||
+    Boolean(root.querySelector("img, canvas, svg, table, p, div"));
+
+  if (!hasContent) {
+    iframe.remove();
+    alert("Print content empty aa raha hai.");
+    return;
+  }
+
+  setTimeout(() => {
+    waitForImages(printDoc, () => {
+      setTimeout(() => {
+        printWin.focus();
+        printWin.print();
+        setTimeout(() => { iframe.remove(); }, 1200);
+      }, 300);
+    });
+  }, 300);
+}
+
+function copyComputedStyles(sourceNode, targetNode, targetDoc) {
+  if (!(sourceNode instanceof HTMLElement) || !(targetNode instanceof HTMLElement)) return;
+  const computed = window.getComputedStyle(sourceNode);
+  const importantProps = [
+    "display", "position", "width", "max-width", "min-width", "height", "min-height", "max-height",
+    "margin", "margin-top", "margin-right", "margin-bottom", "margin-left",
+    "padding", "padding-top", "padding-right", "padding-bottom", "padding-left",
+    "font", "font-family", "font-size", "font-weight", "font-style", "line-height", "letter-spacing", "text-align", "text-decoration", "text-transform",
+    "color", "background", "background-color", "border", "border-top", "border-right", "border-bottom", "border-left", "border-radius",
+    "white-space", "word-break", "overflow-wrap",
+    "list-style", "list-style-type", "vertical-align", "text-indent",
+  ];
+  importantProps.forEach((prop) => {
+    const value = computed.getPropertyValue(prop);
+    if (value) targetNode.style.setProperty(prop, value, "important");
+  });
+  targetNode.style.setProperty("visibility", "visible", "important");
+  targetNode.style.setProperty("opacity", "1", "important");
+  targetNode.style.setProperty("transform", "none", "important");
+  targetNode.style.setProperty("zoom", "1", "important");
+  const sourceChildren = Array.from(sourceNode.children);
+  const targetChildren = Array.from(targetNode.children);
+  sourceChildren.forEach((sourceChild, index) => {
+    const targetChild = targetChildren[index];
+    if (sourceChild && targetChild) copyComputedStyles(sourceChild, targetChild, targetDoc);
+  });
+}
+
+function replaceCanvasWithImages(sourceRoot, clonedRoot, targetDoc) {
+  const sourceCanvasList = Array.from(sourceRoot.querySelectorAll("canvas"));
+  const clonedCanvasList = Array.from(clonedRoot.querySelectorAll("canvas"));
+  sourceCanvasList.forEach((sourceCanvas, index) => {
+    const clonedCanvas = clonedCanvasList[index];
+    if (!clonedCanvas) return;
+    try {
+      const image = targetDoc.createElement("img");
+      image.src = sourceCanvas.toDataURL("image/png");
+      image.style.display = "block";
+      image.style.width = `${sourceCanvas.offsetWidth || sourceCanvas.width}px`;
+      image.style.maxWidth = "100%";
+      image.style.height = "auto";
+      clonedCanvas.replaceWith(image);
+    } catch {
+      try {
+        clonedCanvas.width = sourceCanvas.width;
+        clonedCanvas.height = sourceCanvas.height;
+        const ctx = clonedCanvas.getContext("2d");
+        if (ctx) ctx.drawImage(sourceCanvas, 0, 0);
+      } catch { }
+    }
+  });
+}
+
+function waitForImages(doc, callback) {
+  const images = Array.from(doc.images || []);
+  if (!images.length) { callback(); return; }
+  let loaded = 0;
+  const done = () => { loaded++; if (loaded >= images.length) callback(); };
+  images.forEach((img) => {
+    if (img.complete) done();
+    else { img.onload = done; img.onerror = done; }
+  });
 }
 
 export function getWordCount(text) {

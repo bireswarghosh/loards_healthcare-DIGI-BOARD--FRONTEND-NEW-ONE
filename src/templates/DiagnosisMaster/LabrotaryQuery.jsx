@@ -1590,6 +1590,7 @@ import PaginationBar from "./PaginationBar";
 import BookingTable from "./BookingTable";
 import TestDrawer from "./TestDrawer";
 import ZLoader from "./ZLoader";
+     import CaseTestDataModal from "./CaseTestDataModal";
 
 const LaboratoryQuery = () => {
   const [loading, setLoading] = useState(false);
@@ -1606,6 +1607,8 @@ const [pathologists, setPathologists] = useState([])
   const [signatory, setSignatory] = useState("");
   const [selPath, setSelPath] = useState({})
 const [testHtml, setTestHtml]=useState('')
+  const [showCaseTestModal, setShowCaseTestModal] = useState(false);
+  const [activeDescTest, setActiveDescTest] = useState(null);
 
 
   // Mock Data for Grids to visualize layout
@@ -1959,7 +1962,7 @@ useEffect(() => {
     <div className='main-content'>
       <div
         className='panel'
-        style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
+        style={{ display: "flex", flexDirection: "column" }}
       >
         {/* ------------------------------------------------
             WINDOW HEADER
@@ -2474,8 +2477,16 @@ useEffect(() => {
                               // setShowTestModal(true); // ✅ modal open
                               if (test.DescFormat === 1) {
                                 setTestHtml(test.htmlContent)
-                                // console.log("test:",test)
-                                setTestDrawerType("descriptive");
+                                setActiveDescTest(test);
+                                setFormData2({
+                                  ...formData,
+                                  Test: test.Test,
+                                  TestId: test.TestId,
+                                  ReportDate: test.ReportDate,
+                                  DescFormat: test.DescFormat,
+                                });
+                                setShowCaseTestModal(true);
+                                return;
                               }
                               if (test.DescFormat === 0) {
                                 setTestDrawerType("general");
@@ -2618,6 +2629,18 @@ useEffect(() => {
         fetchPropertyList={fetchPropertyList}
         fetchPropertyValues={fetchPropertyValues}
         fetchTestDetails={fetchTestDetails}
+      />
+
+      {/* Direct DocumentEditor modal for descriptive tests */}
+      <CaseTestDataModal
+        open={showCaseTestModal}
+        onClose={() => setShowCaseTestModal(false)}
+        caseId={formData2.CaseId}
+        testId={activeDescTest?.TestId}
+        SubDepartmentId={activeDescTest?.SubDepartmentId}
+        PatientName={formData2.PatientName}
+        formData2={formData2}
+        htmlContent={activeDescTest?.htmlContent || testHtml}
       />
     </div>
   );

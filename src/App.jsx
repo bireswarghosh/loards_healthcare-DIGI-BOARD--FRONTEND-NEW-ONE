@@ -333,6 +333,9 @@ import DischargePrint from "./templates/DischargePrint.jsx";
 
 // !  ai  
 import AiEditorPage from "./components/ai-editor/AiEditorPage";
+import WordExactClientEditor from "./components/ai-editor/WordExactClientEditor";
+import WordExactClientEditorV2 from "./components/editor-v2/WordExactClientEditor";
+import WordEditorGallery from "./pages/WordEditorGallery";
 import AiChat from "./pages/AiChat";
 import AiChatDoctor from "./pages/AiChatDoctor";
 import AiSettings from "./pages/AiSettings";
@@ -1014,6 +1017,7 @@ function App() {
 {/* ai */}
 
 <Route path="/ai-editor" element={<ProtectedRoute><AiEditorPage /></ProtectedRoute>} />
+
  <Route path="/" element={<AiChat />} />
           <Route path="/aiAppointmentHistory" element={<PermissionRoute section="ai_appointmentHistory"><AiAppointmentHistory /></PermissionRoute>} />
           <Route path="/userAiBookings" element={<PermissionRoute section="ai_userBookings"><UserAiBookings /></PermissionRoute>} />
@@ -1056,6 +1060,11 @@ function App() {
 
     
         </Route>
+        {/* Standalone Word Editor Routes (Full Screen - No Sidebar/Header) */}
+        <Route path="/word-editor" element={<ProtectedRoute><WordEditorGallery /></ProtectedRoute>} />
+        <Route path="/word-editor-v2" element={<ProtectedRoute><WordExactClientEditorV2 initialTitle="Untitled Document" /></ProtectedRoute>} />
+        <Route path="/editor" element={<ProtectedRoute><WordExactClientEditorV2 initialTitle="Untitled Document" /></ProtectedRoute>} />
+
         <Route path="/login" element={<Login3 />} />
         <Route path="/test-editor/:testId" element={<ProtectedRoute><TestEditorPage /></ProtectedRoute>} />
         <Route path="/login2" element={<Login2 />} />

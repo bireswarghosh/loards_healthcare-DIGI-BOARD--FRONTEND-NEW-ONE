@@ -1,6 +1,25 @@
 import React, { useState } from "react";
+import { Editor } from "@tiptap/react";
 import RibbonHomeTab from "./RibbonHomeTab";
 import RibbonInsertTab from "./RibbonInsertTab";
+
+interface RibbonProps {
+  editor: Editor | null;
+  documentTitle: string;
+  onDocumentTitleChange: (title: string) => void;
+  formatPainterActive: boolean;
+  onFormatPainterToggle: () => void;
+  onFindOpen: (mode: "find" | "replace") => void;
+  onSaveDraft: () => void;
+  onSubmit: () => void;
+  showRuler: boolean;
+  onToggleRuler: () => void;
+  showGridlines: boolean;
+  onToggleGridlines: () => void;
+  showStatusBar: boolean;
+  onToggleStatusBar: () => void;
+  
+}
 
 const TABS = [
   { id: "file", label: "File" },
@@ -10,7 +29,7 @@ const TABS = [
   { id: "view", label: "View" },
 ];
 
-const Ribbon = ({
+const Ribbon: React.FC<RibbonProps> = ({
   editor,
   documentTitle,
   onDocumentTitleChange,

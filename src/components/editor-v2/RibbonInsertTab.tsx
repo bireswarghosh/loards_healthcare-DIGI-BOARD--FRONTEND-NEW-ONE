@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
+import { Editor } from "@tiptap/react";
 import {
   Table,
   Image,
@@ -25,7 +26,31 @@ import {
 import { importDocx, exportDocx, exportHtml, exportTxt, printDocument } from "./utils";
 import { applyEditorPageLayout } from "./editor-page-layout";
 
-const ToolButton = ({ onClick, active, title, children, className = "", disabled }) => (
+interface RibbonInsertTabProps {
+  editor: Editor | null;
+  activeTab: string;
+  documentTitle: string;
+  onDocumentTitleChange: (title: string) => void;
+  onFindOpen: (mode: "find" | "replace") => void;
+  onSaveDraft: () => void;
+  onSubmit: () => void;
+  showRuler: boolean;
+  onToggleRuler: () => void;
+  showGridlines: boolean;
+  onToggleGridlines: () => void;
+  showStatusBar: boolean;
+  onToggleStatusBar: () => void;
+  
+}
+
+const ToolButton: React.FC<{
+  onClick: () => void;
+  active?: boolean;
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+  disabled?: boolean;
+}> = ({ onClick, active, title, children, className = "", disabled }) => (
   <button
     onClick={onClick}
     title={title}
@@ -42,7 +67,7 @@ const SPECIAL_CHARS = [
   "←", "→", "↑", "↓", "↔", "♠", "♣", "♥", "♦", "★", "☆", "✓", "✗", "✦", "❤",
 ];
 
-const RibbonInsertTab = ({
+const RibbonInsertTab: React.FC<RibbonInsertTabProps> = ({
   editor,
   activeTab,
   documentTitle,
@@ -56,20 +81,21 @@ const RibbonInsertTab = ({
   onToggleGridlines,
   showStatusBar,
   onToggleStatusBar,
+  
 }) => {
-  const fileInputRef = useRef(null);
-  const imageInputRef = useRef(null);
-  const exportMenuRef = useRef(null);
-  const tablePickerRef = useRef(null);
-  const specialCharsRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const tablePickerRef = useRef<HTMLDivElement>(null);
+  const specialCharsRef = useRef<HTMLDivElement>(null);
   const [showSpecialChars, setShowSpecialChars] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showTablePicker, setShowTablePicker] = useState(false);
   const [tableHover, setTableHover] = useState({ rows: 0, cols: 0 });
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const target = event.target;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (exportMenuRef.current && !exportMenuRef.current.contains(target)) {
         setShowExportMenu(false);
       }
@@ -85,7 +111,7 @@ const RibbonInsertTab = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleImportDocx = useCallback(async (e) => {
+  const handleImportDocx = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
 
@@ -101,7 +127,7 @@ const RibbonInsertTab = ({
     e.target.value = "";
   }, [editor, onDocumentTitleChange]);
 
-  const handleInsertImage = useCallback((e) => {
+  const handleInsertImage = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !editor) return;
 
@@ -123,7 +149,7 @@ const RibbonInsertTab = ({
     }
   }, [editor]);
 
-  const handleInsertTable = useCallback((rows, cols) => {
+  const handleInsertTable = useCallback((rows: number, cols: number) => {
     if (!editor) return;
     editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
     setShowTablePicker(false);
@@ -367,12 +393,13 @@ const RibbonInsertTab = ({
           </div>
           <div className="flex flex-col items-center">
             <span className="text-[9px] text-gray-500 mb-0.5">Orientation</span>
-            <select className="h-[26px] border border-gray-300 rounded text-xs px-1 bg-white"
+            <select className="h-[26px] border border-gray-300 rounded text-xs px-1 bg-white" 
             onChange={(e) => {
             applyEditorPageLayout({
               orientation: e.target.value === "landscape" ? "landscape" : "portrait",
             });
           }}
+        
             >
              <option value="portrait">Portrait</option>
           <option value="landscape">Landscape</option>

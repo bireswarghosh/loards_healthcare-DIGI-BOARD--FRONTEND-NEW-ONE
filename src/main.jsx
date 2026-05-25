@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { registerLicense } from '@syncfusion/ej2-base';
 import App from './App.jsx';
+import './editor.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 registerLicense('Ngo9BigBOggjHTQxAR8/V1JHaF5cWWdCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdlWXxcd3VXQmJZUkVyX0NWYEo=');

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
+import { Editor } from "@tiptap/react";
 import {
   Bold,
   Italic,
@@ -37,7 +38,19 @@ import {
   pasteFromClipboard,
 } from "./utils";
 
-const ToolButton = ({ onClick, active, title, children, className = "" }) => (
+interface RibbonHomeTabProps {
+  editor: Editor | null;
+  formatPainterActive: boolean;
+  onFormatPainterToggle: () => void;
+}
+
+const ToolButton: React.FC<{
+  onClick: () => void;
+  active?: boolean;
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}> = ({ onClick, active, title, children, className = "" }) => (
   <button
     onClick={onClick}
     title={title}
@@ -47,7 +60,11 @@ const ToolButton = ({ onClick, active, title, children, className = "" }) => (
   </button>
 );
 
-const ColorPicker = ({ colors, onSelect, currentColor }) => (
+const ColorPicker: React.FC<{
+  colors: string[];
+  onSelect: (color: string) => void;
+  currentColor?: string;
+}> = ({ colors, onSelect, currentColor }) => (
   <div className="grid grid-cols-10 gap-0.5 p-2">
     {colors.map((color) => (
       <button
@@ -61,19 +78,19 @@ const ColorPicker = ({ colors, onSelect, currentColor }) => (
   </div>
 );
 
-const RibbonHomeTab = ({ editor, formatPainterActive, onFormatPainterToggle }) => {
+const RibbonHomeTab: React.FC<RibbonHomeTabProps> = ({ editor, formatPainterActive, onFormatPainterToggle }) => {
   const [showTextColor, setShowTextColor] = useState(false);
   const [showHighlightColor, setShowHighlightColor] = useState(false);
   const [showLineSpacing, setShowLineSpacing] = useState(false);
   const [currentTextColor, setCurrentTextColor] = useState("#000000");
   const [currentHighlight, setCurrentHighlight] = useState("#FFFF00");
-  const textColorRef = useRef(null);
-  const highlightRef = useRef(null);
-  const lineSpacingRef = useRef(null);
+  const textColorRef = useRef<HTMLDivElement>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
+  const lineSpacingRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const target = event.target;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (textColorRef.current && !textColorRef.current.contains(target)) {
         setShowTextColor(false);
       }
@@ -114,7 +131,7 @@ const RibbonHomeTab = ({ editor, formatPainterActive, onFormatPainterToggle }) =
     return "Normal";
   }, [editor]);
 
-  const setFontSize = useCallback((size) => {
+  const setFontSize = useCallback((size: string) => {
     if (!editor) return;
     editor.chain().focus().setFontSize(`${size}pt`).run();
   }, [editor]);
@@ -165,7 +182,7 @@ const RibbonHomeTab = ({ editor, formatPainterActive, onFormatPainterToggle }) =
             if (val === "Normal") {
               editor.chain().focus().setParagraph().run();
             } else {
-              const level = parseInt(val.replace("Heading ", ""), 10);
+              const level = parseInt(val.replace("Heading ", ""), 10) as 1 | 2 | 3 | 4 | 5 | 6;
               editor.chain().focus().setHeading({ level }).run();
             }
           }}
@@ -413,7 +430,7 @@ const RibbonHomeTab = ({ editor, formatPainterActive, onFormatPainterToggle }) =
                   onClick={() => {
                     const editorEl = document.querySelector(".ProseMirror");
                     if (editorEl) {
-                      editorEl.style.lineHeight = String(ls.value);
+                      (editorEl as HTMLElement).style.lineHeight = String(ls.value);
                     }
                     setShowLineSpacing(false);
                   }}

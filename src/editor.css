@@ -1,0 +1,694 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+  min-height: 1056px;
+  font-family: 'Calibri', 'Segoe UI', sans-serif;
+  font-size: 11pt;
+  line-height: 1.15;
+  color: #333;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.15em 0;
+}
+
+.ProseMirror h1 {
+  font-size: 24pt;
+  font-weight: 700;
+  margin: 0.5em 0 0.3em 0;
+  color: #1a1a2e;
+}
+
+.ProseMirror h2 {
+  font-size: 18pt;
+  font-weight: 600;
+  margin: 0.4em 0 0.25em 0;
+  color: #185ABD;
+}
+
+.ProseMirror h3 {
+  font-size: 14pt;
+  font-weight: 600;
+  margin: 0.35em 0 0.2em 0;
+  color: #333;
+}
+
+.ProseMirror h4 {
+  font-size: 12pt;
+  font-weight: 600;
+  margin: 0.3em 0 0.15em 0;
+}
+
+.ProseMirror h5 {
+  font-size: 11pt;
+  font-weight: 600;
+  margin: 0.25em 0 0.1em 0;
+}
+
+.ProseMirror h6 {
+  font-size: 10pt;
+  font-weight: 600;
+  margin: 0.2em 0 0.1em 0;
+  color: #666;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.3em 0;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror li {
+  margin: 0.1em 0;
+}
+
+.ProseMirror li p {
+  margin: 0;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid #185ABD;
+  padding-left: 1em;
+  margin: 0.5em 0;
+  color: #555;
+  font-style: italic;
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 1em 0;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid #185ABD;
+  outline-offset: 2px;
+}
+
+/* Table Styles */
+.ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+  table-layout: auto;
+  overflow: visible;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  border: 1px solid #bbb;
+  padding: 6px 8px;
+  vertical-align: top;
+  position: relative;
+  min-width: 50px;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.ProseMirror th {
+  background-color: #f0f0f0;
+  font-weight: 600;
+}
+
+.ProseMirror td p,
+.ProseMirror th p,
+.ProseMirror td div,
+.ProseMirror th div {
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.ProseMirror td > *,
+.ProseMirror th > * {
+  margin: 0;
+}
+
+.ProseMirror .selectedCell {
+  background-color: #d4e6f9;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #185ABD;
+  pointer-events: none;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Task List */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.15em;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: #185ABD;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* Link styles */
+.ProseMirror a {
+  color: #185ABD;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  color: #1048a0;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
+/* Selection highlight */
+.ProseMirror ::selection {
+  background-color: #b4d5fe;
+}
+
+/* Print styles */
+/* @media print {
+  body {
+    overflow: visible !important;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  .ProseMirror {
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  #editor-scroll-container {
+    background: white !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #editor-scroll-container > div {
+    box-shadow: none !important;
+    transform: none !important;
+    width: 100% !important;
+  }
+} */
+
+/* Scrollbar styling */
+#editor-scroll-container::-webkit-scrollbar {
+  width: 12px;
+}
+
+#editor-scroll-container::-webkit-scrollbar-track {
+  background: #e8e8e8;
+}
+
+#editor-scroll-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 6px;
+  border: 3px solid #e8e8e8;
+}
+
+#editor-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Format painter cursor */
+.format-painter-active .ProseMirror {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M2 6l6 6'/%3E%3Cpath d='M14 4l4 4-8 8H6v-4l8-8z'/%3E%3C/svg%3E") 0 16, crosshair;
+}
+
+
+#editor-scroll-container {
+  height: 100%;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+#editor-scroll-container .ProseMirror {
+  min-height: calc(1056px - 144px);
+}
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    overflow: visible !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* UI hide */
+  header,
+  nav,
+  .status-bar,
+  .ribbon,
+  .print-hide {
+    display: none !important;
+  }
+
+  /* only editor area print */
+  #editor-scroll-container {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #editor-scroll-container > div {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    transform: none !important;
+    zoom: 1 !important;
+    overflow: visible !important;
+    page-break-after: avoid !important;
+    break-after: avoid-page !important;
+  }
+
+  .ProseMirror {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    transform: none !important;
+    zoom: 1 !important;
+  }
+
+  .ProseMirror table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .ProseMirror tr,
+  .ProseMirror td,
+  .ProseMirror th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    vertical-align: top !important;
+  }
+
+  .ProseMirror img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+/* ===== Frontend-only exact DOCX editor mode ===== */
+.word-exact-app {
+  font-family: Calibri, Arial, sans-serif;
+}
+
+.word-tool-btn {
+  min-height: 42px;
+  min-width: 54px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10px;
+  color: #1f2937;
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.word-tool-btn.compact {
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px;
+}
+
+.word-tool-btn:hover:not(:disabled) {
+  background: #deeaf6;
+  border-color: #b7cbe5;
+}
+
+.word-tool-btn:disabled {
+  opacity: .38;
+  cursor: not-allowed;
+}
+
+.word-sep {
+  width: 1px;
+  height: 34px;
+  background: #cfcfcf;
+  margin: 0 4px;
+}
+
+.word-exact-host {
+  --word-exact-zoom: 1;
+  min-height: 100%;
+}
+
+.word-exact-host .docx-wrapper {
+  background: #e8e8e8 !important;
+  padding: 24px 0 48px !important;
+  transform: scale(var(--word-exact-zoom));
+  transform-origin: top center;
+}
+
+.word-exact-host .docx {
+  color: #000;
+}
+
+.word-exact-host .docx section {
+  background: white !important;
+  outline: none !important;
+  cursor: text;
+}
+
+.word-exact-host .docx section:focus,
+.word-exact-host .docx [contenteditable="true"]:focus {
+  outline: 1px solid rgba(37, 99, 235, .35) !important;
+}
+
+.word-exact-host table {
+  border-collapse: collapse;
+}
+
+.word-exact-host p {
+  margin-top: 0;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  .word-exact-app,
+  .word-exact-scroll,
+  .word-exact-host {
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  .word-exact-host .docx-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+    transform: none !important;
+  }
+
+  .word-exact-host .docx section {
+    box-shadow: none !important;
+    margin: 0 !important;
+    page-break-after: always;
+  }
+}
+
+/* extra controls for WordExactClientEditor */
+.word-mini-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border:1px solid #ddd;border-radius:6px;background:#fff;min-height:34px}
+.word-select{height:30px;border:1px solid #cfcfcf;border-radius:5px;padding:0 6px;font-size:12px;background:white}
+.word-color{width:32px;height:30px;border:1px solid #cfcfcf;border-radius:5px;background:white;padding:2px}
+.word-ruler{height:18px;background:repeating-linear-gradient(to right,#f7f7f7 0,#f7f7f7 9px,#d4d4d4 10px);border-bottom:1px solid #ccc;position:sticky;top:0;z-index:5}
+.word-find-box{position:absolute;right:18px;top:18px;z-index:50;width:280px;background:white;border:1px solid #cfcfcf;box-shadow:0 8px 24px rgba(0,0,0,.18);border-radius:10px;padding:12px;font-size:12px}
+.word-find-input{width:100%;border:1px solid #cfcfcf;border-radius:6px;padding:7px 8px;margin-top:6px;outline:none}
+.word-small-blue{background:#185ABD;color:white;border-radius:6px;padding:6px 10px;font-size:12px}
+.word-gridlines .docx section{background-image:linear-gradient(rgba(24,90,189,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(24,90,189,.08) 1px,transparent 1px)!important;background-size:24px 24px!important}
+
+/* ===== Word exact editor: imported/inserted table controls ===== */
+.word-table-picker {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 11px;
+  color: #374151;
+}
+
+.word-table-picker input {
+  width: 48px;
+  height: 28px;
+  border: 1px solid #c7c7c7;
+  border-radius: 5px;
+  padding: 0 5px;
+  outline: none;
+  font-size: 12px;
+}
+
+.word-table-hint {
+  align-self: center;
+  font-size: 11px;
+  color: #6b7280;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.word-exact-app.word-show-table-borders .word-exact-host .docx table,
+.word-exact-app.word-show-table-borders .word-exact-host table.word-doc-table {
+  border-collapse: collapse !important;
+}
+
+.word-exact-app.word-show-table-borders .word-exact-host .docx table td,
+.word-exact-app.word-show-table-borders .word-exact-host .docx table th,
+.word-exact-app.word-show-table-borders .word-exact-host table.word-doc-table td,
+.word-exact-app.word-show-table-borders .word-exact-host table.word-doc-table th {
+  border: 1px solid #6b7280 !important;
+  min-width: 48px;
+  min-height: 22px;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+.word-exact-host .word-editable-cell {
+  position: relative;
+  outline: none;
+}
+
+.word-exact-host .word-editable-cell:focus,
+.word-exact-host .word-active-cell {
+  outline: 2px solid #185ABD !important;
+  outline-offset: -2px;
+  background-color: rgba(24, 90, 189, 0.08) !important;
+}
+
+.word-exact-host table.word-doc-table p,
+.word-exact-host .docx table p {
+  margin: 0;
+}
+
+.word-exact-host table.word-doc-table td > *,
+.word-exact-host table.word-doc-table th > *,
+.word-exact-host .docx table td > *,
+.word-exact-host .docx table th > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+@media print {
+  .word-exact-app.word-show-table-borders .word-exact-host .docx table td,
+  .word-exact-app.word-show-table-borders .word-exact-host .docx table th,
+  .word-exact-app.word-show-table-borders .word-exact-host table.word-doc-table td,
+  .word-exact-app.word-show-table-borders .word-exact-host table.word-doc-table th {
+    border: 1px solid #000 !important;
+  }
+
+  .word-exact-host .word-active-cell {
+    outline: none !important;
+    background: transparent !important;
+  }
+}

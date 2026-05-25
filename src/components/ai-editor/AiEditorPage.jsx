@@ -3,6 +3,7 @@ import Ribbon from "./Ribbon";
 import EditorCore from "./EditorCore";
 import FindReplace from "./FindReplace";
 import StatusBar from "./StatusBar";
+import SubmitDialog from "./SubmitDialog";
 import {
   DEFAULT_DOCUMENT_CONTENT,
   DEFAULT_DOCUMENT_TITLE,
@@ -32,10 +33,10 @@ const AiEditorPage = () => {
   const [showGridlines, setShowGridlines] = useState(false);
   const [showStatusBar, setShowStatusBar] = useState(true);
   const [lastSavedAt, setLastSavedAt] = useState(initialDraft?.savedAt ? new Date(initialDraft.savedAt) : null);
+  const [submitOpen, setSubmitOpen] = useState(false);
   const formatPainterMarks = useRef(null);
 
   const handleEditorReady = useCallback((ed) => { setEditor(ed); }, []);
-
   const handleContentChange = useCallback((payload) => { setDocumentHtml(payload.html); }, []);
 
   const handleSaveDraft = useCallback(() => {
@@ -55,8 +56,7 @@ const AiEditorPage = () => {
       const textStyle = editor.getAttributes("textStyle");
       if (textStyle.fontFamily) marks.fontFamily = textStyle.fontFamily;
       if (textStyle.fontSize) marks.fontSize = textStyle.fontSize;
-      const color = editor.getAttributes("textStyle").color;
-      if (color) marks.color = color;
+      if (textStyle.color) marks.color = textStyle.color;
       formatPainterMarks.current = marks;
       setFormatPainterActive(true);
     } else {
@@ -111,7 +111,7 @@ const AiEditorPage = () => {
   const handleFindOpen = useCallback((mode) => { setFindReplaceMode(mode); setFindReplaceOpen(true); }, []);
 
   return (
-    <div className="h-screen min-h-0 flex flex-col bg-[#E8E8E8] overflow-hidden">
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, display: "flex", flexDirection: "column", background: "#E8E8E8", fontFamily: "Segoe UI, sans-serif" }}>
       <Ribbon
         editor={editor}
         documentTitle={documentTitle}
@@ -120,6 +120,7 @@ const AiEditorPage = () => {
         onFormatPainterToggle={handleFormatPainterToggle}
         onFindOpen={handleFindOpen}
         onSaveDraft={handleSaveDraft}
+        onSubmit={() => setSubmitOpen(true)}
         showRuler={showRuler}
         onToggleRuler={() => setShowRuler((v) => !v)}
         showGridlines={showGridlines}
@@ -127,11 +128,17 @@ const AiEditorPage = () => {
         showStatusBar={showStatusBar}
         onToggleStatusBar={() => setShowStatusBar((v) => !v)}
       />
-      <div className="flex-1 min-h-0 relative overflow-hidden">
+      <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
         <FindReplace editor={editor} isOpen={findReplaceOpen} onClose={() => setFindReplaceOpen(false)} mode={findReplaceMode} />
         <EditorCore onEditorReady={handleEditorReady} onContentChange={handleContentChange} initialContent={documentHtml} zoom={zoom} showRuler={showRuler} showGridlines={showGridlines} />
       </div>
       {showStatusBar && <StatusBar editor={editor} zoom={zoom} onZoomChange={setZoom} saveStatusLabel={formatSavedAt(lastSavedAt)} />}
+      <SubmitDialog
+        open={submitOpen}
+        onClose={() => setSubmitOpen(false)}
+        documentTitle={documentTitle}
+        documentHtml={editor?.getHTML() || documentHtml}
+      />
     </div>
   );
 };

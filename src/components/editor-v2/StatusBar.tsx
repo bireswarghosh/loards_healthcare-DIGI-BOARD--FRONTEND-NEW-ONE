@@ -1,7 +1,15 @@
 import React from "react";
+import { Editor } from "@tiptap/react";
 import { Minus, Plus, ZoomIn } from "lucide-react";
 
-const StatusBar = ({ editor, zoom, onZoomChange, saveStatusLabel }) => {
+interface StatusBarProps {
+  editor: Editor | null;
+  zoom: number;
+  onZoomChange: (zoom: number) => void;
+  saveStatusLabel: string;
+}
+
+const StatusBar: React.FC<StatusBarProps> = ({ editor, zoom, onZoomChange, saveStatusLabel }) => {
   const text = editor?.getText() || "";
   const words = text.trim().split(/\s+/).filter(Boolean).length;
   const chars = text.length;

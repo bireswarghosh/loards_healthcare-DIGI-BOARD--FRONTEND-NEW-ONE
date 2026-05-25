@@ -19,7 +19,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import axiosInstance from "../../axiosInstance";
 import { toast } from "react-toastify";
 import JsBarcode from "jsbarcode";
-import DocumentEditor from "../../components/editor/DocumentEditor";
+import WordExactClientEditor from "../../components/editor-v2/WordExactClientEditor";
 
 const CaseTestDataModal = ({
   open,
@@ -330,15 +330,24 @@ window.addEventListener('beforeprint',function(){
 </html>`;
   };
 
-  /* ================= PRINT (WYSIWYG - editor CSS embedded) ================= */
+  /* ================= PRINT (new editor - word-editor-v2 style) ================= */
   const doPrint = (target) => {
-    const editorSurface = document.querySelector(".ProseMirror");
-    if (!editorSurface) return;
-    const cloned = editorSurface.cloneNode(true);
+    // Get content from WordExactClientEditor's section
+    const section = document.querySelector(".word-exact-host .docx section") || document.querySelector(".word-exact-host");
+    if (!section) return;
+    const cloned = section.cloneNode(true);
     cloned.removeAttribute("contenteditable");
-    cloned.removeAttribute("role");
+    cloned.removeAttribute("spellcheck");
+    cloned.querySelectorAll("[contenteditable]").forEach(el => el.removeAttribute("contenteditable"));
+    cloned.querySelectorAll("[spellcheck]").forEach(el => el.removeAttribute("spellcheck"));
+
     const signatureBase64 = (SubDepartmentId == 19 || SubDepartmentId == 21) ? "" : (pathologist?.SignatureBase64 || (pathologist?.Signature ? getSignatureBase64(pathologist.Signature) : ""));
-    if (signatureBase64) { const sigDiv = document.createElement("div"); sigDiv.style.cssText = `position:fixed;bottom:65mm;${Number(pathologist?.PathologistId) === 3 ? 'left:10mm' : Number(pathologist?.PathologistId) === 4 ? 'left:80mm' : 'right:10mm'};text-align:center;`; sigDiv.innerHTML = `<img src="${signatureBase64}" style="height:65px;"/>`; cloned.appendChild(sigDiv); }
+    if (signatureBase64) {
+      const sigDiv = document.createElement("div");
+      sigDiv.style.cssText = `position:fixed;bottom:65mm;${Number(pathologist?.PathologistId) === 3 ? 'left:10mm' : Number(pathologist?.PathologistId) === 4 ? 'left:80mm' : 'right:10mm'};text-align:center;`;
+      sigDiv.innerHTML = `<img src="${signatureBase64}" style="height:65px;"/>`;
+      cloned.appendChild(sigDiv);
+    }
     const isCardioOrUSG = (SubDepartmentId == 19 || SubDepartmentId == 21);
     const topPad = isCardioOrUSG ? "20mm" : "50mm";
     const printHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Print</title>
@@ -346,17 +355,17 @@ window.addEventListener('beforeprint',function(){
 @page{size:A4;margin:0}
 *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 html,body{margin:0;padding:0;background:#fff;overflow:visible!important;height:auto!important}
-#print-root{width:210mm;margin:0;padding:${topPad} 8mm 10mm 8mm;background:#fff;overflow:visible!important}
-.ProseMirror{outline:none!important;min-height:auto!important;padding:0!important;margin:0!important;font-family:Calibri,sans-serif;font-size:11pt;line-height:1.15;overflow:visible!important;white-space:pre-wrap;word-wrap:break-word;width:100%!important;height:auto!important;max-height:none!important;border:0!important;box-shadow:none!important;transform:none!important;background:transparent!important}
-.ProseMirror table{border-collapse:collapse;width:100%}
-.ProseMirror td,.ProseMirror th{border:1px solid #999;padding:6px 8px;vertical-align:top;white-space:pre-wrap}
-.ProseMirror img{max-width:100%;height:auto}
-.ProseMirror p{margin:0 0 3px}
-.ProseMirror hr{border:none;border-top:2px solid #000;margin:8px 0}
-.ProseMirror strong,.ProseMirror b{font-weight:bold}
-.ProseMirror h1{font-size:2em;margin:6px 0}.ProseMirror h2{font-size:1.5em;margin:6px 0}.ProseMirror h3{font-size:1.17em;margin:5px 0}
-.ProseMirror ul,.ProseMirror ol{padding-left:18px;margin:3px 0}
-.ProseMirror mark,[style*="background"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#print-root{width:210mm;margin:0;padding:${topPad} 8mm 10mm 8mm;background:#fff;overflow:visible!important;font-family:Calibri,sans-serif;font-size:11pt;line-height:1.15;color:#000}
+#print-root p{margin:0 0 3px}
+#print-root table{border-collapse:collapse;width:100%}
+#print-root td,#print-root th{border:1px solid #999;padding:4px 6px;vertical-align:top}
+#print-root img{max-width:100%;height:auto}
+#print-root hr{border:none;border-top:2px solid #000;margin:8px 0}
+#print-root strong,#print-root b{font-weight:bold}
+#print-root h1{font-size:2em;margin:6px 0}
+#print-root h2{font-size:1.5em;margin:6px 0}
+#print-root h3{font-size:1.17em;margin:5px 0}
+#print-root ul,#print-root ol{padding-left:18px;margin:3px 0}
 @media print{html,body{margin:0!important;padding:0!important;background:#fff!important}#print-root{width:210mm!important;margin:0!important;padding:${topPad} 8mm 10mm 8mm!important;background:#fff!important;overflow:visible!important}}
 </style></head><body>
 <div id="print-root"></div>
@@ -365,7 +374,12 @@ html,body{margin:0;padding:0;background:#fff;overflow:visible!important;height:a
     target.document.open();
     target.document.write(printHtml);
     target.document.close();
-    const mount = () => { const root = target.document.getElementById("print-root"); if (!root) { setTimeout(mount, 50); return; } root.innerHTML = ""; root.appendChild(cloned); };
+    const mount = () => {
+      const root = target.document.getElementById("print-root");
+      if (!root) { setTimeout(mount, 50); return; }
+      root.innerHTML = "";
+      root.appendChild(cloned);
+    };
     mount();
   };
 
@@ -421,12 +435,12 @@ html,body{margin:0;padding:0;background:#fff;overflow:visible!important;height:a
           <button className="btn-close" onClick={onClose}></button>
         </div>
 
-        {/* BODY - DocumentEditor (same DOCX-style as /test-editor) */}
-        <div style={{ flex: 1, overflow: "hidden" }}>
-          <DocumentEditor
+        {/* BODY - WordExactClientEditor (same as /word-editor-v2) */}
+        <div style={{ flex: '1 1 0%', minHeight: 0, overflow: 'hidden' }}>
+          <WordExactClientEditor
             key={editorKey}
-            initialContent={editorInitHtml || buildEditorContent(formData.htmlContent || htmlContent || "")}
-            documentTitle={`Case ${caseId} - Test ${testId}`}
+            initialTitle={`Case ${caseId} - Test ${testId}`}
+            initialHtml={editorInitHtml || buildEditorContent(formData.htmlContent || htmlContent || "")}
             onSave={(data) => {
               editorContentRef.current = data.html;
               handleSubmit();
@@ -434,11 +448,12 @@ html,body{margin:0;padding:0;background:#fff;overflow:visible!important;height:a
             onContentChange={(html) => {
               editorContentRef.current = html;
             }}
+            onPrint={handlePrint}
           />
         </div>
 
         {/* FOOTER */}
-        <div className="d-flex justify-content-end gap-2 px-3 py-2 border-top bg-light">
+        <div className="d-flex justify-content-end gap-2 px-3 py-2 border-top bg-light" style={{ flexShrink: 0 }}>
           <button
             className="btn btn-success"
             onClick={handleSubmit}
