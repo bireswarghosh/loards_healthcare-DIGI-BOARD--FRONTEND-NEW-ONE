@@ -1032,13 +1032,15 @@ const handlePrint = (data) => {
 
            
             <div class="text-center">
-               <h1 class="hospital-title">${data.hospital.name}</h1>
-               <div class="hospital-details">
-                  ${data.hospital.address}<br>
-                  Phone No.: ${data.hospital.phone} HELPLINE - 7003378414, Toll Free No. 1800-309-0895<br>
-                  E-mail: ${data.hospital.email}, Website: ${data.hospital.website}
-               </div>
-            </div>
+                <h1 class="hospital-title">${data.hospital.name}</h1>
+                <div class="hospital-details" style="font-size: 11px; line-height: 1.4;">
+                   <b>(A Unit of MJJ Enterprises Pvt. Ltd.)</b><br>
+                   13/3, Circular 2nd Bye Lane, Kona Expressway,<br>
+                   (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.<br>
+                   Phone No.: ${data.hospital.phone}<br>
+                   E-mail: ${data.hospital.email}
+                </div>
+             </div>
             <div class="barcode-box">
    <canvas id="qrcode"></canvas>
 </div>
@@ -2905,12 +2907,12 @@ window.onload = function () {
                       barcodeValue: formData.AdmitionNo,
                     },
                     hospital: {
-                      name: "LORDS HEALTH CARE",
+                      name: "LORDS HEALTH CARE (NURSING HOME)",
                       address:
-                        "13/3, Circular 2nd Bye Lane, Kona Expressway, Nabanna (Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.",
-                      phone: "8272904444",
+                        "13/3, Circular 2nd Bye Lane, Kona Expressway,\n(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.",
+                      phone: "8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895",
                       email: "patientdesk@lordshealthcare.org",
-                      website: "www.lordshealthcare.org",
+                      website: "",
                     },
                     patient: {
                       name: formData.PatientName,

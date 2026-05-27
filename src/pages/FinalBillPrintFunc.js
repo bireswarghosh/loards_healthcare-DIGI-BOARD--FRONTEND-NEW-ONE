@@ -163,12 +163,12 @@ export const handlePrint1 = (data) => {
           </div> -->
 
            <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
-          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-pvt">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
           <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
-          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</div>
           <div class="company-contact">
 E-mail: patientdesk@lordshealthcare.org <br>
-Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
           </div>
         </td>
      
@@ -563,12 +563,12 @@ export const handlePrint2 = (invoiceData) => {
 
     <td class="company-info">
       <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
-      <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+      <div class="company-pvt">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
       <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
-      <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+      <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</div>
       <div class="company-contact">
         E-mail: patientdesk@lordshealthcare.org <br>
-        Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+        Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
       </div>
     </td>
 
@@ -744,12 +744,12 @@ export const handlePrint3 = (data) => {
           </div> -->
 
            <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
-          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-pvt">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
           <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
-          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</div>
           <div class="company-contact">
 E-mail: patientdesk@lordshealthcare.org <br>
-Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
           </div>
         </td>
      
@@ -1090,12 +1090,12 @@ export const handlePrint4 = (data) => {
           </div> -->
 
            <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
-          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-pvt">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
           <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
-          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</div>
           <div class="company-contact">
 E-mail: patientdesk@lordshealthcare.org <br>
-Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
           </div>
         </td>
      
@@ -1430,12 +1430,12 @@ export const handlePrint5 = (data) => {
           </div> -->
 
            <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
-          <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+          <div class="company-pvt">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
           <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
-          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
+          <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</div>
           <div class="company-contact">
 E-mail: patientdesk@lordshealthcare.org <br>
-Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895
+Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
           </div>
         </td>
      
@@ -1801,10 +1801,10 @@ export const handlePrint7 = (data) => {
       <td><img src="/assets/lords.png" style="width:80px;" /></td>
       <td class="company-info">
         <h1 class="company-name">LORDS HEALTH CARE (NURSING HOME)</h1>
-        <div class="company-pvt">(A UNIT of MJJ Enterprises Pvt. Ltd.)</div>
+        <div class="company-pvt">(A Unit of MJJ Enterprises Pvt. Ltd.)</div>
         <div class="company-address">13/3, Circular 2nd Bye Lane, Kona Expressway,</div>
-        <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711102, W.B.</div>
-        <div class="company-contact">E-mail: patientdesk@lordshealthcare.org<br>Phone: 8272904444 | Helpline: 7003378414 | Toll Free: 1800-309-0895</div>
+        <div class="company-address">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</div>
+        <div class="company-contact">E-mail: patientdesk@lordshealthcare.org<br>Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895</div>
       </td>
       <td><img src="/assets/nabh.png" style="width:120px;" /></td>
     </tr></table>
@@ -2070,10 +2070,11 @@ export function handleprint6(otObjDetails, otChargeDetails) {
        <div class="logo-placeholder"> <img src="/assets/lords.png" style="width:80px;" /> </div>
         <div>
           <h1>LORDS HEALTH CARE (NURSING HOME)</h1>
-          <p>13/3, Circular 2nd Bye Lane, Kona Expressway,</p>
-          <p>(Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.</p>
-          <p>Phone No.: 8272904444 HELPLINE - 7003378414</p>
-          <p>E-mail:patientdesk@lordshealthcare.org, Website: www.lordshealthcare.org</p>
+          <p style="font-weight: bold; margin: 2px 0;">(A Unit of MJJ Enterprises Pvt. Ltd.)</p>
+          <p style="margin: 2px 0;">13/3, Circular 2nd Bye Lane, Kona Expressway,</p>
+          <p style="margin: 2px 0;">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</p>
+          <p style="margin: 2px 0;">Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895</p>
+          <p style="margin: 2px 0;">E-mail: patientdesk@lordshealthcare.org</p>
           <div class="doc-title">O.T. BREAK UP</div>
         </div>
       </div>

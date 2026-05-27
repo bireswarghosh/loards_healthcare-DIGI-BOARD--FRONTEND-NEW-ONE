@@ -48,7 +48,6 @@ const SampleReceipt = () => {
         page: pagination.page,
         limit: pagination.limit,
         allReceipt,
-        allReceipt:false,
         refund,
         search: searchTerm || searchReceiptNo || searchRefId,
         ...(searchName && { patientName: searchName }),
@@ -99,7 +98,7 @@ const SampleReceipt = () => {
 <button className="btn btn-success" onClick={() => {
  navigate('/initialFormData') 
 }
-}><i class="fa-solid fa-plus"></i>Add</button>
+}><i className="fa-solid fa-plus"></i>Add</button>
           <button className="btn btn-sm btn-primary">List</button>
           <button className="btn btn-sm btn-outline-light">Detail</button>
           <button
@@ -193,7 +192,7 @@ const SampleReceipt = () => {
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
               /> */}
-              <button className="btn btn-sm btn-primary mt-4 me-2" onClick={() => fetchReceipts(dateFrom, dateTo)}><i class="fas fa-search"></i> Search</button>
+              <button className="btn btn-sm btn-primary mt-4 me-2" onClick={() => fetchReceipts(dateFrom, dateTo)}><i className="fas fa-search"></i> Search</button>
 
               <button className="btn btn-sm btn-primary mt-4" onClick={() => {
                 setDateFrom(new Date(Date.now()).toISOString().slice(0, 10));

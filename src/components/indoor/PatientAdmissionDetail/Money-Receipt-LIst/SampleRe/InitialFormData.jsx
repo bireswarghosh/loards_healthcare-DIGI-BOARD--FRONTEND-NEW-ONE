@@ -570,11 +570,12 @@ function convertAmountToWords(amount) {
 
   <!-- Center: Title -->
   <div style="text-align:center; flex:1; margin:0 3px;">
-    <h1 style="margin:0; font-size:22px;">LORDS HEALTH CARE</h1>
-    <p style="margin:1px 0;">13/3, Circular 2nd Bye Lane, Kona Expressway, Nabanna</p>
-    <p style="margin:1px 0;">(Near Jumanabala Balika Vidyalaya) Shibpur, Howrah - 711 102, W.B.</p>
-    <p style="margin:1px 0;">Phone No.: 8272904444 • HELPLINE: 7003378414 • Toll Free: 1800-309-0895</p>
-    <p style="margin:1px 0;">E-mail: patientdesk@lordshealthcare.org | Website: www.lordshealthcare.org</p>
+    <h1 style="margin:0; font-size:22px;">LORDS HEALTH CARE (NURSING HOME)</h1>
+    <p style="margin:1px 0; font-weight: bold;">(A Unit of MJJ Enterprises Pvt. Ltd.)</p>
+    <p style="margin:1px 0;">13/3, Circular 2nd Bye Lane, Kona Expressway,</p>
+    <p style="margin:1px 0;">(Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.</p>
+    <p style="margin:1px 0;">Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895</p>
+    <p style="margin:1px 0;">E-mail: patientdesk@lordshealthcare.org</p>
   </div>
 
   <!-- Right: Barcode -->
