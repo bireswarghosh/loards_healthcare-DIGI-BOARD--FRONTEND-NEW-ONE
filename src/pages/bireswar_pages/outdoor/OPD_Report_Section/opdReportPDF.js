@@ -1,10 +1,10 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-export const generateOpdReportPDF = (data, activeTab, fromDate, toDate, summary, groupBy = '') => {
-  // If grouping is active and we are in the Visit tab, generate the special portrait grouped report
-  if (activeTab === 'visit' && groupBy) {
-    generateGroupedPortraitPDF(data, fromDate, toDate, groupBy);
+export const generateOpdReportPDF = (data, activeTab, fromDate, toDate, summary, groupBy = '', subGroupBy = '') => {
+  // If grouping is active, generate the special portrait grouped report
+  if (groupBy) {
+    generateGroupedPortraitPDF(data, fromDate, toDate, groupBy, subGroupBy, activeTab);
     return;
   }
 
@@ -179,7 +179,83 @@ export const generateOpdReportPDF = (data, activeTab, fromDate, toDate, summary,
 // ==========================================================================
 // GENERATES A GROUPED REPORT (A4 PORTRAIT) MATCHING THE USER'S PRINT LAYOUT
 // ==========================================================================
-const generateGroupedPortraitPDF = (data, fromDate, toDate, groupBy) => {
+const performGrouping = (list, key) => {
+  let groups = {};
+  if (key === 'payment') {
+    groups = {
+      'CASH': list.filter(r => String(r.PaymentType) === '0'),
+      'UPI': list.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1'),
+      'BANK': list.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4'),
+      'OTHERS': list.filter(r => !['0', '1', '2', '3', '4'].includes(String(r.PaymentType)))
+    };
+  } else if (key === 'doctor') {
+    const uniqueDocs = [...new Set(list.map(r => r.DoctorName).filter(Boolean))].sort();
+    uniqueDocs.forEach(docName => {
+      groups[docName.toUpperCase()] = list.filter(r => r.DoctorName === docName);
+    });
+    if (list.some(r => !r.DoctorName)) {
+      groups['NO DOCTOR ASSIGNED'] = list.filter(r => !r.DoctorName);
+    }
+  } else if (key === 'user') {
+    const uniqueUsers = [...new Set(list.map(r => r.UserName).filter(Boolean))].sort();
+    uniqueUsers.forEach(userName => {
+      groups[`USER: ${userName.toUpperCase()}`] = list.filter(r => r.UserName === userName);
+    });
+    if (list.some(r => !r.UserName)) {
+      groups['NO USER ASSIGNED'] = list.filter(r => !r.UserName);
+    }
+  } else if (key === 'date') {
+    const uniqueDates = [...new Set(list.map(r => r.OutBillDate ? r.OutBillDate.split('T')[0] : (r.PVisitDate ? r.PVisitDate.split('T')[0] : (r.RegDate ? r.RegDate.split('T')[0] : 'NO DATE'))))].sort();
+    uniqueDates.forEach(dVal => {
+      groups[dVal] = list.filter(r => (r.OutBillDate ? r.OutBillDate.split('T')[0] : (r.PVisitDate ? r.PVisitDate.split('T')[0] : r.RegDate.split('T')[0])) === dVal);
+    });
+  } else if (key === 'patient') {
+    const uniquePatients = [...new Set(list.map(r => r.PatientName).filter(Boolean))].sort();
+    uniquePatients.forEach(pName => {
+      groups[pName.toUpperCase()] = list.filter(r => r.PatientName === pName);
+    });
+  } else if (key === 'sex') {
+    groups = {
+      'MALE': list.filter(r => r.Sex === 'M' || r.Sex?.toLowerCase() === 'male'),
+      'FEMALE': list.filter(r => r.Sex === 'F' || r.Sex?.toLowerCase() === 'female'),
+      'OTHERS': list.filter(r => !['M', 'F', 'male', 'female'].includes(String(r.Sex)))
+    };
+  } else if (key === 'address') {
+    const uniqueAddrs = [...new Set(list.map(r => r.Add1).filter(Boolean))].sort();
+    uniqueAddrs.forEach(addr => {
+      groups[addr.toUpperCase()] = list.filter(r => r.Add1 === addr);
+    });
+    if (list.some(r => !r.Add1)) {
+      groups['NO ADDRESS PROVIDED'] = list.filter(r => !r.Add1);
+    }
+  } else if (key === 'charge') {
+    const uniqueCharges = new Set();
+    list.forEach(r => {
+      (r.items || []).forEach(item => {
+        const name = item.ChargeName || item.OtherCharge;
+        if (name) uniqueCharges.add(name.trim().toUpperCase());
+      });
+    });
+    const sortedCharges = [...uniqueCharges].sort();
+    sortedCharges.forEach(cName => {
+      groups[cName] = list.filter(r => 
+        (r.items || []).some(item => 
+          (item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === cName
+        )
+      );
+    });
+  }
+  
+  // Clean empty groups
+  Object.keys(groups).forEach(g => {
+    if (groups[g].length === 0 && key !== 'payment' && key !== 'sex') {
+      delete groups[g];
+    }
+  });
+  return groups;
+};
+
+const generateGroupedPortraitPDF = (data, fromDate, toDate, groupBy, subGroupBy = '', activeTab = 'visit') => {
   const doc = new jsPDF('p', 'mm', 'a4');
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -195,140 +271,281 @@ const generateGroupedPortraitPDF = (data, fromDate, toDate, groupBy) => {
   doc.setLineWidth(0.3);
   doc.line(m, 12, W - m, 12);
 
-  // Group the data
-  let groups = {};
-  if (groupBy === 'payment') {
-    groups = {
-      'CASH': data.filter(r => String(r.PaymentType) === '0'),
-      'UPI': data.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1'),
-      'BANK': data.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4'),
-      'OTHERS': data.filter(r => !['0', '1', '2', '3', '4'].includes(String(r.PaymentType)))
-    };
-  } else if (groupBy === 'doctor') {
-    // Unique list of doctors
-    const uniqueDocs = [...new Set(data.map(r => r.DoctorName).filter(Boolean))].sort();
-    uniqueDocs.forEach(docName => {
-      groups[docName.toUpperCase()] = data.filter(r => r.DoctorName === docName);
-    });
-    if (data.some(r => !r.DoctorName)) {
-      groups['NO DOCTOR ASSIGNED'] = data.filter(r => !r.DoctorName);
-    }
-  } else if (groupBy === 'user') {
-    // Unique list of users
-    const uniqueUsers = [...new Set(data.map(r => r.UserName).filter(Boolean))].sort();
-    uniqueUsers.forEach(userName => {
-      groups[`USER: ${userName.toUpperCase()}`] = data.filter(r => r.UserName === userName);
-    });
-    if (data.some(r => !r.UserName)) {
-      groups['NO USER ASSIGNED'] = data.filter(r => !r.UserName);
-    }
-  }
+  // Group primary data
+  const primaryGroups = performGrouping(data, groupBy);
 
-  let y = 16;
-  const columns = ['Reg Id', 'Date', 'Patient', 'Paid', 'Trans Num'];
+  let columns = [];
+  let getRowData = (r) => [];
+  let colStyles = {};
 
-  Object.entries(groups).forEach(([groupName, items]) => {
-    // Do not render empty sections unless it's Payment-wise Grouping (user wants to see CASH, UPI, BANK even if empty!)
-    if (items.length === 0 && groupBy !== 'payment') return;
-
-    // Check page overflow before drawing
-    if (y > H - 45) {
-      doc.addPage();
-      y = 16;
-    }
-
-    // Draw Group Banner/Header
-    doc.setFillColor(235, 235, 235);
-    doc.rect(m, y, W - (m * 2), 6, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(0, 0, 0);
-    doc.text(groupName, m + 2, y + 4.2);
-    y += 8;
-
-    // Create rows
-    const rows = items.map(r => [
+  if (activeTab === 'visit') {
+    columns = ['Reg Id', 'Date', 'Patient', 'Paid', 'Trans Num'];
+    getRowData = (r) => [
       r.RegistrationId || '-',
       r.PVisitDate ? r.PVisitDate.split('T')[0] : '-',
       r.PatientName || '-',
       Number(r.RecAmt || 0).toFixed(2),
       r.Cheque || '-'
-    ]);
-
-    // Draw Table
-    autoTable(doc, {
-      head: [columns],
-      body: rows,
-      startY: y,
-      theme: 'plain',
-      styles: { fontSize: 7.5, cellPadding: 2, textColor: [0, 0, 0], fontStyle: 'normal' },
-      headStyles: { fontStyle: 'bold', borderBottom: '1px solid black', cellPadding: 2 },
-      columnStyles: {
-        0: { cellWidth: 35 },
-        1: { cellWidth: 28 },
-        2: { cellWidth: 65 },
-        3: { cellWidth: 25, halign: 'right' },
-        4: { cellWidth: 33, halign: 'center' }
-      },
-      margin: { left: m, right: m },
-      didAnimateRow: (d) => {},
-    });
-
-    y = doc.lastAutoTable.finalY + 2;
-
-    // Calculate subtotal
-    const subtotal = items.reduce((s, x) => s + Number(x.RecAmt || 0), 0);
-
-    // Group Total Row (aligned perfectly to right column)
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.text('TOTAL', W - m - 45, y + 3, { align: 'right' });
-    doc.text(subtotal.toFixed(2), W - m - 33, y + 3, { align: 'right' });
-    
-    y += 8; // Offset for next section
-  });
-
-  // Calculate final summary card variables
-  const grandTotal = data.reduce((s, x) => s + Number(x.RecAmt || 0), 0);
-  const cashCol = data.filter(r => String(r.PaymentType) === '0').reduce((s, x) => s + Number(x.RecAmt || 0), 0);
-  const upiCol = data.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1').reduce((s, x) => s + Number(x.RecAmt || 0), 0);
-  const bankCol = data.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4').reduce((s, x) => s + Number(x.RecAmt || 0), 0);
-  const otherCol = grandTotal - (cashCol + upiCol + bankCol);
-
-  // Draw final summary box on bottom right
-  if (y > H - 55) {
-    doc.addPage();
-    y = 20;
-  } else {
-    y = H - 50;
+    ];
+    colStyles = {
+      0: { cellWidth: 35 },
+      1: { cellWidth: 28 },
+      2: { cellWidth: 65 },
+      3: { cellWidth: 25, halign: 'right' },
+      4: { cellWidth: 33, halign: 'center' }
+    };
+  } else if (activeTab === 'otherCharges') {
+    columns = ['Bill No', 'Date', 'Patient', 'Paid', 'Due'];
+    getRowData = (r) => [
+      r.OutBillNo || '-',
+      r.OutBillDate ? r.OutBillDate.split('T')[0] : '-',
+      r.PatientName || '-',
+      Number(r.paidamt || 0).toFixed(2),
+      Number(r.dueamt || 0).toFixed(2)
+    ];
+    colStyles = {
+      0: { cellWidth: 35 },
+      1: { cellWidth: 28 },
+      2: { cellWidth: 65 },
+      3: { cellWidth: 28, halign: 'right' },
+      4: { cellWidth: 30, halign: 'right' }
+    };
+  } else if (activeTab === 'tableData') {
+    columns = ['Reg Id', 'Date', 'Patient', 'Gender', 'Phone'];
+    getRowData = (r) => [
+      r.RegistrationId || '-',
+      r.RegDate ? r.RegDate.split('T')[0] : '-',
+      r.PatientName || '-',
+      r.Sex === 'M' ? 'Male' : r.Sex === 'F' ? 'Female' : (r.Sex || '-'),
+      r.PhoneNo || '-'
+    ];
+    colStyles = {
+      0: { cellWidth: 40 },
+      1: { cellWidth: 30 },
+      2: { cellWidth: 65 },
+      3: { cellWidth: 22, halign: 'center' },
+      4: { cellWidth: 29, halign: 'center' }
+    };
   }
 
-  const boxW = 85;
-  const boxH = 34;
-  const boxX = W - m - boxW;
-  const boxY = y;
+  let y = 16;
 
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(0);
-  doc.rect(boxX, boxY, boxW, boxH, 'S');
+  if (subGroupBy) {
+    // Nested Grouping Rendering in PDF
+    Object.entries(primaryGroups).forEach(([primaryName, primaryItems]) => {
+      const subGroups = performGrouping(primaryItems, subGroupBy);
+      
+      if (Object.keys(subGroups).length === 0) return;
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
+      // Check page overflow for Primary Header
+      if (y > H - 35) {
+        doc.addPage();
+        y = 16;
+      }
 
-  const lbl = (t, val, offset) => {
-    doc.setFont('helvetica', t === 'Total:' ? 'bold' : 'normal');
-    doc.text(t, boxX + 4, boxY + offset);
-    doc.text(val, boxX + boxW - 4, boxY + offset, { align: 'right' });
-  };
+      // Draw Level 1 Primary Banner Header
+      doc.setFillColor(180, 185, 200); // Steel Blue-grey
+      doc.rect(m, y, W - (m * 2), 6.5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`📁 PRIMARY GROUP: ${primaryName.toUpperCase()}`, m + 2.5, y + 4.5);
+      y += 8.5;
 
-  lbl('Total:', grandTotal.toFixed(2), 6);
-  doc.line(boxX, boxY + 8, boxX + boxW, boxY + 8);
-  lbl('Cash:', cashCol.toFixed(2), 13);
-  lbl('Bank:', bankCol.toFixed(2), 19);
-  lbl('UPI:', upiCol.toFixed(2), 25);
-  doc.line(boxX, boxY + 28, boxX + boxW, boxY + 28);
-  doc.setFont('helvetica', 'bold');
-  lbl('Others:', otherCol.toFixed(2), 32);
+      let primaryTotalPaid = 0;
+
+      Object.entries(subGroups).forEach(([secondaryName, items]) => {
+        if (items.length === 0) return;
+
+        // Check page overflow for Secondary Header
+        if (y > H - 35) {
+          doc.addPage();
+          y = 16;
+        }
+
+        // Draw Level 2 Secondary Banner Header
+        doc.setFillColor(235, 235, 235); // Light grey
+        doc.rect(m, y, W - (m * 2), 5.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(50, 50, 50);
+        doc.text(`↳ SUB-GROUP: ${secondaryName} (${items.length} records)`, m + 4, y + 3.8);
+        y += 7.5;
+
+        // Rows data
+        const rows = items.map(r => getRowData(r));
+        const subgroupTotalPaid = items.reduce((s, x) => {
+          if (subGroupBy === 'charge') {
+            const chargeSum = (x.items || []).reduce((sum, item) => {
+              if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === secondaryName.trim().toUpperCase()) {
+                return sum + Number(item.Amount || 0);
+              }
+              return sum;
+            }, 0);
+            return s + chargeSum;
+          }
+          if (groupBy === 'charge') {
+            const chargeSum = (x.items || []).reduce((sum, item) => {
+              if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === primaryName.trim().toUpperCase()) {
+                return sum + Number(item.Amount || 0);
+              }
+              return sum;
+            }, 0);
+            return s + chargeSum;
+          }
+          return s + Number(x.RecAmt || x.paidamt || 0);
+        }, 0);
+        primaryTotalPaid += subgroupTotalPaid;
+
+        // Draw Table
+        autoTable(doc, {
+          head: [columns],
+          body: rows,
+          startY: y,
+          theme: 'plain',
+          styles: { fontSize: 7.5, cellPadding: 2, textColor: [0, 0, 0], fontStyle: 'normal' },
+          headStyles: { fontStyle: 'bold', borderBottom: '1px solid black', cellPadding: 2 },
+          columnStyles: colStyles,
+          margin: { left: m, right: m }
+        });
+
+        y = doc.lastAutoTable.finalY + 1.5;
+
+        // Secondary Subtotal Row
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.text('SUB-TOTAL', W - m - 45, y + 2.5, { align: 'right' });
+        doc.text(subgroupTotalPaid.toFixed(2), W - m - 33, y + 2.5, { align: 'right' });
+        
+        y += 6.5;
+      });
+
+      // Primary Grand Total Row
+      if (y > H - 20) {
+        doc.addPage();
+        y = 16;
+      }
+      doc.setLineWidth(0.2);
+      doc.line(m, y, W - m, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.text(`TOTAL FOR ${primaryName}`, m + 5, y + 4.5);
+      doc.text(primaryTotalPaid.toFixed(2), W - m - 33, y + 4.5, { align: 'right' });
+      y += 8.5;
+      doc.line(m, y - 2, W - m, y - 2);
+      y += 4;
+    });
+
+  } else {
+    // 1-Level Grouping Rendering in PDF
+    Object.entries(primaryGroups).forEach(([groupName, items]) => {
+      if (items.length === 0 && groupBy !== 'payment' && groupBy !== 'sex') return;
+
+      if (y > H - 35) {
+        doc.addPage();
+        y = 16;
+      }
+
+      // Draw Group Banner/Header
+      doc.setFillColor(230, 230, 230);
+      doc.rect(m, y, W - (m * 2), 6, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(0, 0, 0);
+      doc.text(groupName, m + 2.5, y + 4.2);
+      y += 8;
+
+      const rows = items.map(r => getRowData(r));
+      const subtotal = items.reduce((s, x) => {
+        if (groupBy === 'charge') {
+          const chargeSum = (x.items || []).reduce((sum, item) => {
+            if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === groupName.trim().toUpperCase()) {
+              return sum + Number(item.Amount || 0);
+            }
+            return sum;
+          }, 0);
+          return s + chargeSum;
+        }
+        return s + Number(x.RecAmt || x.paidamt || 0);
+      }, 0);
+
+      // Draw Table
+      autoTable(doc, {
+        head: [columns],
+        body: rows,
+        startY: y,
+        theme: 'plain',
+        styles: { fontSize: 7.5, cellPadding: 2, textColor: [0, 0, 0], fontStyle: 'normal' },
+        headStyles: { fontStyle: 'bold', borderBottom: '1px solid black', cellPadding: 2 },
+        columnStyles: colStyles,
+        margin: { left: m, right: m }
+      });
+
+      y = doc.lastAutoTable.finalY + 1.5;
+
+      // Group Total Row
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.text('TOTAL', W - m - 45, y + 3, { align: 'right' });
+      doc.text(subtotal.toFixed(2), W - m - 33, y + 3, { align: 'right' });
+      
+      y += 8;
+    });
+  }
+
+  // Calculate final summary box on bottom right
+  const grandTotal = data.reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
+  const cashCol = data.filter(r => String(r.PaymentType) === '0').reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
+  const upiCol = data.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1').reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
+  const bankCol = data.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4').reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
+  const otherCol = grandTotal - (cashCol + upiCol + bankCol);
+
+  if (activeTab === 'visit' || activeTab === 'otherCharges') {
+    if (y > H - 55) {
+      doc.addPage();
+      y = 20;
+    } else {
+      y = H - 50;
+    }
+
+    const boxW = 85;
+    const boxH = 34;
+    const boxX = W - m - boxW;
+    const boxY = y;
+
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(0);
+    doc.rect(boxX, boxY, boxW, boxH, 'S');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+
+    const lbl = (t, val, offset) => {
+      doc.setFont('helvetica', t === 'Total:' ? 'bold' : 'normal');
+      doc.text(t, boxX + 4, boxY + offset);
+      doc.text(val, boxX + boxW - 4, boxY + offset, { align: 'right' });
+    };
+
+    lbl('Total:', grandTotal.toFixed(2), 6);
+    doc.line(boxX, boxY + 8, boxX + boxW, boxY + 8);
+    lbl('Cash:', cashCol.toFixed(2), 13);
+    lbl('Bank:', bankCol.toFixed(2), 19);
+    lbl('UPI:', upiCol.toFixed(2), 25);
+    doc.line(boxX, boxY + 28, boxX + boxW, boxY + 28);
+    doc.setFont('helvetica', 'bold');
+    lbl('Others:', otherCol.toFixed(2), 32);
+  } else {
+    // Just Patient Registration count summary
+    if (y > H - 25) {
+      doc.addPage();
+      y = 20;
+    } else {
+      y = H - 20;
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text(`GRAND TOTAL PATIENT REGISTRATIONS: ${data.length}`, m + 5, y + 5);
+  }
 
   // Quick generation complete!
   window.open(doc.output('bloburl'), '_blank');

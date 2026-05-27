@@ -19,6 +19,7 @@ const OpdReportSection = () => {
   const [filterCharge, setFilterCharge] = useState('');
   const [searchText, setSearchText] = useState('');
   const [groupBy, setGroupBy] = useState('');
+  const [subGroupBy, setSubGroupBy] = useState('');
 
   // Lists populated from API
   const [departmentList, setDepartmentList] = useState([]);
@@ -99,7 +100,7 @@ const OpdReportSection = () => {
         res = await axiosInstance.get(`/patient-visits-enhanced/date-range?fromDate=${fromDate}&toDate=${toDate}`);
         setData(res?.data?.data || []);
       } else if (activeTab === 'otherCharges') {
-        res = await axiosInstance.get(`/opd-other-charges/search/advanced?startDate=${fromDate}&endDate=${toDate}&limit=999999999&page=1`);
+        res = await axiosInstance.get(`/opd-other-charges-with-items/search/date-range?startDate=${fromDate}&endDate=${toDate}&limit=999999`);
         setData(res?.data?.data || []);
       } else if (activeTab === 'tableData') {
         res = await axiosInstance.get(`/patient-with-bills?page=1&limit=100&date=${fromDate}`);
@@ -152,7 +153,12 @@ const OpdReportSection = () => {
         d = d.filter(r => r.PatientName?.toLowerCase().includes(s) || r.RegistrationId?.toLowerCase().includes(s) || r.PhoneNo?.includes(s));
       }
     } else if (activeTab === 'otherCharges') {
-      if (filterCharge) d = d.filter(r => r.items?.some(it => String(it.OtherChId) === filterCharge));
+      if (filterCharge) {
+        d = d.filter(r => r.items?.some(it => 
+          it.ChargeName?.toLowerCase() === filterCharge.toLowerCase() || 
+          it.OtherCharge?.toLowerCase() === filterCharge.toLowerCase()
+        ));
+      }
       if (searchText) {
         const s = searchText.toLowerCase();
         d = d.filter(r => r.PatientName?.toLowerCase().includes(s) || r.RegistrationId?.toLowerCase().includes(s) || r.OutBillNo?.toLowerCase().includes(s));
@@ -168,38 +174,96 @@ const OpdReportSection = () => {
 
   // Group the data dynamically for on-screen grouped rendering
   const groupedData = useMemo(() => {
-    if (activeTab !== 'visit' || !groupBy) return null;
+    if (!groupBy) return null;
     
-    let groups = {};
-    if (groupBy === 'payment') {
-      groups = {
-        'CASH': filteredData.filter(r => String(r.PaymentType) === '0'),
-        'UPI': filteredData.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1'),
-        'BANK': filteredData.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4'),
-        'OTHERS': filteredData.filter(r => !['0', '1', '2', '3', '4'].includes(String(r.PaymentType)))
-      };
-    } else if (groupBy === 'doctor') {
-      const uniqueDocs = [...new Set(filteredData.map(r => r.DoctorName).filter(Boolean))].sort();
-      uniqueDocs.forEach(docName => {
-        groups[docName.toUpperCase()] = filteredData.filter(r => r.DoctorName === docName);
-      });
-      if (filteredData.some(r => !r.DoctorName)) {
-        groups['NO DOCTOR ASSIGNED'] = filteredData.filter(r => !r.DoctorName);
+    const groupByField = (list, key) => {
+      let groups = {};
+      if (key === 'payment') {
+        groups = {
+          'CASH': list.filter(r => String(r.PaymentType) === '0'),
+          'UPI': list.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1'),
+          'BANK': list.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4'),
+          'OTHERS': list.filter(r => !['0', '1', '2', '3', '4'].includes(String(r.PaymentType)))
+        };
+      } else if (key === 'doctor') {
+        const uniqueDocs = [...new Set(list.map(r => r.DoctorName).filter(Boolean))].sort();
+        uniqueDocs.forEach(docName => {
+          groups[docName.toUpperCase()] = list.filter(r => r.DoctorName === docName);
+        });
+        if (list.some(r => !r.DoctorName)) {
+          groups['NO DOCTOR ASSIGNED'] = list.filter(r => !r.DoctorName);
+        }
+      } else if (key === 'user') {
+        const uniqueUsers = [...new Set(list.map(r => r.UserName).filter(Boolean))].sort();
+        uniqueUsers.forEach(userName => {
+          groups[`USER: ${userName.toUpperCase()}`] = list.filter(r => r.UserName === userName);
+        });
+        if (list.some(r => !r.UserName)) {
+          groups['NO USER ASSIGNED'] = list.filter(r => !r.UserName);
+        }
+      } else if (key === 'date') {
+        const uniqueDates = [...new Set(list.map(r => r.OutBillDate ? r.OutBillDate.split('T')[0] : (r.PVisitDate ? r.PVisitDate.split('T')[0] : (r.RegDate ? r.RegDate.split('T')[0] : 'NO DATE'))))].sort();
+        uniqueDates.forEach(dVal => {
+          groups[dVal] = list.filter(r => (r.OutBillDate ? r.OutBillDate.split('T')[0] : (r.PVisitDate ? r.PVisitDate.split('T')[0] : r.RegDate.split('T')[0])) === dVal);
+        });
+      } else if (key === 'patient') {
+        const uniquePatients = [...new Set(list.map(r => r.PatientName).filter(Boolean))].sort();
+        uniquePatients.forEach(pName => {
+          groups[pName.toUpperCase()] = list.filter(r => r.PatientName === pName);
+        });
+      } else if (key === 'sex') {
+        groups = {
+          'MALE': list.filter(r => r.Sex === 'M' || r.Sex?.toLowerCase() === 'male'),
+          'FEMALE': list.filter(r => r.Sex === 'F' || r.Sex?.toLowerCase() === 'female'),
+          'OTHERS': list.filter(r => !['M', 'F', 'male', 'female'].includes(String(r.Sex)))
+        };
+      } else if (key === 'address') {
+        const uniqueAddrs = [...new Set(list.map(r => r.Add1).filter(Boolean))].sort();
+        uniqueAddrs.forEach(addr => {
+          groups[addr.toUpperCase()] = list.filter(r => r.Add1 === addr);
+        });
+        if (list.some(r => !r.Add1)) {
+          groups['NO ADDRESS PROVIDED'] = list.filter(r => !r.Add1);
+        }
+      } else if (key === 'charge') {
+        const uniqueCharges = new Set();
+        list.forEach(r => {
+          (r.items || []).forEach(item => {
+            const name = item.ChargeName || item.OtherCharge;
+            if (name) uniqueCharges.add(name.trim().toUpperCase());
+          });
+        });
+        const sortedCharges = [...uniqueCharges].sort();
+        sortedCharges.forEach(cName => {
+          groups[cName] = list.filter(r => 
+            (r.items || []).some(item => 
+              (item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === cName
+            )
+          );
+        });
       }
-    } else if (groupBy === 'user') {
-      const uniqueUsers = [...new Set(filteredData.map(r => r.UserName).filter(Boolean))].sort();
-      uniqueUsers.forEach(userName => {
-        groups[`USER: ${userName.toUpperCase()}`] = filteredData.filter(r => r.UserName === userName);
+      
+      // Clean empty groups
+      Object.keys(groups).forEach(g => {
+        if (groups[g].length === 0 && key !== 'payment' && key !== 'sex') {
+          delete groups[g];
+        }
       });
-      if (filteredData.some(r => !r.UserName)) {
-        groups['NO USER ASSIGNED'] = filteredData.filter(r => !r.UserName);
-      }
-    }
-    return groups;
-  }, [filteredData, groupBy, activeTab]);
+      return groups;
+    };
+
+    const primaryGroups = groupByField(filteredData, groupBy);
+    if (!subGroupBy) return primaryGroups;
+
+    const nested = {};
+    Object.entries(primaryGroups).forEach(([pName, pItems]) => {
+      nested[pName] = groupByField(pItems, subGroupBy);
+    });
+    return nested;
+  }, [filteredData, groupBy, subGroupBy, activeTab]);
 
   const paginatedData = useMemo(() => {
-    if (activeTab === 'visit' && groupBy) return filteredData;
+    if (groupBy) return filteredData;
     return filteredData.slice((page - 1) * pageSize, page * pageSize);
   }, [filteredData, page, activeTab, groupBy]);
   const totalPages = Math.ceil(filteredData.length / pageSize);
@@ -247,7 +311,302 @@ const OpdReportSection = () => {
 
   const handlePDF = () => {
     if (filteredData.length === 0) return alert('No data to generate PDF');
-    generateOpdReportPDF(filteredData, activeTab, fromDate, toDate, summary, groupBy);
+    generateOpdReportPDF(filteredData, activeTab, fromDate, toDate, summary, groupBy, subGroupBy);
+  };
+
+  const getRowCellsForCSV = (r, tab, idx) => {
+    const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN') : '-';
+    
+    if (tab === 'visit') {
+      const payMode = { 0: 'Cash', 1: 'Cheque', 2: 'Card', 3: 'UPI', 4: 'Online' }[r.PaymentType] || '-';
+      return [
+        idx,
+        r.RegistrationId || '',
+        r.PatientName || '',
+        r.PhoneNo || '',
+        r.DoctorName || '',
+        r.VisitTypeName || '',
+        fmtDate(r.PVisitDate),
+        payMode,
+        r.Rate || 0,
+        r.RegCh || 0,
+        r.ServiceCh || 0,
+        r.Discount || 0,
+        r.TotAmount || 0,
+        r.RecAmt || 0,
+        r.DueAmt || 0,
+        r.UserName || ''
+      ];
+    }
+    if (tab === 'otherCharges') {
+      const itemsText = r.items && r.items.length > 0 
+        ? r.items.map(it => `${it.ChargeName || it.OtherCharge || 'Charge'} (${it.Qty > 1 ? it.Qty + 'x' : ''}Rs.${it.Amount})`).join('; ')
+        : 'No items';
+        
+      return [
+        idx,
+        r.OutBillNo || '',
+        r.RegistrationId || '',
+        r.PatientName || '',
+        r.PhoneNo || '',
+        `${r.Age || '-'}/${r.Sex || '-'}`,
+        fmtDate(r.OutBillDate),
+        itemsText,
+        r.Amount || 0,
+        r.DiscAmt || 0,
+        r.GTotal || 0,
+        r.paidamt || 0,
+        r.dueamt || 0
+      ];
+    }
+    if (tab === 'tableData') {
+      return [
+        idx,
+        r.RegistrationId || '',
+        r.PatientName || '',
+        r.PhoneNo || '',
+        r.Age || '',
+        r.Sex === 'M' ? 'Male' : r.Sex === 'F' ? 'Female' : (r.Sex || ''),
+        r.Add1 || '',
+        fmtDate(r.RegDate),
+        r.billCount || 0
+      ];
+    }
+    return [];
+  };
+
+  const exportToCSV = (dataList, tab, pGroup, sGroup) => {
+    const headers = getHeaders(tab);
+    let rows = [];
+    
+    if (pGroup && groupedData) {
+      const customHeaders = ["Primary Group", "Sub Group", ...headers];
+      rows.push(customHeaders);
+      
+      if (sGroup) {
+        Object.entries(groupedData).forEach(([pName, subGroups]) => {
+          Object.entries(subGroups).forEach(([sName, items]) => {
+            items.forEach((r, idx) => {
+              const cells = getRowCellsForCSV(r, tab, idx + 1);
+              rows.push([pName, sName, ...cells]);
+            });
+          });
+        });
+      } else {
+        Object.entries(groupedData).forEach(([pName, items]) => {
+          items.forEach((r, idx) => {
+            const cells = getRowCellsForCSV(r, tab, idx + 1);
+            rows.push([pName, "-", ...cells]);
+          });
+        });
+      }
+    } else {
+      rows.push(headers);
+      dataList.forEach((r, idx) => {
+        const cells = getRowCellsForCSV(r, tab, idx + 1);
+        rows.push(cells);
+      });
+    }
+
+    const csvContent = "\uFEFF" + rows.map(row => 
+      row.map(val => {
+        let text = String(val ?? '');
+        if (text.includes(',') || text.includes('"') || text.includes('\n') || text.includes('\r')) {
+          text = `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      }).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const filename = `OPD_${tab}_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+    
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToExcel = (dataList, tab, pGroup, sGroup) => {
+    const headers = getHeaders(tab);
+    let tableHTML = `<table border="1">`;
+    
+    const thStyle = `style="background-color: #0f172a; color: #ffffff; font-weight: bold; padding: 6px; text-align: center;"`;
+    const tdStyle = `style="padding: 5px; text-align: center; mso-number-format: '\\@';"`;
+    const tdRightStyle = `style="padding: 5px; text-align: right; mso-number-format: '0\\.00';"`;
+    const primaryHeaderStyle = `style="background-color: #cbd5e1; font-weight: bold; font-size: 11pt; padding: 8px; text-align: left;"`;
+    const secondaryHeaderStyle = `style="background-color: #f1f5f9; font-weight: bold; font-size: 10pt; padding: 6px; text-align: left;"`;
+    const subtotalStyle = `style="background-color: #fafafa; font-weight: bold; padding: 6px; text-align: right;"`;
+
+    if (pGroup && groupedData) {
+      tableHTML += `
+        <thead>
+          <tr>
+            <th ${thStyle}>Primary Group</th>
+            <th ${thStyle}>Sub Group</th>
+            ${headers.map(h => `<th ${thStyle}>${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+      `;
+      
+      if (sGroup) {
+        Object.entries(groupedData).forEach(([pName, subGroups]) => {
+          tableHTML += `<tr><td colspan="${headers.length + 2}" ${primaryHeaderStyle}>📁 PRIMARY GROUP: ${pName}</td></tr>`;
+          
+          Object.entries(subGroups).forEach(([sName, items]) => {
+            if (items.length === 0) return;
+            tableHTML += `<tr><td colspan="${headers.length + 2}" ${secondaryHeaderStyle}>↳ SUB-GROUP: ${sName} (${items.length} records)</td></tr>`;
+            
+            let secondarySubtotal = 0;
+            items.forEach((r, idx) => {
+              const cells = getRowCellsForCSV(r, tab, idx + 1);
+              let itemSubtotal = Number(r.RecAmt || r.paidamt || 0);
+              if (sGroup === 'charge') {
+                itemSubtotal = (r.items || []).reduce((sum, item) => {
+                  if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === sName.trim().toUpperCase()) {
+                    return sum + Number(item.Amount || 0);
+                  }
+                  return sum;
+                }, 0);
+              } else if (pGroup === 'charge') {
+                itemSubtotal = (r.items || []).reduce((sum, item) => {
+                  if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === pName.trim().toUpperCase()) {
+                    return sum + Number(item.Amount || 0);
+                  }
+                  return sum;
+                }, 0);
+              }
+              secondarySubtotal += itemSubtotal;
+              
+              tableHTML += `
+                <tr>
+                  <td ${tdStyle}>${pName}</td>
+                  <td ${tdStyle}>${sName}</td>
+                  ${cells.map(cell => {
+                    const isNum = typeof cell === 'number';
+                    const alignment = isNum ? tdRightStyle : tdStyle;
+                    return `<td ${alignment}>${cell}</td>`;
+                  }).join('')}
+                </tr>
+              `;
+            });
+            
+            tableHTML += `
+              <tr>
+                <td colspan="${tab === 'otherCharges' ? 13 : 15}" ${subtotalStyle}>SUB-TOTAL (${sName}):</td>
+                <td ${subtotalStyle}>₹${secondarySubtotal.toFixed(2)}</td>
+                <td colspan="2" ${subtotalStyle}></td>
+              </tr>
+            `;
+          });
+        });
+      } else {
+        Object.entries(groupedData).forEach(([pName, items]) => {
+          tableHTML += `<tr><td colspan="${headers.length + 2}" ${primaryHeaderStyle}>📁 GROUP: ${pName} (${items.length} records)</td></tr>`;
+          
+          let subtotal = 0;
+          items.forEach((r, idx) => {
+            const cells = getRowCellsForCSV(r, tab, idx + 1);
+            let itemSubtotal = Number(r.RecAmt || r.paidamt || 0);
+            if (pGroup === 'charge') {
+              itemSubtotal = (r.items || []).reduce((sum, item) => {
+                if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === pName.trim().toUpperCase()) {
+                  return sum + Number(item.Amount || 0);
+                }
+                return sum;
+              }, 0);
+            }
+            subtotal += itemSubtotal;
+            
+            tableHTML += `
+              <tr>
+                <td ${tdStyle}>${pName}</td>
+                <td ${tdStyle}>-</td>
+                ${cells.map(cell => {
+                  const isNum = typeof cell === 'number';
+                  const alignment = isNum ? tdRightStyle : tdStyle;
+                  return `<td ${alignment}>${cell}</td>`;
+                }).join('')}
+              </tr>
+            `;
+          });
+          
+          tableHTML += `
+            <tr>
+              <td colspan="${tab === 'otherCharges' ? 13 : 15}" ${subtotalStyle}>SUB-TOTAL (${pName}):</td>
+              <td ${subtotalStyle}>₹${subtotal.toFixed(2)}</td>
+              <td colspan="2" ${subtotalStyle}></td>
+            </tr>
+          `;
+        });
+      }
+    } else {
+      tableHTML += `
+        <thead>
+          <tr>
+            ${headers.map(h => `<th ${thStyle}>${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+      `;
+      
+      dataList.forEach((r, idx) => {
+        const cells = getRowCellsForCSV(r, tab, idx + 1);
+        tableHTML += `
+          <tr>
+            ${cells.map(cell => {
+              const isNum = typeof cell === 'number';
+              const alignment = isNum ? tdRightStyle : tdStyle;
+              return `<td ${alignment}>${cell}</td>`;
+            }).join('')}
+          </tr>
+        `;
+      });
+    }
+    
+    tableHTML += `</tbody></table>`;
+
+    const excelTemplate = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <!--[if gte mso 9]>
+          <xml>
+            <x:ExcelWorkbook>
+              <x:ExcelWorksheets>
+                <x:ExcelWorksheet>
+                  <x:Name>${tab.toUpperCase()}_Report</x:Name>
+                  <x:WorksheetOptions>
+                    <x:DisplayGridlines/>
+                  </x:WorksheetOptions>
+                </x:ExcelWorksheet>
+              </x:ExcelWorksheets>
+            </x:ExcelWorkbook>
+          </xml>
+          <![endif]-->
+          <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
+        </head>
+        <body>
+          ${tableHTML}
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([excelTemplate], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const filename = `OPD_${tab}_Report_${new Date().toISOString().slice(0, 10)}.xls`;
+    
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const tabs = [
@@ -408,6 +767,48 @@ const OpdReportSection = () => {
         .premium-btn-pdf:hover {
           transform: translateY(-2px);
           box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45) !important;
+        }
+
+        .premium-btn-excel {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          color: white !important;
+          border-radius: 10px !important;
+          padding: 8px 18px !important;
+          font-weight: 600 !important;
+          font-size: 0.85rem !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+          transition: all 0.25s ease !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-excel:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45) !important;
+        }
+
+        .premium-btn-csv {
+          background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          color: white !important;
+          border-radius: 10px !important;
+          padding: 8px 18px !important;
+          font-weight: 600 !important;
+          font-size: 0.85rem !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 14px rgba(100, 116, 139, 0.3) !important;
+          transition: all 0.25s ease !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-csv:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(100, 116, 139, 0.45) !important;
         }
 
         .premium-tab-container {
@@ -649,6 +1050,17 @@ const OpdReportSection = () => {
           text-align: left !important;
           font-weight: 700 !important;
         }
+        .premium-group-sub-header-row {
+          background: rgba(16, 185, 129, 0.08) !important;
+          border-left: 4px solid #10b981 !important;
+        }
+        .premium-group-sub-header-cell {
+          padding: 8px 25px !important;
+          color: #a7f3d0 !important;
+          font-size: 0.8rem !important;
+          text-align: left !important;
+          font-weight: 700 !important;
+        }
         .premium-group-subtotal-row {
           background: rgba(255, 255, 255, 0.01) !important;
           border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
@@ -852,6 +1264,13 @@ const OpdReportSection = () => {
         .light-theme .premium-group-header-cell {
           color: #4f46e5 !important;
         }
+        .light-theme .premium-group-sub-header-row {
+          background: rgba(16, 185, 129, 0.05) !important;
+          border-left: 4px solid #10b981 !important;
+        }
+        .light-theme .premium-group-sub-header-cell {
+          color: #047857 !important;
+        }
         .light-theme .premium-group-subtotal-row {
           background: rgba(0, 0, 0, 0.005) !important;
           border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
@@ -904,8 +1323,16 @@ const OpdReportSection = () => {
               <i className="fa-solid fa-magnifying-glass"></i> {loading ? 'Fetching...' : 'Fetch'}
             </button>
             
-            <button onClick={handlePDF} disabled={filteredData.length === 0} className="premium-btn-pdf">
-              <i className="fa-solid fa-file-pdf"></i> Export PDF
+            <button onClick={handlePDF} disabled={filteredData.length === 0} className="premium-btn-pdf" title="Export to PDF Portrait Audit Report">
+              <i className="fa-solid fa-file-pdf"></i> PDF
+            </button>
+            
+            <button onClick={() => exportToExcel(filteredData, activeTab, groupBy, subGroupBy)} disabled={filteredData.length === 0} className="premium-btn-excel" title="Export to fully formatted Excel Sheet">
+              <i className="fa-solid fa-file-excel"></i> Excel
+            </button>
+
+            <button onClick={() => exportToCSV(filteredData, activeTab, groupBy, subGroupBy)} disabled={filteredData.length === 0} className="premium-btn-csv" title="Export to raw CSV file">
+              <i className="fa-solid fa-file-csv"></i> CSV
             </button>
           </div>
         </div>
@@ -927,6 +1354,7 @@ const OpdReportSection = () => {
               setFilterPayment('');
               setFilterCharge('');
               setGroupBy('');
+              setSubGroupBy('');
             }}
             className={`premium-tab-button ${activeTab === t.id ? 'active' : ''}`}
           >
@@ -961,7 +1389,7 @@ const OpdReportSection = () => {
                 >
                   <option value="">All Charges ({chargeList.length})</option>
                   {chargeList.map(c => (
-                    <option key={c.OtherChId} value={String(c.OtherChId)}>{c.OtherCharge}</option>
+                    <option key={c.OtherChId} value={c.OtherCharge}>{c.OtherCharge}</option>
                   ))}
                 </select>
               )}
@@ -1044,19 +1472,74 @@ const OpdReportSection = () => {
                   </select>
 
                   {/* Group By Selector */}
-                  <select
-                    value={groupBy}
-                    onChange={e => setGroupBy(e.target.value)}
-                    className="premium-input-field"
-                    style={{ minWidth: '150px', border: '1.5px solid #818cf8', fontWeight: 'bold' }}
-                    title="Group By Layout"
-                  >
-                    <option value="">All (No Grouping)</option>
+                  {/* Note: Moved universally outside to support grouping on all tabs */}
+                </>
+              )}
+
+              {/* Universal Dynamic Grouping Selectors */}
+              <select
+                value={groupBy}
+                onChange={e => {
+                  setGroupBy(e.target.value);
+                  setSubGroupBy('');
+                }}
+                className="premium-input-field"
+                style={{ minWidth: '150px', border: '1.5px solid #818cf8', fontWeight: 'bold' }}
+                title="Primary Grouping"
+              >
+                <option value="">All (No Grouping)</option>
+                {activeTab === 'visit' && (
+                  <>
                     <option value="payment">Group: Payment Wise</option>
                     <option value="doctor">Group: Doctor Wise</option>
                     <option value="user">Group: User Wise</option>
-                  </select>
-                </>
+                  </>
+                )}
+                {activeTab === 'otherCharges' && (
+                  <>
+                    <option value="date">Group: Date Wise</option>
+                    <option value="patient">Group: Patient Wise</option>
+                    <option value="charge">Group: Charges Category Wise</option>
+                  </>
+                )}
+                {activeTab === 'tableData' && (
+                  <>
+                    <option value="sex">Group: Sex Wise</option>
+                    <option value="address">Group: Address Wise</option>
+                  </>
+                )}
+              </select>
+
+              {groupBy && (
+                <select
+                  value={subGroupBy}
+                  onChange={e => setSubGroupBy(e.target.value)}
+                  className="premium-input-field"
+                  style={{ minWidth: '150px', border: '1.5px solid #10b981', fontWeight: 'bold' }}
+                  title="Secondary Grouping"
+                >
+                  <option value="">No Sub-grouping</option>
+                  {activeTab === 'visit' && (
+                    <>
+                      {groupBy !== 'payment' && <option value="payment">Sub: Payment Wise</option>}
+                      {groupBy !== 'doctor' && <option value="doctor">Sub: Doctor Wise</option>}
+                      {groupBy !== 'user' && <option value="user">Sub: User Wise</option>}
+                    </>
+                  )}
+                  {activeTab === 'otherCharges' && (
+                    <>
+                      {groupBy !== 'date' && <option value="date">Sub: Date Wise</option>}
+                      {groupBy !== 'patient' && <option value="patient">Sub: Patient Wise</option>}
+                      {groupBy !== 'charge' && <option value="charge">Sub: Charges Category Wise</option>}
+                    </>
+                  )}
+                  {activeTab === 'tableData' && (
+                    <>
+                      {groupBy !== 'sex' && <option value="sex">Sub: Sex Wise</option>}
+                      {groupBy !== 'address' && <option value="address">Sub: Address Wise</option>}
+                    </>
+                  )}
+                </select>
               )}
 
               <span className="premium-badge-id d-inline-flex align-items-center justify-content-center">
@@ -1174,7 +1657,7 @@ const OpdReportSection = () => {
       {/* ================= DATA GRID TABLE ================= */}
       <div className="premium-table-card">
         <OverlayScrollbarsComponent style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-          {activeTab === 'otherCharges' ? (
+          {activeTab === 'otherCharges' && !groupBy ? (
             <OtherChargesTable data={paginatedData} loading={loading} page={page} pageSize={pageSize} />
           ) : (
             <table className="table premium-dashboard-table mb-0">
@@ -1200,39 +1683,129 @@ const OpdReportSection = () => {
                       No records found. Adjust date filters and click 'Fetch'.
                     </td>
                   </tr>
-                ) : activeTab === 'visit' && groupBy && groupedData ? (
-                  Object.entries(groupedData).map(([groupName, items]) => {
-                    if (items.length === 0 && groupBy !== 'payment') return null;
-                    const groupSubtotal = items.reduce((s, x) => s + Number(x.RecAmt || 0), 0);
-                    return (
-                      <React.Fragment key={groupName}>
-                        {/* Group Header Banner */}
-                        <tr className="premium-group-header-row">
-                          <td colSpan={16} className="premium-group-header-cell">
-                            📁 {groupName} ({items.length} records)
-                          </td>
-                        </tr>
-                        {/* Group Rows */}
-                        {items.length === 0 ? (
-                          <tr>
-                            <td colSpan={16} className="text-center text-muted py-3 small" style={{ background: 'rgba(255,255,255,0.01)' }}>No records in this group</td>
-                          </tr>
-                        ) : (
-                          items.map((r, idx) => (
-                            <tr key={r.RegistrationId + '-' + idx} className="premium-table-row">
-                              {getRowCells(r, activeTab, idx + 1, paymentLabel)}
+                ) : groupBy && groupedData ? (
+                  (() => {
+                    const totalCols = getHeaders(activeTab).length || 20;
+                    
+                    if (subGroupBy) {
+                      // Multi-Level Nested Group Rendering
+                      return Object.entries(groupedData).map(([primaryGroupName, secondaryGroups]) => {
+                        let primarySubtotal = 0;
+                        
+                        return (
+                          <React.Fragment key={primaryGroupName}>
+                            {/* Primary Group Header Banner */}
+                            <tr className="premium-group-header-row">
+                              <td colSpan={totalCols} className="premium-group-header-cell">
+                                📁 PRIMARY GROUP: {primaryGroupName}
+                              </td>
                             </tr>
-                          ))
-                        )}
-                        {/* Group Subtotal Row */}
-                        <tr className="premium-group-subtotal-row">
-                          <td colSpan={13} className="text-end fw-bold py-2 premium-group-subtotal-label">SUBTOTAL FOR {groupName}:</td>
-                          <td className="fw-bold py-2 premium-group-subtotal-value">₹{groupSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td colSpan={2} className="py-2"></td>
-                        </tr>
-                      </React.Fragment>
-                    );
-                  })
+                            
+                            {Object.entries(secondaryGroups).map(([secondaryGroupName, items]) => {
+                              if (items.length === 0) return null;
+                              const secondarySubtotal = items.reduce((s, x) => {
+                                if (subGroupBy === 'charge') {
+                                  const chargeSum = (x.items || []).reduce((sum, item) => {
+                                    if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === secondaryGroupName.trim().toUpperCase()) {
+                                      return sum + Number(item.Amount || 0);
+                                    }
+                                    return sum;
+                                  }, 0);
+                                  return s + chargeSum;
+                                }
+                                if (groupBy === 'charge') {
+                                  const chargeSum = (x.items || []).reduce((sum, item) => {
+                                    if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === primaryGroupName.trim().toUpperCase()) {
+                                      return sum + Number(item.Amount || 0);
+                                    }
+                                    return sum;
+                                  }, 0);
+                                  return s + chargeSum;
+                                }
+                                return s + Number(x.RecAmt || x.paidamt || 0);
+                              }, 0);
+                              primarySubtotal += secondarySubtotal;
+                              
+                              return (
+                                <React.Fragment key={secondaryGroupName}>
+                                  {/* Secondary Sub-group Header Row */}
+                                  <tr className="premium-group-sub-header-row">
+                                    <td colSpan={totalCols} className="premium-group-sub-header-cell">
+                                      ↳ SUB-GROUP: {secondaryGroupName} ({items.length} records)
+                                    </td>
+                                  </tr>
+                                  {/* Sub-group Rows */}
+                                  {items.map((r, idx) => (
+                                    <tr key={r.RegistrationId + '-' + primaryGroupName + '-' + secondaryGroupName + '-' + idx} className="premium-table-row">
+                                      {getRowCells(r, activeTab, idx + 1, paymentLabel)}
+                                    </tr>
+                                  ))}
+                                  {/* Secondary Sub-group Subtotal */}
+                                  <tr className="premium-group-subtotal-row">
+                                    <td colSpan={activeTab === 'otherCharges' ? 11 : 13} className="text-end fw-bold py-2 premium-group-subtotal-label">SUB-TOTAL ({secondaryGroupName}):</td>
+                                    <td className="fw-bold py-2 premium-group-subtotal-value">₹{secondarySubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    <td colSpan={2} className="py-2"></td>
+                                  </tr>
+                                </React.Fragment>
+                              );
+                            })}
+                            
+                            {/* Primary Group Total Row */}
+                            <tr style={{ background: 'rgba(99,102,241,0.03)', borderBottom: '2px solid rgba(99,102,241,0.2)' }}>
+                              <td colSpan={activeTab === 'otherCharges' ? 11 : 13} className="text-end fw-bold py-3 text-indigo-400" style={{ fontSize: '0.85rem' }}>TOTAL FOR {primaryGroupName}:</td>
+                              <td className="fw-bold py-3 text-success" style={{ fontSize: '0.9rem' }}>₹{primarySubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                              <td colSpan={2}></td>
+                            </tr>
+                          </React.Fragment>
+                        );
+                      });
+                    }
+                    
+                    // Standard 1-Level Group Rendering
+                    return Object.entries(groupedData).map(([groupName, items]) => {
+                      if (items.length === 0 && groupBy !== 'payment' && groupBy !== 'sex') return null;
+                      const groupSubtotal = items.reduce((s, x) => {
+                        if (groupBy === 'charge') {
+                          const chargeSum = (x.items || []).reduce((sum, item) => {
+                            if ((item.ChargeName || item.OtherCharge)?.trim().toUpperCase() === groupName.trim().toUpperCase()) {
+                              return sum + Number(item.Amount || 0);
+                            }
+                            return sum;
+                          }, 0);
+                          return s + chargeSum;
+                        }
+                        return s + Number(x.RecAmt || x.paidamt || 0);
+                      }, 0);
+                      return (
+                        <React.Fragment key={groupName}>
+                          {/* Group Header Banner */}
+                          <tr className="premium-group-header-row">
+                            <td colSpan={totalCols} className="premium-group-header-cell">
+                              📁 {groupName} ({items.length} records)
+                            </td>
+                          </tr>
+                          {/* Group Rows */}
+                          {items.length === 0 ? (
+                            <tr>
+                              <td colSpan={totalCols} className="text-center text-muted py-3 small" style={{ background: 'rgba(255,255,255,0.01)' }}>No records in this group</td>
+                            </tr>
+                          ) : (
+                            items.map((r, idx) => (
+                              <tr key={r.RegistrationId + '-' + idx} className="premium-table-row">
+                                {getRowCells(r, activeTab, idx + 1, paymentLabel)}
+                              </tr>
+                            ))
+                          )}
+                          {/* Group Subtotal Row */}
+                          <tr className="premium-group-subtotal-row">
+                            <td colSpan={activeTab === 'otherCharges' ? 11 : 13} className="text-end fw-bold py-2 premium-group-subtotal-label">SUBTOTAL FOR {groupName}:</td>
+                            <td className="fw-bold py-2 premium-group-subtotal-value">₹{groupSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                            <td colSpan={2} className="py-2"></td>
+                          </tr>
+                        </React.Fragment>
+                      );
+                    });
+                  })()
                 ) : (
                   paginatedData.map((r, idx) => (
                     <tr key={idx} className="premium-table-row">
@@ -1246,7 +1819,7 @@ const OpdReportSection = () => {
         </OverlayScrollbarsComponent>
 
         {/* PAGINATION PANEL */}
-        {totalPages > 1 && !(activeTab === 'visit' && groupBy) && (
+        {totalPages > 1 && !groupBy && (
           <div className="d-flex justify-content-center p-3 border-top border-opacity-10" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(15,23,42,0.1)' }}>
             <div className="premium-pg-container">
               <button
@@ -1354,6 +1927,7 @@ const OtherChargesTable = ({ data, loading, page, pageSize }) => {
 
 const getHeaders = (tab) => {
   if (tab === 'visit') return ['#', 'Reg ID', 'Patient', 'Phone', 'Doctor', 'Visit Type', 'Date', 'Payment', 'Rate', 'RegCh', 'SrvCh', 'Disc', 'Total', 'Rec', 'Due', 'User'];
+  if (tab === 'otherCharges') return ['#', 'Bill No', 'Reg ID', 'Patient', 'Phone', 'Age/Sex', 'Date', 'Charges Category (Breakdown)', 'Amount', 'Disc', 'G.Total', 'Paid', 'Due'];
   if (tab === 'tableData') return ['#', 'Reg ID', 'Patient', 'Phone', 'Age', 'Sex', 'Address', 'Reg Date', 'BillsCount'];
   return [];
 };
@@ -1386,6 +1960,43 @@ const getRowCells = (r, tab, idx, paymentLabel) => {
         </span>
       </td>,
       td(r.UserName)
+    ];
+  }
+  if (tab === 'otherCharges') {
+    const n2 = (v) => v != null ? Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+    const itemsText = r.items && r.items.length > 0 ? (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {r.items.map((item, i) => (
+          <div key={i} className="item-breakdown-row">
+            <span className="text-white fw-medium">{item.ChargeName || item.OtherCharge || 'Charge'}</span>
+            <span className="fw-semibold text-info" style={{ marginLeft: '10px' }}>
+              {item.Qty > 1 ? `${item.Qty} × ` : ''}₹{Number(item.Amount || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <span className="text-muted small">No items breakdown</span>
+    );
+    
+    return [
+      td(idx),
+      <td><span className="badge-reg">{r.OutBillNo || '-'}</span></td>,
+      <td><span className="badge-reg">{r.RegistrationId || '-'}</span></td>,
+      <td className="fw-semibold text-white">{r.PatientName || '-'}</td>,
+      td(r.PhoneNo),
+      td(`${r.Age || '-'}/${r.Sex || '-'}`),
+      td(fmtDate(r.OutBillDate)),
+      <td style={{ minWidth: '220px', textAlign: 'left' }}>{itemsText}</td>,
+      <td><span className="fw-semibold text-success">₹{n2(r.Amount)}</span></td>,
+      <td><span className="text-danger">₹{n2(r.DiscAmt)}</span></td>,
+      <td><span className="badge-amount">₹{n2(r.GTotal)}</span></td>,
+      <td><span className="fw-semibold text-info">₹{n2(r.paidamt)}</span></td>,
+      <td>
+        <span className={r.dueamt > 0 ? 'badge-due' : 'badge-amount'}>
+          ₹{n2(r.dueamt)}
+        </span>
+      </td>
     ];
   }
   if (tab === 'tableData') {
