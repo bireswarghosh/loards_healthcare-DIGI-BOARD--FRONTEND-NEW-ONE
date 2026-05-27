@@ -815,60 +815,892 @@ useEffect(() => {
   return (
     <div className="main-content">
       <ToastContainer />
-      {/* <OT/>  */}
-      {/* ================= PANEL ================= */}
-      <div className="panel">
-        <div className="panel-header d-flex justify-content-between align-items-center">
-          <h5>🏥 OT Billing</h5>
+      
+      {/* Premium Injected Styles */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-          <div className="d-flex gap-2">
-            <input
-              type="date"
-              className="form-control form-control-sm"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              style={{ width: 140 }}
-            />
+        .main-content {
+          background: radial-gradient(circle at 50% 0%, #0d1e3d 0%, #050b18 100%) !important;
+          min-height: 100vh;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          color: #cbd5e1;
+          padding: 25px 25px 90px 25px !important;
+        }
 
-            <input
-              type="date"
-              className="form-control form-control-sm"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              style={{ width: 140 }}
-            />
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+          background: rgba(15, 23, 42, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          transition: background 0.3s ease;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(99, 102, 241, 0.4);
+        }
 
-            <input
-              className="form-control form-control-sm"
-              placeholder="Patient Name"
-              value={searchPatient}
-              onChange={(e) => setSearchPatient(e.target.value)}
-              style={{ width: 150 }}
-            />
+        .premium-dashboard-card {
+          background: rgba(13, 27, 56, 0.65);
+          backdrop-filter: blur(24px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          margin-bottom: 24px;
+        }
+
+        .premium-dashboard-card:hover {
+          border-color: rgba(99, 102, 241, 0.25);
+          box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+        }
+
+        .premium-header-bar {
+          background: linear-gradient(135deg, rgba(23, 37, 84, 0.3) 0%, rgba(9, 17, 36, 0.65) 100%);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          padding: 24px 28px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 20px;
+        }
+
+        .premium-title-text {
+          font-family: 'Outfit', sans-serif;
+          font-weight: 800;
+          font-size: 1.5rem;
+          color: #ffffff;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .pulse-dot {
+          width: 10px;
+          height: 10px;
+          background-color: #10b981;
+          border-radius: 50%;
+          display: inline-block;
+          box-shadow: 0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.5);
+          animation: pulse 2.2s infinite;
+        }
+
+        @keyframes pulse {
+          0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
+          70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+          100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Executive Stats Widgets */
+        .premium-stat-widget {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.04);
+          border-radius: 14px;
+          padding: 16px 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .premium-stat-widget:hover {
+          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(99, 102, 241, 0.2);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        .stat-icon-box {
+          width: 46px;
+          height: 46px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.35rem;
+          transition: all 0.3s ease;
+        }
+
+        .stat-icon-box.blue {
+          background: rgba(59, 130, 246, 0.12);
+          color: #60a5fa;
+          border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .stat-icon-box.green {
+          background: rgba(16, 185, 129, 0.12);
+          color: #34d399;
+          border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-icon-box.purple {
+          background: rgba(139, 92, 246, 0.12);
+          color: #a78bfa;
+          border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .stat-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .stat-label {
+          font-size: 0.72rem;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          font-weight: 600;
+        }
+
+        .stat-value {
+          font-family: 'Outfit', sans-serif;
+          font-size: 1.45rem;
+          font-weight: 700;
+          color: #ffffff;
+          margin-top: 2px;
+          letter-spacing: -0.01em;
+        }
+
+        .premium-filter-container {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 14px;
+          padding: 8px 14px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .premium-input-field {
+          background: rgba(15, 23, 42, 0.7) !important;
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          color: #e2e8f0 !important;
+          border-radius: 10px !important;
+          padding: 8px 14px !important;
+          font-size: 0.85rem !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .premium-input-field:focus {
+          border-color: #6366f1 !important;
+          box-shadow: 0 0 14px rgba(99, 102, 241, 0.35) !important;
+          background: rgba(15, 23, 42, 0.9) !important;
+        }
+
+        .premium-btn-primary {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          color: white !important;
+          border-radius: 10px !important;
+          padding: 8px 18px !important;
+          font-weight: 600 !important;
+          font-size: 0.85rem !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
+          transition: all 0.25s ease !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45) !important;
+        }
+
+        .premium-btn-secondary {
+          background: rgba(255, 255, 255, 0.03) !important;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          color: #94a3b8 !important;
+          border-radius: 10px !important;
+          padding: 8px 16px !important;
+          font-size: 0.85rem !important;
+          font-weight: 600 !important;
+          transition: all 0.2s ease !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.08) !important;
+          color: #fff !important;
+          border-color: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .premium-btn-search {
+          background: rgba(14, 165, 233, 0.15) !important;
+          border: 1px solid rgba(14, 165, 233, 0.3) !important;
+          color: #38bdf8 !important;
+          border-radius: 10px !important;
+          width: 38px !important;
+          height: 38px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-search:hover {
+          background: #0ea5e9 !important;
+          color: #fff !important;
+          box-shadow: 0 0 12px rgba(14, 165, 233, 0.45) !important;
+        }
+
+        .premium-table-container {
+          padding: 0;
+          overflow: hidden;
+        }
+
+        .premium-dashboard-table {
+          margin: 0 !important;
+        }
+
+        .premium-dashboard-table th {
+          background: rgba(15, 23, 42, 0.5) !important;
+          color: #94a3b8 !important;
+          font-weight: 700 !important;
+          font-size: 0.76rem !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.08em !important;
+          padding: 18px 24px !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .premium-dashboard-table td {
+          padding: 18px 24px !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+          color: #cbd5e1 !important;
+          font-size: 0.9rem !important;
+          vertical-align: middle !important;
+        }
+
+        .premium-table-row {
+          transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .premium-table-row:hover {
+          background-color: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        .premium-badge-amount {
+          background: rgba(16, 185, 129, 0.12) !important;
+          color: #34d399 !important;
+          border: 1px solid rgba(16, 185, 129, 0.25) !important;
+          font-family: 'Outfit', sans-serif;
+          font-weight: 700;
+          padding: 5px 12px;
+          border-radius: 8px;
+          display: inline-block;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);
+        }
+
+        .premium-badge-id {
+          background: rgba(99, 102, 241, 0.12) !important;
+          color: #a5b4fc !important;
+          border: 1px solid rgba(99, 102, 241, 0.25) !important;
+          font-weight: 600;
+          padding: 3px 10px;
+          border-radius: 6px;
+        }
+
+        .action-button-group {
+          display: flex;
+          gap: 8px;
+        }
+
+        .action-icon-pill {
+          width: 34px;
+          height: 34px;
+          border-radius: 10px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1px solid transparent;
+          background: transparent;
+          cursor: pointer;
+        }
+
+        .action-icon-pill.view {
+          background: rgba(14, 165, 233, 0.08);
+          color: #38bdf8;
+          border-color: rgba(14, 165, 233, 0.15);
+        }
+
+        .action-icon-pill.view:hover {
+          background: #0ea5e9;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+        }
+
+        .action-icon-pill.edit {
+          background: rgba(245, 158, 11, 0.08);
+          color: #fbbf24;
+          border-color: rgba(245, 158, 11, 0.15);
+        }
+
+        .action-icon-pill.edit:hover {
+          background: #f59e0b;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+        }
+
+        .action-icon-pill.delete {
+          background: rgba(239, 68, 68, 0.08);
+          color: #f87171;
+          border-color: rgba(239, 68, 68, 0.15);
+        }
+
+        .action-icon-pill.delete:hover {
+          background: #ef4444;
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+        }
+
+        .premium-drawer {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 999999 !important;
+          background: rgba(8, 16, 36, 0.98) !important;
+          border-left: none !important;
+          box-shadow: none !important;
+          backdrop-filter: blur(20px);
+        }
+
+        .premium-drawer-header {
+          background: linear-gradient(135deg, rgba(23, 37, 84, 0.5) 0%, rgba(9, 17, 36, 0.8) 100%) !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+          padding: 20px 28px !important;
+        }
+
+        .premium-section-card {
+          background: rgba(255, 255, 255, 0.015);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 20px;
+          margin-bottom: 24px;
+          box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.01);
+        }
+
+        .premium-section-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #818cf8;
+          font-weight: 700;
+          margin-bottom: 18px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .receipt-summary-panel {
+          background: linear-gradient(135deg, rgba(23, 37, 84, 0.3) 0%, rgba(9, 17, 36, 0.6) 100%);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          border-radius: 16px;
+          padding: 24px;
+          box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+        }
+
+        .digital-total-amount {
+          background: rgba(9, 17, 36, 0.7);
+          border: 1px solid rgba(16, 185, 129, 0.25);
+          border-radius: 12px;
+          padding: 16px;
+          text-align: center;
+          font-family: 'Outfit', sans-serif;
+          margin-top: 10px;
+          box-shadow: inset 0 2px 10px rgba(0,0,0,0.4), 0 0 20px rgba(16,185,129,0.08);
+          transition: all 0.3s ease;
+        }
+
+        .digital-amount-label {
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #94a3b8;
+          margin-bottom: 4px;
+        }
+
+        .digital-amount-val {
+          font-size: 2.1rem;
+          font-weight: 800;
+          color: #34d399;
+          letter-spacing: -0.02em;
+          text-shadow: 0 0 10px rgba(52, 211, 153, 0.25);
+        }
+
+        .premium-btn-save {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
+          color: #fff !important;
+          font-weight: 600 !important;
+          border-radius: 10px !important;
+          padding: 10px 26px !important;
+          font-size: 0.9rem !important;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-save:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45) !important;
+        }
+
+        .premium-btn-pdf {
+          background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+          color: #fff !important;
+          font-weight: 600 !important;
+          border-radius: 10px !important;
+          padding: 10px 22px !important;
+          font-size: 0.9rem !important;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-pdf:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45) !important;
+        }
+
+        .premium-btn-print {
+          background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3) !important;
+          color: #fff !important;
+          font-weight: 600 !important;
+          border-radius: 10px !important;
+          padding: 10px 22px !important;
+          font-size: 0.9rem !important;
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          cursor: pointer;
+        }
+
+        .premium-btn-print:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 18px rgba(6, 182, 212, 0.45) !important;
+        }
+
+        .charge-item-table th {
+          background: rgba(15, 23, 42, 0.4) !important;
+          color: #94a3b8 !important;
+          font-weight: 700 !important;
+          font-size: 0.76rem !important;
+          text-transform: uppercase !important;
+          padding: 12px 14px !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .charge-item-table td {
+          padding: 10px 14px !important;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+          vertical-align: middle !important;
+        }
+
+
+        /* ==========================================================================
+           LIGHT/WHITE THEME OVERRIDES (AUTOMATICALLY TRIGGERED BY ROOT GLOBAL CLASS)
+           ========================================================================== */
+        
+        .light-theme .main-content {
+          background: radial-gradient(circle at 50% 0%, #f8fafc 0%, #f1f5f9 100%) !important;
+          color: #334155 !important;
+        }
+
+        /* Custom Scrollbar for Light Theme */
+        .light-theme ::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.03);
+        }
+        .light-theme ::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.15);
+        }
+        .light-theme ::-webkit-scrollbar-thumb:hover {
+          background: rgba(99, 102, 241, 0.5);
+        }
+
+        .light-theme .premium-dashboard-card {
+          background: rgba(255, 255, 255, 0.75);
+          backdrop-filter: blur(24px);
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          box-shadow: 0 12px 40px rgba(15, 23, 42, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+          color: #334155;
+        }
+
+        .light-theme .premium-dashboard-card:hover {
+          border-color: rgba(99, 102, 241, 0.35);
+          box-shadow: 0 16px 48px rgba(15, 23, 42, 0.09);
+        }
+
+        .light-theme .premium-header-bar {
+          background: linear-gradient(135deg, rgba(248, 250, 252, 0.5) 0%, rgba(241, 245, 249, 0.85) 100%);
+          border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+        }
+
+        .light-theme .premium-title-text {
+          background: linear-gradient(135deg, #0f172a 30%, #475569 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        /* Stats Widgets in Light Theme */
+        .light-theme .premium-stat-widget {
+          background: rgba(15, 23, 42, 0.015);
+          border: 1px solid rgba(15, 23, 42, 0.04);
+        }
+
+        .light-theme .premium-stat-widget:hover {
+          background: rgba(15, 23, 42, 0.035);
+          border-color: rgba(99, 102, 241, 0.25);
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .light-theme .stat-icon-box.blue {
+          background: rgba(59, 130, 246, 0.08);
+          color: #2563eb;
+          border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+
+        .light-theme .stat-icon-box.green {
+          background: rgba(16, 185, 129, 0.08);
+          color: #059669;
+          border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+
+        .light-theme .stat-icon-box.purple {
+          background: rgba(139, 92, 246, 0.08);
+          color: #7c3aed;
+          border: 1px solid rgba(139, 92, 246, 0.15);
+        }
+
+        .light-theme .stat-label {
+          color: #64748b;
+        }
+
+        .light-theme .stat-value {
+          color: #0f172a;
+        }
+
+        /* Filter elements in Light Theme */
+        .light-theme .premium-filter-container {
+          background: rgba(15, 23, 42, 0.015);
+          border: 1px solid rgba(15, 23, 42, 0.06);
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .light-theme .premium-input-field {
+          background: #ffffff !important;
+          border: 1px solid #cbd5e1 !important;
+          color: #1e293b !important;
+        }
+
+        .light-theme .premium-input-field:focus {
+          border-color: #6366f1 !important;
+          box-shadow: 0 0 14px rgba(99, 102, 241, 0.18) !important;
+          background: #ffffff !important;
+        }
+
+        .light-theme .premium-btn-secondary {
+          background: #ffffff !important;
+          border: 1px solid #cbd5e1 !important;
+          color: #475569 !important;
+        }
+
+        .light-theme .premium-btn-secondary:hover {
+          background: #f8fafc !important;
+          color: #0f172a !important;
+          border-color: #94a3b8 !important;
+        }
+
+        /* Table elements in Light Theme */
+        .light-theme .premium-dashboard-table th {
+          background: rgba(241, 245, 249, 0.85) !important;
+          color: #475569 !important;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .light-theme .premium-dashboard-table td {
+          border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
+          color: #334155 !important;
+        }
+
+        .light-theme .premium-table-row:hover {
+          background-color: rgba(99, 102, 241, 0.025) !important;
+        }
+
+        .light-theme .premium-badge-amount {
+          background: rgba(16, 185, 129, 0.08) !important;
+          color: #059669 !important;
+          border-color: rgba(16, 185, 129, 0.2) !important;
+          box-shadow: 0 2px 8px rgba(16, 185, 129, 0.02);
+        }
+
+        .light-theme .premium-badge-id {
+          background: rgba(99, 102, 241, 0.08) !important;
+          color: #4f46e5 !important;
+          border-color: rgba(99, 102, 241, 0.2) !important;
+        }
+
+        /* Text Overrides for Light Mode (Critical for preventing invisible text) */
+        .light-theme .fw-semibold.text-white {
+          color: #1e293b !important;
+        }
+        .light-theme .text-secondary {
+          color: #64748b !important;
+        }
+        .light-theme .text-muted {
+          color: #94a3b8 !important;
+        }
+
+        /* Drawer in Light Theme */
+        .light-theme .premium-drawer {
+          background: #ffffff !important;
+          border-left: none !important;
+          box-shadow: none !important;
+        }
+
+        .light-theme .premium-drawer-header {
+          background: linear-gradient(135deg, rgba(241, 245, 249, 0.8) 0%, rgba(226, 232, 240, 0.9) 100%) !important;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+        }
+
+        .light-theme .premium-drawer-header span {
+          color: #0f172a !important;
+        }
+
+        .light-theme .premium-section-card {
+          background: rgba(15, 23, 42, 0.008);
+          border: 1px solid rgba(15, 23, 42, 0.05);
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.01);
+        }
+
+        .light-theme .premium-section-title {
+          color: #4f46e5 !important;
+        }
+
+        .light-theme select.premium-input-field option {
+          background-color: #ffffff !important;
+          color: #1e293b !important;
+        }
+
+        /* Drawer Item Tables in Light Theme */
+        .light-theme .charge-item-table th {
+          background: rgba(15, 23, 42, 0.02) !important;
+          color: #475569 !important;
+          border-bottom: 1px solid rgba(15, 23, 42, 0.06) !important;
+        }
+
+        .light-theme .charge-item-table td {
+          border-bottom: 1px solid rgba(15, 23, 42, 0.04) !important;
+        }
+
+        .light-theme .charge-item-table span.text-white {
+          color: #1e293b !important;
+        }
+
+        /* Summary Receipt Panel in Light Theme */
+        .light-theme .receipt-summary-panel {
+          background: linear-gradient(135deg, rgba(241, 245, 249, 0.4) 0%, rgba(226, 232, 240, 0.7) 100%);
+          border: 1px solid rgba(99, 102, 241, 0.2);
+          box-shadow: 0 6px 24px rgba(15, 23, 42, 0.03);
+        }
+
+        .light-theme .digital-total-amount {
+          background: #ffffff;
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          box-shadow: inset 0 2px 10px rgba(0,0,0,0.02), 0 0 20px rgba(16,185,129,0.04);
+        }
+
+        .light-theme .digital-amount-val {
+          color: #10b981;
+          text-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Modals and Dialogs in Light Theme */
+        .light-theme .modal-content.premium-dashboard-card {
+          background: #ffffff !important;
+          border: 1px solid rgba(15, 23, 42, 0.1) !important;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Premium full-screen close button */
+        .premium-drawer .right-bar-close {
+          position: absolute;
+          top: 18px;
+          right: 28px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #ffffff;
+          width: 38px;
+          height: 38px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          cursor: pointer;
+          z-index: 100;
+        }
+        .premium-drawer .right-bar-close:hover {
+          background: rgba(239, 68, 68, 0.15);
+          border-color: rgba(239, 68, 68, 0.3);
+          color: #ef4444;
+          transform: rotate(90deg) scale(1.05);
+        }
+        .light-theme .premium-drawer .right-bar-close {
+          background: rgba(15, 23, 42, 0.05);
+          border: 1px solid rgba(15, 23, 42, 0.08);
+          color: #475569;
+        }
+        .light-theme .premium-drawer .right-bar-close:hover {
+          background: rgba(239, 68, 68, 0.08);
+          color: #dc2626;
+        }
+
+        /* Stats Row adjustment in Light Mode */
+        .light-theme .premium-dashboard-card .row.g-3.px-4.py-3.border-bottom {
+          background: rgba(255, 255, 255, 0.4) !important;
+          border-color: rgba(0, 0, 0, 0.05) !important;
+        }
+      `}} />
+
+      {/* ================= PREMIUM DASHBOARD CARD ================= */}
+      <div className="premium-dashboard-card">
+        
+        {/* PREMIUM HEADER BAR */}
+        <div className="premium-header-bar">
+          <h5 className="premium-title-text">
+            <span className="pulse-dot"></span>
+            🏥 OT Operating Billing Manager
+          </h5>
+
+          {/* PREMIUM FILTER CONTAINER */}
+          <div className="premium-filter-container">
+            <div className="d-flex align-items-center gap-1">
+              <i className="fa-light fa-calendar text-muted ms-1" style={{ fontSize: '0.85rem' }}></i>
+              <input
+                type="date"
+                className="premium-input-field"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{ width: 130 }}
+                title="Start Date"
+              />
+            </div>
+
+            <div className="d-flex align-items-center gap-1">
+              <i className="fa-light fa-calendar text-muted ms-1" style={{ fontSize: '0.85rem' }}></i>
+              <input
+                type="date"
+                className="premium-input-field"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                style={{ width: 130 }}
+                title="End Date"
+              />
+            </div>
+
+            <div className="d-flex align-items-center gap-1">
+              <i className="fa-light fa-user text-muted ms-1" style={{ fontSize: '0.85rem' }}></i>
+              <input
+                className="premium-input-field"
+                placeholder="Patient Name..."
+                value={searchPatient}
+                onChange={(e) => setSearchPatient(e.target.value)}
+                style={{ width: 160 }}
+              />
+            </div>
+
             <button
-              className="btn btn-sm btn-info"
+              className="premium-btn-search"
               onClick={() => handleSearch(1)}
+              title="Search"
             >
-              <i className="fa fa-search"></i>
+              <i className="fa-solid fa-magnifying-glass"></i>
             </button>
-            <button className="btn btn-sm btn-secondary" onClick={clearSearch}>
-              Clear
+            
+            <button className="premium-btn-secondary" onClick={clearSearch}>
+              Reset
             </button>
-            <button className="btn btn-sm btn-primary" onClick={openAdd}>
-              <i className="fa-light fa-plus"></i> Add
+
+            <button className="premium-btn-primary ms-2" onClick={openAdd}>
+              <i className="fa-solid fa-plus"></i> Add Invoice
             </button>
           </div>
         </div>
 
-        {/* ================= TABLE ================= */}
-        <div className="panel-body">
+        {/* PREMIUM STATS ROW */}
+        <div className="row g-3 px-4 py-3 border-bottom" style={{ borderColor: 'rgba(255, 255, 255, 0.05)', background: 'rgba(15, 23, 42, 0.15)' }}>
+          <div className="col-md-4">
+            <div className="premium-stat-widget">
+              <div className="stat-icon-box blue">
+                <i className="fa-solid fa-file-invoice-dollar"></i>
+              </div>
+              <div className="stat-info">
+                <span className="stat-label">Total Invoices</span>
+                <span className="stat-value">{items.length}</span>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="premium-stat-widget">
+              <div className="stat-icon-box green">
+                <i className="fa-solid fa-indian-rupee-sign"></i>
+              </div>
+              <div className="stat-info">
+                <span className="stat-label">Total Value</span>
+                <span className="stat-value">
+                  ₹ {items.reduce((acc, curr) => acc + Number(curr.TotalAmt || 0), 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-4">
+            <div className="premium-stat-widget">
+              <div className="stat-icon-box purple">
+                <i className="fa-solid fa-hospital-user"></i>
+              </div>
+              <div className="stat-info">
+                <span className="stat-label">Operations Today</span>
+                <span className="stat-value">
+                  {items.filter(item => item.BillDate?.split("T")[0] === new Date().toISOString().split("T")[0]).length} Active
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= PREMIUM TABLE ================= */}
+        <div className="premium-table-container">
           {loading ? (
-            <div className="d-flex justify-content-center align-items-center">
+            <div className="d-flex justify-content-center align-items-center py-5">
               <ZLoader/>
             </div>
           ) : (
             <OverlayScrollbarsComponent>
-              <table className="table table-striped table-hover table-dashed">
+              <table className="table premium-dashboard-table">
                 <thead>
                   <tr>
                     <th>Action</th>
@@ -882,45 +1714,49 @@ useEffect(() => {
                 <tbody>
                   {items.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center">
-                        No data found
+                      <td colSpan={6} className="text-center text-muted py-5">
+                        <i className="fa-light fa-folder-open d-block mb-2" style={{ fontSize: '2rem' }}></i>
+                        No OT Billing invoices found.
                       </td>
                     </tr>
                   ) : (
                     items.map((item, i) => (
-                      <tr key={item.OtBillId}>
+                      <tr key={item.OtBillId} className="premium-table-row">
                         <td>
-                          <div className="d-flex gap-1">
+                          <div className="action-button-group">
                             <button
-                              className="btn btn-sm btn-outline-info"
+                              className="action-icon-pill view"
                               onClick={() => openView(item.OtBillId)}
+                              title="View Invoice"
                             >
-                              <i className="fa-light fa-eye"></i>
+                              <i className="fa-solid fa-eye"></i>
                             </button>
 
                             <button
-                              className="btn btn-sm btn-outline-primary"
+                              className="action-icon-pill edit"
                               onClick={() => openEdit(item.OtBillId)}
+                              title="Edit Invoice"
                             >
-                              <i className="fa-light fa-pen-to-square"></i>
+                              <i className="fa-solid fa-pen-to-square"></i>
                             </button>
 
                             <button
-                              className="btn btn-sm btn-outline-danger"
+                              className="action-icon-pill delete"
                               onClick={() => {
                                 setDeleteId(item.OtBillId);
                                 setShowConfirm(true);
                               }}
+                              title="Delete Invoice"
                             >
-                              <i className="fa-light fa-trash-can"></i>
+                              <i className="fa-solid fa-trash-can"></i>
                             </button>
                           </div>
                         </td>
-                        <td>{(page - 1) * limit + i + 1}</td>
-                        <td>{item.BillDate?.split("T")[0]}</td>
-                        <td>{item.AdmitionId}</td>
-                        <td>{item.PatientName}</td>
-                        <td>{item.TotalAmt}</td>
+                        <td><span className="text-secondary">{(page - 1) * limit + i + 1}</span></td>
+                        <td><i className="fa-light fa-calendar-days text-secondary me-2"></i>{item.BillDate?.split("T")[0]}</td>
+                        <td><span className="premium-badge-id">{item.AdmitionId}</span></td>
+                        <td><span className="fw-semibold text-white">{item.PatientName}</span></td>
+                        <td><span className="premium-badge-amount">₹ {Number(item.TotalAmt || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></td>
                       </tr>
                     ))
                   )}
@@ -931,939 +1767,675 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* ================= DRAWER ================= */}
       {showDrawer && (
         <>
           {/* BACKDROP */}
           <div
             className="modal-backdrop fade show"
-            style={{ zIndex: 9998 }}
+            style={{ zIndex: 999998 }}
             onClick={() => setShowDrawer(false)}
           />
 
           {/* DRAWER */}
           <div
-            className="profile-right-sidebar active"
+            className="profile-right-sidebar premium-drawer active"
             style={{
-              zIndex: 9999,
-              width: "100%",
-              maxWidth: "950px",
-              top: "70px",
-              height: "calc(100vh - 70px)",
+              zIndex: 999999,
+              width: "100vw",
+              maxWidth: "100vw",
+              top: "0",
+              height: "100vh",
+              left: "0",
+              right: "0",
+              position: "fixed",
             }}
           >
             <button
               className="right-bar-close"
               onClick={() => setShowDrawer(false)}
+              title="Close Panel"
             >
-              <i className="fa-light fa-angle-right"></i>
+              <i className="fa-regular fa-xmark" style={{ fontSize: '1.25rem' }}></i>
             </button>
 
             <div className="top-panel" style={{ height: "100%" }}>
               {/* HEADER */}
               <div
-                className="dropdown-txt "
+                className="dropdown-txt premium-drawer-header"
                 style={{
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
-                  padding: "10px",
+                  padding: "18px 24px",
                   fontWeight: 600,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center"
                 }}
               >
-                {modalType === "add"
-                  ? "➕ Add OT Billing"
-                  : modalType === "edit"
-                    ? "✏️ Edit OT Billing"
-                    : "👁️ View OT Billing"}
+                <span style={{ fontSize: '1.1rem', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {modalType === "add"
+                    ? "➕ Add OT Billing Invoice"
+                    : modalType === "edit"
+                      ? "✏️ Edit OT Billing Invoice"
+                      : "👁️ View OT Billing Details"}
+                </span>
+                
+                {/* Cashless Indicator Badge */}
+                {formData.CashLess === "Y" && (
+                  <span className="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25" style={{ fontSize: '0.75rem', padding: '5px 10px', borderRadius: '20px' }}>
+                    <i className="fa-solid fa-credit-card me-1"></i> Cashless Active
+                  </span>
+                )}
               </div>
 
               <OverlayScrollbarsComponent
-                style={{ height: "calc(100% - 50px)" }}
+                style={{ height: "calc(100% - 70px)" }}
               >
-                <div className="p-3">
+                <div className="p-4 mx-auto" style={{ maxWidth: "1280px" }}>
                   <form onSubmit={handleSubmit}>
-                    {/* ================= BASIC ================= */}
-                    <h6 className="text-primary">Basic Info</h6>
-                    <div className="row g-2 align-items-end">
-                      <div className="col-md-3">
-                        <label className="form-label">OT Bill No</label>
-                        <input
-                          className="form-control"
-                          name="OtBillNo"
-                          value={formData.OtBillNo || ""}
-                          disabled
-                        />
+                    
+                    {/* ================= BASIC INFO CARD ================= */}
+                    <div className="premium-section-card">
+                      <div className="premium-section-title">
+                        <i className="fa-solid fa-file-invoice-dollar text-primary"></i> Basic Billing Info
                       </div>
+                      <div className="row g-3 align-items-end">
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">OT Bill No</label>
+                          <input
+                            className="form-control premium-input-field"
+                            name="OtBillNo"
+                            value={formData.OtBillNo || "Auto Generated"}
+                            disabled
+                          />
+                        </div>
 
-                      <div className="col-md-3">
-                        <label className="form-label">Bill Date</label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          name="BillDate"
-                          // value={new Date().toISOString().split("T")[0]}
-                          value={formData.BillDate || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              BillDate: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">Bill Date</label>
+                          <input
+                            type="date"
+                            className="form-control premium-input-field"
+                            name="BillDate"
+                            value={formData.BillDate || ""}
+                            disabled={modalType === "view"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                BillDate: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
 
-                      <div className="col-md-3" disabled={modalType === "edit"}>
-                        <label className="form-label">Admission No</label>
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">Admission No</label>
+                          <div className="premium-select-wrapper">
+                            <AsyncApiSelect
+                              api="/admission/search"
+                              value={admissionOption}
+                              searchKey="q"
+                              labelKey="AdmitionId"
+                              showKey="PatientName"
+                              valueKey="AdmitionId"
+                              onChange={(opt) => {
+                                setAdmissionOption(opt);
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  AdmitionId: opt ? opt.value : "",
+                                }));
+                              }}
+                              disabled={modalType === "edit" || modalType === "view"}
+                            />
+                          </div>
+                        </div>
 
-                        {/* <AsyncApiSelect
-                          api="https://lords-backend.onrender.com/api/v1/ot-bills/search/admission"
-                          value={formData.AdmitionId}
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              AdmitionId: val,
-                            }))
-                          }
-                          searchKey="admissionId" 
-                          labelKey="AdmitionId"
-                          valueKey="AdmitionId"
-                          defaultPage={1}
-                          isDisabled={modalType === "edit"}
-                        /> */}
-                        <AsyncApiSelect
-                          // api="https://lords-backend.onrender.com/api/v1/ot-bills/search/admission"
-                          api="/admission/search"
-                          // `/admission/search?q=${formData.AdmitionId}`
-                          value={admissionOption} // ✅ UI object
-                          // searchKey="admissionId"
-
-                          searchKey="q"
-                          labelKey="AdmitionId"
-                          showKey="PatientName"
-                          valueKey="AdmitionId"
-                          onChange={(opt) => {
-                            setAdmissionOption(opt); // UI
-                            setFormData((prev) => ({
-                              ...prev,
-                              AdmitionId: opt ? opt.value : "", // backend
-                            }));
-                          }}
-                        />
-                      </div>
-
-                      <div className="col-md-3">
-                        <label className="form-label">Patient Name</label>
-                        <input
-                          className="form-control"
-                          name="PatientName"
-                          value={formData.PatientName || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              PatientName: e.target.value,
-                            })
-                          }
-                        />
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">Patient Name</label>
+                          <input
+                            className="form-control premium-input-field"
+                            name="PatientName"
+                            value={formData.PatientName || ""}
+                            disabled={modalType === "view"}
+                            placeholder="Autofills from Admission ID"
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                PatientName: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    {/* ================= BOOKING ================= */}
-                    <hr />
-                    {/* <h6 className="text-primary">Booking Info</h6> */}
-                    <div className="row">
-                      {/* Booking No */}
-                      {/* <div className="col-md-3 mb-3">
-                        <label className="form-label fw-semibold">
-                          Booking No
-                        </label>
-                        <input
-                          className="form-control"
-                          placeholder="Enter Booking No"
-                          value={formData.BookingNo || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              BookingNo: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-
-                      {/* Booking Date */}
-                      {/* <div className="col-md-3 mb-3">
-                        <label className="form-label fw-semibold">
-                          Booking Date
-                        </label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          placeholder="Enter Booking Date"
-                          value={formData.BookingDate || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              BookingDate: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-                    </div>
-
-                    {/* ================= DOCTORS ================= */}
-
-                    <h6 className="text-primary">Doctors</h6>
-
-                    <div className="row g-2 align-items-end">
-                      <div className="col-md-4">
-                        <label className="form-label">Anesthesia Doctor</label>
-                        {/* <input
-      className="form-control"
-      name="AnesthesiaDocId"
-      value={formData.AnesthesiaDocId || ""}
-      disabled={modalType === "view"}
-      onChange={(e) =>
-        setFormData({ ...formData, AnesthesiaDocId: e.target.value })
-      }
-    /> */}
-                        <ApiSelect
-                          api="/doctors/indoor"
-                          value={formData.AnesthesiaDocId || null}
-                          labelKey="Doctor"
-                          valueKey="DoctorId"
-                          placeholder="Select doctor"
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              AnesthesiaDocId: val, // ✅ correct field
-                            }))
-                          }
-                        />
+                    {/* ================= DOCTORS SECTION CARD ================= */}
+                    <div className="premium-section-card">
+                      <div className="premium-section-title">
+                        <i className="fa-solid fa-user-nurse text-primary"></i> Operating Surgical Team
                       </div>
+                      
+                      {/* Anesthesia Row */}
+                      <div className="row g-3 align-items-center mb-3">
+                        <div className="col-md-4">
+                          <label className="form-label text-secondary small d-flex align-items-center gap-1">
+                            <i className="fa-light fa-user-doctor text-secondary"></i> Anesthesia Doctor
+                          </label>
+                          <ApiSelect
+                            api="/doctors/indoor"
+                            value={formData.AnesthesiaDocId || null}
+                            labelKey="Doctor"
+                            valueKey="DoctorId"
+                            placeholder="Select Anesthetist"
+                            onChange={(val) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                AnesthesiaDocId: val,
+                              }))
+                            }
+                            disabled={modalType === "view"}
+                          />
+                        </div>
 
-                      <div className="col-md-4">
-                        <label className="form-label">Anesthesia Type</label>
-                        {/* <input
-      className="form-control"
-      name="anttype"
-      value={formData.anttype || ""}
-      disabled={modalType === "view"}
-      onChange={(e) =>
-        setFormData({ ...formData, anttype: e.target.value })
-      }
-    /> */}
-                        <select
-                          className="form-control"
-                          name="anttype"
-                          value={formData.anttype || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              anttype: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Select</option>
-                          {[
-                            "SA",
-                            "GA",
-                            "LA",
-                            "TIVA",
-                            "BRACHIAL",
-                            "WRIST",
-                            "BLOCK",
-                            "SADDLE",
-                          ].map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="col-md-4">
+                          <label className="form-label text-secondary small d-flex align-items-center gap-1">
+                            <i className="fa-light fa-syringe text-secondary"></i> Anesthesia Type
+                          </label>
+                          <select
+                            className="form-control premium-input-field"
+                            name="anttype"
+                            value={formData.anttype || ""}
+                            disabled={modalType === "view"}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                anttype: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Select Type</option>
+                            {[
+                              "SA",
+                              "GA",
+                              "LA",
+                              "TIVA",
+                              "BRACHIAL",
+                              "WRIST",
+                              "BLOCK",
+                              "SADDLE",
+                            ].map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="col-md-4">
+                          <label className="form-label text-secondary small d-flex align-items-center gap-1">
+                            <i className="fa-light fa-indian-rupee-sign text-secondary"></i> Anesthesia Fee (₹)
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control premium-input-field text-end"
+                            name="AnesthesiaAmt"
+                            value={formData.AnesthesiaAmt || 0}
+                            disabled={modalType === "view"}
+                            placeholder="0.00"
+                            onChange={(e) => {
+                              const value = Number(e.target.value || 0);
+                              setFormData((prev) => ({
+                                ...prev,
+                                AnesthesiaAmt: value,
+                              }));
+                            }}
+                          />
+                        </div>
                       </div>
+                      
+                      {/* Surgeon and Under-care Row */}
+                      <div className="row g-3 align-items-center">
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small d-flex align-items-center gap-1">
+                            <i className="fa-light fa-user-doctor text-secondary"></i> Surgeon Doctor
+                          </label>
+                          <ApiSelect
+                            api="/doctors/indoor"
+                            value={formData.SergonDocId || null}
+                            labelKey="Doctor"
+                            valueKey="DoctorId"
+                            placeholder="Select Surgeon"
+                            onChange={(val) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                SergonDocId: val,
+                              }))
+                            }
+                            disabled={modalType === "view"}
+                          />
+                        </div>
 
-                      <div className="col-md-4">
-                        <label className="form-label">Anesthesia Amount</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="AnesthesiaAmt"
-                          value={formData.AnesthesiaAmt || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) => {
-                            const value = Number(e.target.value || 0);
-                            setFormData((prev) => ({
-                              ...prev,
-                              AnesthesiaAmt: value,
-                            }));
-                          }}
-                        />
-                      </div>
-                    </div>
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small d-flex align-items-center gap-1">
+                            <i className="fa-light fa-indian-rupee-sign text-secondary"></i> Surgeon Fee (₹)
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control premium-input-field text-end"
+                            name="SergonDocAmt"
+                            value={formData.SergonDocAmt || 0}
+                            disabled={modalType === "view"}
+                            placeholder="0.00"
+                            onChange={(e) => {
+                              const value = Number(e.target.value || 0);
+                              setFormData((prev) => ({
+                                ...prev,
+                                SergonDocAmt: value,
+                              }));
+                            }}
+                          />
+                        </div>
 
-                    <div className="row g-2 align-items-end">
-                      <div className="col-md-3">
-                        <label className="form-label">Surgeon Doctor</label>
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small d-flex align-items-center gap-1">
+                            <i className="fa-light fa-user-doctor text-secondary"></i> Under Care Doctor
+                          </label>
+                          <ApiSelect
+                            api="/doctors/indoor"
+                            value={formData.OthersDocId || null}
+                            labelKey="Doctor"
+                            valueKey="DoctorId"
+                            placeholder="Select Doctor"
+                            onChange={(val) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                OthersDocId: val,
+                              }))
+                            }
+                            disabled={modalType === "view"}
+                          />
+                        </div>
 
-                        <ApiSelect
-                          api="/doctors/indoor"
-                          value={formData.SergonDocId || null}
-                          labelKey="Doctor"
-                          valueKey="DoctorId"
-                          placeholder="Select doctor"
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              SergonDocId: val, // ✅ correct field
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-3">
-                        <label className="form-label">Surgeon Amount</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="SergonDocAmt"
-                          value={formData.SergonDocAmt || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) => {
-                            const value = Number(e.target.value || 0);
-                            setFormData((prev) => ({
-                              ...prev,
-                              SergonDocAmt: value,
-                            }));
-                          }}
-                        />
-                      </div>
-
-                      <div className="col-md-3">
-                        <label className="form-label">Under Care Doctor</label>
-
-                        <ApiSelect
-                          api="/doctors/indoor"
-                          value={formData.OthersDocId || null}
-                          labelKey="Doctor"
-                          valueKey="DoctorId"
-                          placeholder="Select doctor"
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              OthersDocId: val, // ✅ correct field
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-3">
-                        <label className="form-label">Under Care Amount</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="OthersDocAmt"
-                          value={formData.OthersDocAmt || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) => {
-                            const value = Number(e.target.value || 0);
-                            setFormData((prev) => ({
-                              ...prev,
-                              OthersDocAmt: value,
-                            }));
-                          }}
-                        />
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small d-flex align-items-center gap-1">
+                            <i className="fa-light fa-indian-rupee-sign text-secondary"></i> Under Care Fee (₹)
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control premium-input-field text-end"
+                            name="OthersDocAmt"
+                            value={formData.OthersDocAmt || 0}
+                            disabled={modalType === "view"}
+                            placeholder="0.00"
+                            onChange={(e) => {
+                              const value = Number(e.target.value || 0);
+                              setFormData((prev) => ({
+                                ...prev,
+                                OthersDocAmt: value,
+                              }));
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    {/* ================= OT DETAILS ================= */}
-                    <hr />
-                    <h6 className="text-primary">OT Charge</h6>
-
-                    <div className="row g-2 align-items-end">
-                      <div className="col-md-3">
-                        <label className="form-label">OT Name</label>
-
-                        <ApiSelect
-                          api="/otMaster"
-                          value={formData.OTId || ""}
-                          labelKey="OtMaster"
-                          valueKey="OtMasterId"
-                          placeholder="Select "
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              OTId: val, // ✅ correct field
-                            }))
-                          }
-                        />
+                    {/* ================= OT CHARGE CARD ================= */}
+                    <div className="premium-section-card">
+                      <div className="premium-section-title">
+                        <i className="fa-solid fa-hospital text-primary"></i> Operating Theatre (OT) Allocation
                       </div>
+                      
+                      <div className="row g-3 align-items-center mb-3">
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">OT Room/Name</label>
+                          <ApiSelect
+                            api="/otMaster"
+                            value={formData.OTId || ""}
+                            labelKey="OtMaster"
+                            valueKey="OtMasterId"
+                            placeholder="Select OT Room"
+                            onChange={(val) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                OTId: val,
+                              }))
+                            }
+                            disabled={modalType === "view"}
+                          />
+                        </div>
 
-                      <div className="col-md-3">
-                        <label className="form-label">OT Slot</label>
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">OT Time Slot</label>
+                          <ApiSelect
+                            api="/otSlot"
+                            value={formData.OTSlotId || ""}
+                            labelKey="OTSlot"
+                            valueKey="OTSlotId"
+                            placeholder="Select Time Slot"
+                            onChange={(val) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                OTSlotId: val,
+                              }))
+                            }
+                            disabled={modalType === "view"}
+                          />
+                        </div>
 
-                        <ApiSelect
-                          api="/otSlot"
-                          value={formData.OTSlotId || ""}
-                          labelKey="OTSlot"
-                          valueKey="OTSlotId"
-                          placeholder="Select "
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              OTSlotId: val, // ✅ correct field
-                            }))
-                          }
-                        />
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">OT Surgery Type</label>
+                          <ApiSelect
+                            api="/otType"
+                            value={formData.OTType || ""}
+                            labelKey="OtType"
+                            valueKey="OtType"
+                            placeholder="Select Category"
+                            onChange={(val) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                OTType: val,
+                              }))
+                            }
+                            disabled={modalType === "view"}
+                          />
+                        </div>
+
+                        <div className="col-md-3">
+                          <label className="form-label text-secondary small">OT Base Fee (₹)</label>
+                          <input
+                            type="number"
+                            className="form-control premium-input-field text-end"
+                            name="OTAmt"
+                            value={formData.OTAmt || ""}
+                            disabled={modalType === "view"}
+                            placeholder="0.00"
+                            onChange={(e) => {
+                              const value = Number(e.target.value || 0);
+                              setFormData((prev) => ({
+                                ...prev,
+                                OTAmt: value,
+                              }));
+                            }}
+                          />
+                        </div>
                       </div>
+                      
+                      <div className="row g-3 align-items-center">
+                        <div className="col-md-4">
+                          <label className="form-label text-secondary small">Surgery Duration (Hours)</label>
+                          <input
+                            type="number"
+                            className="form-control premium-input-field text-center"
+                            name="OTHr"
+                            value={formData.OTHr || 0}
+                            disabled={modalType === "view"}
+                            placeholder="Hours"
+                            onChange={(e) =>
+                              setFormData({ ...formData, OTHr: e.target.value })
+                            }
+                          />
+                        </div>
 
-                      <div className="col-md-3">
-                        <label className="form-label">OT Type</label>
+                        <div className="col-md-4">
+                          <label className="form-label text-secondary small">Surgery Duration (Minutes)</label>
+                          <input
+                            type="number"
+                            className="form-control premium-input-field text-center"
+                            name="OTMinit"
+                            value={formData.OTMinit || 0}
+                            disabled={modalType === "view"}
+                            placeholder="Minutes"
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                OTMinit: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
 
-                        <ApiSelect
-                          api="/otType"
-                          value={formData.OTType || ""}
-                          labelKey="OtType"
-                          valueKey="OtType"
-                          placeholder="Select "
-                          onChange={(val) =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              OTType: val, // ✅ correct field
-                            }))
-                          }
-                        />
-                      </div>
-
-                      <div className="col-md-3">
-                        <label className="form-label">OT Charge Amount</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="OTAmt"
-                          value={formData.OTAmt || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) => {
-                            const value = Number(e.target.value || 0);
-                            setFormData((prev) => ({
-                              ...prev,
-                              OTAmt: value,
-                            }));
-                          }}
-                        />
+                        <div className="col-md-4">
+                          <label className="form-label text-secondary small">OT Remarks / Special Notes</label>
+                          <input
+                            className="form-control premium-input-field"
+                            name="Remarks"
+                            value={formData.Remarks || ""}
+                            disabled={modalType === "view"}
+                            placeholder="Enter surgical notes..."
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                Remarks: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="row g-2 align-items-end">
-                      <div className="col-md-4">
-                        <label className="form-label">OT Hour</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="OTHr"
-                          value={formData.OTHr || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({ ...formData, OTHr: e.target.value })
-                          }
-                        />
+                    {/* ================= CHARGE ITEMS SHEET ================= */}
+                    <div className="premium-section-card">
+                      <div className="premium-section-title d-flex justify-content-between align-items-center w-100 mb-3">
+                        <span><i className="fa-solid fa-list-check text-primary"></i> Surgical Consumables & Item Charges</span>
+                        {modalType !== "view" && (
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-outline-success border-opacity-50"
+                            style={{ fontSize: '0.78rem', borderRadius: '6px', padding: '4px 12px' }}
+                            onClick={addChargeItem}
+                          >
+                            <i className="fa-light fa-plus me-1"></i> Add Item Row
+                          </button>
+                        )}
                       </div>
 
-                      <div className="col-md-4">
-                        <label className="form-label">OT Minute</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="OTMinit"
-                          value={formData.OTMinit || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              OTMinit: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
+                      <div className="table-responsive border rounded" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                        <table className="table charge-item-table mb-0" style={{ tableLayout: "fixed" }}>
+                          <thead>
+                            <tr>
+                              <th style={{ width: "40%" }}>Item Description</th>
+                              <th style={{ width: "15%" }} className="text-center">Unit</th>
+                              <th style={{ width: "15%" }} className="text-end">Rate (₹)</th>
+                              <th style={{ width: "12%" }} className="text-center">Qty</th>
+                              <th style={{ width: "18%" }} className="text-end">Amount (₹)</th>
+                              {modalType !== "view" && (
+                                <th style={{ width: "10%" }} className="text-center">Action</th>
+                              )}
+                            </tr>
+                          </thead>
 
-                      <div className="col-md-4">
-                        <label className="form-label">Remarks</label>
-                        <input
-                          className="form-control"
-                          name="Remarks"
-                          value={formData.Remarks || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              Remarks: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
+                          <tbody>
+                            {chargeItems.length === 0 ? (
+                              <tr>
+                                <td colSpan={modalType !== "view" ? 6 : 5} className="text-center text-muted py-4 small">
+                                  <i className="fa-light fa-receipt d-block mb-1" style={{ fontSize: '1.3rem' }}></i>
+                                  No additional item charges added. Click 'Add Item Row' to select items.
+                                </td>
+                              </tr>
+                            ) : (
+                              chargeItems.map((item, index) => (
+                                <tr key={index}>
+                                  {/* Item Selector */}
+                                  <td>
+                                    <select
+                                      className="form-control premium-input-field form-control-sm"
+                                      value={item.OtItemId || ""}
+                                      disabled={modalType === "view"}
+                                      onChange={(e) =>
+                                        updateChargeItem(
+                                          index,
+                                          "OtItemId",
+                                          e.target.value
+                                        )
+                                      }
+                                      style={{ padding: '4px 8px !important' }}
+                                    >
+                                      <option value="">Select Surgical Charge Item</option>
+                                      {availableCharges.map((c) => (
+                                        <option key={c.OtItemId} value={c.OtItemId}>
+                                          {c.OtItem}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
 
-                    {/* ================= CONSUMABLES ================= */}
-                    <hr />
+                                  {/* Unit */}
+                                  <td className="text-center">
+                                    <span className="text-secondary small">{item.Unit || "-"}</span>
+                                  </td>
 
-                    <h6 className="text-primary border-bottom pb-2 mt-3">
-                      Charge Items
-                    </h6>
-                    {/* <table
-                      className="table table-bordered table-sm"
-                      style={{ tableLayout: "fixed" }}
-                    >
-                      <thead>
-                        <tr>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Action
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Item
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Unit
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Rate
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Unit
+                                  {/* Rate */}
+                                  <td>
+                                    <input
+                                      type="number"
+                                      className="form-control premium-input-field form-control-sm text-end"
+                                      value={item.Rate || 0}
+                                      disabled={modalType === "view"}
+                                      onChange={(e) =>
+                                        updateChargeItem(
+                                          index,
+                                          "Rate",
+                                          Number(e.target.value)
+                                        )
+                                      }
+                                      style={{ padding: '4px 8px !important' }}
+                                    />
+                                  </td>
 
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Amount
-                          </th>
-                        </tr>
-                      </thead>
+                                  {/* Qty */}
+                                  <td className="text-center">
+                                    <input
+                                      type="number"
+                                      className="form-control premium-input-field form-control-sm text-center"
+                                      value={item.Qty || 1}
+                                      disabled={modalType === "view"}
+                                      onChange={(e) =>
+                                        updateChargeItem(
+                                          index,
+                                          "Qty",
+                                          Number(e.target.value)
+                                        )
+                                      }
+                                      style={{ padding: '4px 8px !important' }}
+                                    />
+                                  </td>
 
-                      <tbody>
-                        {chargeItems?.map((item, index) => (
-                          <tr key={index}>
-                            {/* ===== PARTICULAR ===== */}
-                    {/* <td>
-                              <div className="d-flex gap-1">
-                                <button
-                                  className="btn btn-sm btn-outline-info"
-                                  // onClick={() => openView(item)}
-                                >
-                                  <i className="fa-light fa-eye"></i>
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-primary"
-                                  // onClick={() => openEdit(item)}
-                                >
-                                  <i className="fa-light fa-pen-to-square"></i>
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => {
-                                    // setDeleteId(item.id);
-                                    // setShowConfirm(true);
-                                  }}
-                                >
-                                  <i className="fa-light fa-trash-can"></i>
-                                </button>
-                              </div>
-                            </td> */}
+                                  {/* Amount */}
+                                  <td className="text-end">
+                                    <span className="fw-semibold text-white small">₹ {Number(item.Amount || 0).toFixed(2)}</span>
+                                  </td>
 
-                    {/* <td>
-                              <select
-                                className="form-control form-control-sm"
-                                value={item.OtItemId || ""}
-                               onChange={(e) =>
-  updateChargeItem(index, "Rate", Number(e.target.value))
-}
-                              >
-                                <option value="">Select</option>
-                                {/* {availableCharges.map((c) => (
-            <option key={c.OtItemId} value={c.OtItemId}>
-              {c.OtherCharge}
-            </option>
-          ))} */}
-                    {/* </select>
-                            </td> */}
-
-                    {/* ===== UNIT ===== */}
-                    {/* <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={item.Unit || ""}
-                                disabled
-                              />
-                            </td> */}
-
-                    {/* ===== RATE ===== */}
-                    {/* <td>
-                              <input
-                                type="number"
-                                className="form-control form-control-sm"
-                                value={item.Rate || 0}
-                                onChange={(e) => {
-                                  const value = Number(e.target.value);
-                                  setFormData((prev) => {
-                                    const updated = [...chargeItems];
-                                    const Unit
- = updated[index].Unit
- || 0;
-                                    updated[index] = {
-                                      ...updated[index],
-                                      Rate: value,
-                                      Amount: value * Unit
-,
-                                    };
-                                    return { ...prev, chargeItems: updated };
-                                  });
-                                }}
-                              />
-                            </td> */}
-
-                    {/* ===== Unit
- ===== */}
-                    {/* <td>
-                              <input
-                                type="number"
-                                step="0.01"
-                                className="form-control form-control-sm"
-                                value={item.Unit
- || 0}
-                                onChange={(e) => {
-                                  const value = Number(e.target.value);
-                                  setFormData((prev) => {
-                                    const updated = [...prev.otBillDetails];
-                                    const rate = updated[index].Rate || 0;
-                                    updated[index] = {
-                                      ...updated[index],
-                                      Unit
-: value,
-                                      Amount: rate * value,
-                                    };
-                                    return { ...prev, otBillDetails: updated };
-                                  });
-                                }}
-                              />
-                            </td> */}
-
-                    {/* ===== AMOUNT ===== */}
-                    {/* <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={item.Amount || 0}
-                                disabled
-                              />
-                            </td> */}
-                    {/* </tr>
-                        ))}
-                      </tbody>
-                    </table> */}
-                    {/* <h6 className="text-primary">Consumables</h6> */}
-
-                    {/* <button
-                      type="button"
-                      className="btn btn-sm btn-outline-primary"
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          Consumables: [
-                            ...(formData.Consumables || []),
-                            {
-                              item: "",
-                              unit: "",
-                              rate: "",
-                              Unit
-: "",
-                              amount: "",
-                            },
-                          ],
-                        })
-                      }
-                    >
-                      + Add Item
-                    </button>
-                    <h1>hello</h1> */}
-
-                    <table
-                      className="table table-bordered table-sm"
-                      style={{ tableLayout: "fixed" }}
-                    >
-                      <thead>
-                        <tr>
-                          <th className="text-center" style={{ width: "20%" }}>
-                            Item
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Unit
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Rate
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Qty
-                          </th>
-                          <th className="text-center" style={{ width: "10%" }}>
-                            Amount
-                          </th>
-                          {modalType !== "view" && (
-                            <th
-                              className="text-center"
-                              style={{ width: "10%" }}
-                            >
-                              Action
-                            </th>
-                          )}
-                        </tr>
-                      </thead>
-
-                      <tbody>
-                        {chargeItems.map((item, index) => (
-                          <tr key={index}>
-                            {/* ===== Particular (SELECT HERE) ===== */}
-                            <td>
-                              <select
-                                className="form-control form-control-sm"
-                                value={item.OtItemId || ""}
-                                disabled={modalType === "view"}
-                                onChange={(e) =>
-                                  updateChargeItem(
-                                    index,
-                                    "OtItemId",
-                                    e.target.value
-                                  )
-                                }
-                              >
-                                <option value="">Select Charge</option>
-                                {availableCharges.map((c) => (
-                                  <option key={c.OtItemId} value={c.OtItemId}>
-                                    {c.OtItem}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-
-                            {/* ===== UNIT ===== */}
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                // value={item.UNIT || ""}
-                                value={item.Unit || ""}
-                                disabled
-                              />
-                            </td>
-
-                            {/* ===== RATE ===== */}
-                            <td>
-                              <input
-                                type="number"
-                                placeholder="₹"
-                                className="form-control form-control-sm"
-                                value={item.Rate || 0}
-                                disabled={modalType === "view"}
-                                onChange={(e) =>
-                                  updateChargeItem(
-                                    index,
-                                    "Rate",
-                                    Number(e.target.value)
-                                  )
-                                }
-                              />
-                            </td>
-
-                            {/* ===== Unit
- ===== */}
-                            <td className="text-center">
-                              <input
-                                type="number"
-                                className="form-control form-control-sm py-0 text-center "
-                                value={item.Qty || 1}
-                                disabled={modalType === "view"}
-                                onChange={(e) =>
-                                  updateChargeItem(
-                                    index,
-                                    "Qty",
-                                    Number(e.target.value)
-                                  )
-                                }
-                              />
-                            </td>
-
-                            {/* ===== AMOUNT ===== */}
-                            <td>
-                              <input
-                                className="form-control form-control-sm"
-                                value={item.Amount}
-                                disabled
-                              />
-                            </td>
-                            {/* ===== ACTION ===== */}
-                            {modalType !== "view" && (
-                              <td className="text-center">
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => removeChargeItem(index)}
-                                  title="Remove"
-                                >
-                                  <i className="fa-light fa-trash"></i>
-                                </button>
-                              </td>
+                                  {/* Action */}
+                                  {modalType !== "view" && (
+                                    <td className="text-center">
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger border-opacity-25"
+                                        onClick={() => removeChargeItem(index)}
+                                        title="Remove Item"
+                                        style={{ padding: '2px 8px' }}
+                                      >
+                                        <i className="fa-solid fa-trash-can" style={{ fontSize: '0.8rem' }}></i>
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))
                             )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {/* {modalType === "edit" && */}
-
-                    <div className="mt-2 text-end">
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-success"
-                        onClick={addChargeItem}
-                      >
-                        <i className="fa-light fa-plus me-1"></i>
-                        Add Charge Item
-                      </button>
-                    </div>
-
-                    {/* }    */}
-                    {/* ================= SUMMARY ================= */}
-                    <hr />
-                    <h6 className="text-primary">Summary</h6>
-                    <div className="row g-2 justify-content-end">
-                      {/* <div className="col-md-2">
-                        <label className="form-label">Consumable Amt</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="ConsumableAmt"
-                          value={formData.ConsumableAmt || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              ConsumableAmt: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-
-                      {/* <div className="col-md-2">
-                        <label className="form-label">Instrument Amt</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="InstrumentAmt"
-                          value={formData.InstrumentAmt || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              InstrumentAmt: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-
-                      {/* <div className="col-md-2">
-                        <label className="form-label">Medicine Amt</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="MedicineAmt"
-                          value={formData.MedicineAmt || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              MedicineAmt: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-
-                      {/* <div className="col-md-2">
-                        <label className="form-label">Other Charges</label>
-                        <input
-                          type="number"
-                          className="form-control"
-                          name="OthersCh"
-                          value={formData.OthersCh || 0}
-                          disabled={modalType === "view"}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              OthersCh: e.target.value,
-                            })
-                          }
-                        />
-                      </div> */}
-
-                      <div className="col-md-2">
-                        <label className="form-label">Service Charge</label>
-                        <input
-                          type="number"
-                          placeholder="₹"
-                          className="form-control"
-                          name="ServiceCharge"
-                          value={formData.ServiceCharge || ""}
-                          disabled={modalType === "view"}
-                          onChange={(e) => {
-                            const value = Number(e.target.value || 0);
-                            setFormData((prev) => ({
-                              ...prev,
-                              ServiceCharge: value,
-                            }));
-                          }}
-                        />
-                      </div>
-                      <div className="col-md-2">
-                        <label className="form-label fw-bold">
-                          Total Bill Amount
-                        </label>
-                        <input
-                          type="number"
-                          placeholder="₹"
-                          className="form-control fw-bold text-danger"
-                          name="TotalAmt"
-                          value={formData.TotalAmt || 0}
-                          disabled
-                        />
+                          </tbody>
+                        </table>
                       </div>
                     </div>
 
-                    {/* ================= TOTAL ================= */}
+                    {/* ================= RECEIPT SUMMARY PANEL ================= */}
+                    <div className="receipt-summary-panel mb-4">
+                      <div className="premium-section-title">
+                        <i className="fa-solid fa-receipt text-success"></i> Billing & Receipt Summary
+                      </div>
+                      
+                      <div className="row g-3 justify-content-between align-items-center">
+                        <div className="col-md-5">
+                          <p className="text-secondary small mb-2">
+                            Please review all surgical fees, OT suite base rate, and additional consumables charges before generating the final invoice.
+                          </p>
+                          {formData.CashLess === "Y" && (
+                            <div className="p-2 rounded bg-success bg-opacity-10 border border-success border-opacity-10 d-flex align-items-center gap-2">
+                              <i className="fa-solid fa-circle-check text-success"></i>
+                              <span className="text-success small fw-semibold">Rates automatically adjusted for cashless company scheme.</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="col-md-6">
+                          <div className="row g-3 justify-content-end">
+                            <div className="col-md-6">
+                              <label className="form-label text-secondary small">Service Charge (₹)</label>
+                              <input
+                                type="number"
+                                placeholder="₹ 0.00"
+                                className="form-control premium-input-field text-end fw-semibold"
+                                name="ServiceCharge"
+                                value={formData.ServiceCharge || ""}
+                                disabled={modalType === "view"}
+                                onChange={(e) => {
+                                  const value = Number(e.target.value || 0);
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    ServiceCharge: value,
+                                  }));
+                                }}
+                              />
+                            </div>
 
-                    {/* ================= ACTION ================= */}
-                    <div className="d-flex gap-2 mt-4">
+                            <div className="col-md-6">
+                              <div className="digital-total-amount">
+                                <div className="digital-amount-label">Grand Total Invoice</div>
+                                <div className="digital-amount-val">
+                                  ₹ {Number(formData.TotalAmt || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ================= ACTION BUTTON BAR ================= */}
+                    <div className="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-opacity-10" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="premium-btn-secondary"
                         onClick={() => setShowDrawer(false)}
                       >
-                        Cancel
+                        <i className="fa-regular fa-xmark me-1"></i> Close
                       </button>
-                      {modalType !== "view" && (
-                        <button type="submit" className="btn btn-primary">
-                          Save
+                      
+                      <div className="d-flex gap-2">
+                        <button
+                          type="button"
+                          className="premium-btn-pdf"
+                          onClick={handleDownloadPDF}
+                          title="Export PDF Document"
+                        >
+                          <i className="fa-solid fa-file-pdf me-1"></i> PDF
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        className="btn btn-success"
-                        onClick={handleDownloadPDF}
-                        title="Download PDF"
-                      >
-                        <i className="fa-light fa-file-pdf me-1"></i> PDF
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-info"
-                        onClick={handlePrintPDF}
-                        title="Print"
-                      >
-                        <i className="fa-light fa-print me-1"></i> Print
-                      </button>
+                        
+                        <button
+                          type="button"
+                          className="premium-btn-print"
+                          onClick={handlePrintPDF}
+                          title="Send to Printer"
+                        >
+                          <i className="fa-solid fa-print me-1"></i> Print
+                        </button>
+
+                        {modalType !== "view" && (
+                          <button type="submit" className="premium-btn-save">
+                            <i className="fa-solid fa-floppy-disk me-1"></i> {modalType === "edit" ? "Update Invoice" : "Generate Invoice"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </form>
                 </div>
@@ -1873,27 +2445,30 @@ useEffect(() => {
         </>
       )}
 
-      {/* {showDrawer && <OT/>} */}
-
       {/* ================= DELETE CONFIRM ================= */}
       {showConfirm && (
-        <div className="modal d-block" onClick={() => setShowConfirm(false)}>
+        <div className="modal d-block" onClick={() => setShowConfirm(false)} style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 10000 }}>
           <div
             className="modal-dialog modal-dialog-centered"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="modal-content">
-              <div className="modal-body text-center">
-                <p>Are you sure you want to delete?</p>
+            <div className="modal-content premium-dashboard-card p-0" style={{ maxWidth: '400px', margin: 'auto' }}>
+              <div className="premium-header-bar py-3 justify-content-center">
+                <h5 className="premium-title-text" style={{ fontSize: '1.1rem' }}>
+                  ⚠️ Delete Confirmation
+                </h5>
+              </div>
+              <div className="modal-body text-center p-4">
+                <p className="text-secondary mb-4">Are you sure you want to permanently delete this billing invoice?</p>
                 <div className="d-flex justify-content-center gap-3">
                   <button
-                    className="btn btn-secondary"
+                    className="premium-btn-secondary py-1 px-4"
                     onClick={() => setShowConfirm(false)}
                   >
                     Cancel
                   </button>
-                  <button className="btn btn-danger" onClick={confirmDelete}>
-                    Delete
+                  <button className="premium-btn-pdf py-1 px-4" onClick={confirmDelete}>
+                    Yes, Delete
                   </button>
                 </div>
               </div>
@@ -1902,28 +2477,32 @@ useEffect(() => {
         </div>
       )}
 
-      {/* ================= DRAWER ================= */}
-
-      {/* ================= PAGINATION ================= */}
+      {/* ================= PREMIUM PAGINATION ================= */}
       {!searchPatient && !startDate && !endDate && (
-        <div className="d-flex justify-content-center mt-3">
-          <ul className="pagination pagination-sm">
-            <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-              <button className="page-link" onClick={() => goToPage(page - 1)}>
-                Prev
-              </button>
-            </li>
-
-            <button className="page-link">{`${page}/${totalPages}`}</button>
-
-            <li
-              className={`page-item ${page === totalPages ? "disabled" : ""}`}
+        <div className="d-flex justify-content-center mt-4">
+          <div className="premium-filter-container py-1 px-2">
+            <button
+              className="premium-btn-secondary py-1 px-3"
+              disabled={page === 1}
+              onClick={() => goToPage(page - 1)}
+              style={{ minHeight: 'auto', border: 'none' }}
             >
-              <button className="page-link" onClick={() => goToPage(page + 1)}>
-                Next
-              </button>
-            </li>
-          </ul>
+              <i className="fa-solid fa-angle-left me-1"></i> Prev
+            </button>
+            
+            <span className="text-secondary small px-3">
+              Page <strong>{page}</strong> of <strong>{totalPages}</strong>
+            </span>
+            
+            <button
+              className="premium-btn-secondary py-1 px-3"
+              disabled={page === totalPages}
+              onClick={() => goToPage(page + 1)}
+              style={{ minHeight: 'auto', border: 'none' }}
+            >
+              Next <i className="fa-solid fa-angle-right ms-1"></i>
+            </button>
+          </div>
         </div>
       )}
 
@@ -1931,7 +2510,5 @@ useEffect(() => {
     </div>
   );
 };
-
-
 
 export default OTBilling;
