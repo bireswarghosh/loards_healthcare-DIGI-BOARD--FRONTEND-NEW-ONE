@@ -213,20 +213,21 @@ const DischargePrint = () => {
 
               {/* Hospital Info */}
               <div className="col-sm-8 text-center">
-                <h4 className="fw-bold mb-1">LORDS HEALTH CARE</h4>
+                <h4 className="fw-bold mb-1">LORDS HEALTH CARE (NURSING HOME)</h4>
+                <h6 className="fw-bold mb-2">(A Unit of MJJ Enterprises Pvt. Ltd.)</h6>
 
                 <div>
                   <div>
-                    13/3, Circular 2nd bye lane, (Near Jumanabala Balika
-                    Vidyalaya) Shibpur, Howrah - 711 102, W.B.
+                    13/3, Circular 2nd Bye Lane, Kona Expressway,
                   </div>
                   <div>
-                    Phone No.: (033) 2688 1734, 8272904444, HELPLINE
-                    -7003378414, Toll Free No. 1800-309-0895
+                    (Near Jumanabala Balika Vidyalaya) Shibpur. Howrah-711 102, W.B.
                   </div>
                   <div>
-                    E-mail: patientdesk@lordshealthcare.org,
-                    Website:www.lordshealthcare.org
+                    Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
+                  </div>
+                  <div>
+                    E-mail: patientdesk@lordshealthcare.org
                   </div>
                 </div>
               </div>
