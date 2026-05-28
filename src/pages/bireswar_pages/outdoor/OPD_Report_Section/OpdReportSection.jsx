@@ -180,10 +180,9 @@ const OpdReportSection = () => {
       let groups = {};
       if (key === 'payment') {
         groups = {
-          'CASH': list.filter(r => String(r.PaymentType) === '0'),
+          'CASH': list.filter(r => !['1', '2', '3', '4'].includes(String(r.PaymentType))),
           'UPI': list.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1'),
-          'BANK': list.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4'),
-          'OTHERS': list.filter(r => !['0', '1', '2', '3', '4'].includes(String(r.PaymentType)))
+          'BANK': list.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4')
         };
       } else if (key === 'doctor') {
         const uniqueDocs = [...new Set(list.map(r => r.DoctorName).filter(Boolean))].sort();
@@ -293,12 +292,12 @@ const OpdReportSection = () => {
     return { totalRecords: filteredData.length };
   }, [filteredData, activeTab]);
 
-  // Compute dynamic financial collections breakdown (Visit Entry tab only)
+  // Compute dynamic financial collections breakdown (Visit Entry & OPD Other Charges)
   const paymentBreakdown = useMemo(() => {
-    if (activeTab !== 'visit') return null;
+    if (activeTab !== 'visit' && activeTab !== 'otherCharges') return null;
     const totals = { cash: 0, cheque: 0, card: 0, upi: 0, online: 0 };
     filteredData.forEach(r => {
-      const val = Number(r.RecAmt || 0);
+      const val = activeTab === 'visit' ? Number(r.RecAmt || 0) : Number(r.paidamt || 0);
       const type = String(r.PaymentType);
       if (type === '0') totals.cash += val;
       else if (type === '1') totals.cheque += val;
@@ -318,7 +317,7 @@ const OpdReportSection = () => {
     const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN') : '-';
     
     if (tab === 'visit') {
-      const payMode = { 0: 'Cash', 1: 'Cheque', 2: 'Card', 3: 'UPI', 4: 'Online' }[r.PaymentType] || '-';
+      const payMode = { 0: 'Cash', 1: 'Cheque', 2: 'Card', 3: 'UPI', 4: 'Online' }[r.PaymentType] || 'Cash';
       return [
         idx,
         r.RegistrationId || '',
@@ -342,6 +341,7 @@ const OpdReportSection = () => {
       const itemsText = r.items && r.items.length > 0 
         ? r.items.map(it => `${it.ChargeName || it.OtherCharge || 'Charge'} (${it.Qty > 1 ? it.Qty + 'x' : ''}Rs.${it.Amount})`).join('; ')
         : 'No items';
+      const payMode = { 0: 'Cash', 1: 'Cheque', 2: 'Card', 3: 'UPI', 4: 'Online' }[r.PaymentType] || 'Cash';
         
       return [
         idx,
@@ -351,6 +351,7 @@ const OpdReportSection = () => {
         r.PhoneNo || '',
         `${r.Age || '-'}/${r.Sex || '-'}`,
         fmtDate(r.OutBillDate),
+        payMode,
         itemsText,
         r.Amount || 0,
         r.DiscAmt || 0,
@@ -461,8 +462,7 @@ const OpdReportSection = () => {
           Object.entries(subGroups).forEach(([sName, items]) => {
             if (items.length === 0) return;
             tableHTML += `<tr><td colspan="${headers.length + 2}" ${secondaryHeaderStyle}>↳ SUB-GROUP: ${sName} (${items.length} records)</td></tr>`;
-            
-            let secondarySubtotal = 0;
+                     let secondarySubtotal = 0;
             items.forEach((r, idx) => {
               const cells = getRowCellsForCSV(r, tab, idx + 1);
               let itemSubtotal = Number(r.RecAmt || r.paidamt || 0);
@@ -498,7 +498,7 @@ const OpdReportSection = () => {
             
             tableHTML += `
               <tr>
-                <td colspan="${tab === 'otherCharges' ? 13 : 15}" ${subtotalStyle}>SUB-TOTAL (${sName}):</td>
+                <td colspan="${tab === 'otherCharges' ? 14 : 15}" ${subtotalStyle}>SUB-TOTAL (${sName}):</td>
                 <td ${subtotalStyle}>₹${secondarySubtotal.toFixed(2)}</td>
                 <td colspan="2" ${subtotalStyle}></td>
               </tr>
@@ -538,7 +538,7 @@ const OpdReportSection = () => {
           
           tableHTML += `
             <tr>
-              <td colspan="${tab === 'otherCharges' ? 13 : 15}" ${subtotalStyle}>SUB-TOTAL (${pName}):</td>
+              <td colspan="${tab === 'otherCharges' ? 14 : 15}" ${subtotalStyle}>SUB-TOTAL (${pName}):</td>
               <td ${subtotalStyle}>₹${subtotal.toFixed(2)}</td>
               <td colspan="2" ${subtotalStyle}></td>
             </tr>
@@ -615,7 +615,7 @@ const OpdReportSection = () => {
     { id: 'tableData', label: '📋 Patient Table' },
   ];
 
-  const paymentLabel = (v) => ({ '0': 'Cash', '1': 'Cheque', '2': 'Card', '3': 'UPI', '4': 'Online' }[String(v)] || '-');
+  const paymentLabel = (v) => ({ '0': 'Cash', '1': 'Cheque', '2': 'Card', '3': 'UPI', '4': 'Online' }[String(v)] || 'Cash');
 
   return (
     <div className="main-content">
@@ -1251,6 +1251,11 @@ const OpdReportSection = () => {
           color: #334155 !important;
         }
 
+        .light-theme .premium-dashboard-table .text-white,
+        .light-theme .premium-dashboard-table span.text-white {
+          color: #1e293b !important;
+        }
+
         .light-theme .premium-pg-container {
           background: #ffffff;
           border-color: #cbd5e1;
@@ -1497,6 +1502,7 @@ const OpdReportSection = () => {
                 )}
                 {activeTab === 'otherCharges' && (
                   <>
+                    <option value="payment">Group: Payment Mode Wise</option>
                     <option value="date">Group: Date Wise</option>
                     <option value="patient">Group: Patient Wise</option>
                     <option value="charge">Group: Charges Category Wise</option>
@@ -1528,6 +1534,7 @@ const OpdReportSection = () => {
                   )}
                   {activeTab === 'otherCharges' && (
                     <>
+                      {groupBy !== 'payment' && <option value="payment">Sub: Payment Mode Wise</option>}
                       {groupBy !== 'date' && <option value="date">Sub: Date Wise</option>}
                       {groupBy !== 'patient' && <option value="patient">Sub: Patient Wise</option>}
                       {groupBy !== 'charge' && <option value="charge">Sub: Charges Category Wise</option>}
@@ -1623,7 +1630,7 @@ const OpdReportSection = () => {
       )}
 
       {/* ================= FINANCIAL COLLECTION BREAKDOWN WIDGET ================= */}
-      {activeTab === 'visit' && paymentBreakdown && filteredData.length > 0 && (
+      {(activeTab === 'visit' || activeTab === 'otherCharges') && paymentBreakdown && filteredData.length > 0 && (
         <div className="financial-breakdown-card">
           <div className="breakdown-title">
             <i className="fa-solid fa-receipt"></i>
@@ -1742,7 +1749,7 @@ const OpdReportSection = () => {
                                   ))}
                                   {/* Secondary Sub-group Subtotal */}
                                   <tr className="premium-group-subtotal-row">
-                                    <td colSpan={activeTab === 'otherCharges' ? 11 : 13} className="text-end fw-bold py-2 premium-group-subtotal-label">SUB-TOTAL ({secondaryGroupName}):</td>
+                                    <td colSpan={activeTab === 'otherCharges' ? 12 : 13} className="text-end fw-bold py-2 premium-group-subtotal-label">SUB-TOTAL ({secondaryGroupName}):</td>
                                     <td className="fw-bold py-2 premium-group-subtotal-value">₹{secondarySubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                                     <td colSpan={2} className="py-2"></td>
                                   </tr>
@@ -1752,7 +1759,7 @@ const OpdReportSection = () => {
                             
                             {/* Primary Group Total Row */}
                             <tr style={{ background: 'rgba(99,102,241,0.03)', borderBottom: '2px solid rgba(99,102,241,0.2)' }}>
-                              <td colSpan={activeTab === 'otherCharges' ? 11 : 13} className="text-end fw-bold py-3 text-indigo-400" style={{ fontSize: '0.85rem' }}>TOTAL FOR {primaryGroupName}:</td>
+                              <td colSpan={activeTab === 'otherCharges' ? 12 : 13} className="text-end fw-bold py-3 text-indigo-400" style={{ fontSize: '0.85rem' }}>TOTAL FOR {primaryGroupName}:</td>
                               <td className="fw-bold py-3 text-success" style={{ fontSize: '0.9rem' }}>₹{primarySubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                               <td colSpan={2}></td>
                             </tr>
@@ -1798,7 +1805,7 @@ const OpdReportSection = () => {
                           )}
                           {/* Group Subtotal Row */}
                           <tr className="premium-group-subtotal-row">
-                            <td colSpan={activeTab === 'otherCharges' ? 11 : 13} className="text-end fw-bold py-2 premium-group-subtotal-label">SUBTOTAL FOR {groupName}:</td>
+                            <td colSpan={activeTab === 'otherCharges' ? 12 : 13} className="text-end fw-bold py-2 premium-group-subtotal-label">SUBTOTAL FOR {groupName}:</td>
                             <td className="fw-bold py-2 premium-group-subtotal-value">₹{groupSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                             <td colSpan={2} className="py-2"></td>
                           </tr>
@@ -1874,11 +1881,13 @@ const OtherChargesTable = ({ data, loading, page, pageSize }) => {
     );
   }
 
+  const payLabel = (v) => ({ '0': 'Cash', '1': 'Cheque', '2': 'Card', '3': 'UPI', '4': 'Online' }[String(v)] || 'Cash');
+
   return (
     <table className="table premium-dashboard-table mb-0">
       <thead>
         <tr>
-          {['#', 'Bill No', 'Reg ID', 'Patient', 'Phone', 'Age/Sex', 'Date', 'Charges Category (Breakdown)', 'Amount', 'Disc', 'G.Total', 'Paid', 'Due'].map((h, i) => (
+          {['#', 'Bill No', 'Reg ID', 'Patient', 'Phone', 'Age/Sex', 'Date', 'Payment Mode', 'Charges Category (Breakdown)', 'Amount', 'Disc', 'G.Total', 'Paid', 'Due'].map((h, i) => (
             <th key={i}>{h}</th>
           ))}
         </tr>
@@ -1889,16 +1898,17 @@ const OtherChargesTable = ({ data, loading, page, pageSize }) => {
             <td><span className="text-secondary">{(page - 1) * pageSize + idx + 1}</span></td>
             <td><span className="badge-reg">{r.OutBillNo || '-'}</span></td>
             <td><span className="badge-reg">{r.RegistrationId || '-'}</span></td>
-            <td><span className="fw-semibold text-white">{r.PatientName || '-'}</span></td>
+            <td><span className="fw-semibold">{r.PatientName || '-'}</span></td>
             <td>{r.PhoneNo || '-'}</td>
             <td>{r.Age || '-'}/{r.Sex || '-'}</td>
             <td>{fmtDate(r.OutBillDate)}</td>
+            <td><span className="badge-reg" style={{ background: 'rgba(255,255,255,0.05)', color: '#a5b4fc', borderColor: 'rgba(255,255,255,0.1)' }}>{payLabel(r.PaymentType)}</span></td>
             <td style={{ minWidth: '220px', textAlign: 'left' }}>
               {r.items && r.items.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                   {r.items.map((item, i) => (
                     <div key={i} className="item-breakdown-row">
-                      <span className="text-white fw-medium">{item.ChargeName || item.OtherCharge || 'Charge'}</span>
+                      <span className="fw-medium">{item.ChargeName || item.OtherCharge || 'Charge'}</span>
                       <span className="fw-semibold text-info" style={{ marginLeft: '10px' }}>
                         {item.Qty > 1 ? `${item.Qty} × ` : ''}₹{Number(item.Amount || 0).toLocaleString('en-IN')}
                       </span>
@@ -1927,7 +1937,7 @@ const OtherChargesTable = ({ data, loading, page, pageSize }) => {
 
 const getHeaders = (tab) => {
   if (tab === 'visit') return ['#', 'Reg ID', 'Patient', 'Phone', 'Doctor', 'Visit Type', 'Date', 'Payment', 'Rate', 'RegCh', 'SrvCh', 'Disc', 'Total', 'Rec', 'Due', 'User'];
-  if (tab === 'otherCharges') return ['#', 'Bill No', 'Reg ID', 'Patient', 'Phone', 'Age/Sex', 'Date', 'Charges Category (Breakdown)', 'Amount', 'Disc', 'G.Total', 'Paid', 'Due'];
+  if (tab === 'otherCharges') return ['#', 'Bill No', 'Reg ID', 'Patient', 'Phone', 'Age/Sex', 'Date', 'Payment Mode', 'Charges Category (Breakdown)', 'Amount', 'Disc', 'G.Total', 'Paid', 'Due'];
   if (tab === 'tableData') return ['#', 'Reg ID', 'Patient', 'Phone', 'Age', 'Sex', 'Address', 'Reg Date', 'BillsCount'];
   return [];
 };
@@ -1942,7 +1952,7 @@ const getRowCells = (r, tab, idx, paymentLabel) => {
     return [
       td(idx),
       <td><span className="badge-reg">{r.RegistrationId}</span></td>,
-      <td className="fw-semibold text-white">{r.PatientName}</td>,
+      <td className="fw-semibold">{r.PatientName}</td>,
       td(r.PhoneNo),
       tdBold(r.DoctorName),
       td(r.VisitTypeName),
@@ -1968,7 +1978,7 @@ const getRowCells = (r, tab, idx, paymentLabel) => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
         {r.items.map((item, i) => (
           <div key={i} className="item-breakdown-row">
-            <span className="text-white fw-medium">{item.ChargeName || item.OtherCharge || 'Charge'}</span>
+            <span className="fw-medium">{item.ChargeName || item.OtherCharge || 'Charge'}</span>
             <span className="fw-semibold text-info" style={{ marginLeft: '10px' }}>
               {item.Qty > 1 ? `${item.Qty} × ` : ''}₹{Number(item.Amount || 0).toLocaleString('en-IN')}
             </span>
@@ -1983,10 +1993,11 @@ const getRowCells = (r, tab, idx, paymentLabel) => {
       td(idx),
       <td><span className="badge-reg">{r.OutBillNo || '-'}</span></td>,
       <td><span className="badge-reg">{r.RegistrationId || '-'}</span></td>,
-      <td className="fw-semibold text-white">{r.PatientName || '-'}</td>,
+      <td className="fw-semibold">{r.PatientName || '-'}</td>,
       td(r.PhoneNo),
       td(`${r.Age || '-'}/${r.Sex || '-'}`),
       td(fmtDate(r.OutBillDate)),
+      <td><span className="badge-reg" style={{ background: 'rgba(255,255,255,0.05)', color: '#a5b4fc', borderColor: 'rgba(255,255,255,0.1)' }}>{paymentLabel(r.PaymentType)}</span></td>,
       <td style={{ minWidth: '220px', textAlign: 'left' }}>{itemsText}</td>,
       <td><span className="fw-semibold text-success">₹{n2(r.Amount)}</span></td>,
       <td><span className="text-danger">₹{n2(r.DiscAmt)}</span></td>,
@@ -2003,7 +2014,7 @@ const getRowCells = (r, tab, idx, paymentLabel) => {
     return [
       td(idx),
       <td><span className="badge-reg">{r.RegistrationId}</span></td>,
-      <td className="fw-semibold text-white">{r.PatientName}</td>,
+      <td className="fw-semibold">{r.PatientName}</td>,
       td(r.PhoneNo),
       td(r.Age),
       td(r.Sex === 'M' ? 'Male' : r.Sex === 'F' ? 'Female' : r.Sex),

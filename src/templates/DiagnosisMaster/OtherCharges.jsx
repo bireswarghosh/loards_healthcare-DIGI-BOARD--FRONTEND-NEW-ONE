@@ -54,6 +54,34 @@ const OtherCharges = () => {
   // ================= DRAWER =================
   const [showDrawer, setShowDrawer] = useState(false);
   const [modalType, setModalType] = useState("view"); // view | edit
+  const [patientHistory, setPatientHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const fetchPatientChargesHistory = async (regId) => {
+    if (!regId) {
+      setPatientHistory([]);
+      return;
+    }
+    setHistoryLoading(true);
+    try {
+      const res = await axiosInstance.get(
+        `/opd-other-charges-with-items/search/date-range?startDate=2000-01-01&endDate=2099-12-31&limit=999999`
+      );
+      if (res.data.success) {
+        const allCharges = res.data.data || [];
+        const filtered = allCharges.filter(
+          (c) =>
+            c.RegistrationId?.toString().trim().toLowerCase() ===
+            regId.toString().trim().toLowerCase()
+        );
+        setPatientHistory(filtered);
+      }
+    } catch (err) {
+      console.error("Failed to load patient charges history:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   // ================= DELETE =================
   const [showConfirm, setShowConfirm] = useState(false);
@@ -315,6 +343,8 @@ const OtherCharges = () => {
 
         const doc = doctorList.find((d) => d.DoctorId == data.DoctorId);
         setDoctorSearch(doc?.Doctor || "");
+
+        fetchPatientChargesHistory(data.RegistrationId);
       }
 
       const chargesResponse = await axiosInstance.get("/other-charges-list");
@@ -383,6 +413,7 @@ const OtherCharges = () => {
     });
 
     setChargeItems([]);
+    setPatientHistory([]);
     setModalType("add");
     setShowDrawer(true);
   };
@@ -637,6 +668,8 @@ const OtherCharges = () => {
           Add3: patient.Add3,
           MStatus: patient.MStatus,
         }));
+
+        fetchPatientChargesHistory(patient.RegistrationId);
       }
     } catch (err) {
       toast.error("Failed to load patient details");
@@ -866,7 +899,9 @@ const OtherCharges = () => {
 
               <OverlayScrollbarsComponent style={{ height: "100%" }}>
                 <form className="p-3" onSubmit={handleSubmit}>
-                  {/* ================= REGISTRATION DETAIL ================= */}
+                  <div className="row">
+                    <div className="col-lg-8 border-end">
+                      {/* ================= REGISTRATION DETAIL ================= */}
                   <h6 className="text-primary border-bottom pb-2">
                     Registration Detail
                   </h6>
@@ -1626,8 +1661,66 @@ const OtherCharges = () => {
                       </button>
                     )}
                   </div>
-                </form>
-              </OverlayScrollbarsComponent>
+                </div>
+
+                {/* ===== PATIENT'S EXISTING OTHER CHARGES HISTORY ===== */}
+                <div className="col-lg-4">
+                  <div className="sticky-top" style={{ top: '10px' }}>
+                    <h6 className="text-warning border-bottom pb-2 mb-3 d-flex align-items-center">
+                      <i className="fa-light fa-clock-rotate-left me-2"></i>
+                      Existing Charges History
+                    </h6>
+                    {historyLoading ? (
+                      <div className="text-center py-4 text-muted">
+                        <div className="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+                        Loading History...
+                      </div>
+                    ) : patientHistory.length === 0 ? (
+                      <div className="text-center py-4 text-muted small">
+                        <i className="fa-light fa-folder-open d-block mb-2" style={{ fontSize: '1.5rem' }}></i>
+                        No past other charges recorded for this patient.
+                      </div>
+                    ) : (
+                      <div style={{ maxHeight: 'calc(100vh - 180px)', overflowY: 'auto', paddingRight: '5px' }}>
+                        {patientHistory.map((h, i) => (
+                          <div key={i} className="card bg-black border-secondary mb-3 shadow-sm" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <div className="card-header bg-dark py-2 px-3 d-flex justify-content-between align-items-center" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                              <span className="fw-semibold text-warning small">{h.OutBillNo}</span>
+                              <span className="badge bg-primary text-white small" style={{ fontSize: '0.7rem' }}>
+                                {new Date(h.OutBillDate).toLocaleDateString('en-IN')}
+                              </span>
+                            </div>
+                            <div className="card-body p-3 bg-black">
+                              <div className="mb-2">
+                                {(h.items || h.chargeItems || []).map((item, idx) => (
+                                  <div key={idx} className="d-flex justify-content-between align-items-center mb-1 text-light small">
+                                    <span>• {item.OtherCharge || item.ChargeName || 'Charge'}</span>
+                                    <span className="fw-medium text-info">
+                                      {item.Qty > 1 ? `${item.Qty} × ` : ''}₹{Number(item.Amount || 0).toLocaleString('en-IN')}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="border-top pt-2 d-flex justify-content-between align-items-center small text-white" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                                <span>Grand Total:</span>
+                                <span className="fw-bold text-success">₹{Number(h.GTotal || 0).toLocaleString('en-IN')}</span>
+                              </div>
+                              <div className="d-flex justify-content-between align-items-center small text-white mt-1">
+                                <span>Paid / Due:</span>
+                                <span className="fw-semibold text-info">
+                                  ₹{Number(h.paidamt || 0).toLocaleString('en-IN')} / <span className={h.dueamt > 0 ? 'text-danger' : 'text-success'}>₹{Number(h.dueamt || 0).toLocaleString('en-IN')}</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </form>
+          </OverlayScrollbarsComponent>
             </div>
           </>
         )}

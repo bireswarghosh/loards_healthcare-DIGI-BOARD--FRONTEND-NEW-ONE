@@ -74,7 +74,7 @@ export const generateOpdReportPDF = (data, activeTab, fromDate, toDate, summary,
 
   // === TABLE ===
   if (activeTab === 'otherCharges') {
-    const columns = ['#', 'Bill No', 'Reg ID', 'Patient', 'Phone', 'Age/Sex', 'Date', 'Charge Items', 'Amount', 'Disc', 'G.Total', 'Paid', 'Due'];
+    const columns = ['#', 'Bill No', 'Reg ID', 'Patient', 'Phone', 'Age/Sex', 'Date', 'Payment Mode', 'Charge Items', 'Amount', 'Disc', 'G.Total', 'Paid', 'Due'];
     const rows = data.map((r, i) => {
       const itemsText = r.items && r.items.length > 0
         ? r.items.map(it => `${it.ChargeName || it.OtherCharge || '-'}${it.Qty > 1 ? ' x' + it.Qty : ''} = Rs.${fmt(it.Amount)}`).join('\n')
@@ -87,6 +87,7 @@ export const generateOpdReportPDF = (data, activeTab, fromDate, toDate, summary,
         r.PhoneNo || '',
         `${r.Age || '-'}/${r.Sex || '-'}`,
         formatDate(r.OutBillDate),
+        payLabel(r.PaymentType),
         itemsText,
         fmt(r.Amount),
         fmt(r.DiscAmt),
@@ -106,17 +107,18 @@ export const generateOpdReportPDF = (data, activeTab, fromDate, toDate, summary,
       columnStyles: {
         0: { halign: 'center', cellWidth: 8 },
         1: { cellWidth: 14 },
-        2: { cellWidth: 22 },
-        3: { cellWidth: 28 },
-        4: { cellWidth: 22 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 24 },
+        4: { cellWidth: 20 },
         5: { cellWidth: 14, halign: 'center' },
-        6: { cellWidth: 18, halign: 'center' },
-        7: { cellWidth: 70 },
-        8: { halign: 'right', cellWidth: 16 },
-        9: { halign: 'right', cellWidth: 14 },
-        10: { halign: 'right', cellWidth: 16, fontStyle: 'bold' },
-        11: { halign: 'right', cellWidth: 16 },
-        12: { halign: 'right', cellWidth: 14 },
+        6: { cellWidth: 16, halign: 'center' },
+        7: { cellWidth: 18, halign: 'center' }, // Payment Mode
+        8: { cellWidth: 54 }, // Charge Items
+        9: { halign: 'right', cellWidth: 15 },
+        10: { halign: 'right', cellWidth: 13 },
+        11: { halign: 'right', cellWidth: 15, fontStyle: 'bold' },
+        12: { halign: 'right', cellWidth: 15 },
+        13: { halign: 'right', cellWidth: 13 },
       },
       margin: { left: 10, right: 10 },
       didDrawPage: (d) => drawFooter(doc, W, H, d.pageNumber),
@@ -183,10 +185,9 @@ const performGrouping = (list, key) => {
   let groups = {};
   if (key === 'payment') {
     groups = {
-      'CASH': list.filter(r => String(r.PaymentType) === '0'),
+      'CASH': list.filter(r => !['1', '2', '3', '4'].includes(String(r.PaymentType))),
       'UPI': list.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1'),
-      'BANK': list.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4'),
-      'OTHERS': list.filter(r => !['0', '1', '2', '3', '4'].includes(String(r.PaymentType)))
+      'BANK': list.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4')
     };
   } else if (key === 'doctor') {
     const uniqueDocs = [...new Set(list.map(r => r.DoctorName).filter(Boolean))].sort();
@@ -295,20 +296,22 @@ const generateGroupedPortraitPDF = (data, fromDate, toDate, groupBy, subGroupBy 
       4: { cellWidth: 33, halign: 'center' }
     };
   } else if (activeTab === 'otherCharges') {
-    columns = ['Bill No', 'Date', 'Patient', 'Paid', 'Due'];
+    columns = ['Bill No', 'Date', 'Payment', 'Patient', 'Paid', 'Due'];
     getRowData = (r) => [
       r.OutBillNo || '-',
       r.OutBillDate ? r.OutBillDate.split('T')[0] : '-',
+      payLabel(r.PaymentType),
       r.PatientName || '-',
       Number(r.paidamt || 0).toFixed(2),
       Number(r.dueamt || 0).toFixed(2)
     ];
     colStyles = {
-      0: { cellWidth: 35 },
-      1: { cellWidth: 28 },
-      2: { cellWidth: 65 },
-      3: { cellWidth: 28, halign: 'right' },
-      4: { cellWidth: 30, halign: 'right' }
+      0: { cellWidth: 32 },
+      1: { cellWidth: 24 },
+      2: { cellWidth: 20, halign: 'center' },
+      3: { cellWidth: 50 },
+      4: { cellWidth: 28, halign: 'right' },
+      5: { cellWidth: 28, halign: 'right' }
     };
   } else if (activeTab === 'tableData') {
     columns = ['Reg Id', 'Date', 'Patient', 'Gender', 'Phone'];
@@ -495,7 +498,7 @@ const generateGroupedPortraitPDF = (data, fromDate, toDate, groupBy, subGroupBy 
 
   // Calculate final summary box on bottom right
   const grandTotal = data.reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
-  const cashCol = data.filter(r => String(r.PaymentType) === '0').reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
+  const cashCol = data.filter(r => !['1', '2', '3', '4'].includes(String(r.PaymentType))).reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
   const upiCol = data.filter(r => String(r.PaymentType) === '3' || String(r.PaymentType) === '1').reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
   const bankCol = data.filter(r => String(r.PaymentType) === '2' || String(r.PaymentType) === '4').reduce((s, x) => s + Number(x.RecAmt || x.paidamt || 0), 0);
   const otherCol = grandTotal - (cashCol + upiCol + bankCol);
@@ -562,4 +565,4 @@ function drawFooter(doc, W, H, pageNumber) {
 
 function fmt(v) { return v != null ? Number(v).toFixed(2) : '0.00'; }
 function formatDate(d) { return d ? new Date(d).toLocaleDateString('en-IN') : '-'; }
-function payLabel(v) { return { 0: 'Cash', 1: 'Cheque', 2: 'Card', 3: 'UPI', 4: 'Online' }[v] || '-'; }
+function payLabel(v) { return { 0: 'Cash', 1: 'Cheque', 2: 'Card', 3: 'UPI', 4: 'Online' }[v] || 'Cash'; }
