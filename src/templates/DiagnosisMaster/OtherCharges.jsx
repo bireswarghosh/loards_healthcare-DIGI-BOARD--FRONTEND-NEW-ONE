@@ -496,6 +496,17 @@ const OtherCharges = () => {
   // add==================================
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.PaymentType === "" || formData.PaymentType === undefined || formData.PaymentType === null) {
+      toast.error("Please select a payment method.");
+      return;
+    }
+    const amt = parseFloat(formData.paidamt || 0);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error("Please enter a valid paid amount greater than 0.");
+      return;
+    }
+
     try {
       const res = await axiosInstance.post("/opd-other-charges-with-items", {
         ...payload,
@@ -516,6 +527,17 @@ const OtherCharges = () => {
   // ================= UPDATE =================
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.PaymentType === "" || formData.PaymentType === undefined || formData.PaymentType === null) {
+      toast.error("Please select a payment method.");
+      return;
+    }
+    const amt = parseFloat(formData.paidamt || 0);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error("Please enter a valid paid amount greater than 0.");
+      return;
+    }
+
     try {
       await axiosInstance.put(
         `/opd-other-charges-with-items/${formData.OutBillId}`,

@@ -633,6 +633,26 @@ const VisitEntry = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Enforce required payment validations
+    if (!paymentMethods || paymentMethods.length === 0) {
+      alert("Please add at least one payment method.");
+      return;
+    }
+
+    for (let i = 0; i < paymentMethods.length; i++) {
+      const pm = paymentMethods[i];
+      if (pm.type === "" || pm.type === undefined || pm.type === null) {
+        alert(`Please select a payment type for Payment #${i + 1}.`);
+        return;
+      }
+      const amt = parseFloat(pm.amount || 0);
+      if (isNaN(amt) || amt <= 0) {
+        alert(`Please enter a valid amount greater than 0 for Payment #${i + 1}.`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
