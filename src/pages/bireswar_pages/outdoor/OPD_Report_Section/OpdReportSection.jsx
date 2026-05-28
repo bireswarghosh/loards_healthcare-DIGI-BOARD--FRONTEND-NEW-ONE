@@ -299,11 +299,11 @@ const OpdReportSection = () => {
     filteredData.forEach(r => {
       const val = activeTab === 'visit' ? Number(r.RecAmt || 0) : Number(r.paidamt || 0);
       const type = String(r.PaymentType);
-      if (type === '0') totals.cash += val;
-      else if (type === '1') totals.cheque += val;
+      if (type === '1') totals.cheque += val;
       else if (type === '2') totals.card += val;
       else if (type === '3') totals.upi += val;
       else if (type === '4') totals.online += val;
+      else totals.cash += val; // Default / null / others / '0' goes to CASH!
     });
     return totals;
   }, [filteredData, activeTab]);
