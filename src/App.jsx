@@ -75,6 +75,7 @@ import OtherChargesIPD from "./pages/bireswar_pages/outdoor/Other_Charges/OtherC
 import CaseList from "./pages/bireswar_pages/outdoor/Other_Charges/CaseList.jsx";
 import AgentWiseSaleReport from "./pages/bireswar_pages/outdoor/Other_Charges/AgentWiseSaleReport.jsx";
 import CaseView from "./pages/bireswar_pages/outdoor/Other_Charges/CaseView.jsx";
+import CaseFlowExplorer from "./pages/bireswar_pages/outdoor/Other_Charges/CaseFlowExplorer.jsx";
 import DateWiseRegistrationCharge from "./pages/bireswar_pages/outdoor/DateWiseRegistrationCharge/DateWiseRegistrationCharge.jsx";
 import PatientHistory from "./pages/bireswar_pages/outdoor/PatientHistory/PatientHistory.jsx";
 import IVFBIODATAMASTER from "./pages/bireswar_pages/outdoor/IVF/IVFBIODATAMASTER.jsx";
@@ -547,6 +548,7 @@ function App() {
 <Route path="/CaseList" element={<CaseList />} />
 <Route path="/AgentWiseSaleReport" element={<AgentWiseSaleReport />} />
 <Route path="/CaseView/:caseId" element={<CaseView />} />
+<Route path="/CaseFlowExplorer" element={<ProtectedRoute><CaseFlowExplorer /></ProtectedRoute>} />
 
 <Route path="/CaseEntry" element={<CaseEntryForm />} />
 <Route path="/CaseEntry/:id/:Modex" element={<CaseEntryForm />} />

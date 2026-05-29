@@ -70,6 +70,14 @@ Diagnosis
           </li>
         )}
 
+        {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/CaseFlowExplorer" className="sidebar-link">
+              Case Flow Explorer
+            </NavLink>
+          </li>
+        )}
+
 
          {(isSuperAdmin || permissions?.diagnosis_laboratoryQuery !== false) && (
           <li className="sidebar-dropdown-item">

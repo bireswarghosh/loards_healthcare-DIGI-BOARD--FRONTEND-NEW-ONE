@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import axiosInstance from "../../../../axiosInstance";
 import Footer from "../../../../components/footer/Footer";
+import { useAuth } from "../../../../context/AuthContext";
 
 const STORAGE_KEY = "caseListSearch";
 const getStored = () => {
@@ -11,6 +12,70 @@ const getStored = () => {
 
 const CaseList = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [adminLevel, setAdminLevel] = useState("0");
+  const [activeTab, setActiveTab] = useState("list");
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsPagination, setLogsPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    pages: 1,
+  });
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user?.userId) {
+        try {
+          const res = await axiosInstance.get('/auth/users');
+          if (res.data.success) {
+            const currentUser = res.data.data.find(u => String(u.UserId) === String(user.userId));
+            if (currentUser) {
+              setAdminLevel(String(currentUser.Admin));
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+        }
+      }
+    };
+    fetchUserRole();
+  }, [user]);
+
+  const fetchAuditLogs = async () => {
+    if (!user) return;
+    try {
+      setLogsLoading(true);
+      const isSuper = adminLevel === "1" || user?.username === 'lords' || user?.username === 'lordsYou';
+      
+      let url = `/activity-log?action=edit_case_unlock&page=${logsPagination.page}&limit=${logsPagination.limit}`;
+      if (!isSuper) {
+        url += `&username=${user.username}`;
+      }
+      
+      const res = await axiosInstance.get(url);
+      if (res.data.success) {
+        setAuditLogs(res.data.data || []);
+        const total = res.data.total || 0;
+        setLogsPagination(prev => ({
+          ...prev,
+          total,
+          pages: Math.ceil(total / prev.limit)
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching audit logs:", err);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "logs") {
+      fetchAuditLogs();
+    }
+  }, [activeTab, logsPagination.page, adminLevel]);
   const dropdownRef = useRef(null);
   const stored = useRef(getStored()).current;
   const today = new Date().toISOString().slice(0, 10);
@@ -212,6 +277,16 @@ const CaseList = () => {
                   </button>
 
                   <button
+                    className="btn btn-sm text-info"
+                    title="Trace Flow"
+                    onClick={() => {
+                      navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(data.CaseId)}`);
+                    }}
+                  >
+                    <i className="fa-duotone fa-network-wired"></i>
+                  </button>
+
+                  <button
                     className="btn btn-sm text-success"
                     title="Edit"
                     onClick={() => {
@@ -292,77 +367,82 @@ const CaseList = () => {
           <div className="col-12">
             <div className="panel">
               <div className="panel-header d-flex justify-content-between align-items-center">
-                <h5>🏥 Case List</h5>
-                <div className="btn-box d-flex flex-wrap gap-2">
-                  <button
-                    className="btn btn-sm btn-success"
-                    onClick={() => navigate("/CaseEntry")}
-                  >
-                    <i className="fa-light fa-plus me-2"></i> Add New Case
-                  </button>
-                  <div id="tableSearch" className="d-flex gap-2">
-                    <input
-                      type="date"
-                      className="form-control form-control-sm"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                    />
-                    <input
-                      type="date"
-                      className="form-control form-control-sm"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                    />
+                <h5>{activeTab === "list" ? "🏥 Case List" : "🔒 Case Edit Audit Logs"}</h5>
+                <div className="btn-box d-flex flex-wrap gap-2 align-items-center">
+                  {activeTab === "list" && (
+                    <>
+                      <button
+                        className="btn btn-sm btn-success"
+                        onClick={() => navigate("/CaseEntry")}
+                      >
+                        <i className="fa-light fa-plus me-2"></i> Add New Case
+                      </button>
+                      <div id="tableSearch" className="d-flex gap-2">
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                        />
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                        />
 
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Patient Name"
-                      value={searchPatientName}
-                      onChange={(e) => setSearchPatientName(e.target.value)}
-                    />
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Phone"
-                      value={searchPhone}
-                      onChange={(e) => setSearchPhone(e.target.value)}
-                    />
-                    {/* <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Case No"
-                      value={searchRegistrationId}
-                      onChange={(e) => setSearchRegistrationId(e.target.value)}
-                    /> */}
-                    {/* <input
-                      type="date"
-                      className="form-control form-control-sm"
-                      value={searchDate}
-                      onChange={(e) => setSearchDate(e.target.value)}
-                    /> */}
-                  </div>
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={handleSearch}
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="Patient Name"
+                          value={searchPatientName}
+                          onChange={(e) => setSearchPatientName(e.target.value)}
+                        />
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="Phone"
+                          value={searchPhone}
+                          onChange={(e) => setSearchPhone(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={handleSearch}
+                      >
+                        <i className="fa-light fa-magnifying-glass"></i> Search
+                      </button>
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => {
+                          setStartDate(today);
+                          setEndDate(today);
+                          setSearchPatientName("");
+                          setSearchPhone("");
+                          setSearchDate("");
+                          setSearchRegistrationId("");
+                          sessionStorage.removeItem(STORAGE_KEY);
+                          fetchVisits("", "", "", "", 1, 20);
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </>
+                  )}
+
+                  <button 
+                    className={`btn btn-sm ${activeTab === 'list' ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => setActiveTab("list")}
                   >
-                    <i className="fa-light fa-magnifying-glass"></i> Search
+                    List
                   </button>
-                  <button
-                    className="btn btn-sm btn-secondary"
-                    onClick={() => {
-                      setStartDate(today);
-                      setEndDate(today);
-                      setSearchPatientName("");
-                      setSearchPhone("");
-                      setSearchDate("");
-                      setSearchRegistrationId("");
-                      sessionStorage.removeItem(STORAGE_KEY);
-                      fetchVisits("", "", "", "", 1, 20);
-                    }}
+                  <button 
+                    className={`btn btn-sm ${activeTab === 'logs' ? 'btn-danger' : 'btn-outline-danger'}`}
+                    onClick={() => setActiveTab("logs")}
                   >
-                    Clear
+                    <i className="fa-solid fa-shield-halved me-1"></i> Audit Logs
                   </button>
+
                   <button
                     className="btn btn-sm btn-danger"
                     onClick={() => {
@@ -375,74 +455,172 @@ const CaseList = () => {
               </div>
 
               <div className="panel-body">
-                {loading ? (
-                  <div className="text-center py-5">
-                    <div
-                      className="spinner-border text-primary"
-                      role="status"
-                    ></div>
-                  </div>
-                ) : (
-                  <>
-                    <OverlayScrollbarsComponent style={{ height: "500px" }}>
-                      {renderTable()}
-                    </OverlayScrollbarsComponent>
-
-                    {/* Dynamic Pagination UI based on API metadata */}
-                    <div className="d-flex justify-content-between align-items-center mt-3">
-                      <div className="text-muted small">
-                        Showing{" "}
-                        {(paginationModel.page - 1) * paginationModel.pageSize +
-                          1}{" "}
-                        to{" "}
-                        {Math.min(
-                          paginationModel.page * paginationModel.pageSize,
-                          rowCount,
-                        )}{" "}
-                        of {rowCount} entries
-                      </div>
-                      <nav>
-                        <ul className="pagination pagination-sm m-0">
-                          <li
-                            className={`page-item ${
-                              paginationModel.page === 1 ? "disabled" : ""
-                            }`}
-                          >
-                            <button
-                              className="page-link"
-                              onClick={() =>
-                                handlePaginationChange(paginationModel.page - 1)
-                              }
-                            >
-                              Previous
-                            </button>
-                          </li>
-                          <li className="page-item active">
-                            <span className="page-link">
-                              {paginationModel.page}/
-                              {paginationModel.totalPages}
-                            </span>
-                          </li>
-                          <li
-                            className={`page-item ${
-                              paginationModel.page >= paginationModel.totalPages
-                                ? "disabled"
-                                : ""
-                            }`}
-                          >
-                            <button
-                              className="page-link"
-                              onClick={() =>
-                                handlePaginationChange(paginationModel.page + 1)
-                              }
-                            >
-                              Next
-                            </button>
-                          </li>
-                        </ul>
-                      </nav>
+                {activeTab === "list" ? (
+                  loading ? (
+                    <div className="text-center py-5">
+                      <div
+                        className="spinner-border text-primary"
+                        role="status"
+                      ></div>
                     </div>
-                  </>
+                  ) : (
+                    <>
+                      <OverlayScrollbarsComponent style={{ height: "500px" }}>
+                        {renderTable()}
+                      </OverlayScrollbarsComponent>
+
+                      {/* Dynamic Pagination UI based on API metadata */}
+                      <div className="d-flex justify-content-between align-items-center mt-3">
+                        <div className="text-muted small">
+                          Showing{" "}
+                          {(paginationModel.page - 1) * paginationModel.pageSize +
+                            1}{" "}
+                          to{" "}
+                          {Math.min(
+                            paginationModel.page * paginationModel.pageSize,
+                            rowCount,
+                          )}{" "}
+                          of {rowCount} entries
+                        </div>
+                        <nav>
+                          <ul className="pagination pagination-sm m-0">
+                            <li
+                              className={`page-item ${
+                                paginationModel.page === 1 ? "disabled" : ""
+                              }`}
+                            >
+                              <button
+                                className="page-link"
+                                onClick={() =>
+                                  handlePaginationChange(paginationModel.page - 1)
+                                }
+                              >
+                                Previous
+                              </button>
+                            </li>
+                            <li className="page-item active">
+                              <span className="page-link">
+                                {paginationModel.page}/
+                                {paginationModel.totalPages}
+                              </span>
+                            </li>
+                            <li
+                              className={`page-item ${
+                                paginationModel.page >= paginationModel.totalPages
+                                  ? "disabled"
+                                  : ""
+                              }`}
+                            >
+                              <button
+                                className="page-link"
+                                onClick={() =>
+                                  handlePaginationChange(paginationModel.page + 1)
+                                }
+                              >
+                                Next
+                              </button>
+                            </li>
+                          </ul>
+                        </nav>
+                      </div>
+                    </>
+                  )
+                ) : (
+                  <div className="audit-logs-section">
+                    <div className="alert alert-info border-0 p-3 mb-4 rounded-3 d-flex align-items-center gap-3" style={{ background: "rgba(13, 110, 253, 0.1)", color: "#0d6efd" }}>
+                      <i className="fa-solid fa-circle-info fs-4"></i>
+                      <div>
+                        <strong>Audit Compliance Transparency:</strong> All completed case entry edits require mandatory unlocking and justification. 
+                        {adminLevel === "1" || user?.username === 'lords' || user?.username === 'lordsYou' 
+                          ? " As Super Admin, you are viewing the complete system-wide edit logs for all cashiers." 
+                          : " You are currently viewing your own personal case edit logs."}
+                      </div>
+                    </div>
+
+                    <div className="table-responsive border rounded">
+                      <table className="table table-dashed digi-dataTable table-hover mb-0">
+                        <thead>
+                          <tr>
+                            <th>Timestamp</th>
+                            <th>Action By</th>
+                            <th>Audit Details / Justification</th>
+                            <th>IP Address</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {logsLoading ? (
+                            <tr>
+                              <td colSpan="4" className="text-center text-muted py-4">
+                                Loading audit trail...
+                              </td>
+                            </tr>
+                          ) : auditLogs.length === 0 ? (
+                            <tr>
+                              <td colSpan="4" className="text-center text-muted py-4">
+                                No case edit logs found.
+                              </td>
+                            </tr>
+                          ) : (
+                            auditLogs.map((log) => (
+                              <tr key={log.id}>
+                                <td>
+                                  {new Date(log.createdAt).toLocaleString("en-IN", { hour12: true })}
+                                </td>
+                                <td>
+                                  <span className="badge bg-secondary px-2 py-1">
+                                    {log.username}
+                                  </span>
+                                </td>
+                                <td>
+                                  <div className="d-flex flex-column gap-1">
+                                    <span className="text-danger fw-bold small">
+                                      <i className="fa-solid fa-unlock-keyhole me-1"></i>
+                                      {log.action?.toUpperCase()}
+                                    </span>
+                                    <span className="text-dark-emphasis small" style={{ wordBreak: "break-word" }}>
+                                      {log.details}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td>
+                                  <code className="text-muted small">{log.ipAddress}</code>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Logs Pagination */}
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        disabled={logsPagination.page === 1}
+                        onClick={() =>
+                          setLogsPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+                        }
+                      >
+                        ◀ Prev
+                      </button>
+
+                      <span>
+                        Page <strong>{logsPagination.page}</strong> of{" "}
+                        <strong>{logsPagination.pages || 1}</strong> — Total Audit Records:{" "}
+                        {logsPagination.total}
+                      </span>
+
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        disabled={logsPagination.page >= logsPagination.pages}
+                        onClick={() =>
+                          setLogsPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+                        }
+                      >
+                        Next ▶
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

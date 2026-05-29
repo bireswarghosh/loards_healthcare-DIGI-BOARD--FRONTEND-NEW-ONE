@@ -1761,6 +1761,15 @@ ${pagesHtml}
                             >
                               <i className="fa-light fa-pen-to-square"></i>
                             </button>
+                            <button
+                              className="btn btn-sm btn-outline-info"
+                              title="Trace Flow"
+                              onClick={() => {
+                                navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(r.ReffId)}`);
+                              }}
+                            >
+                              <i className="fa-duotone fa-network-wired"></i>
+                            </button>
                           </div>
                         </td>
                         <td>{(page - 1) * limit + index + 1}</td>

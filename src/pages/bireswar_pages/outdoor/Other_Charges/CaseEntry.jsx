@@ -9,6 +9,7 @@ import SubDeptSelector from "./SubDeptSelector";
 import useAxiosFetch from "../../../../templates/DiagnosisMaster/Fetch";
 import ReceiptDetailModal from "./ReceiptDetailModal";
 import { toast } from "react-toastify";
+import { useAuth } from "../../../../context/AuthContext";
 
 const DepartmentModal = ({ isOpen, setIsOpen, tests = [] }) => {
   const [selectedTestIds, setSelectedTestIds] = useState([]);
@@ -248,6 +249,32 @@ const DepartmentModal = ({ isOpen, setIsOpen, tests = [] }) => {
 };
 
 const CaseEntry = () => {
+  const { user } = useAuth();
+  const [adminLevel, setAdminLevel] = useState("0");
+  const [isFormLocked, setIsFormLocked] = useState(true);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [unlockReason, setUnlockReason] = useState("");
+  const [confirmUnderstand, setConfirmUnderstand] = useState(false);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user?.userId) {
+        try {
+          const res = await axiosInstance.get('/auth/users');
+          if (res.data.success) {
+            const currentUser = res.data.data.find(u => String(u.UserId) === String(user.userId));
+            if (currentUser) {
+              setAdminLevel(String(currentUser.Admin));
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+        }
+      }
+    };
+    fetchUserRole();
+  }, [user]);
+
   const { data: depertments } = useAxiosFetch("/subdepartment");
   function utcToISTDateOnly(utc) {
     return new Intl.DateTimeFormat("en-CA", {
@@ -3065,7 +3092,56 @@ ${formData.ChequeNo ? `<tr>
           style={{ overflow: "hidden" }}
         >
           <OverlayScrollbarsComponent style={{ height: "100%", width: "100%" }}>
-            {/* === TOP ROW === */}
+            {mode === "edit" && (
+              <>
+                <style>{`
+                  @keyframes warningPulse {
+                    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.8); border-color: #dc3545; }
+                    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); border-color: #ffc107; }
+                    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); border-color: #dc3545; }
+                  }
+                  .pulsing-warning-lock {
+                    animation: warningPulse 1.8s infinite;
+                  }
+                `}</style>
+                <div className={`alert ${isFormLocked ? "alert-danger pulsing-warning-lock" : "alert-success"} shadow-lg border p-3 mb-4 d-flex align-items-center justify-content-between`} style={{
+                  background: isFormLocked ? 'linear-gradient(135deg, #1a0606, #3b0a0a)' : 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
+                  borderWidth: '2px',
+                  color: isFormLocked ? '#ffc107' : '#333',
+                  borderRadius: '12px',
+                  margin: '10px'
+                }}>
+                  <div className="d-flex align-items-center gap-3">
+                    <span style={{ fontSize: '28px' }}>
+                      {isFormLocked ? "⚠️" : "🔓"}
+                    </span>
+                    <div>
+                      <h6 className="fw-bold mb-1" style={{ color: isFormLocked ? '#ffc107' : '#1b5e20', letterSpacing: '0.5px' }}>
+                        {isFormLocked ? "🚨 FRAUD PREVENTION COMPLIANCE LOCK ACTIVE" : "AUDIT CLEARANCE: Form Unlocked"}
+                      </h6>
+                      <p className="mb-0 small" style={{ opacity: 0.9 }}>
+                        {isFormLocked 
+                          ? "CRITICAL WARNING: Tampering with or altering case entries is a high-risk financial audit violation. All unlocks are logged and fingerprinted."
+                          : `Form successfully unlocked by ${user?.username || 'user'}. Edits are now allowed and are being fully logged for audit.`
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  {isFormLocked && (
+                    <button 
+                      type="button" 
+                      className="btn btn-danger btn-sm px-4 py-2 fw-bold"
+                      style={{ background: 'linear-gradient(135deg, #d32f2f, #c62828)', border: 'none', borderRadius: '20px', letterSpacing: '0.5px', color: 'white' }}
+                      onClick={() => setShowUnlockModal(true)}
+                    >
+                      <i className="fa-solid fa-lock-open me-2"></i> Unlock Document
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+            <fieldset disabled={mode === "view" || (mode === "edit" && isFormLocked)} style={{ border: "none", padding: 0, margin: 0 }}>
+              {/* === TOP ROW === */}
             <div className="row g-1 mb-1">
               {/* SECTION 1: FLAGS */}
               <div className="col-12 col-md-4 col-lg-4">
@@ -3182,7 +3258,7 @@ ${formData.ChequeNo ? `<tr>
                       className="flex-grow-1 ms-1"
                       style={{ height: "28px" }}
                     >
-                      {mode === "view" ? (
+                      {mode === "view" || (mode === "edit" && isFormLocked) ? (
                         <input
                           disabled
                           className={inputClass}
@@ -3236,7 +3312,7 @@ ${formData.ChequeNo ? `<tr>
                       className="flex-grow-1 ms-1"
                       style={{ height: "28px" }}
                     >
-                      {mode === "view" ? (
+                      {mode === "view" || (mode === "edit" && isFormLocked) ? (
                         <input
                           disabled
                           className={inputClass}
@@ -3879,6 +3955,7 @@ ${formData.ChequeNo ? `<tr>
                       placeholder="Search Agent..."
                       isClearable
                       isLoading={isSearchingAgent}
+                      isDisabled={mode === "view" || (mode === "edit" && isFormLocked)}
                       noOptionsMessage={({ inputValue }) =>
                         inputValue.length < 2
                           ? "Type at least 2 characters"
@@ -4100,7 +4177,7 @@ ${formData.ChequeNo ? `<tr>
                       isSearchable
                       isClearable
                       isLoading={isSearchingTest}
-                      isDisabled={mode === "view"}
+                      isDisabled={mode === "view" || (mode === "edit" && isFormLocked)}
                       noOptionsMessage={({ inputValue }) =>
                         inputValue.length < 2
                           ? "Type at least 2 characters"
@@ -4496,6 +4573,7 @@ ${formData.ChequeNo ? `<tr>
                 </div>
               </div>
             </div>
+            </fieldset>
           </OverlayScrollbarsComponent>
         </div>
 
@@ -4529,7 +4607,7 @@ ${formData.ChequeNo ? `<tr>
               fontWeight: "bold",
               color: "black",
             }}
-            disabled={loading}
+            disabled={loading || (mode === "edit" && isFormLocked)}
           >
             Save
           </button>
@@ -4588,6 +4666,16 @@ ${formData.ChequeNo ? `<tr>
           >
             Exit
           </button>
+
+          {formData.CaseId && (
+            <button
+              onClick={() => navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(formData.CaseId)}`)}
+              className="btn btn-sm btn-info text-white border shadow-sm"
+              style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            >
+              <i className="fa-duotone fa-network-wired me-1"></i>Trace Flow
+            </button>
+          )}
 
           <div className="border-end mx-1"></div>
           {["Work Sheet", "D-Work Sheet", "F-Form"].map((btn) => (
@@ -4723,8 +4811,130 @@ ${formData.ChequeNo ? `<tr>
           tests={dWorkTests}
         />
       )}
+
+      {showUnlockModal && (
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1050, backdropFilter: "blur(5px)", backgroundColor: "rgba(0,0,0,0.6)" }}></div>
+          <div className="modal fade show d-block" tabIndex="-1" style={{ zIndex: 1060 }}>
+            <div className="modal-dialog modal-dialog-centered">
+              <div className="modal-content shadow-lg border-0" style={{
+                borderRadius: "16px",
+                overflow: "hidden",
+                background: "linear-gradient(145deg, #150505, #220707)",
+                border: "2px solid #dc3545"
+              }}>
+                {/* Header */}
+                <div className="p-4 text-white text-center position-relative" style={{
+                  background: "linear-gradient(135deg, #7c1212, #b71c1c)",
+                  borderBottom: "2px solid #dc3545"
+                }}>
+                  <div className="fs-1 mb-2">⚠️</div>
+                  <h5 className="modal-title fw-bold text-uppercase" style={{ letterSpacing: "1px", color: "#ffc107" }}>PROSECUTION & FRAUD PREVENTION NOTICE</h5>
+                  <div className="small opacity-75 fw-bold" style={{ color: "#ffc107" }}>UNAUTHORIZED CASE ENTRY ALTERATION INFRINGEMENT</div>
+                </div>
+                
+                {/* Body */}
+                <div className="p-4 text-white">
+                  <div className="alert alert-danger border-0 p-3 mb-4 rounded-3 text-start" style={{ backgroundColor: "#3a0909", color: "#f8d7da" }}>
+                    <i className="fa-solid fa-triangle-exclamation me-2 fs-5" style={{ color: "#ffc107" }}></i>
+                    <strong>CRITICAL DANGER WARNING:</strong> Case entries constitute legally binding medical transaction records. Altering or modifying a completed case entry without validated corporate clearance is flagged as financial fraud. Under strict regulatory audit protocols:
+                    <ul className="mt-2 mb-0 ps-3 small">
+                      <li>Your User ID <strong>{user?.username || 'user'}</strong> is flagged for high-level monitoring.</li>
+                      <li>Workstation fingerprint, terminal IP, and system time are hard-captured.</li>
+                      <li>Unexplained alterations trigger **IMMEDIATE suspension of account credentials** pending executive board investigation.</li>
+                    </ul>
+                  </div>
+                  
+                  <label className="form-label small fw-bold text-uppercase" style={{ color: "#ffc107" }}>
+                    PROVIDE MANDATORY COMPLIANCE JUSTIFICATION *
+                  </label>
+                  <textarea
+                    className="form-control bg-dark border-danger text-white rounded-3 p-3 mb-2"
+                    rows="4"
+                    placeholder="Enter precise operational reason (e.g., 'Corrected patient age and doctor ID as per clinical registration sheet'). MUST be at least 15 characters."
+                    style={{ fontSize: "14px", resize: "none" }}
+                    value={unlockReason}
+                    onChange={(e) => setUnlockReason(e.target.value)}
+                  ></textarea>
+                  
+                  <div className="text-end small">
+                    {unlockReason.length < 15 ? (
+                      <span className="text-danger fw-bold">
+                        <i className="fa-solid fa-circle-xmark me-1"></i>
+                        Requires {15 - unlockReason.length} more characters
+                      </span>
+                    ) : (
+                      <span className="text-success fw-bold">
+                        <i className="fa-solid fa-circle-check me-1"></i>
+                        Validation Approved ({unlockReason.length} chars)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="form-check mt-3 mb-2 text-start">
+                    <input
+                      className="form-check-input border-danger bg-dark"
+                      type="checkbox"
+                      id="confirmComplianceCheck"
+                      checked={confirmUnderstand}
+                      onChange={(e) => setConfirmUnderstand(e.target.checked)}
+                      style={{ cursor: "pointer", width: "18px", height: "18px" }}
+                    />
+                    <label className="form-check-label small text-danger fw-bold ms-2" htmlFor="confirmComplianceCheck" style={{ cursor: "pointer", opacity: 0.9 }}>
+                      I UNDERSTAND THAT COMPILING UNSUBSTANTIATED OR FRAUDULENT EDITS WILL LEAD TO IMMEDIATE SUSPENSION AND COMPLIANCE ACTION.
+                    </label>
+                  </div>
+                </div>
+                
+                {/* Footer */}
+                <div className="p-4 bg-dark border-top border-secondary d-flex gap-2 justify-content-end">
+                  <button
+                    type="button"
+                    className="btn btn-secondary px-4 rounded-pill fw-bold"
+                    onClick={() => {
+                      setShowUnlockModal(false);
+                      setUnlockReason("");
+                      setConfirmUnderstand(false);
+                    }}
+                  >
+                    ABORT REQUEST
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger px-4 rounded-pill shadow-sm fw-bold"
+                    style={{ background: "linear-gradient(135deg, #b71c1c, #dc3545)", border: "none" }}
+                    disabled={unlockReason.length < 15 || !confirmUnderstand}
+                    onClick={async () => {
+                      try {
+                        // Log the unlock action
+                        await axiosInstance.post("/activity-log", {
+                          userId: user?.userId,
+                          username: user?.username,
+                          action: "edit_case_unlock",
+                          page: `/CaseEntry/${encodeURIComponent(orgId)}/edit`,
+                          details: `Unlocked Case Entry #${orgId} (Patient: ${formData.PatientName || 'N/A'}) for editing. Reason: ${unlockReason}`
+                        });
+                        
+                        setIsFormLocked(false);
+                        setShowUnlockModal(false);
+                        toast.success("Document unlocked! Action has been securely logged.");
+                      } catch (error) {
+                        console.error("Unlock log error:", error);
+                        toast.error("Failed to log audit details. Try again.");
+                      }
+                    }}
+                  >
+                    I ASSUME FULL LIABILITY
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
 export default CaseEntry;
+  
