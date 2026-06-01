@@ -58,6 +58,18 @@ const DOCX_OPTIONS = {
 type WordExactClientEditorProps = { initialTitle?: string; initialHtml?: string; onSave?: (data: { title: string; html: string }) => void; onContentChange?: (html: string) => void; onPrint?: () => void; };
 type TabId = "file" | "home" | "insert" | "layout" | "table" | "view";
 type FindMode = "find" | "replace";
+type TableResizeMode = "column" | "row" | "table";
+type TableResizeState = {
+  mode: TableResizeMode;
+  table: HTMLTableElement;
+  startX: number;
+  startY: number;
+  startWidth: number;
+  startHeight: number;
+  columnIndex?: number;
+  row?: HTMLTableRowElement;
+  cells?: HTMLTableCellElement[];
+};
 
 type TextStats = {
   words: number;
@@ -240,6 +252,17 @@ const cellIndexInRow = (cell: HTMLTableCellElement) => {
   return Math.max(0, cells.indexOf(cell));
 };
 
+const isNearRightEdge = (e: MouseEvent, rect: DOMRect, gap = 8) =>
+  rect.right - e.clientX <= gap && e.clientX >= rect.left;
+
+const isNearBottomEdge = (e: MouseEvent, rect: DOMRect, gap = 8) =>
+  rect.bottom - e.clientY <= gap && e.clientY >= rect.top;
+
+const getColumnCells = (table: HTMLTableElement, columnIndex: number) =>
+  Array.from(table.rows)
+    .map((row) => row.cells[columnIndex] as HTMLTableCellElement | undefined)
+    .filter(Boolean) as HTMLTableCellElement[];
+
 const getSelectionCell = () => {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return null;
@@ -279,6 +302,7 @@ const WordExactClientEditor: React.FC<WordExactClientEditorProps> = ({
   const imageInputRef = useRef<HTMLInputElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const lastFileRef = useRef<File | null>(null);
+  const tableResizeRef = useRef<TableResizeState | null>(null);
 
   const [title, setTitle] = useState(initialTitle);
   const [activeTab, setActiveTab] = useState<TabId>("home");
@@ -329,6 +353,191 @@ const WordExactClientEditor: React.FC<WordExactClientEditorProps> = ({
       if (!cell.innerHTML.trim()) cell.innerHTML = "<p><br></p>";
     });
   }, []);
+
+  useEffect(() => {
+    const root = hostRef.current;
+    if (!root) return;
+
+    const getResizeTarget = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const cell = closestCell(target);
+      const table = (cell?.closest("table") as HTMLTableElement | null) || null;
+
+      if (!cell || !table || !root.contains(table)) return null;
+
+      const cellRect = cell.getBoundingClientRect();
+      const tableRect = table.getBoundingClientRect();
+
+      const nearRight = isNearRightEdge(e, cellRect);
+      const nearBottom = isNearBottomEdge(e, cellRect);
+
+      const row = cell.parentElement as HTMLTableRowElement;
+      const isLastRow = row === table.rows[table.rows.length - 1];
+      const isLastCell = cellIndexInRow(cell) === row.cells.length - 1;
+
+      // Bottom-right last cell: full table resize
+      if (nearRight && nearBottom && isLastRow && isLastCell) {
+        return {
+          mode: "table" as const,
+          table,
+          cursor: "nwse-resize",
+          startWidth: tableRect.width,
+          startHeight: tableRect.height,
+        };
+      }
+
+      // Right border: column resize
+      if (nearRight) {
+        const columnIndex = cellIndexInRow(cell);
+        const cells = getColumnCells(table, columnIndex);
+
+        return {
+          mode: "column" as const,
+          table,
+          cursor: "col-resize",
+          columnIndex,
+          cells,
+          startWidth: cellRect.width,
+          startHeight: cellRect.height,
+        };
+      }
+
+      // Bottom border: row resize
+      if (nearBottom) {
+        return {
+          mode: "row" as const,
+          table,
+          cursor: "row-resize",
+          row,
+          startWidth: cellRect.width,
+          startHeight: cellRect.height,
+        };
+      }
+
+      return null;
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (tableResizeRef.current) return;
+
+      const target = getResizeTarget(e);
+      root.style.cursor = target?.cursor || "";
+    };
+
+    const onMouseLeave = () => {
+      if (!tableResizeRef.current) {
+        root.style.cursor = "";
+      }
+    };
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+
+      const target = getResizeTarget(e);
+      if (!target) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      root.style.cursor = target.cursor;
+
+      tableResizeRef.current = {
+        mode: target.mode,
+        table: target.table,
+        startX: e.clientX,
+        startY: e.clientY,
+        startWidth: target.startWidth,
+        startHeight: target.startHeight,
+        columnIndex: target.columnIndex,
+        row: target.row,
+        cells: target.cells,
+      };
+
+      document.body.classList.add("word-table-resizing");
+    };
+
+    const onWindowMove = (e: MouseEvent) => {
+      const state = tableResizeRef.current;
+      if (!state) return;
+
+      e.preventDefault();
+
+      // Column resize
+      if (state.mode === "column") {
+        const width = Math.max(
+          28,
+          Math.round(state.startWidth + e.clientX - state.startX),
+        );
+
+        state.table.style.tableLayout = "fixed";
+
+        state.cells?.forEach((cell) => {
+          cell.style.width = `${width}px`;
+          cell.style.minWidth = `${width}px`;
+        });
+      }
+
+      // Row resize
+      if (state.mode === "row" && state.row) {
+        const height = Math.max(
+          20,
+          Math.round(state.startHeight + e.clientY - state.startY),
+        );
+
+        state.row.style.height = `${height}px`;
+
+        Array.from(state.row.cells).forEach((cell) => {
+          const td = cell as HTMLTableCellElement;
+          td.style.height = `${height}px`;
+          td.style.minHeight = `${height}px`;
+        });
+      }
+
+      // Full table resize from bottom-right
+      if (state.mode === "table") {
+        const width = Math.max(
+          120,
+          Math.round(state.startWidth + e.clientX - state.startX),
+        );
+
+        const height = Math.max(
+          40,
+          Math.round(state.startHeight + e.clientY - state.startY),
+        );
+
+        state.table.style.width = `${width}px`;
+        state.table.style.minWidth = `${Math.min(width, 120)}px`;
+        state.table.style.height = `${height}px`;
+        state.table.style.minHeight = `${height}px`;
+      }
+    };
+
+    const stopResize = () => {
+      if (!tableResizeRef.current) return;
+
+      tableResizeRef.current = null;
+      root.style.cursor = "";
+      document.body.classList.remove("word-table-resizing");
+    };
+
+    root.addEventListener("mousemove", onMouseMove);
+    root.addEventListener("mouseleave", onMouseLeave);
+    root.addEventListener("mousedown", onMouseDown);
+
+    window.addEventListener("mousemove", onWindowMove);
+    window.addEventListener("mouseup", stopResize);
+
+    return () => {
+      root.removeEventListener("mousemove", onMouseMove);
+      root.removeEventListener("mouseleave", onMouseLeave);
+      root.removeEventListener("mousedown", onMouseDown);
+
+      window.removeEventListener("mousemove", onWindowMove);
+      window.removeEventListener("mouseup", stopResize);
+
+      document.body.classList.remove("word-table-resizing");
+    };
+  }, [hasDocument]);
 
   const makeEditable = useCallback(() => {
     const root = hostRef.current;
