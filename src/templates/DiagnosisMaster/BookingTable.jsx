@@ -3,10 +3,13 @@ import { Navigate } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import useAxiosFetch from "./Fetch";
 import { useMemo } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 
 const BookingTable = ({ bookingList = [], onRowClick }) => {
   const navigate = useNavigate();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
 
   const {data:doctors}=useAxiosFetch("/doctormaster?page=1&limit=10000",[])
  const doctorMap = useMemo(() => {
