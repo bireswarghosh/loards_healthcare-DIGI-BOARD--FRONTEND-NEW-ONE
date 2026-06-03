@@ -1,10 +1,18 @@
 import React, { useContext } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { DigiContext } from '../../context/DigiContext';
+import { useAuth } from '../../context/AuthContext';
 
 const WhatsAppAPISection = () => {
   const { whatsappState, toggleWhatsAppDropdown, layoutPosition, dropdownOpen, whatsappRef } = useContext(DigiContext);
   const { isMainDropdownOpen } = whatsappState || { isMainDropdownOpen: false };
+  const { permissions, user } = useAuth();
+
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+
+  if (!isSuperAdmin && !permissions?.whatsapp) {
+    return null;
+  }
 
   return (
     <li className="sidebar-item" ref={layoutPosition?.horizontal ? whatsappRef : null}>
@@ -13,84 +21,110 @@ const WhatsAppAPISection = () => {
         <span className="sidebar-txt">WhatsApp API</span>
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition?.horizontal ? (dropdownOpen?.whatsapp ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-text" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-message"></i></span>
-            <span className="sidebar-txt">Send Text</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-media" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-image"></i></span>
-            <span className="sidebar-txt">Send Media</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-button" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-square-check"></i></span>
-            <span className="sidebar-txt">Send Button</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-poll" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-poll"></i></span>
-            <span className="sidebar-txt">Send Poll</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-list" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-list"></i></span>
-            <span className="sidebar-txt">Send List</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-location" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-location-dot"></i></span>
-            <span className="sidebar-txt">Send Location</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-vcard" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-address-card"></i></span>
-            <span className="sidebar-txt">Send VCard</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-sticker" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-face-smile"></i></span>
-            <span className="sidebar-txt">Send Sticker</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-product" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-bag-shopping"></i></span>
-            <span className="sidebar-txt">Send Product</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/send-channel" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-bullhorn"></i></span>
-            <span className="sidebar-txt">Send to Channel</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/check-number" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-phone-check"></i></span>
-            <span className="sidebar-txt">Check Number</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/user-management" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-users"></i></span>
-            <span className="sidebar-txt">User Management</span>
-          </NavLink>
-        </li>
-        <li className="sidebar-dropdown-item">
-          <NavLink to="/whatsapp/device-management" className="sidebar-link">
-            <span className="nav-icon"><i className="fa-light fa-mobile"></i></span>
-            <span className="sidebar-txt">Device Management</span>
-          </NavLink>
-        </li>
+        {(isSuperAdmin || permissions?.whatsapp_sendText !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-text" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-message"></i></span>
+              <span className="sidebar-txt">Send Text</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendMedia !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-media" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-image"></i></span>
+              <span className="sidebar-txt">Send Media</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendButton !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-button" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-square-check"></i></span>
+              <span className="sidebar-txt">Send Button</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendPoll !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-poll" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-poll"></i></span>
+              <span className="sidebar-txt">Send Poll</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendList !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-list" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-list"></i></span>
+              <span className="sidebar-txt">Send List</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendLocation !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-location" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-location-dot"></i></span>
+              <span className="sidebar-txt">Send Location</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendVcard !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-vcard" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-address-card"></i></span>
+              <span className="sidebar-txt">Send VCard</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendSticker !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-sticker" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-face-smile"></i></span>
+              <span className="sidebar-txt">Send Sticker</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendProduct !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-product" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-bag-shopping"></i></span>
+              <span className="sidebar-txt">Send Product</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_sendChannel !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/send-channel" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-bullhorn"></i></span>
+              <span className="sidebar-txt">Send to Channel</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_checkNumber !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/check-number" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-phone-check"></i></span>
+              <span className="sidebar-txt">Check Number</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_userManagement !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/user-management" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-users"></i></span>
+              <span className="sidebar-txt">User Management</span>
+            </NavLink>
+          </li>
+        )}
+        {(isSuperAdmin || permissions?.whatsapp_deviceManagement !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/whatsapp/device-management" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-mobile"></i></span>
+              <span className="sidebar-txt">Device Management</span>
+            </NavLink>
+          </li>
+        )}
       </ul>
     </li>
   );

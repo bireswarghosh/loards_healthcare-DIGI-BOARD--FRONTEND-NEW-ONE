@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,6 +13,8 @@ import { useLocation } from "react-router-dom";
 const MoneyReceipt = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === "lordsYou" || user?.username === "lords" || user?.email === "lords@kol";
 
   const [findBy, setFindBy] = useState("name"); // name | no
   const [findValue, setFindValue] = useState("");
@@ -145,13 +148,35 @@ const MoneyReceipt = () => {
       // Only set Amount (prev paid) for ADD mode
       // For EDIT mode, Amount is set by fetchReceiptByNo with correct logic
       if (modalType === "add") {
-        setFormData((prev) => ({
-          ...prev,
-          Amount: totalPaid,
-        }));
+        setFormData((prev) => {
+          const updated = {
+            ...prev,
+            Amount: totalPaid,
+          };
+          
+          // If in refundMode, calculate default refund amount
+          if (refundMode === 1) {
+            const billAmt = Number(prev.BillAmount || 0);
+            const refundAmt = totalPaid - billAmt;
+            if (refundAmt > 0) {
+              setPaymentMethods([
+                {
+                  type: "0",
+                  amount: -refundAmt,
+                  upiApp: "",
+                  utrNumber: "",
+                  bankName: "",
+                  chequeNumber: "",
+                },
+              ]);
+            }
+          }
+          
+          return updated;
+        });
       }
     }
-  }, [allPrevReceipts]);
+  }, [allPrevReceipts, refundMode, modalType]);
 
   const fetchUsers = async () => {
     try {
@@ -1546,146 +1571,146 @@ ${pagesHtml}
         <div className="panel-header d-flex justify-content-between align-items-center" style={{ background: "linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)", padding: "14px 20px", borderRadius: "12px 12px 0 0" }}>
           <h5 style={{ color: "#fff", margin: 0, fontWeight: 700, letterSpacing: "0.5px" }}>💳 Sample Receipt</h5>
           <div className="d-flex gap-2">
-            <button
-              className="btn btn-sm"
-              style={{ background: "rgba(255,255,255,0.2)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.5)", fontWeight: 600, borderRadius: "8px", backdropFilter: "blur(4px)" }}
-              onClick={() => openDrawer(null, "add")}
-            >
-              <i className="fa fa-plus me-2"></i>Add Receipt
-            </button>
-            <button
-              className="btn btn-sm"
-              style={{ background: "rgba(244,67,54,0.8)", color: "#fff", border: "none", fontWeight: 600, borderRadius: "8px" }}
-              onClick={() => {
-                setRefundMode(1);
-                openDrawer(null, "add");
-              }}
-            >
-              <i className="fa fa-undo me-2"></i>Refund
-            </button>
-            {/* <button
-              className="btn btn-sm btn-danger"
-              onClick={() => openDrawer(null, "refund")}
-            >
-              <i className="fa fa-undo me-2"></i>Refund old
-            </button> */}
+            {(isSuperAdmin || permissions?.diagnosis_moneyReceipt_create !== false) && (
+              <button
+                className="btn btn-sm"
+                style={{ background: "rgba(255,255,255,0.2)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.5)", fontWeight: 600, borderRadius: "8px", backdropFilter: "blur(4px)" }}
+                onClick={() => openDrawer(null, "add")}
+              >
+                <i className="fa fa-plus me-2"></i>Add Receipt
+              </button>
+            )}
+            {(isSuperAdmin || permissions?.diagnosis_moneyReceipt_refund !== false) && (
+              <button
+                className="btn btn-sm"
+                style={{ background: "rgba(244,67,54,0.8)", color: "#fff", border: "none", fontWeight: 600, borderRadius: "8px" }}
+                onClick={() => {
+                  setRefundMode(1);
+                  openDrawer(null, "add");
+                }}
+              >
+                <i className="fa fa-undo me-2"></i>Refund
+              </button>
+            )}
           </div>
         </div>
 
         <div className="panel-body">
           {/* Filters */}
-          <div className="panel p-3 mb-3" style={{ background: "linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)", borderRadius: "16px", border: "1px solid #e0e0e0", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-            <div className="row g-3 align-items-center justify-content-center">
-              <div className="col-md-2">
-                <label className="form-label">Date From</label>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                />
-              </div>
+          {(() => {
+            const canSearch = isSuperAdmin || permissions?.diagnosis_moneyReceipt_search !== false;
+            return (
+              <div className="panel p-3 mb-3" style={{ background: "linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%)", borderRadius: "16px", border: "1px solid #e0e0e0", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                <div className="row g-3 align-items-center justify-content-center">
+                  <div className="col-md-2">
+                    <label className="form-label">Date From</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-              <div className="col-md-3">
-                <label className="form-label">Date To</label>
-                <input
-                  type="date"
-                  className="form-control form-control-sm"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
+                  <div className="col-md-3">
+                    <label className="form-label">Date To</label>
+                    <input
+                      type="date"
+                      className="form-control form-control-sm"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-              <div className="col-md-2">
-                <label className="form-label">Patient Name</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  placeholder="Search name..."
-                  value={searchPatientName}
-                  onChange={(e) => setSearchPatientName(e.target.value)}
-                />
-              </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Patient Name</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Search name..."
+                      value={searchPatientName}
+                      onChange={(e) => setSearchPatientName(e.target.value)}
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-              <div className="col-md-2">
-                <label className="form-label">Case No</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  placeholder="Case No..."
-                  value={searchCaseNo}
-                  onChange={(e) => setSearchCaseNo(e.target.value)}
-                />
-              </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Case No</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Case No..."
+                      value={searchCaseNo}
+                      onChange={(e) => setSearchCaseNo(e.target.value)}
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-              <div className="col-md-2">
-                <label className="form-label">Phone</label>
-                <input
-                  type="text"
-                  className="form-control form-control-sm"
-                  placeholder="Phone..."
-                  value={searchPhone}
-                  onChange={(e) => setSearchPhone(e.target.value)}
-                />
-              </div>
+                  <div className="col-md-2">
+                    <label className="form-label">Phone</label>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      placeholder="Phone..."
+                      value={searchPhone}
+                      onChange={(e) => setSearchPhone(e.target.value)}
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-              <div className="col-md-2 ">
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={showRec}
-                    onChange={() => setShowRec(true)}
-                  />
-                  <label className="form-check-label">All Receipt</label>
+                  <div className="col-md-2 ">
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={showRec}
+                        onChange={() => setShowRec(true)}
+                        disabled={!canSearch}
+                      />
+                      <label className="form-check-label">All Receipt</label>
+                    </div>
+                  </div>
+
+                  <div className="col-md-2  ">
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={!showRec}
+                        onChange={() => setShowRec(false)}
+                        disabled={!canSearch}
+                      />
+                      <label className="form-check-label">Refund</label>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="input-group input-group-sm">
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        placeholder="Search receipt..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleSearch();
+                        }}
+                        disabled={!canSearch}
+                      />
+                      <button
+                        className="btn btn-sm btn-info"
+                        onClick={handleSearch}
+                        disabled={!canSearch}
+                      >
+                        <i className="fa fa-search"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-
-              <div className="col-md-2  ">
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={!showRec}
-                    onChange={() => setShowRec(false)}
-                  />
-                  <label className="form-check-label">Refund</label>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="input-group input-group-sm">
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    placeholder="Search receipt..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleSearch();
-                    }}
-                  />
-                  <button
-                    className="btn btn-sm btn-info"
-                    onClick={handleSearch}
-                  >
-                    <i className="fa fa-search"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-            {/* Search + Barcode */}
-            {/* <div className="row mb-3"> */}
-
-            {/* <div className="col-md-6 text-end">
-              <img
-                src={`https://barcode.tec-it.com/barcode.ashx?data=${barcodeData}&code=Code128`}
-                alt="barcode"
-                height="45"
-              />
-              <div className="fw-bold mt-1">{barcodeData}</div>
-            </div> */}
-            {/* </div> */}
-          </div>
+            );
+          })()}
 
           {/* Table */}
           {loading ? (
@@ -1748,28 +1773,32 @@ ${pagesHtml}
                       <tr key={r.MoneyreeciptId || index}>
                         <td>
                           <div className="d-flex gap-2">
-                            <button
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => {
-                                if (r.Amount < 0) {
-                                  setRefundMode(1);
-                                  openDrawer(r, "edit");
-                                } else {
-                                  openDrawer(r, "edit");
-                                }
-                              }}
-                            >
-                              <i className="fa-light fa-pen-to-square"></i>
-                            </button>
-                            <button
-                              className="btn btn-sm btn-outline-info"
-                              title="Trace Flow"
-                              onClick={() => {
-                                navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(r.ReffId)}`);
-                              }}
-                            >
-                              <i className="fa-duotone fa-network-wired"></i>
-                            </button>
+                            {(isSuperAdmin || permissions?.diagnosis_moneyReceipt_edit !== false) && (
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => {
+                                  if (r.Amount < 0) {
+                                    setRefundMode(1);
+                                    openDrawer(r, "edit");
+                                  } else {
+                                    openDrawer(r, "edit");
+                                  }
+                                }}
+                              >
+                                <i className="fa-light fa-pen-to-square"></i>
+                              </button>
+                            )}
+                            {(isSuperAdmin || permissions?.diagnosis_moneyReceipt_view !== false) && (
+                              <button
+                                className="btn btn-sm btn-outline-info"
+                                title="Trace Flow"
+                                onClick={() => {
+                                  navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(r.ReffId)}`);
+                                }}
+                              >
+                                <i className="fa-duotone fa-network-wired"></i>
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td>{(page - 1) * limit + index + 1}</td>
@@ -2264,17 +2293,21 @@ ${pagesHtml}
                       borderRadius: "24px",
                       overflow: "hidden",
                       position: "relative",
-                      boxShadow: calculatedDueAmount <= 0
+                      boxShadow: calculatedDueAmount === 0
                         ? "0 20px 60px rgba(5,150,105,0.4), 0 0 0 1px rgba(52,211,153,0.2)"
-                        : "0 20px 60px rgba(108,92,231,0.4), 0 0 0 1px rgba(108,92,231,0.2)",
+                        : calculatedDueAmount < 0
+                          ? "0 20px 60px rgba(2,132,199,0.4), 0 0 0 1px rgba(56,189,248,0.2)"
+                          : "0 20px 60px rgba(108,92,231,0.4), 0 0 0 1px rgba(108,92,231,0.2)",
                     }}
                   >
                     {/* Glass Background */}
                     <div style={{
                       position: "absolute", inset: 0,
-                      background: calculatedDueAmount <= 0
+                      background: calculatedDueAmount === 0
                         ? "linear-gradient(160deg, #0d3320 0%, #064e3b 20%, #047857 45%, #059669 70%, #34d399 100%)"
-                        : "linear-gradient(160deg, #0f0c29 0%, #1a1a4e 20%, #302b63 45%, #4834d4 70%, #6c5ce7 100%)",
+                        : calculatedDueAmount < 0
+                          ? "linear-gradient(160deg, #082f49 0%, #0c4a6e 20%, #0284c7 45%, #0369a1 70%, #38bdf8 100%)"
+                          : "linear-gradient(160deg, #0f0c29 0%, #1a1a4e 20%, #302b63 45%, #4834d4 70%, #6c5ce7 100%)",
                     }}></div>
                     {/* Animated gradient overlay */}
                     <div style={{
@@ -2289,7 +2322,7 @@ ${pagesHtml}
                     }}></div>
 
                     {/* Full Paid Notification */}
-                    {calculatedDueAmount <= 0 && (
+                    {calculatedDueAmount === 0 && (
                       <div style={{
                         position: "relative",
                         background: "linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02), rgba(255,255,255,0.1))",
@@ -2304,6 +2337,25 @@ ${pagesHtml}
                         <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#34d399", boxShadow: "0 0 12px #34d399", animation: "blink 1.5s infinite" }}></div>
                         <span style={{ fontSize: "13px", fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "#ecfdf5" }}>PAYMENT COMPLETE • ZERO DUE</span>
                         <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#34d399", boxShadow: "0 0 12px #34d399", animation: "blink 1.5s infinite 0.75s" }}></div>
+                      </div>
+                    )}
+
+                    {/* Refund Due Notification */}
+                    {calculatedDueAmount < 0 && (
+                      <div style={{
+                        position: "relative",
+                        background: "linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02), rgba(255,255,255,0.1))",
+                        padding: "14px 20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        backdropFilter: "blur(10px)",
+                      }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8", boxShadow: "0 0 12px #38bdf8", animation: "blink 1.5s infinite" }}></div>
+                        <span style={{ fontSize: "13px", fontWeight: 800, letterSpacing: "3px", textTransform: "uppercase", color: "#e0f2fe" }}>REFUND PENDING • PATIENT OVERPAID</span>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#38bdf8", boxShadow: "0 0 12px #38bdf8", animation: "blink 1.5s infinite 0.75s" }}></div>
                       </div>
                     )}
 
@@ -2353,21 +2405,25 @@ ${pagesHtml}
                         )}
 
                         {/* Current Payment */}
-                        {currentPayment > 0 && (
+                        {currentPayment !== 0 && (
                           <>
-                            <div style={{ fontSize: "24px", fontWeight: 300, color: "rgba(255,255,255,0.3)" }}>−</div>
+                            <div style={{ fontSize: "24px", fontWeight: 300, color: "rgba(255,255,255,0.3)" }}>
+                              {currentPayment > 0 ? "−" : "+"}
+                            </div>
                             <div className="text-center" style={{ minWidth: "80px" }}>
-                              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Now Paying</div>
+                              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
+                                {currentPayment > 0 ? "Now Paying" : "Now Refunded"}
+                              </div>
                               <div style={{
                                 fontSize: "20px", fontWeight: 800, color: "#fff",
-                                background: "rgba(56,189,248,0.2)",
+                                background: currentPayment > 0 ? "rgba(56,189,248,0.2)" : "rgba(244,67,54,0.2)",
                                 borderRadius: "12px",
                                 padding: "8px 14px",
-                                border: "1px solid rgba(56,189,248,0.4)",
-                                boxShadow: "0 0 20px rgba(56,189,248,0.15)",
+                                border: currentPayment > 0 ? "1px solid rgba(56,189,248,0.4)" : "1px solid rgba(244,67,54,0.4)",
+                                boxShadow: currentPayment > 0 ? "0 0 20px rgba(56,189,248,0.15)" : "0 0 20px rgba(244,67,54,0.15)",
                                 lineHeight: 1.2,
                               }}>
-                                ₹{currentPayment.toLocaleString()}
+                                ₹{Math.abs(currentPayment).toLocaleString()}
                               </div>
                             </div>
                           </>
@@ -2398,33 +2454,51 @@ ${pagesHtml}
                         <div className="text-center" style={{ minWidth: "110px" }}>
                           <div style={{
                             fontSize: "10px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px",
-                            color: calculatedDueAmount <= 0 ? "#6ee7b7" : "#fca5a5",
+                            color: calculatedDueAmount === 0
+                              ? "#6ee7b7"
+                              : calculatedDueAmount < 0
+                                ? "#38bdf8"
+                                : "#fca5a5",
                           }}>
-                            {calculatedDueAmount <= 0 ? "PAID IN FULL" : "BALANCE DUE"}
+                            {calculatedDueAmount === 0
+                              ? "PAID IN FULL"
+                              : calculatedDueAmount < 0
+                                ? "REFUND DUE"
+                                : "BALANCE DUE"}
                           </div>
                           <div
                             style={{
                               fontSize: "30px",
                               fontWeight: 900,
                               color: "#fff",
-                              background: calculatedDueAmount <= 0
+                              background: calculatedDueAmount === 0
                                 ? "linear-gradient(135deg, rgba(16,185,129,0.3), rgba(52,211,153,0.15))"
-                                : "linear-gradient(135deg, rgba(239,68,68,0.3), rgba(248,113,113,0.15))",
+                                : calculatedDueAmount < 0
+                                  ? "linear-gradient(135deg, rgba(2,132,199,0.3), rgba(56,189,248,0.15))"
+                                  : "linear-gradient(135deg, rgba(239,68,68,0.3), rgba(248,113,113,0.15))",
                               borderRadius: "16px",
                               padding: "10px 22px",
-                              border: `2px solid ${calculatedDueAmount <= 0 ? "rgba(52,211,153,0.5)" : "rgba(248,113,113,0.5)"}`,
-                              boxShadow: calculatedDueAmount <= 0
+                              border: `2px solid ${
+                                calculatedDueAmount === 0
+                                  ? "rgba(52,211,153,0.5)"
+                                  : calculatedDueAmount < 0
+                                    ? "rgba(56,189,248,0.5)"
+                                    : "rgba(248,113,113,0.5)"
+                              }`,
+                              boxShadow: calculatedDueAmount === 0
                                 ? "0 8px 30px rgba(16,185,129,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
-                                : "0 8px 30px rgba(239,68,68,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
+                                : calculatedDueAmount < 0
+                                  ? "0 8px 30px rgba(2,132,199,0.3), inset 0 1px 0 rgba(255,255,255,0.1)"
+                                  : "0 8px 30px rgba(239,68,68,0.3), inset 0 1px 0 rgba(255,255,255,0.1)",
                               lineHeight: 1.2,
                             }}
                           >
-                            ₹{Math.max(0, calculatedDueAmount).toLocaleString()}
+                            ₹{Math.abs(calculatedDueAmount).toLocaleString()}
                           </div>
                         </div>
 
-                        {/* Add Payment - only when due > 0 */}
-                        {isDueAmountPositive && modalType !== "view" && (
+                        {/* Add Payment - only when due is not 0 */}
+                        {calculatedDueAmount !== 0 && modalType !== "view" && (
                           <div className="text-center">
                             <button
                               type="button"
@@ -2575,8 +2649,8 @@ ${pagesHtml}
                   {/* Multiple Payment Methods - Show locked when due <= 0 */}
                   {refundMode == 0
                     ? paymentMethods.map((payment, index) => {
-                        const isLocked = (calculatedDueAmount <= 0 && !forceUnlock) || (modalType === "edit" && !showSaveBtnEdit);
-                        const canUnlock = calculatedDueAmount <= 0 && !forceUnlock && modalType === "edit" && showSaveBtnEdit;
+                        const isLocked = (calculatedDueAmount === 0 && !forceUnlock) || (modalType === "edit" && !showSaveBtnEdit);
+                        const canUnlock = calculatedDueAmount === 0 && !forceUnlock && modalType === "edit" && showSaveBtnEdit;
                         return (
                         <div key={index} className="payment-card card mb-3" style={{
                           borderRadius: "14px",
@@ -2939,7 +3013,7 @@ ${pagesHtml}
 
                     {modalType !== "view" && (
                       <>
-                        {modalType == "add" && (
+                        {modalType == "add" && (isSuperAdmin || permissions?.diagnosis_moneyReceipt_create !== false) && (
                           <button
                             onClick={handleSave}
                             className="btn w-50"
@@ -2949,7 +3023,7 @@ ${pagesHtml}
                           </button>
                         )}
 
-                        {modalType == "edit" && showSaveBtnEdit && (
+                        {modalType == "edit" && showSaveBtnEdit && (isSuperAdmin || permissions?.diagnosis_moneyReceipt_edit !== false) && (
                           <button
                             onClick={handleSave}
                             className="btn w-50"
@@ -2959,87 +3033,89 @@ ${pagesHtml}
                           </button>
                         )}
 
-                        <button
-                          onClick={() => {
-                            if (refundMode == 0 && modalType != "add") {
-                              handlePrint();
-                            } else if (refundMode == 1 && modalType != "add") {
-                              let testData = tests.map((item, i) => {
-                                return {
-                                  slNo: i + 1,
-                                  name: testsMap[item.TestId] || "",
-                                  deliveryDate: item.DeliveryDate,
-                                  time: item.DeliveryTime,
-                                  amount: item.CancelTast == 1 ? 0 : item.Rate,
-                                  CancelTast: item.CancelTast,
+                        {(isSuperAdmin || permissions?.diagnosis_moneyReceipt_view !== false) && (
+                          <button
+                            onClick={() => {
+                              if (refundMode == 0 && modalType != "add") {
+                                handlePrint();
+                              } else if (refundMode == 1 && modalType != "add") {
+                                let testData = tests.map((item, i) => {
+                                  return {
+                                    slNo: i + 1,
+                                    name: testsMap[item.TestId] || "",
+                                    deliveryDate: item.DeliveryDate,
+                                    time: item.DeliveryTime,
+                                    amount: item.CancelTast == 1 ? 0 : item.Rate,
+                                    CancelTast: item.CancelTast,
+                                  };
+                                });
+
+                                console.log("test arr: ", paymentMethods);
+                                console.log("formData: ", formData);
+                                console.log("prev data: ", allPrevReceipts);
+                                const receiptData = {
+                                  clinicName: "LORDS DIAGNOSTIC",
+                                  address: "13/3, CIRCULAR 2ND BYE LANE,",
+                                  receiptType: "Money Refund",
+
+                                  patientDetails: {
+                                    receiptNo: formData.ReceiptNo || "",
+                                    receiptDate:
+                                      formData.ReceiptDate?.split("T")[0]
+                                        .split("-")
+                                        ?.reverse()
+                                        .join("/") || "",
+                                    caseNo: "OP/2526/00008",
+                                    caseDate:
+                                      formData.CaseDate?.split("T")[0]
+                                        .split("-")
+                                        ?.reverse()
+                                        .join("/") || "",
+                                    bedNo: "",
+                                    patientName: formData.PatientName || "",
+                                    age: formData.Age || "",
+                                    sex: formData.Sex || "",
+                                    referredBy:
+                                      doctorMap[formData.DoctorId] || "",
+                                    phoneNo: formData.Phone || "",
+                                  },
+
+                                  tests: testData,
+
+                                  billing: {
+                                    total: formData.BillAmount,
+                                    advance: formData.Amount || 0,
+                                    refundAmount:
+                                      paymentMethods[0].amount * -1 || 0,
+                                    paymentStatus: "Full & Final Payment.",
+                                    dueAmount: calculatedDueAmount * -1 || 0,
+                                  },
+
+                                  footer: {
+                                    receivedBy: "Admin",
+                                    billTime: "",
+                                    remarks: "",
+                                    deliveryNote:
+                                      "Report will be delivered between 07:00 PM(Same Day), Next day between",
+                                    greeting: "WE CARE FOR YOUR HEALTH",
+                                    signatory: "OFFICE MANAGER",
+                                  },
                                 };
-                              });
+                                setTimeout(
+                                  () => {
+                                    handleRefundPdf(receiptData);
+                                  },
 
-                              console.log("test arr: ", paymentMethods);
-                              console.log("formData: ", formData);
-                              console.log("prev data: ", allPrevReceipts);
-                              const receiptData = {
-                                clinicName: "LORDS DIAGNOSTIC",
-                                address: "13/3, CIRCULAR 2ND BYE LANE,",
-                                receiptType: "Money Refund",
-
-                                patientDetails: {
-                                  receiptNo: formData.ReceiptNo || "",
-                                  receiptDate:
-                                    formData.ReceiptDate?.split("T")[0]
-                                      .split("-")
-                                      ?.reverse()
-                                      .join("/") || "",
-                                  caseNo: "OP/2526/00008",
-                                  caseDate:
-                                    formData.CaseDate?.split("T")[0]
-                                      .split("-")
-                                      ?.reverse()
-                                      .join("/") || "",
-                                  bedNo: "",
-                                  patientName: formData.PatientName || "",
-                                  age: formData.Age || "",
-                                  sex: formData.Sex || "",
-                                  referredBy:
-                                    doctorMap[formData.DoctorId] || "",
-                                  phoneNo: formData.Phone || "",
-                                },
-
-                                tests: testData,
-
-                                billing: {
-                                  total: formData.BillAmount,
-                                  advance: formData.Amount || 0,
-                                  refundAmount:
-                                    paymentMethods[0].amount * -1 || 0,
-                                  paymentStatus: "Full & Final Payment.",
-                                  dueAmount: calculatedDueAmount * -1 || 0,
-                                },
-
-                                footer: {
-                                  receivedBy: "Admin",
-                                  billTime: "",
-                                  remarks: "",
-                                  deliveryNote:
-                                    "Report will be delivered between 07:00 PM(Same Day), Next day between",
-                                  greeting: "WE CARE FOR YOUR HEALTH",
-                                  signatory: "OFFICE MANAGER",
-                                },
-                              };
-                              setTimeout(
-                                () => {
-                                  handleRefundPdf(receiptData);
-                                },
-
-                                1000
-                              );
-                            }
-                          }}
-                          className="btn w-50"
-                          style={{ background: "linear-gradient(135deg, #ff9800, #f57c00)", color: "#fff", fontWeight: 700, borderRadius: "10px", padding: "10px", fontSize: "14px", boxShadow: "0 4px 15px rgba(255,152,0,0.4)", border: "none" }}
-                        >
-                          🖨️ Print
-                        </button>
+                                  1000
+                                );
+                              }
+                            }}
+                            className="btn w-50"
+                            style={{ background: "linear-gradient(135deg, #ff9800, #f57c00)", color: "#fff", fontWeight: 700, borderRadius: "10px", padding: "10px", fontSize: "14px", boxShadow: "0 4px 15px rgba(255,152,0,0.4)", border: "none" }}
+                          >
+                            🖨️ Print
+                          </button>
+                        )}
                       </>
                     )}
                   </div>

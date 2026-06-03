@@ -415,6 +415,10 @@ const DischargePrint = () => {
             <b>Signature of Doctor / R.M.O</b>
           </div>
         </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "15px", fontSize: "10px", borderTop: "1px dashed #000", paddingTop: "5px" }}>
+          <div>Print Date & Time: {new Date().toLocaleString("en-IN", { hour12: true })}</div>
+          <div>Printed By: {localStorage.getItem("username") || "Admin"}</div>
+        </div>
       </div>
     </>
   );

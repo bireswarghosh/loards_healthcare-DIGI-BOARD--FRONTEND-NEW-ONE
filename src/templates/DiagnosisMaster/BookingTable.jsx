@@ -70,50 +70,59 @@ const BookingTable = ({ bookingList = [], onRowClick }) => {
                   <td>
                     <div className="d-flex gap-2 justify-content-center">
                       {/* Money Receipt */}
-                      <button
-                        className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
-                        title="Money Receipt"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate("/moneyreceipt", {
-                            state: {
-                              openPatientModal: true,
-                              search: item.CaseId,
-                            },
-                          });
-                        }}
-                      >
-                        <i className="fa-solid fa-receipt"></i>
-                      </button>
+                      {(isSuperAdmin || permissions?.diagnosis_moneyReceipt !== false) && (
+                        <button
+                          className="btn btn-sm btn-outline-primary d-flex align-items-center justify-content-center"
+                          title="Money Receipt"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate("/moneyreceipt", {
+                              state: {
+                                openPatientModal: true,
+                                search: item.CaseId,
+                              },
+                            });
+                          }}
+                        >
+                          <i className="fa-solid fa-receipt"></i>
+                        </button>
+                      )}
 
                       {/* Edit Case */}
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center"
-                        title="Case Entry"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/CaseEntry/${encodeURIComponent(item.CaseId)}/edit`)
-                        }}
-                      >
-                        <i className="fa-solid fa-keyboard"></i>
-                      </button>
+                      {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-warning d-flex align-items-center justify-content-center"
+                          title="Case Entry"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/CaseEntry/${encodeURIComponent(item.CaseId)}/edit`)
+                          }}
+                        >
+                          <i className="fa-solid fa-keyboard"></i>
+                        </button>
+                      )}
 
                       {/* Test / Lab */}
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
-                        title="View Tests"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRowClick(item);
-                        }}
-                      >
-                        <i className="fa-solid fa-vial"></i>
-                      </button>
+                      {(isSuperAdmin || permissions?.diagnosis_laboratoryQuery_view !== false) && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-success d-flex align-items-center justify-content-center"
+                          title="View Tests"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRowClick(item);
+                          }}
+                        >
+                          <i className="fa-solid fa-vial"></i>
+                        </button>
+                      )}
                     </div>
                   </td>
-                  <td onClick={() => onRowClick(item)}>
+                  <td onClick={() => {
+                    const canView = isSuperAdmin || permissions?.diagnosis_laboratoryQuery_view !== false;
+                    if (canView) onRowClick(item);
+                  }}>
                     <div className="d-flex justify-content-between align-items-center">
                       <span>{item.CaseNo}</span>
                     </div>

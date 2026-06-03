@@ -797,6 +797,8 @@ useEffect(() => {
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.text("This is a computer generated bill.", pw / 2, y, { align: "center" });
+    y += 5;
+    doc.text("Printed By: " + (localStorage.getItem("username") || "Admin") + "   |   Print Date & Time: " + new Date().toLocaleString("en-IN", { hour12: true }), pw / 2, y, { align: "center" });
 
     return doc;
   };

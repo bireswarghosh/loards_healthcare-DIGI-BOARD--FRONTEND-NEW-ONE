@@ -1590,9 +1590,14 @@ import PaginationBar from "./PaginationBar";
 import BookingTable from "./BookingTable";
 import TestDrawer from "./TestDrawer";
 import ZLoader from "./ZLoader";
-     import CaseTestDataModal from "./CaseTestDataModal";
+import CaseTestDataModal from "./CaseTestDataModal";
+import { useAuth } from "../../context/AuthContext";
 
 const LaboratoryQuery = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === "lordsYou" || user?.username === "lords" || user?.email === "lords@kol";
+  const canSearch = isSuperAdmin || permissions?.diagnosis_laboratoryQuery_search !== false;
+
   const [loading, setLoading] = useState(false);
   // --- State ---
   const [filterType, setFilterType] = useState("All");
@@ -2004,17 +2009,18 @@ useEffect(() => {
               placeholder='Patient Name'
               style={{ width: "130px" }}
               onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)}
+              disabled={!canSearch}
             />
 
             {/* Test multi-select */}
             <div ref={testDDRef} style={{ position: "relative", minWidth: "140px" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowTestDD(true)}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: canSearch ? "text" : "not-allowed", opacity: canSearch ? 1 : 0.6 }} onClick={() => canSearch && setShowTestDD(true)}>
                 {selectedSearchTests.map(t => (
                   <span key={t.TestId} style={{ background: "#e3f2fd", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
                     {t.Test}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedSearchTests(p => p.filter(x => x.TestId !== t.TestId)); }}>×</span>
                   </span>
                 ))}
-                <input value={searchTestName} onChange={(e) => handleTestInput(e.target.value)} placeholder={selectedSearchTests.length ? "" : "Test..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+                <input value={searchTestName} onChange={(e) => handleTestInput(e.target.value)} placeholder={selectedSearchTests.length ? "" : "Test..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} disabled={!canSearch} />
               </div>
               {showTestDD && testSuggestions.length > 0 && (
                 <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
@@ -2029,13 +2035,13 @@ useEffect(() => {
 
             {/* Doctor multi-select */}
             <div ref={docDDRef} style={{ position: "relative", minWidth: "130px" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowDocDD(true)}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: canSearch ? "text" : "not-allowed", opacity: canSearch ? 1 : 0.6 }} onClick={() => canSearch && setShowDocDD(true)}>
                 {selectedDoctors.map(d => (
                   <span key={d.DoctorId} style={{ background: "#e8f5e9", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
                     {d.Doctor}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedDoctors(p => p.filter(x => x.DoctorId !== d.DoctorId)); }}>×</span>
                   </span>
                 ))}
-                <input value={searchDoctorName} onChange={(e) => setSearchDoctorName(e.target.value)} onFocus={() => setShowDocDD(true)} placeholder={selectedDoctors.length ? "" : "Doctor..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+                <input value={searchDoctorName} onChange={(e) => setSearchDoctorName(e.target.value)} onFocus={() => canSearch && setShowDocDD(true)} placeholder={selectedDoctors.length ? "" : "Doctor..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} disabled={!canSearch} />
               </div>
               {showDocDD && (
                 <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
@@ -2050,13 +2056,13 @@ useEffect(() => {
 
             {/* Agent multi-select */}
             <div ref={agentDDRef} style={{ position: "relative", minWidth: "120px" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowAgentDD(true)}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: canSearch ? "text" : "not-allowed", opacity: canSearch ? 1 : 0.6 }} onClick={() => canSearch && setShowAgentDD(true)}>
                 {selectedAgents.map(a => (
                   <span key={a.AgentId} style={{ background: "#fff3e0", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
                     {a.Agent}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedAgents(p => p.filter(x => x.AgentId !== a.AgentId)); }}>×</span>
                   </span>
                 ))}
-                <input value={searchAgentName} onChange={(e) => setSearchAgentName(e.target.value)} onFocus={() => setShowAgentDD(true)} placeholder={selectedAgents.length ? "" : "Agent..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+                <input value={searchAgentName} onChange={(e) => setSearchAgentName(e.target.value)} onFocus={() => canSearch && setShowAgentDD(true)} placeholder={selectedAgents.length ? "" : "Agent..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} disabled={!canSearch} />
               </div>
               {showAgentDD && (
                 <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
@@ -2071,13 +2077,13 @@ useEffect(() => {
 
             {/* SubDepartment multi-select */}
             <div ref={subDeptDDRef} style={{ position: "relative", minWidth: "140px" }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: "text" }} onClick={() => setShowSubDeptDD(true)}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 2, border: "1px solid #ced4da", borderRadius: 4, padding: "2px 4px", minHeight: 30, alignItems: "center", background: "#fff", cursor: canSearch ? "text" : "not-allowed", opacity: canSearch ? 1 : 0.6 }} onClick={() => canSearch && setShowSubDeptDD(true)}>
                 {selectedSubDepts.map(s => (
                   <span key={s.SubDepartmentId} style={{ background: "#f3e5f5", borderRadius: 12, padding: "1px 8px", fontSize: "0.72rem", display: "inline-flex", alignItems: "center", gap: 3 }}>
                     {s.SubDepartment}<span style={{ cursor: "pointer", fontWeight: "bold", color: "#c62828", marginLeft: 3 }} onClick={(e) => { e.stopPropagation(); setSelectedSubDepts(p => p.filter(x => x.SubDepartmentId !== s.SubDepartmentId)); }}>×</span>
                   </span>
                 ))}
-                <input value={subDeptFilter} onChange={(e) => { setSubDeptFilter(e.target.value); setShowSubDeptDD(true); }} onFocus={() => setShowSubDeptDD(true)} placeholder={selectedSubDepts.length ? "" : "SubDept..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} />
+                <input value={subDeptFilter} onChange={(e) => { setSubDeptFilter(e.target.value); setShowSubDeptDD(true); }} onFocus={() => canSearch && setShowSubDeptDD(true)} placeholder={selectedSubDepts.length ? "" : "SubDept..."} style={{ border: "none", outline: "none", flex: 1, minWidth: 50, fontSize: "0.8rem", padding: "2px" }} onKeyDown={(e) => e.key === 'Enter' && fetchBoookingList(true)} disabled={!canSearch} />
               </div>
               {showSubDeptDD && (
                 <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 9999, background: "#fff", border: "1px solid #ccc", borderRadius: 4, maxHeight: 180, overflowY: "auto", boxShadow: "0 4px 8px rgba(0,0,0,0.15)" }}>
@@ -2093,6 +2099,7 @@ useEffect(() => {
             <button
               className='btn btn-sm btn-primary fw-bold'
               onClick={() => fetchBoookingList(true)}
+              disabled={!canSearch}
             >
               Search
             </button>
@@ -2106,6 +2113,7 @@ useEffect(() => {
                 sessionStorage.removeItem("labQuery");
                 setTimeout(() => fetchBoookingList(true), 100);
               }}
+              disabled={!canSearch}
             >
               Clear
             </button>
@@ -2126,6 +2134,7 @@ useEffect(() => {
                   win.document.close();
                   win.onload = () => { win.focus(); setTimeout(() => win.print(), 300); };
                 }}
+                disabled={!canSearch}
               >
                 Print
               </button>
@@ -2148,6 +2157,7 @@ useEffect(() => {
                     setSignatory(e.target.value);
                   }
                 }}
+                disabled={!canSearch}
               >
                 <option value="">---</option>
                 {pathologists.map((p) => (
@@ -2190,10 +2200,12 @@ useEffect(() => {
                   id={`rad-${label.replace(/\s/g, "")}`}
                   checked={statusFilter === label}
                   onChange={() => setStatusFilter(label)}
+                  disabled={!canSearch}
                 />
                 <label
                   className='form-check-label small fw-bold text-nowrap'
                   htmlFor={`rad-${label.replace(/\s/g, "")}`}
+                  style={{ cursor: canSearch ? "pointer" : "not-allowed" }}
                 >
                   {label}
                 </label>
@@ -2216,6 +2228,7 @@ useEffect(() => {
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 style={{ width: "130px" }}
+                disabled={!canSearch}
               />
             </div>
 
@@ -2230,6 +2243,7 @@ useEffect(() => {
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 style={{ width: "130px" }}
+                disabled={!canSearch}
               />
             </div>
 

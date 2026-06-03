@@ -8,10 +8,11 @@ import axiosInstance from "./axiosInstance";
 import useAxiosFetch from "./templates/DiagnosisMaster/Fetch";
 import ApiSelect from "./templates/DiagnosisMaster/ApiSelect";
 import { useNavigate } from "react-router-dom";
-
-
+import { useAuth } from "./context/AuthContext";
 
 const DoctorVisit = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
 
   const [previousVisits, setPreviousVisits] = useState([]);
   const [doctorNameMap, setDoctorNameMap] = useState({});
@@ -252,8 +253,9 @@ toast.error("Something went wrong");
   }
 };
 
-
-
+  const canSave = DoctorVisitId 
+    ? (isSuperAdmin || permissions?.indoor_doctorVisit_edit) 
+    : (isSuperAdmin || permissions?.indoor_doctorVisit_create);
 
   return (
     <>
@@ -560,9 +562,8 @@ toast.error("Something went wrong");
                 <button
                   type="button"
                   className="btn btn-sm btn-success"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !canSave}
                   onClick={handleSubmit(onSubmit)}
-                  
                 >
                   {isSubmitting && (
                     <span className="spinner-border spinner-border-sm me-2"></span>
@@ -610,30 +611,36 @@ toast.error("Something went wrong");
                       <tr key={i}>
                         <td>
                           <div className="d-flex gap-1">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-info"
-                              onClick={() => openView(row)}
-                            >
-                              <i className="fa-light fa-eye"></i>
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-primary"
-                              onClick={() => handleEdit(row)}
-                            >
-                              <i className="fa-light fa-pen-to-square"></i>
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => {
-                                setDeleteId(row.DoctorVisitId);
-                                setShowConfirm(true);
-                              }}
-                            >
-                              <i className="fa-light fa-trash-can"></i>
-                            </button>
+                            {(isSuperAdmin || permissions?.indoor_doctorVisit_view) && (
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-info"
+                                onClick={() => openView(row)}
+                              >
+                                <i className="fa-light fa-eye"></i>
+                              </button>
+                            )}
+                            {(isSuperAdmin || permissions?.indoor_doctorVisit_edit) && (
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => handleEdit(row)}
+                              >
+                                <i className="fa-light fa-pen-to-square"></i>
+                              </button>
+                            )}
+                            {(isSuperAdmin || permissions?.indoor_doctorVisit_delete) && (
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => {
+                                  setDeleteId(row.DoctorVisitId);
+                                  setShowConfirm(true);
+                                }}
+                              >
+                                <i className="fa-light fa-trash-can"></i>
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td>{doctorNameMap[row.DoctorId] || "..."}</td>

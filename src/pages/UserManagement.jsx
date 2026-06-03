@@ -12,7 +12,8 @@ const UserManagement = () => {
     UserName: '',
     Password: '',
     Active: 'Y',
-    Admin: '1'
+    Admin: '1',
+    AllowedIP: ''
   });
   const [editingUserId, setEditingUserId] = useState(null);
   const { user } = useAuth();
@@ -46,7 +47,8 @@ const UserManagement = () => {
         UserName: userData.UserName,
         Password: '',
         Active: userData.Active || 'Y',
-        Admin: userData.Admin || '1'
+        Admin: userData.Admin || '1',
+        AllowedIP: userData.AllowedIP || ''
       });
     } else {
       setEditingUserId(null);
@@ -54,7 +56,8 @@ const UserManagement = () => {
         UserName: '',
         Password: '',
         Active: 'Y',
-        Admin: '1'
+        Admin: '1',
+        AllowedIP: ''
       });
     }
     setShowModal(true);
@@ -62,7 +65,7 @@ const UserManagement = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setFormData({ UserName: '', Password: '', Active: 'Y', Admin: '1' });
+    setFormData({ UserName: '', Password: '', Active: 'Y', Admin: '1', AllowedIP: '' });
     setEditingUserId(null);
   };
 
@@ -139,6 +142,7 @@ const UserManagement = () => {
                 <th>Username</th>
                 <th>Status</th>
                 <th>Admin Level</th>
+                <th>Allowed IP</th>
                 {canEdit && <th>Actions</th>}
               </tr>
             </thead>
@@ -170,6 +174,7 @@ const UserManagement = () => {
                       {u.Admin || 'N/A'}
                     </span>
                   </td>
+                  <td>{u.AllowedIP || 'Any'}</td>
                   {canEdit && (
                     <td>
                       <button
@@ -251,6 +256,17 @@ const UserManagement = () => {
                         <option value="2">Level 2</option>
                         <option value="0">No Admin</option>
                       </select>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Allowed IP(s)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="AllowedIP"
+                        value={formData.AllowedIP}
+                        onChange={handleInputChange}
+                        placeholder="e.g. 192.168.1.1, 127.0.0.1 (comma separated) or * for any"
+                      />
                     </div>
                   </div>
                   <div className="modal-footer">

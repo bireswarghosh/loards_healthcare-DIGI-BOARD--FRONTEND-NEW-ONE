@@ -477,7 +477,7 @@ function App() {
           <Route path="/visit_entry" element={<PermissionRoute section="outdoor_visitEntry"><VisitEntry /></PermissionRoute>} />
           <Route path="/table-data" element={<PermissionRoute section="outdoor_visitList"><VisitList /></PermissionRoute>} />
           <Route path="/dr-rect-visit-detail" element={<PermissionRoute section="outdoor_drRectVisit"><DrRectVisitDetail /></PermissionRoute>} />
-          <Route path="/opd-report-section" element={<OpdReportSection />} />
+          <Route path="/opd-report-section" element={<PermissionRoute section="outdoorReport_opdReportCenter"><OpdReportSection /></PermissionRoute>} />
           <Route path="/emr" element={<PermissionRoute section="outdoor_emr"><Emr /></PermissionRoute>} />
           <Route path="/Opd_Other_Charges" element={<PermissionRoute section="outdoor_otherCharge"><OtherChargesss /></PermissionRoute>} />
           <Route path="/IVFBiodataMaster" element={<PermissionRoute section="outdoor_ivfBiodata"><IVFBIODATAMASTER /></PermissionRoute>}  />
@@ -1036,19 +1036,19 @@ function App() {
 {/* ai */}
 
 {/* WhatsApp API routes */}
-          <Route path="/whatsapp/send-text" element={<ProtectedRoute><SendText /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-media" element={<ProtectedRoute><SendMedia /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-button" element={<ProtectedRoute><SendButton /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-poll" element={<ProtectedRoute><SendPoll /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-list" element={<ProtectedRoute><SendList /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-location" element={<ProtectedRoute><SendLocation /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-vcard" element={<ProtectedRoute><SendVCard /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-sticker" element={<ProtectedRoute><SendSticker /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-product" element={<ProtectedRoute><SendProduct /></ProtectedRoute>} />
-          <Route path="/whatsapp/send-channel" element={<ProtectedRoute><SendTextChannel /></ProtectedRoute>} />
-          <Route path="/whatsapp/check-number" element={<ProtectedRoute><CheckNumber /></ProtectedRoute>} />
-          <Route path="/whatsapp/user-management" element={<ProtectedRoute><UserManagementWA /></ProtectedRoute>} />
-          <Route path="/whatsapp/device-management" element={<ProtectedRoute><DeviceManagement /></ProtectedRoute>} />
+          <Route path="/whatsapp/send-text" element={<PermissionRoute section="whatsapp_sendText"><SendText /></PermissionRoute>} />
+          <Route path="/whatsapp/send-media" element={<PermissionRoute section="whatsapp_sendMedia"><SendMedia /></PermissionRoute>} />
+          <Route path="/whatsapp/send-button" element={<PermissionRoute section="whatsapp_sendButton"><SendButton /></PermissionRoute>} />
+          <Route path="/whatsapp/send-poll" element={<PermissionRoute section="whatsapp_sendPoll"><SendPoll /></PermissionRoute>} />
+          <Route path="/whatsapp/send-list" element={<PermissionRoute section="whatsapp_sendList"><SendList /></PermissionRoute>} />
+          <Route path="/whatsapp/send-location" element={<PermissionRoute section="whatsapp_sendLocation"><SendLocation /></PermissionRoute>} />
+          <Route path="/whatsapp/send-vcard" element={<PermissionRoute section="whatsapp_sendVcard"><SendVCard /></PermissionRoute>} />
+          <Route path="/whatsapp/send-sticker" element={<PermissionRoute section="whatsapp_sendSticker"><SendSticker /></PermissionRoute>} />
+          <Route path="/whatsapp/send-product" element={<PermissionRoute section="whatsapp_sendProduct"><SendProduct /></PermissionRoute>} />
+          <Route path="/whatsapp/send-channel" element={<PermissionRoute section="whatsapp_sendChannel"><SendTextChannel /></PermissionRoute>} />
+          <Route path="/whatsapp/check-number" element={<PermissionRoute section="whatsapp_checkNumber"><CheckNumber /></PermissionRoute>} />
+          <Route path="/whatsapp/user-management" element={<PermissionRoute section="whatsapp_userManagement"><UserManagementWA /></PermissionRoute>} />
+          <Route path="/whatsapp/device-management" element={<PermissionRoute section="whatsapp_deviceManagement"><DeviceManagement /></PermissionRoute>} />
 {/* WhatsApp API routes end */}
 
 

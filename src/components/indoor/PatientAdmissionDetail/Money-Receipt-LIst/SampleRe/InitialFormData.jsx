@@ -484,6 +484,7 @@ function convertAmountToWords(amount) {
     const printDateTime = new Date()
       .toLocaleString("en-IN", { hour12: true })
       .toUpperCase();
+    const printedBy = (localStorage.getItem("username") || "Admin").toUpperCase();
 
     const printContent = `
     <!DOCTYPE html>
@@ -688,8 +689,8 @@ function convertAmountToWords(amount) {
           </div>
         </div>
 
-        <div class="footer">
-          <div>Print Date & Time: ${printDateTime}</div>
+        <div class="footer print-footer-info">
+          <div>Print Date & Time: ${printDateTime} | Printed By: ${printedBy}</div>
           <div>Received By: ${receivedBy}</div>
         </div>
       </div>

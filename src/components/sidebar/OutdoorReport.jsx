@@ -31,6 +31,17 @@ const OutdoorReport = () => {
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.outdoorReport ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>
 
+        {(isSuperAdmin || permissions?.outdoorReport_opdReportCenter !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/opd-report-section" className="sidebar-link">
+              <span className="nav-icon">
+                <i className="fa-light fa-chart-column"></i>
+              </span>
+              <span className="sidebar-txt">OPD Report Center</span>
+            </NavLink>
+          </li>
+        )}
+
         {(isSuperAdmin || permissions?.outdoorReport_dateWiseReg !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/date-wise-registration-charge" className="sidebar-link">
@@ -141,7 +152,7 @@ const OutdoorReport = () => {
           </li>
         )}
 
-        {(isSuperAdmin || permissions?.outdoorReport_visitTypeReport !== false) && (
+        {(isSuperAdmin || permissions?.outdoorReport_billReport !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/daterangebillopd" className="sidebar-link">
               <span className="nav-icon">
@@ -151,7 +162,7 @@ const OutdoorReport = () => {
             </NavLink>
           </li>
         )}
-        {(isSuperAdmin || permissions?.outdoorReport_visitTypeReport !== false) && (
+        {(isSuperAdmin || permissions?.outdoorReport_otherChargesBillReport !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/daterangebillother" className="sidebar-link">
               <span className="nav-icon">

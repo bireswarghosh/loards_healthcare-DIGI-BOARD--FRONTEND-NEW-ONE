@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 
 const AdmissionList = () => {
   const navigate = useNavigate();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
   // Using 'list' as the initial activeTab, matching AdmissionList-1.jsx structure logic
   const [activeTab, setActiveTab] = useState("list");
   const [admissions, setAdmissions] = useState([]);
@@ -191,6 +194,7 @@ const AdmissionList = () => {
                       value={searchQuery}
                       onChange={handleSearch}
                       style={{ width: "170px" }}
+                      disabled={!(isSuperAdmin || permissions?.indoor_bedTransfer_search)}
                     />
                   </div>
                 </div>
@@ -236,30 +240,34 @@ const AdmissionList = () => {
                       <tr key={admission.AdmitionId}>
                         <td>
                           {/* Updated button classes to match AdmissionList-1.jsx */}
-                          <button
-                            className="btn btn-sm btn-info me-1"
-                            onClick={() =>
-                              navigate(
-                                `/Bed-Transfer/${encodeURIComponent(
-                                  admission.AdmitionId
-                                )}/view`
-                              )
-                            }
-                          >
-                            <i className="fa-light fa-eye"></i>
-                          </button>
-                          <button
-                            className="btn btn-sm btn-warning me-1"
-                            onClick={() =>
-                               navigate(
-                                `/Bed-Transfer/${encodeURIComponent(
-                                  admission.AdmitionId
-                                )}/edit`
-                              )
-                            }
-                          >
-                            <i className="fa-light fa-pen-to-square"></i>
-                          </button>
+                          {(isSuperAdmin || permissions?.indoor_bedTransfer_view) && (
+                            <button
+                              className="btn btn-sm btn-info me-1"
+                              onClick={() =>
+                                navigate(
+                                  `/Bed-Transfer/${encodeURIComponent(
+                                    admission.AdmitionId
+                                  )}/view`
+                                )
+                              }
+                            >
+                              <i className="fa-light fa-eye"></i>
+                            </button>
+                          )}
+                          {(isSuperAdmin || permissions?.indoor_bedTransfer_edit) && (
+                            <button
+                              className="btn btn-sm btn-warning me-1"
+                              onClick={() =>
+                                 navigate(
+                                  `/Bed-Transfer/${encodeURIComponent(
+                                    admission.AdmitionId
+                                  )}/edit`
+                                )
+                              }
+                            >
+                              <i className="fa-light fa-pen-to-square"></i>
+                            </button>
+                          )}
                           {/* <button
                             className="btn btn-sm btn-danger"
                             onClick={() =>

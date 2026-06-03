@@ -58,7 +58,7 @@ const Section2 = () => {
         )}
 
         {/* Activity Log */}
-        {(isSuperAdmin || permissions?.userManagement !== false) && (
+        {(isSuperAdmin || permissions?.userManagement_activity !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/activity-log" className="sidebar-link">
               <span className="nav-icon">

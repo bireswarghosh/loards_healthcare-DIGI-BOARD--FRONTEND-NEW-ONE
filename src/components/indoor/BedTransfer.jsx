@@ -1,12 +1,14 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "../../axiosInstance";
 import { use } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useAuth } from "../../context/AuthContext";
 
 const BedTransfer = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
   const { id, mode } = useParams();
   const [admData, setAdmData] = useState({});
   const id_new = decodeURIComponent(id);
@@ -610,9 +612,7 @@ const BedTransfer = () => {
               {bedTransfers.length != 0 ? (
                 bedTransfers.map((bed, i) => {
                   const totalRows = bedTransfers.length;
-                  // const isEditable = mode !== "view" && totalRows >= 2 && i !== 0 && (i === totalRows - 1 || i === totalRows - 2);
-
-const isEditable = mode !== "view";
+const isEditable = mode !== "view" && (isSuperAdmin || permissions?.indoor_bedTransfer_edit);
 
 
 
@@ -750,7 +750,7 @@ const isEditable = mode !== "view";
               <button
                 className="btn btn-sm btn-success"
                 onClick={handleSave}
-                disabled={loadBtn}
+                disabled={loadBtn || !(isSuperAdmin || permissions?.indoor_bedTransfer_create)}
               >
                 {!loadBtn ? "Add" : "Adding..."}
               </button>
@@ -761,6 +761,7 @@ const isEditable = mode !== "view";
                   onClick={() => {
                     handleUpdate(slNo);
                   }}
+                  disabled={loadBtn || !(isSuperAdmin || permissions?.indoor_bedTransfer_edit)}
                 >
                   {!loadBtn ? "Update" : "Updating..."}
                 </button>

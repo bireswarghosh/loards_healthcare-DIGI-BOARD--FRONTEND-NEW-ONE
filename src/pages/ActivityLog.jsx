@@ -3,6 +3,7 @@ import axiosInstance from '../axiosInstance';
 
 const ActivityLog = () => {
   const [logs, setLogs] = useState([]);
+  const [securityLogs, setSecurityLogs] = useState([]);
   const [summary, setSummary] = useState({ userSummary: [], todayActive: [], recentLogins: [] });
   const [productivity, setProductivity] = useState({ data: [], userStats: [] });
   const [userDetail, setUserDetail] = useState(null);
@@ -18,14 +19,21 @@ const ActivityLog = () => {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [sumRes, logRes, prodRes] = await Promise.all([
+      const [sumRes, logRes, prodRes, secRes] = await Promise.all([
         axiosInstance.get('/activity-log/summary', { params: { dateFrom: filters.dateFrom, dateTo: filters.dateTo } }),
         axiosInstance.get('/activity-log', { params: { ...filters, page, limit: 50 } }),
-        axiosInstance.get('/productivity-log', { params: { dateFrom: filters.dateFrom, dateTo: filters.dateTo } })
+        axiosInstance.get('/productivity-log', { params: { dateFrom: filters.dateFrom, dateTo: filters.dateTo } }),
+        axiosInstance.get('/activity-log', { params: { ...filters, page: 1, limit: 250 } })
       ]);
       if (sumRes.data.success) setSummary(sumRes.data);
       if (logRes.data.success) { setLogs(logRes.data.data); setTotal(logRes.data.total); }
       if (prodRes.data.success) setProductivity(prodRes.data);
+      if (secRes.data.success) {
+        const filtered = secRes.data.data.filter(l => 
+          l.action === 'delete' || l.action === 'login_failed' || l.action === 'update'
+        );
+        setSecurityLogs(filtered);
+      }
     } catch (err) { console.error(err); }
     setLoading(false);
   };
@@ -101,6 +109,7 @@ const ActivityLog = () => {
           <button className={`al-tab ${tab==='dashboard'?'active':''}`} onClick={()=>setTab('dashboard')}>🏠 Dashboard</button>
           <button className={`al-tab ${tab==='productivity'?'active':''}`} onClick={()=>setTab('productivity')}>⚡ Productivity</button>
           <button className={`al-tab ${tab==='activity'?'active':''}`} onClick={()=>setTab('activity')}>📋 All Activity</button>
+          <button className={`al-tab ${tab==='security'?'active':''}`} onClick={()=>setTab('security')}>🛡️ Security & Deletions</button>
           <button className={`al-tab ${tab==='logins'?'active':''}`} onClick={()=>setTab('logins')}>🔑 Logins</button>
           {userDetail && <button className={`al-tab ${tab==='userDetail'?'active':''}`} onClick={()=>setTab('userDetail')}>👤 {userDetail.username}</button>}
         </div>
@@ -141,6 +150,7 @@ const ActivityLog = () => {
                 <div className="al-dot"></div>
                 <strong style={{fontSize:12}}>{u.username}</strong>
                 <span className="al-ip">{u.ipAddress}</span>
+                {u.location && <span className="ms-1" style={{ fontSize: '10px', color: '#666' }}>📍 {u.location}</span>}
                 <span style={{marginLeft:'auto',fontSize:10,color:'#666'}}>{formatDate(u.lastSeen)}</span>
               </div>
             ))}
@@ -180,7 +190,7 @@ const ActivityLog = () => {
                   <td><strong style={{color:'#1a237e',cursor:'pointer'}} onClick={()=>fetchUserDetail(l.username)}>{l.username}</strong></td>
                   <td><span className="al-badge" style={{background:getActionColor(l.action)}}>{getActionIcon(l.action)} {l.action}</span></td>
                   <td style={{maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.page}</td>
-                  <td><span className="al-ip">{l.ipAddress}</span></td>
+                  <td><span className="al-ip">{l.ipAddress}</span>{l.location && <span className="ms-1" style={{ fontSize: '10px', color: '#666' }}>📍 {l.location}</span>}</td>
                   <td style={{maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'#666'}}>{l.details}</td>
                 </tr>)}
               </tbody>
@@ -192,12 +202,90 @@ const ActivityLog = () => {
           </div>
         </>}
 
+        {/* SECURITY & DELETIONS */}
+        {tab==='security' && (
+          <div style={{ padding: '16px' }}>
+            <h6 style={{ fontWeight: 700, color: '#c62828', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              🛡️ Critical Security Events, Updates & Deletions
+            </h6>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="al-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Page</th>
+                    <th>IP & Location</th>
+                    <th>Details / Mistakes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: 30 }}>Loading...</td></tr>
+                  ) : securityLogs.length === 0 ? (
+                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: 30, color: '#999' }}>No critical events detected</td></tr>
+                  ) : (
+                    securityLogs.map((l, i) => {
+                      const isAlert = l.action === 'delete' || l.action === 'login_failed';
+                      const rowBg = l.action === 'login_failed' ? '#ffebee' : l.action === 'delete' ? '#fbe9e7' : 'inherit';
+                      const textColor = isAlert ? '#c62828' : '#333';
+                      return (
+                        <tr key={i} style={{ background: rowBg }}>
+                          <td style={{ whiteSpace: 'nowrap', fontWeight: isAlert ? 600 : 'normal', color: textColor }}>
+                            {formatDate(l.createdAt)}
+                          </td>
+                          <td>
+                            <strong style={{ color: '#1a237e', cursor: 'pointer' }} onClick={() => fetchUserDetail(l.username)}>
+                              {l.username}
+                            </strong>
+                          </td>
+                          <td>
+                            <span 
+                              className="al-badge" 
+                              style={{ 
+                                background: l.action === 'login_failed' ? '#d32f2f' : getActionColor(l.action),
+                                border: isAlert ? '1px solid rgba(0,0,0,0.1)' : 'none'
+                              }}
+                            >
+                              {l.action === 'login_failed' ? '🚫 login_failed' : `${getActionIcon(l.action)} ${l.action}`}
+                            </span>
+                          </td>
+                          <td style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: isAlert ? 600 : 'normal' }}>
+                            {l.page}
+                          </td>
+                          <td>
+                            <span className="al-ip">{l.ipAddress}</span>
+                            {l.location && <span className="ms-1" style={{ fontSize: '10px', color: '#666' }}>📍 {l.location}</span>}
+                          </td>
+                          <td 
+                            style={{ 
+                              maxWidth: 300, 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis', 
+                              whiteSpace: 'normal', 
+                              fontWeight: isAlert ? 600 : 'normal',
+                              color: isAlert ? '#b71c1c' : '#555'
+                            }}
+                          >
+                            {l.details}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* LOGINS */}
         {tab==='logins' && <div style={{padding:16}}>
           {summary.recentLogins?.map((l,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',background:'#fff',border:'1px solid #e8edf5',borderRadius:10,marginBottom:8,cursor:'pointer'}} onClick={()=>fetchUserDetail(l.username)}>
             <div className="al-avatar">{l.username?.charAt(0)?.toUpperCase()}</div>
             <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,fontSize:13,color:'#1a237e'}}>{l.username}</div><div style={{fontSize:9,color:'#888',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.userAgent?.substring(0,80)}</div></div>
-            <div style={{textAlign:'right',flexShrink:0}}><span className="al-ip">{l.ipAddress}</span><div style={{fontSize:10,color:'#666',marginTop:3}}>{formatDate(l.createdAt)}</div></div>
+            <div style={{textAlign:'right',flexShrink:0}}><span className="al-ip">{l.ipAddress}</span>{l.location && <span className="ms-1" style={{ fontSize: '10px', color: '#666' }}>📍 {l.location}</span>}<div style={{fontSize:10,color:'#666',marginTop:3}}>{formatDate(l.createdAt)}</div></div>
           </div>)}
           {!summary.recentLogins?.length && <p style={{color:'#999'}}>No logins yet</p>}
         </div>}
@@ -239,7 +327,7 @@ const ActivityLog = () => {
           {userDetail.sessions?.length > 0 && <div style={{padding:'0 16px 16px'}}>
             <h6 style={{fontWeight:700,color:'#302b63',marginBottom:10}}>🔑 Login Sessions</h6>
             {userDetail.sessions.map((s,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 12px',background:'#f8faff',borderRadius:8,marginBottom:6,fontSize:11}}>
-              <span>🔑</span><span className="al-ip">{s.ipAddress}</span><span style={{color:'#666',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.userAgent?.substring(0,60)}</span><span style={{fontWeight:600}}>{formatDate(s.createdAt)}</span>
+              <span>🔑</span><span className="al-ip">{s.ipAddress}</span>{s.location && <span className="ms-1" style={{ fontSize: '10px', color: '#666' }}>📍 {s.location}</span>}<span style={{color:'#666',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.userAgent?.substring(0,60)}</span><span style={{fontWeight:600}}>{formatDate(s.createdAt)}</span>
             </div>)}
           </div>}
 

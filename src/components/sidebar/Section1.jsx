@@ -70,7 +70,7 @@ Diagnosis
           </li>
         )}
 
-        {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+        {(isSuperAdmin || permissions?.diagnosis_caseFlowExplorer !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/CaseFlowExplorer" className="sidebar-link">
               Case Flow Explorer
@@ -79,7 +79,7 @@ Diagnosis
         )}
 
 
-         {(isSuperAdmin || permissions?.diagnosis_laboratoryQuery !== false) && (
+         {(isSuperAdmin || permissions?.diagnosis_pathLogin !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/PathologistLogin" className="sidebar-link">
               Path Login

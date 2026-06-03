@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../../../../axiosInstance";
+import { useAuth } from "../../../../context/AuthContext";
 import jsPDF from "jspdf";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"; // From Emr.jsx
 import Footer from "../../../../components/footer/Footer";
@@ -11,6 +12,8 @@ const VisitList = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null); // Added from Emr.jsx
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === "lordsYou" || user?.username === "lords" || user?.email === "lords@kol";
 
   // Restore search state from navigation
   const savedSearchState = location.state?.searchState;
@@ -1404,100 +1407,112 @@ const VisitList = () => {
               <td>
                 <div>
                   <ul className={`d-flex gap-2`}>
-                    <li>
-                      <a
-                        href="#"
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleView(data);
-                        }}
-                      >
-                        <button className="btn btn-sm btn-outline-info me-1">
-                          <i className="fa-light fa-eye"></i>
-                        </button>
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleEdit(data);
-                        }}
-                      >
-                        <button className="btn btn-sm btn-outline-primary me-1">
-                          <i className="fa-light fa-pen-to-square"></i>
-                        </button>
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          generatePDF(data);
-                        }}
-                      >
-                        <button
-                          className="btn btn-sm btn-outline-success me-1"
-                          data-toggle="tooltip"
-                          data-placement="bottom"
-                          title="Money Receipt PDF"
+                    {(isSuperAdmin || permissions?.outdoor_visitList_view !== false) && (
+                      <li>
+                        <a
+                          href="#"
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleView(data);
+                          }}
                         >
-                          <i className="fa-solid fa-indian-rupee-sign"></i>
-                        </button>{" "}
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          generateVisitEntryPDF(data.PVisitId);
-                        }}
-                      >
-                        <button
-                          className="btn btn-sm btn-outline-warning"
-                          title="Dr Press PDF"
+                          <button className="btn btn-sm btn-outline-info me-1">
+                            <i className="fa-light fa-eye"></i>
+                          </button>
+                        </a>
+                      </li>
+                    )}
+                    {(isSuperAdmin || permissions?.outdoor_visitList_edit !== false) && (
+                      <li>
+                        <a
+                          href="#"
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEdit(data);
+                          }}
                         >
-                          <i className="fa-light fa-file-pdf"></i>
-                        </button>
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSendWhatsApp(data);
-                        }}
-                      >
-                        <button
-                          className="btn btn-sm btn-outline-success"
-                          title="Send WhatsApp"
+                          <button className="btn btn-sm btn-outline-primary me-1">
+                            <i className="fa-light fa-pen-to-square"></i>
+                          </button>
+                        </a>
+                      </li>
+                    )}
+                    {(isSuperAdmin || permissions?.outdoor_visitList_receipt !== false) && (
+                      <li>
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            generatePDF(data);
+                          }}
                         >
-                          <i className="fa-brands fa-whatsapp"></i>
-                        </button>
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        href="#"
-                        className="dropdown-item"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleDelete(data);
-                        }}
-                      >
-                        <button className="btn btn-sm btn-outline-danger">
-                          <i className="fa-light fa-trash-can"></i>
-                        </button>
-                      </a>
-                    </li>
+                          <button
+                            className="btn btn-sm btn-outline-success me-1"
+                            data-toggle="tooltip"
+                            data-placement="bottom"
+                            title="Money Receipt PDF"
+                          >
+                            <i className="fa-solid fa-indian-rupee-sign"></i>
+                          </button>{" "}
+                        </a>
+                      </li>
+                    )}
+                    {(isSuperAdmin || permissions?.outdoor_visitList_drPress !== false) && (
+                      <li>
+                        <a
+                          href="#"
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            generateVisitEntryPDF(data.PVisitId);
+                          }}
+                        >
+                          <button
+                            className="btn btn-sm btn-outline-warning"
+                            title="Dr Press PDF"
+                          >
+                            <i className="fa-light fa-file-pdf"></i>
+                          </button>
+                        </a>
+                      </li>
+                    )}
+                    {(isSuperAdmin || permissions?.outdoor_visitList_whatsapp !== false) && (
+                      <li>
+                        <a
+                          href="#"
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSendWhatsApp(data);
+                          }}
+                        >
+                          <button
+                            className="btn btn-sm btn-outline-success"
+                            title="Send WhatsApp"
+                          >
+                            <i className="fa-brands fa-whatsapp"></i>
+                          </button>
+                        </a>
+                      </li>
+                    )}
+                    {(isSuperAdmin || permissions?.outdoor_visitList_delete !== false) && (
+                      <li>
+                        <a
+                          href="#"
+                          className="dropdown-item"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleDelete(data);
+                          }}
+                        >
+                          <button className="btn btn-sm btn-outline-danger">
+                            <i className="fa-light fa-trash-can"></i>
+                          </button>
+                        </a>
+                      </li>
+                    )}
                   </ul>
                 </div>
               </td>
@@ -1532,66 +1547,78 @@ const VisitList = () => {
                 and restructured the search inputs based on AllEmployeeHeader.jsx reference. */}
               <div className="panel-header d-flex justify-content-between align-items-center">
                 <h5>🏥 Patient Visit List</h5>
-                <div className="btn-box d-flex flex-wrap gap-2">
-                  {/* Group search inputs under id="tableSearch" */}
-                  <div id="tableSearch" className="d-flex gap-2">
-                    {/* Search by Phone - compact placeholder */}
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Phone"
-                      value={searchPhone}
-                      onChange={(e) => setSearchPhone(e.target.value)}
-                    />
-                    {/* Search by Registration ID - compact placeholder */}
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      placeholder="Reg ID"
-                      value={searchRegistrationId}
-                      onChange={(e) => setSearchRegistrationId(e.target.value)}
-                    />
-                    {/* Search by Date - explicit width to contain the date picker */}
-                    <input
-                      type="date"
-                      className="form-control form-control-sm"
-                      value={searchDate}
-                      onChange={(e) => setSearchDate(e.target.value)}
-                    />
-                  </div>
+                {(() => {
+                  const canSearch = isSuperAdmin || permissions?.outdoor_visitList_search !== false;
+                  return (
+                    <div className="btn-box d-flex flex-wrap gap-2">
+                      {/* Group search inputs under id="tableSearch" */}
+                      <div id="tableSearch" className="d-flex gap-2">
+                        {/* Search by Phone - compact placeholder */}
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="Phone"
+                          value={searchPhone}
+                          onChange={(e) => setSearchPhone(e.target.value)}
+                          disabled={!canSearch}
+                        />
+                        {/* Search by Registration ID - compact placeholder */}
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder="Reg ID"
+                          value={searchRegistrationId}
+                          onChange={(e) => setSearchRegistrationId(e.target.value)}
+                          disabled={!canSearch}
+                        />
+                        {/* Search by Date - explicit width to contain the date picker */}
+                        <input
+                          type="date"
+                          className="form-control form-control-sm"
+                          value={searchDate}
+                          onChange={(e) => setSearchDate(e.target.value)}
+                          disabled={!canSearch}
+                        />
+                      </div>
 
-                  {/* Search Button */}
-                  <button
-                    className="btn btn-sm btn-primary flex-shrink-0"
-                    onClick={handleSearch}
-                  >
-                    <i className="fa-light fa-magnifying-glass"></i> Search
-                  </button>
-                  {/* Clear Button */}
-                  <button
-                    className="btn btn-sm btn-secondary flex-shrink-0"
-                    onClick={() => {
-                      setSearchPhone("");
-                      setSearchDate("");
-                      setSearchRegistrationId("");
-                      setPaginationModel({
-                        page: 0,
-                        pageSize: paginationModel.pageSize,
-                      });
-                      fetchVisits("", "", "", 1, paginationModel.pageSize);
-                    }}
-                  >
-                    <i className="fa-light fa-trash-arrow-up"></i> Clear
-                  </button>
-                  <button
-                    className="btn btn-sm btn-success flex-shrink-0"
-                    onClick={() => {
-                      navigate("/visit_entry");
-                    }}
-                  >
-                    + Add
-                  </button>
-                </div>
+                      {/* Search Button */}
+                      <button
+                        className="btn btn-sm btn-primary flex-shrink-0"
+                        onClick={handleSearch}
+                        disabled={!canSearch}
+                      >
+                        <i className="fa-light fa-magnifying-glass"></i> Search
+                      </button>
+                      {/* Clear Button */}
+                      <button
+                        className="btn btn-sm btn-secondary flex-shrink-0"
+                        onClick={() => {
+                          setSearchPhone("");
+                          setSearchDate("");
+                          setSearchRegistrationId("");
+                          setPaginationModel({
+                            page: 0,
+                            pageSize: paginationModel.pageSize,
+                          });
+                          fetchVisits("", "", "", 1, paginationModel.pageSize);
+                        }}
+                        disabled={!canSearch}
+                      >
+                        <i className="fa-light fa-trash-arrow-up"></i> Clear
+                      </button>
+                      {(isSuperAdmin || permissions?.outdoor_visitList_create !== false) && (
+                        <button
+                          className="btn btn-sm btn-success flex-shrink-0"
+                          onClick={() => {
+                            navigate("/visit_entry");
+                          }}
+                        >
+                          + Add
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="panel-body">

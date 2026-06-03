@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "../../axiosInstance";
+import { useAuth } from "../../context/AuthContext";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -15,6 +16,8 @@ import AsyncApiSelect from "../../components/indoor/PatientAdmissionDetail/Money
 
 const OtherCharges = () => {
   const navigate = useNavigate();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === "lordsYou" || user?.username === "lords" || user?.email === "lords@kol";
   const [doctorList, setDoctorList] = useState([]);
   const [doctorSearch, setDoctorSearch] = useState("");
   const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
@@ -710,122 +713,125 @@ const OtherCharges = () => {
           >
             {showSearch ? "Hide Search" : "Show Search"}
           </button>
-          <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
-            <i className="fa-light fa-plus"></i> Add
-          </button>
+          {(isSuperAdmin || permissions?.outdoor_otherCharge_create !== false) && (
+            <button className="btn btn-sm btn-primary" onClick={openDrawerAdd}>
+              <i className="fa-light fa-plus"></i> Add
+            </button>
+          )}
         </div>
 
-        {showSearch && (
-          <div className="card mb-3">
-            <div className="card-body">
-              <div className="row g-2">
-                <div className="col-md-2">
-                  <input
-                    className="form-control"
-                    placeholder="Patient Name"
-                    value={searchFilters.patientName}
-                    onChange={(e) =>
-                      handleFilterChange("patientName", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="col-md-2">
-                  <input
-                    className="form-control"
-                    placeholder="Registration ID"
-                    value={searchFilters.registrationId}
-                    onChange={(e) =>
-                      handleFilterChange("registrationId", e.target.value)
-                    }
-                  />
-                </div>
+        {showSearch && (() => {
+          const canSearch = isSuperAdmin || permissions?.outdoor_otherCharge_search !== false;
+          return (
+            <div className="card mb-3">
+              <div className="card-body">
+                <div className="row g-2">
+                  <div className="col-md-2">
+                    <input
+                      className="form-control"
+                      placeholder="Patient Name"
+                      value={searchFilters.patientName}
+                      onChange={(e) =>
+                        handleFilterChange("patientName", e.target.value)
+                      }
+                      disabled={!canSearch}
+                    />
+                  </div>
+                  <div className="col-md-2">
+                    <input
+                      className="form-control"
+                      placeholder="Registration ID"
+                      value={searchFilters.registrationId}
+                      onChange={(e) =>
+                        handleFilterChange("registrationId", e.target.value)
+                      }
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-                <div className="col-md-2">
-                  <input
-                    className="form-control"
-                    placeholder="Phone"
-                    value={searchFilters.phone}
-                    onChange={(e) =>
-                      handleFilterChange("phone", e.target.value)
-                    }
-                  />
-                </div>
+                  <div className="col-md-2">
+                    <input
+                      className="form-control"
+                      placeholder="Phone"
+                      value={searchFilters.phone}
+                      onChange={(e) =>
+                        handleFilterChange("phone", e.target.value)
+                      }
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-                {/* <div className="col-md-2">
-                  <input
-                    className="form-control"
-                    placeholder="Bill No"
-                    value={searchFilters.OutBillNo}
-                    onChange={(e) =>
-                      handleFilterChange("OutBillNo", e.target.value)
-                    }
-                  />
-                </div> */}
+                  <div className="col-md-2">
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={searchFilters.startDate}
+                      onChange={(e) =>
+                        handleFilterChange("startDate", e.target.value)
+                      }
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-                <div className="col-md-2">
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={searchFilters.startDate}
-                    onChange={(e) =>
-                      handleFilterChange("startDate", e.target.value)
-                    }
-                  />
-                </div>
+                  <div className="col-md-2">
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={searchFilters.endDate}
+                      onChange={(e) =>
+                        handleFilterChange("endDate", e.target.value)
+                      }
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-                <div className="col-md-2">
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={searchFilters.endDate}
-                    onChange={(e) =>
-                      handleFilterChange("endDate", e.target.value)
-                    }
-                  />
-                </div>
+                  <div className="col-md-2">
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Min Amount"
+                      value={searchFilters.minAmount}
+                      onChange={(e) =>
+                        handleFilterChange("minAmount", e.target.value)
+                      }
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-                <div className="col-md-2">
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="Min Amount"
-                    value={searchFilters.minAmount}
-                    onChange={(e) =>
-                      handleFilterChange("minAmount", e.target.value)
-                    }
-                  />
-                </div>
+                  <div className="col-md-2">
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Max Amount"
+                      value={searchFilters.maxAmount}
+                      onChange={(e) =>
+                        handleFilterChange("maxAmount", e.target.value)
+                      }
+                      disabled={!canSearch}
+                    />
+                  </div>
 
-                <div className="col-md-2">
-                  <input
-                    type="number"
-                    className="form-control"
-                    placeholder="Max Amount"
-                    value={searchFilters.maxAmount}
-                    onChange={(e) =>
-                      handleFilterChange("maxAmount", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="col-md-12 text-end mt-2">
-                  <button
-                    className="btn btn-sm btn-success me-2"
-                    onClick={handleSearch}
-                  >
-                    Search
-                  </button>
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={handleClearSearch}
-                  >
-                    Clear
-                  </button>
+                  <div className="col-md-12 text-end mt-2">
+                    <button
+                      className="btn btn-sm btn-success me-2"
+                      onClick={handleSearch}
+                      disabled={!canSearch}
+                    >
+                      Search
+                    </button>
+                    <button
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={handleClearSearch}
+                      disabled={!canSearch}
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ================= LIST ================= */}
         <div className="panel">
@@ -856,27 +862,33 @@ const OtherCharges = () => {
                     {charges.map((r, i) => (
                       <tr key={`${r.OutBillId}-${i}`}>
                         <td>
-                          <button
-                            className="btn btn-sm btn-outline-info me-1"
-                            onClick={() => openView(r)}
-                          >
-                            <i className="fa-light fa-eye"></i>
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-primary me-1"
-                            onClick={() => openEdit(r)}
-                          >
-                            <i className="fa-light fa-pen-to-square"></i>
-                          </button>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => {
-                              setDeleteId(r.OutBillId);
-                              setShowConfirm(true);
-                            }}
-                          >
-                            <i className="fa-light fa-trash"></i>
-                          </button>
+                          {(isSuperAdmin || permissions?.outdoor_otherCharge_view !== false) && (
+                            <button
+                              className="btn btn-sm btn-outline-info me-1"
+                              onClick={() => openView(r)}
+                            >
+                              <i className="fa-light fa-eye"></i>
+                            </button>
+                          )}
+                          {(isSuperAdmin || permissions?.outdoor_otherCharge_edit !== false) && (
+                            <button
+                              className="btn btn-sm btn-outline-primary me-1"
+                              onClick={() => openEdit(r)}
+                            >
+                              <i className="fa-light fa-pen-to-square"></i>
+                            </button>
+                          )}
+                          {(isSuperAdmin || permissions?.outdoor_otherCharge_delete !== false) && (
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => {
+                                setDeleteId(r.OutBillId);
+                                setShowConfirm(true);
+                              }}
+                            >
+                              <i className="fa-light fa-trash"></i>
+                            </button>
+                          )}
                         </td>
                         <td>{(page - 1) * limit + i + 1}</td>
                         <td>{r.OutBillNo}</td>
