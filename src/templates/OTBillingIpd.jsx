@@ -1650,7 +1650,7 @@ useEffect(() => {
               Reset
             </button>
 
-            {(isSuperAdmin || permissions?.indoor_otBillingList !== false) && (
+            {(isSuperAdmin || permissions?.indoor_otBillingList_create !== false) && (
               <button className="premium-btn-primary ms-2" onClick={openAdd}>
                 <i className="fa-solid fa-plus"></i> Add Invoice
               </button>
@@ -1731,7 +1731,7 @@ useEffect(() => {
                       <tr key={item.OtBillId} className="premium-table-row">
                         <td>
                           <div className="action-button-group">
-                            {(isSuperAdmin || permissions?.indoor_otBillingList !== false) && (
+                            {(isSuperAdmin || permissions?.indoor_otBillingList_view !== false) && (
                               <button
                                 className="action-icon-pill view"
                                 onClick={() => openView(item.OtBillId)}
@@ -1741,7 +1741,7 @@ useEffect(() => {
                               </button>
                             )}
 
-                            {(isSuperAdmin || permissions?.indoor_otBillingList !== false) && (
+                            {(isSuperAdmin || permissions?.indoor_otBillingList_edit !== false) && (
                               <button
                                 className="action-icon-pill edit"
                                 onClick={() => openEdit(item.OtBillId)}
@@ -2425,23 +2425,27 @@ useEffect(() => {
                       </button>
                       
                       <div className="d-flex gap-2">
-                        <button
-                          type="button"
-                          className="premium-btn-pdf"
-                          onClick={handleDownloadPDF}
-                          title="Export PDF Document"
-                        >
-                          <i className="fa-solid fa-file-pdf me-1"></i> PDF
-                        </button>
+                        {(isSuperAdmin || permissions?.indoor_otBillingList_print !== false) && (
+                          <button
+                            type="button"
+                            className="premium-btn-pdf"
+                            onClick={handleDownloadPDF}
+                            title="Export PDF Document"
+                          >
+                            <i className="fa-solid fa-file-pdf me-1"></i> PDF
+                          </button>
+                        )}
                         
-                        <button
-                          type="button"
-                          className="premium-btn-print"
-                          onClick={handlePrintPDF}
-                          title="Send to Printer"
-                        >
-                          <i className="fa-solid fa-print me-1"></i> Print
-                        </button>
+                        {(isSuperAdmin || permissions?.indoor_otBillingList_print !== false) && (
+                          <button
+                            type="button"
+                            className="premium-btn-print"
+                            onClick={handlePrintPDF}
+                            title="Send to Printer"
+                          >
+                            <i className="fa-solid fa-print me-1"></i> Print
+                          </button>
+                        )}
 
                         {modalType !== "view" && (
                           <button type="submit" className="premium-btn-save">

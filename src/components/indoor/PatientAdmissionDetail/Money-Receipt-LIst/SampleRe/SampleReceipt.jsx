@@ -166,7 +166,7 @@ const SampleReceipt = () => {
           {activeTab === "list" ? "Money Receipt List" : "🔒 Money Receipt Edit Audit Logs"}
         </div>
         <div className="d-flex gap-2">
-          {activeTab === "list" && (isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
+          {activeTab === "list" && (isSuperAdmin || permissions?.indoor_moneyReceipt_create !== false) && (
             <button className="btn btn-success" onClick={() => {
               navigate('/initialFormData') 
             }}>
@@ -316,7 +316,7 @@ const SampleReceipt = () => {
                     receipts.map((receipt, index) => (
                       <tr key={index}>
                         <td>
-                          {(isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
+                          {(isSuperAdmin || permissions?.indoor_moneyReceipt_view !== false) && (
                             <button
                               className="btn btn-sm btn-outline-info me-1"
                               onClick={() =>
@@ -331,7 +331,7 @@ const SampleReceipt = () => {
                             </button>
                           )}
 
-                          {(isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
+                          {(isSuperAdmin || permissions?.indoor_moneyReceipt_edit !== false) && (
                             <button
                               className="btn btn-sm btn-outline-warning me-1"
                               onClick={() =>

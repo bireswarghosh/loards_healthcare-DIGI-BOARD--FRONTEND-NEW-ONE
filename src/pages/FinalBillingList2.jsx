@@ -109,7 +109,7 @@ const handleDelte = async (id) => {
           <div className="panel-header d-flex justify-content-between align-items-center">
             <div className="panel-title fw-bold">Final Billing</div>
             <div>
-              {(isSuperAdmin || permissions?.indoor_finalBillingList !== false) && (
+              {(isSuperAdmin || permissions?.indoor_finalBillQuery_create !== false) && (
                 <button
                   className="btn btn-sm btn-primary me-2"
                   // onClick={() => navigate("/fina-bill-add")}
@@ -317,7 +317,7 @@ const handleDelte = async (id) => {
                     finalBillings.map((admission, i) => (
                       <tr key={admission.AdmitionId || i}>
                         <td>
-                          {(isSuperAdmin || permissions?.indoor_finalBillingList !== false) && (
+                          {(isSuperAdmin || permissions?.indoor_finalBillQuery_view !== false) && (
                             <button className="btn btn-sm btn-outline-info me-1"
                               onClick={() => {
                             navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/view`)  
@@ -327,7 +327,7 @@ const handleDelte = async (id) => {
                               <i className="fa-solid fa-eye"></i>
                             </button>
                           )}
-                          {(isSuperAdmin || permissions?.indoor_finalBillingList !== false) && (
+                          {(isSuperAdmin || permissions?.indoor_finalBillQuery_edit !== false) && (
                             <button className="btn btn-sm btn-outline-warning me-1"
                             onClick={() => {
                             navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/edit`)  

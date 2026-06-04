@@ -135,7 +135,7 @@ const Discharge = () => {
             <button className="btn btn-sm btn-outline-secondary" onClick={clearSearch} style={{ borderRadius: 6 }}>
               Clear
             </button>
-            {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+            {(isSuperAdmin || permissions?.indoor_dischargeAdvise_create !== false) && (
               <NavLink className="btn btn-sm btn-success" to="/discharge/add" style={{ borderRadius: 6, fontWeight: 600 }}>
                 <i className="fa-light fa-plus"></i> New Discharge
               </NavLink>
@@ -169,12 +169,12 @@ const Discharge = () => {
                   <tr key={index}>
                     <td>
                       <div className="d-flex gap-1 flex-wrap">
-                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise_view !== false) && (
                           <button className="btn btn-outline-info dis-action-btn" title="View" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}`)}>
                             <i className="fa-light fa-eye" />
                           </button>
                         )}
-                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise_edit !== false) && (
                           <button className="btn btn-outline-primary dis-action-btn" title="Edit" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}/edit`)}>
                             <i className="fa-light fa-pen" />
                           </button>
@@ -184,7 +184,7 @@ const Discharge = () => {
                             <i className="fa-light fa-trash" />
                           </button>
                         )}
-                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise_print !== false) && (
                           <button className="btn btn-success" style={{ padding: "3px 8px", fontSize: "11px", borderRadius: "4px" }} title="Print" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}/print`)}>
                             🖨 Print
                           </button>

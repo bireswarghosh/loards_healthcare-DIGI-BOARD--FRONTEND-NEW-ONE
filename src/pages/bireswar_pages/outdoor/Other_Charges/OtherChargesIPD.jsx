@@ -748,7 +748,7 @@ const OtherCharges = () => {
                 <span className="badge bg-success me-2">
                   {masterCharges.length} charges
                 </span>
-                {(isSuperAdmin || permissions?.indoor_otherCharges !== false) && (
+                {(isSuperAdmin || permissions?.indoor_otherCharges_create !== false) && (
                   <button
                     className="btn btn-success"
                     onClick={() => setShowAddModal(true)}
@@ -795,7 +795,7 @@ const OtherCharges = () => {
                         return (
                           <tr key={i}>
                             <td className="d-flex">
-                              {(isSuperAdmin || permissions?.indoor_otherCharges !== false) && (
+                              {(isSuperAdmin || permissions?.indoor_otherCharges_edit !== false) && (
                                 <button
                                   className="btn btn-sm btn-outline-info me-1"
                                   disabled={loading}

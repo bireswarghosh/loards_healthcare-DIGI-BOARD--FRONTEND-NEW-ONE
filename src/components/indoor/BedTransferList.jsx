@@ -194,7 +194,7 @@ const AdmissionList = () => {
                       value={searchQuery}
                       onChange={handleSearch}
                       style={{ width: "170px" }}
-                      disabled={!(isSuperAdmin || permissions?.indoor_bedTransfer !== false)}
+                      disabled={!(isSuperAdmin || permissions?.indoor_bedTransfer_search !== false)}
                     />
                   </div>
                 </div>
@@ -240,7 +240,7 @@ const AdmissionList = () => {
                       <tr key={admission.AdmitionId}>
                         <td>
                           {/* Updated button classes to match AdmissionList-1.jsx */}
-                          {(isSuperAdmin || permissions?.indoor_bedTransfer !== false) && (
+                          {(isSuperAdmin || permissions?.indoor_bedTransfer_view !== false) && (
                             <button
                               className="btn btn-sm btn-info me-1"
                               onClick={() =>
@@ -254,7 +254,7 @@ const AdmissionList = () => {
                               <i className="fa-light fa-eye"></i>
                             </button>
                           )}
-                          {(isSuperAdmin || permissions?.indoor_bedTransfer !== false) && (
+                          {(isSuperAdmin || permissions?.indoor_bedTransfer_edit !== false) && (
                             <button
                               className="btn btn-sm btn-warning me-1"
                               onClick={() =>

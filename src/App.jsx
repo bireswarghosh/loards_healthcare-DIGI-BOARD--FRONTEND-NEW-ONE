@@ -625,7 +625,7 @@ function App() {
           <Route path="/fina-bill-copy/:id/:mode_type" element={<PermissionRoute section="indoor_finalBillingDetail"><FinalBillingAddCopy /></PermissionRoute>} />
           {/* <Route path="/fina-bill-list1" element={<FinalBillingListA />} /> */}
 
-          <Route path="/fina-bill-list2" element={<PermissionRoute section="indoor_finalBillingList"><FinalBillingListB /></PermissionRoute>} />
+          <Route path="/fina-bill-list2" element={<PermissionRoute section="indoor_finalBillQuery"><FinalBillingListB /></PermissionRoute>} />
 
 
 

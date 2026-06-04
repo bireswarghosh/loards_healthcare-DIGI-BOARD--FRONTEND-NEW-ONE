@@ -12,7 +12,8 @@ const getStored = () => {
 
 const CaseList = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
   const [adminLevel, setAdminLevel] = useState("0");
   const [activeTab, setActiveTab] = useState("list");
   const [auditLogs, setAuditLogs] = useState([]);
@@ -264,39 +265,45 @@ const CaseList = () => {
             <tr key={data.CaseId}>
               <td>
                 <div className="d-flex gap-1">
-                  <button
-                    className="btn btn-sm text-primary"
-                    title="View"
-                    onClick={() => {
-                      navigate(
-                        `/CaseEntry/${encodeURIComponent(data.CaseId)}/view`,
-                      );
-                    }}
-                  >
-                    <i className="fa-light fa-eye"></i>
-                  </button>
+                  {(isSuperAdmin || permissions?.diagnosis_caseEntry_view !== false) && (
+                    <button
+                      className="btn btn-sm text-primary"
+                      title="View"
+                      onClick={() => {
+                        navigate(
+                          `/CaseEntry/${encodeURIComponent(data.CaseId)}/view`,
+                        );
+                      }}
+                    >
+                      <i className="fa-light fa-eye"></i>
+                    </button>
+                  )}
 
-                  <button
-                    className="btn btn-sm text-info"
-                    title="Trace Flow"
-                    onClick={() => {
-                      navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(data.CaseId)}`);
-                    }}
-                  >
-                    <i className="fa-duotone fa-network-wired"></i>
-                  </button>
+                  {(isSuperAdmin || permissions?.diagnosis_caseFlowExplorer !== false) && (
+                    <button
+                      className="btn btn-sm text-info"
+                      title="Trace Flow"
+                      onClick={() => {
+                        navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(data.CaseId)}`);
+                      }}
+                    >
+                      <i className="fa-duotone fa-network-wired"></i>
+                    </button>
+                  )}
 
-                  <button
-                    className="btn btn-sm text-success"
-                    title="Edit"
-                    onClick={() => {
-                      navigate(
-                        `/CaseEntry/${encodeURIComponent(data.CaseId)}/edit`,
-                      );
-                    }}
-                  >
-                    <i className="fa-light fa-pen-to-square"></i>
-                  </button>
+                  {(isSuperAdmin || permissions?.diagnosis_caseEntry_edit !== false) && (
+                    <button
+                      className="btn btn-sm text-success"
+                      title="Edit"
+                      onClick={() => {
+                        navigate(
+                          `/CaseEntry/${encodeURIComponent(data.CaseId)}/edit`,
+                        );
+                      }}
+                    >
+                      <i className="fa-light fa-pen-to-square"></i>
+                    </button>
+                  )}
 
                   <button
                     className="btn btn-sm text-info"
@@ -306,35 +313,37 @@ const CaseList = () => {
                     <i className="fa-light fa-file"></i>
                   </button>
 
-                  <button
-                    className="btn btn-sm text-danger"
-                    title="Delete"
-                    onClick={async () => {
-                      if (window.confirm(`Delete case ${data.CaseNo}?`)) {
-                        try {
-                          await axiosInstance.delete(
-                            `/case01/${encodeURIComponent(data.CaseId)}`,
-                          );
-                          alert("Case deleted successfully!");
-                          fetchVisits(
-                            "",
-                            "",
-                            "",
-                            "",
-                            paginationModel.page,
-                            paginationModel.pageSize,
-                          );
-                        } catch (error) {
-                          alert(
-                            "Failed to delete: " +
-                              (error.response?.data?.message || error.message),
-                          );
+                  {isSuperAdmin && (
+                    <button
+                      className="btn btn-sm text-danger"
+                      title="Delete"
+                      onClick={async () => {
+                        if (window.confirm(`Delete case ${data.CaseNo}?`)) {
+                          try {
+                            await axiosInstance.delete(
+                              `/case01/${encodeURIComponent(data.CaseId)}`,
+                            );
+                            alert("Case deleted successfully!");
+                            fetchVisits(
+                              "",
+                              "",
+                              "",
+                              "",
+                              paginationModel.page,
+                              paginationModel.pageSize,
+                            );
+                          } catch (error) {
+                            alert(
+                              "Failed to delete: " +
+                                (error.response?.data?.message || error.message),
+                            );
+                          }
                         }
-                      }
-                    }}
-                  >
-                    <i className="fa-light fa-trash"></i>
-                  </button>
+                      }}
+                    >
+                      <i className="fa-light fa-trash"></i>
+                    </button>
+                  )}
                 </div>
               </td>
 
@@ -371,62 +380,68 @@ const CaseList = () => {
                 <div className="btn-box d-flex flex-wrap gap-2 align-items-center">
                   {activeTab === "list" && (
                     <>
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => navigate("/CaseEntry")}
-                      >
-                        <i className="fa-light fa-plus me-2"></i> Add New Case
-                      </button>
-                      <div id="tableSearch" className="d-flex gap-2">
-                        <input
-                          type="date"
-                          className="form-control form-control-sm"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                        />
-                        <input
-                          type="date"
-                          className="form-control form-control-sm"
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                        />
+                      {(isSuperAdmin || permissions?.diagnosis_caseEntry_create !== false) && (
+                        <button
+                          className="btn btn-sm btn-success"
+                          onClick={() => navigate("/CaseEntry")}
+                        >
+                          <i className="fa-light fa-plus me-2"></i> Add New Case
+                        </button>
+                      )}
+                      {(isSuperAdmin || permissions?.diagnosis_caseEntry_search !== false) && (
+                        <>
+                          <div id="tableSearch" className="d-flex gap-2">
+                            <input
+                              type="date"
+                              className="form-control form-control-sm"
+                              value={startDate}
+                              onChange={(e) => setStartDate(e.target.value)}
+                            />
+                            <input
+                              type="date"
+                              className="form-control form-control-sm"
+                              value={endDate}
+                              onChange={(e) => setEndDate(e.target.value)}
+                            />
 
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          placeholder="Patient Name"
-                          value={searchPatientName}
-                          onChange={(e) => setSearchPatientName(e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          placeholder="Phone"
-                          value={searchPhone}
-                          onChange={(e) => setSearchPhone(e.target.value)}
-                        />
-                      </div>
-                      <button
-                        className="btn btn-sm btn-primary"
-                        onClick={handleSearch}
-                      >
-                        <i className="fa-light fa-magnifying-glass"></i> Search
-                      </button>
-                      <button
-                        className="btn btn-sm btn-secondary"
-                        onClick={() => {
-                          setStartDate(today);
-                          setEndDate(today);
-                          setSearchPatientName("");
-                          setSearchPhone("");
-                          setSearchDate("");
-                          setSearchRegistrationId("");
-                          sessionStorage.removeItem(STORAGE_KEY);
-                          fetchVisits("", "", "", "", 1, 20);
-                        }}
-                      >
-                        Clear
-                      </button>
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              placeholder="Patient Name"
+                              value={searchPatientName}
+                              onChange={(e) => setSearchPatientName(e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              placeholder="Phone"
+                              value={searchPhone}
+                              onChange={(e) => setSearchPhone(e.target.value)}
+                            />
+                          </div>
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={handleSearch}
+                          >
+                            <i className="fa-light fa-magnifying-glass"></i> Search
+                          </button>
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            onClick={() => {
+                              setStartDate(today);
+                              setEndDate(today);
+                              setSearchPatientName("");
+                              setSearchPhone("");
+                              setSearchDate("");
+                              setSearchRegistrationId("");
+                              sessionStorage.removeItem(STORAGE_KEY);
+                              fetchVisits("", "", "", "", 1, 20);
+                            }}
+                          >
+                            Clear
+                          </button>
+                        </>
+                      )}
                     </>
                   )}
 

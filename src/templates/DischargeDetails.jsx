@@ -807,7 +807,7 @@ const DischargeDetails = ({ mode }) => {
                     Next
                   </button>
                 )} */}
-                {mode !== "view" && (isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+                {mode !== "view" && (isSuperAdmin || (mode === "edit" ? permissions?.indoor_dischargeAdvise_edit !== false : permissions?.indoor_dischargeAdvise_create !== false)) && (
                   <div className="card p-3 shadow-sm border-0 mt-3">
                     <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                       <label className="fw-semibold text-muted mb-0">

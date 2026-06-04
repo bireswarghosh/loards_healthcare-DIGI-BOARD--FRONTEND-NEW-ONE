@@ -299,6 +299,18 @@ const CaseEntry = () => {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState(Modex || "create");
 
+  useEffect(() => {
+    if (!isSuperAdmin && permissions) {
+      if (mode === "edit" && permissions.diagnosis_caseEntry_edit === false) {
+        setMode("view");
+        toast.error("You do not have permission to edit this case. Switched to View mode.");
+      } else if (mode === "create" && permissions.diagnosis_caseEntry_create === false) {
+        setMode("view");
+        toast.error("You do not have permission to create a new case.");
+      }
+    }
+  }, [mode, permissions, isSuperAdmin]);
+
   const [companyYN, setCompanyYN] = useState("N");
   const [bookingYN, setBookingYN] = useState("N");
   const [companyData, setCompanyData] = useState([]);
@@ -4587,7 +4599,7 @@ ${formData.ChequeNo ? `<tr>
             flexShrink: 0,
           }}
         >
-          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry_create !== false) && (
             <button
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
@@ -4595,7 +4607,7 @@ ${formData.ChequeNo ? `<tr>
               New
             </button>
           )}
-          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry_edit !== false) && (
             <button
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
@@ -4603,7 +4615,7 @@ ${formData.ChequeNo ? `<tr>
               Edit
             </button>
           )}
-          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          {(isSuperAdmin || (mode === "edit" ? permissions?.diagnosis_caseEntry_edit !== false : permissions?.diagnosis_caseEntry_create !== false)) && (
             <button
               onClick={handleSave}
               className="btn btn-sm btn-light border shadow-sm"
@@ -4631,7 +4643,7 @@ ${formData.ChequeNo ? `<tr>
               Delete
             </button>
           )}
-          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry_create !== false || permissions?.diagnosis_caseEntry_edit !== false) && (
             <button
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
@@ -4639,7 +4651,7 @@ ${formData.ChequeNo ? `<tr>
               Undo
             </button>
           )}
-          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry_bill !== false) && (
             <button
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
@@ -4648,7 +4660,7 @@ ${formData.ChequeNo ? `<tr>
               Bill
             </button>
           )}
-          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry_comBill !== false) && (
             <button
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
@@ -4666,7 +4678,7 @@ ${formData.ChequeNo ? `<tr>
 
           {/* dev  */}
 
-          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry_depPrint !== false) && (
             <button
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}

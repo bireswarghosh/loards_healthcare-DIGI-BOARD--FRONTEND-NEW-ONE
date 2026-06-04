@@ -126,7 +126,7 @@ const OtherCharges = () => {
                         </span>
                       </a> */}
 
-                      {(isSuperAdmin || permissions?.indoor_otherCharges !== false) && (
+                      {(isSuperAdmin || permissions?.indoor_otherCharges_create !== false) && (
                         <button
                           className="btn btn-sm btn-outline-info"
                           onClick={(e) => {
