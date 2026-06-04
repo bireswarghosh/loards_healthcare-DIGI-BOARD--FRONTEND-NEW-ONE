@@ -253,9 +253,7 @@ toast.error("Something went wrong");
   }
 };
 
-  const canSave = DoctorVisitId 
-    ? (isSuperAdmin || permissions?.indoor_doctorVisit_edit) 
-    : (isSuperAdmin || permissions?.indoor_doctorVisit_create);
+  const canSave = isSuperAdmin || permissions?.indoor_doctorVisit !== false;
 
   return (
     <>
@@ -611,7 +609,7 @@ toast.error("Something went wrong");
                       <tr key={i}>
                         <td>
                           <div className="d-flex gap-1">
-                            {(isSuperAdmin || permissions?.indoor_doctorVisit_view) && (
+                            {(isSuperAdmin || permissions?.indoor_doctorVisit !== false) && (
                               <button
                                 type="button"
                                 className="btn btn-sm btn-outline-info"
@@ -620,7 +618,7 @@ toast.error("Something went wrong");
                                 <i className="fa-light fa-eye"></i>
                               </button>
                             )}
-                            {(isSuperAdmin || permissions?.indoor_doctorVisit_edit) && (
+                            {(isSuperAdmin || permissions?.indoor_doctorVisit !== false) && (
                               <button
                                 type="button"
                                 className="btn btn-sm btn-outline-primary"
@@ -629,7 +627,7 @@ toast.error("Something went wrong");
                                 <i className="fa-light fa-pen-to-square"></i>
                               </button>
                             )}
-                            {(isSuperAdmin || permissions?.indoor_doctorVisit_delete) && (
+                            {isSuperAdmin && (
                               <button
                                 type="button"
                                 className="btn btn-sm btn-outline-danger"

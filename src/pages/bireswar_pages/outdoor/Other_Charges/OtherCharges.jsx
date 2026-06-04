@@ -4,8 +4,12 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../../../components/footer/Footer";
 import axiosInstance from "../../../../axiosInstance";
+import { useAuth } from "../../../../context/AuthContext";
 
 const OtherCharges = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+
   const navigate = useNavigate();
   const isBelowLg = false;
 
@@ -122,16 +126,18 @@ const OtherCharges = () => {
                         </span>
                       </a> */}
 
-                      <button
-                        className="btn btn-sm btn-outline-info"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          console.log("hello : ", charge);
-                          handleViewCharges(charge);
-                        }}
-                      >
-                        <i className="fa-solid fa-plus"></i>
-                      </button>
+                      {(isSuperAdmin || permissions?.indoor_otherCharges !== false) && (
+                        <button
+                          className="btn btn-sm btn-outline-info"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            console.log("hello : ", charge);
+                            handleViewCharges(charge);
+                          }}
+                        >
+                          <i className="fa-solid fa-plus"></i>
+                        </button>
+                      )}
                     </li>
                     {/* <li>
                       <a

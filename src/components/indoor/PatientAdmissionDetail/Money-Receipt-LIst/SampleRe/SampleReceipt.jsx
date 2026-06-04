@@ -5,7 +5,9 @@ import { useAuth } from "../../../../../context/AuthContext";
 
 const SampleReceipt = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+
   
   const [adminLevel, setAdminLevel] = useState("0");
   const [activeTab, setActiveTab] = useState("list"); // "list" or "logs"
@@ -164,7 +166,7 @@ const SampleReceipt = () => {
           {activeTab === "list" ? "Money Receipt List" : "🔒 Money Receipt Edit Audit Logs"}
         </div>
         <div className="d-flex gap-2">
-          {activeTab === "list" && (
+          {activeTab === "list" && (isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
             <button className="btn btn-success" onClick={() => {
               navigate('/initialFormData') 
             }}>
@@ -314,40 +316,46 @@ const SampleReceipt = () => {
                     receipts.map((receipt, index) => (
                       <tr key={index}>
                         <td>
-                          <button
-                            className="btn btn-sm btn-outline-info me-1"
-                            onClick={() =>
-                              navigate(
-                                `/initialFormData/${encodeURIComponent(
-                                  receipt.MoneyreeciptId
-                                )}?mode=view`
-                              )
-                            }
-                          >
-                            <i className="fa-light fa-eye"></i>
-                          </button>
+                          {(isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
+                            <button
+                              className="btn btn-sm btn-outline-info me-1"
+                              onClick={() =>
+                                navigate(
+                                  `/initialFormData/${encodeURIComponent(
+                                    receipt.MoneyreeciptId
+                                  )}?mode=view`
+                                )
+                              }
+                            >
+                              <i className="fa-light fa-eye"></i>
+                            </button>
+                          )}
 
-                          <button
-                            className="btn btn-sm btn-outline-warning me-1"
-                            onClick={() =>
-                              navigate(
-                                `/initialFormData/${encodeURIComponent(
-                                  receipt.MoneyreeciptId
-                                )}?mode=edit`
-                              )
-                            }
-                          >
-                            <i className="fa-light fa-pen-to-square"></i>
-                          </button>
+                          {(isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
+                            <button
+                              className="btn btn-sm btn-outline-warning me-1"
+                              onClick={() =>
+                                navigate(
+                                  `/initialFormData/${encodeURIComponent(
+                                    receipt.MoneyreeciptId
+                                  )}?mode=edit`
+                                )
+                              }
+                            >
+                              <i className="fa-light fa-pen-to-square"></i>
+                            </button>
+                          )}
 
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() =>
-                              handleDelete(receipt.MoneyreeciptId)
-                            }
-                          >
-                            <i className="fa-light fa-trash-can"></i>
-                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() =>
+                                handleDelete(receipt.MoneyreeciptId)
+                              }
+                            >
+                              <i className="fa-light fa-trash-can"></i>
+                            </button>
+                          )}
                         </td>
 
                         <td>{receipt.MoneyreeciptNo}</td>

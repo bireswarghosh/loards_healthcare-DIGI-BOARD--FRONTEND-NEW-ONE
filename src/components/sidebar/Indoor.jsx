@@ -97,7 +97,7 @@ const Indoor = () => {
 
 
 
-{(isSuperAdmin || permissions?.indoor_doctorVisit !== false) && (
+        {(isSuperAdmin || permissions?.indoor_bedTransfer !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/BedTransfer" className="sidebar-link">
               <span className="nav-icon">
@@ -111,7 +111,7 @@ const Indoor = () => {
 
 
 
-        {(isSuperAdmin || permissions?.indoor_doctorVisit !== false) && (
+        {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/discharge" className="sidebar-link">
               <span className="nav-icon">

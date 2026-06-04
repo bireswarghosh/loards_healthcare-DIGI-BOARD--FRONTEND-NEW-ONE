@@ -530,63 +530,63 @@ function App() {
 
 
 
-          <Route path="/PatientRegistrationList" element={<ProtectedRoute><AdmissionList /></ProtectedRoute>} />
-          <Route path="/PatientAdmissionDetail" element={<ProtectedRoute><PatientAdmissionDetail /></ProtectedRoute>}/>
+          <Route path="/PatientRegistrationList" element={<PermissionRoute section="indoor_admissionList"><AdmissionList /></PermissionRoute>} />
+          <Route path="/PatientAdmissionDetail" element={<PermissionRoute section="indoor"><PatientAdmissionDetail /></PermissionRoute>}/>
 
 
-<Route path="/PatientRegistrationDetail" element={<PatientRegistrationDetail />} />
-          <Route path="/PatientRegistrationDetail/:id" element={<PatientRegistrationDetail />} />
-
-
-
-          <Route path="/sampleReceipts" element={<ProtectedRoute><SampleReceipt /></ProtectedRoute>} />
-<Route path="/initialFormData" element={<InitialFormData />} />
-<Route path="/initialFormData/:id" element={<InitialFormData />} />
-
- <Route path="/other-charges" element={<ProtectedRoute><OtherChargesIPD /></ProtectedRoute>} />
-
-<Route path="/CaseList" element={<CaseList />} />
-<Route path="/AgentWiseSaleReport" element={<AgentWiseSaleReport />} />
-<Route path="/CaseView/:caseId" element={<CaseView />} />
-<Route path="/CaseFlowExplorer" element={<ProtectedRoute><CaseFlowExplorer /></ProtectedRoute>} />
-
-<Route path="/CaseEntry" element={<CaseEntryForm />} />
-<Route path="/CaseEntry/:id/:Modex" element={<CaseEntryForm />} />
-<Route path="/case-test-data" element={<ProtectedRoute><CaseTestData /></ProtectedRoute>} />
+<Route path="/PatientRegistrationDetail" element={<PermissionRoute section="indoor"><PatientRegistrationDetail /></PermissionRoute>} />
+          <Route path="/PatientRegistrationDetail/:id" element={<PermissionRoute section="indoor"><PatientRegistrationDetail /></PermissionRoute>} />
 
 
 
-          <Route path="/othercharges" element={<ProtectedRoute><OtherCharges /></ProtectedRoute>} />
-          <Route path="/OTBillingList" element={<ProtectedRoute><OTBillingList /></ProtectedRoute>} />
-          <Route path="/OTBillingDetail" element={<ProtectedRoute><OTBillingDetail /></ProtectedRoute>} />
-          <Route path="/OTNoteProcedure" element={<ProtectedRoute><OTNoteProcedure /></ProtectedRoute>} />
-          <Route path="/DoctorVisit" element={<ProtectedRoute><DoctorVisit/></ProtectedRoute>} />
+          <Route path="/sampleReceipts" element={<PermissionRoute section="indoor_moneyReceipt"><SampleReceipt /></PermissionRoute>} />
+<Route path="/initialFormData" element={<PermissionRoute section="indoor_moneyReceipt"><InitialFormData /></PermissionRoute>} />
+<Route path="/initialFormData/:id" element={<PermissionRoute section="indoor_moneyReceipt"><InitialFormData /></PermissionRoute>} />
+
+ <Route path="/other-charges" element={<PermissionRoute section="indoor_otherCharges"><OtherChargesIPD /></PermissionRoute>} />
+
+<Route path="/CaseList" element={<PermissionRoute section="outdoor_otherCharge"><CaseList /></PermissionRoute>} />
+<Route path="/AgentWiseSaleReport" element={<PermissionRoute section="outdoor"><AgentWiseSaleReport /></PermissionRoute>} />
+<Route path="/CaseView/:caseId" element={<PermissionRoute section="outdoor"><CaseView /></PermissionRoute>} />
+<Route path="/CaseFlowExplorer" element={<PermissionRoute section="diagnosis_caseFlowExplorer"><CaseFlowExplorer /></PermissionRoute>} />
+
+<Route path="/CaseEntry" element={<PermissionRoute section="diagnosis_caseEntry"><CaseEntryForm /></PermissionRoute>} />
+<Route path="/CaseEntry/:id/:Modex" element={<PermissionRoute section="diagnosis_caseEntry"><CaseEntryForm /></PermissionRoute>} />
+<Route path="/case-test-data" element={<PermissionRoute section="outdoor"><CaseTestData /></PermissionRoute>} />
+
+
+
+          <Route path="/othercharges" element={<PermissionRoute section="indoor_otherCharges"><OtherCharges /></PermissionRoute>} />
+          <Route path="/OTBillingList" element={<PermissionRoute section="indoor_otBillingList"><OTBillingList /></PermissionRoute>} />
+          <Route path="/OTBillingDetail" element={<PermissionRoute section="indoor_otBillingDetail"><OTBillingDetail /></PermissionRoute>} />
+          <Route path="/OTNoteProcedure" element={<PermissionRoute section="indoor_otNoteProcedure"><OTNoteProcedure /></PermissionRoute>} />
+          <Route path="/DoctorVisit" element={<PermissionRoute section="indoor_doctorVisit"><DoctorVisit/></PermissionRoute>} />
          
-          <Route path="/Estimate" element={<ProtectedRoute><Estimate /></ProtectedRoute>} />
-          <Route path="/DischargeAndAdvise"element={<ProtectedRoute><DischargeAndAdvice_Details /></ProtectedRoute>}/>
-          <Route path="/DischargeAndAdvise_details" element={<ProtectedRoute><DischargeAndAdvise /></ProtectedRoute>}/>
-          <Route path="/DischargeAdvise" element={<ProtectedRoute><DischargeAdvise /></ProtectedRoute>} />
-          <Route path="/DischargeMrd" element={<ProtectedRoute><DischargeMrd/></ProtectedRoute>}/>
-          <Route path="/FinalBillQuery" element={<ProtectedRoute><FinalBillQuery/></ProtectedRoute>} />
-          <Route path="/FinalBillingDetail" element={<ProtectedRoute><FinalBillingDetail/></ProtectedRoute>} />
-          <Route path="/FinalBillingList" element={<ProtectedRoute><FinalBillingList/></ProtectedRoute>} />
-          <Route path="/PatientEnquiryDetail" element={<ProtectedRoute><PatientEnquiryDetail/></ProtectedRoute>} />
+          <Route path="/Estimate" element={<PermissionRoute section="indoor_estimate"><Estimate /></PermissionRoute>} />
+          <Route path="/DischargeAndAdvise"element={<PermissionRoute section="indoor_dischargeAndAdvise"><DischargeAndAdvice_Details /></PermissionRoute>}/>
+          <Route path="/DischargeAndAdvise_details" element={<PermissionRoute section="indoor_dischargeAndAdvise"><DischargeAndAdvise /></PermissionRoute>}/>
+          <Route path="/DischargeAdvise" element={<PermissionRoute section="indoor_dischargeAdvise"><DischargeAdvise /></PermissionRoute>} />
+          <Route path="/DischargeMrd" element={<PermissionRoute section="indoor_dischargeMrd"><DischargeMrd/></PermissionRoute>}/>
+          <Route path="/FinalBillQuery" element={<PermissionRoute section="indoor_finalBillQuery"><FinalBillQuery/></PermissionRoute>} />
+          <Route path="/FinalBillingDetail" element={<PermissionRoute section="indoor_finalBillingDetail"><FinalBillingDetail/></PermissionRoute>} />
+          <Route path="/FinalBillingList" element={<PermissionRoute section="indoor_finalBillingList"><FinalBillingList/></PermissionRoute>} />
+          <Route path="/PatientEnquiryDetail" element={<PermissionRoute section="indoor_patientEnquiry"><PatientEnquiryDetail/></PermissionRoute>} />
 
 
 
 
 
-<Route path="/BedTransfer" element={<ProtectedRoute><BedTransferList /></ProtectedRoute>} />
-          <Route path="/Bed-Transfer" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
-          <Route path="/Bed-Transfer/:id/:mode" element={<ProtectedRoute><BedTransfer /></ProtectedRoute>} />
+          <Route path="/BedTransfer" element={<PermissionRoute section="indoor_bedTransfer"><BedTransferList /></PermissionRoute>} />
+          <Route path="/Bed-Transfer" element={<PermissionRoute section="indoor_bedTransfer"><BedTransfer /></PermissionRoute>} />
+          <Route path="/Bed-Transfer/:id/:mode" element={<PermissionRoute section="indoor_bedTransfer"><BedTransfer /></PermissionRoute>} />
 
 
-<Route
+          <Route
             path="/dateWiseAdmReg"
             element={
-              <>
+              <PermissionRoute section="indoorReport_admissionRegister">
                 <DateWiseAdmReg />
-              </>
+              </PermissionRoute>
             }
           />
 
@@ -594,17 +594,17 @@ function App() {
 <Route
             path="/date-wise-registration-charge"
             element={
-              <>
+              <PermissionRoute section="indoorReport_admissionRegister">
                 <DateWiseRegistrationCharge1 />
-              </>
+              </PermissionRoute>
             }
           />
 <Route
             path="/discharge-pateint-reg"
             element={
-              <>
+              <PermissionRoute section="indoorReport_dischargePatient">
                 <DisPatEReg />
-              </>
+              </PermissionRoute>
             }
           />
 
@@ -612,46 +612,46 @@ function App() {
  <Route
             path="/datawise-moneyreceipt"
             element={
-              <>
+              <PermissionRoute section="indoorReport_moneyReceipt">
                 <DatewiseMoneyReceipt1/>
-              </>
+              </PermissionRoute>
             }
           />
 
 
-<Route path="/fina-bill-add-copy" element={<FinalBillingAddCopy />} />
-<Route path="/fina-bill-add" element={<FinalBillingAdd />} />
-          <Route path="/fina-bill/:id/:mode_type" element={<FinalBilling />} />
-          <Route path="/fina-bill-copy/:id/:mode_type" element={<FinalBillingAddCopy />} />
+          <Route path="/fina-bill-add-copy" element={<PermissionRoute section="indoor_finalBillingDetail"><FinalBillingAddCopy /></PermissionRoute>} />
+          <Route path="/fina-bill-add" element={<PermissionRoute section="indoor_finalBillingDetail"><FinalBillingAdd /></PermissionRoute>} />
+          <Route path="/fina-bill/:id/:mode_type" element={<PermissionRoute section="indoor_finalBillingDetail"><FinalBilling /></PermissionRoute>} />
+          <Route path="/fina-bill-copy/:id/:mode_type" element={<PermissionRoute section="indoor_finalBillingDetail"><FinalBillingAddCopy /></PermissionRoute>} />
           {/* <Route path="/fina-bill-list1" element={<FinalBillingListA />} /> */}
 
-          <Route path="/fina-bill-list2" element={<FinalBillingListB />} />
+          <Route path="/fina-bill-list2" element={<PermissionRoute section="indoor_finalBillingList"><FinalBillingListB /></PermissionRoute>} />
 
 
 
 
-<Route
+          <Route
             path="/dateWiseFinalBillRegPdf"
             element={
-              <>
+              <PermissionRoute section="indoorReport_finalBill">
                 <DateWiseFinalBillReg />
-              </>
+              </PermissionRoute>
             }
           />
 
 
 
 
-<Route path="/dateWiseOtherChargesReg" element={ <> <DateWiseOtherChargesReg/> </> } /> 
+<Route path="/dateWiseOtherChargesReg" element={<PermissionRoute section="indoorReport_otherCharges"><DateWiseOtherChargesReg /></PermissionRoute>} /> 
 
 
 
-<Route path="/dateWiseDrChargesDetailPdf" element={ <> <DateWiseDrChargesDetailPdf/> </> } />
+<Route path="/dateWiseDrChargesDetailPdf" element={<PermissionRoute section="indoorReport_drCharges"><DateWiseDrChargesDetailPdf /></PermissionRoute>} />
           {/* indoor route end---------------------------------  */}
 
-<Route path="/dateWiseBedChargesPdf" element={ <> <DateWiseBedChargesPdf/> </> } />
+<Route path="/dateWiseBedChargesPdf" element={<PermissionRoute section="indoorReport_bedCharges"><DateWiseBedChargesPdf /></PermissionRoute>} />
 
-<Route path="/dateWiseFinalBillOtherChargesReg" element={ <> <DateWiseFinalBillOtherChargesReg/> </> } />
+<Route path="/dateWiseFinalBillOtherChargesReg" element={<PermissionRoute section="indoorReport_otherChargesDetail"><DateWiseFinalBillOtherChargesReg /></PermissionRoute>} />
 
 <Route path="/bed-status" element={<ProtectedRoute><BedStatus /></ProtectedRoute>} />
 <Route path="/nurseStation" element={ <> <NurseStation/> </> } /> 
@@ -723,7 +723,11 @@ function App() {
           ></Route>
           <Route
             path="/daterangebillIpd"
-            element={<DateRangeBillIpd />}
+            element={
+              <PermissionRoute section="indoorReport_billReport">
+                <DateRangeBillIpd />
+              </PermissionRoute>
+            }
           ></Route>
           <Route
             path="/daterangebillOther"
@@ -892,8 +896,8 @@ function App() {
 
 {/* deb  dia mass */}
 
-<Route path="/LaboratoryQuery" element={<ProtectedRoute><LaboratoryQuery/></ProtectedRoute>}/>
-<Route path="/OTBillingIpd" element={<ProtectedRoute><OTBillingIpd/></ProtectedRoute>}/>
+<Route path="/LaboratoryQuery" element={<PermissionRoute section="diagnosis_laboratoryQuery"><LaboratoryQuery/></PermissionRoute>}/>
+<Route path="/OTBillingIpd" element={<PermissionRoute section="indoor_otBillingDetail"><OTBillingIpd/></PermissionRoute>}/>
 
 
 
@@ -901,7 +905,7 @@ function App() {
 <Route path="/TestReportSeq" element={<ProtectedRoute><TestReportSeq/></ProtectedRoute>}/>
 <Route path="/Formula" element={<Formula />} />
 <Route path="/TypeOfService" element={<ProtectedRoute><TypeOfService/></ProtectedRoute>}/>
-<Route path="/active-doctors" element={<ProtectedRoute><ActiveDoctors/></ProtectedRoute>} />
+<Route path="/active-doctors" element={<PermissionRoute section="doctor_activeDoctors"><ActiveDoctors/></PermissionRoute>} />
 <Route path="/CultureMedicine" element={<ProtectedRoute><CulMedHdMaster/></ProtectedRoute>}/>
   <Route path="/Saluation" element={<ProtectedRoute><Saluation/></ProtectedRoute>}/> 
   <Route path="/SampleType" element={<ProtectedRoute><SampleType/></ProtectedRoute>}/>
@@ -919,8 +923,8 @@ function App() {
  <Route path="/doctor" element={<DoctorManagement/>}/>
 <Route path="/doctor-wise-appointments" element={<DoctorWiseAppointments />} />
 <Route path="/SpecialityMaster" element={<ProtectedRoute><SpecialityMaster/></ProtectedRoute>}/>
-<Route path="/MoneyReceipt" element={<ProtectedRoute><MoneyReceipt/></ProtectedRoute>}/>
-<Route path="/Refund" element={<ProtectedRoute><Refund/></ProtectedRoute>}/>
+<Route path="/MoneyReceipt" element={<PermissionRoute section="diagnosis_moneyReceipt"><MoneyReceipt/></PermissionRoute>}/>
+<Route path="/Refund" element={<PermissionRoute section="diagnosis_moneyReceipt_create"><Refund/></PermissionRoute>}/>
  <Route path="/Opd_Other_Charges" element={<ProtectedRoute><OtherChargesss/></ProtectedRoute>}/>
 
       {/* sou dia  mas */}

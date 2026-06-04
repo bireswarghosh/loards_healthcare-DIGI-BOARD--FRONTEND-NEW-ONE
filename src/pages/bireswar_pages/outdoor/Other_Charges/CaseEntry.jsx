@@ -249,7 +249,8 @@ const DepartmentModal = ({ isOpen, setIsOpen, tests = [] }) => {
 };
 
 const CaseEntry = () => {
-  const { user } = useAuth();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
   const [adminLevel, setAdminLevel] = useState("0");
   const [isFormLocked, setIsFormLocked] = useState(true);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -4586,61 +4587,75 @@ ${formData.ChequeNo ? `<tr>
             flexShrink: 0,
           }}
         >
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
-          >
-            New
-          </button>
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
-          >
-            Edit
-          </button>
-          <button
-            onClick={handleSave}
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{
-              fontSize: "0.75rem",
-              height: "26px",
-              fontWeight: "bold",
-              color: "black",
-            }}
-            disabled={loading || (mode === "edit" && isFormLocked)}
-          >
-            Save
-          </button>
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{
-              fontSize: "0.75rem",
-              height: "26px",
-              fontWeight: "bold",
-              color: "black",
-            }}
-          >
-            Delete
-          </button>
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
-          >
-            Undo
-          </button>
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
-            onClick={handleBillPrint}
-          >
-            Bill
-          </button>
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
-          >
-            Com Bill
-          </button>
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+            <button
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            >
+              New
+            </button>
+          )}
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+            <button
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            >
+              Edit
+            </button>
+          )}
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+            <button
+              onClick={handleSave}
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{
+                fontSize: "0.75rem",
+                height: "26px",
+                fontWeight: "bold",
+                color: "black",
+              }}
+              disabled={loading || (mode === "edit" && isFormLocked)}
+            >
+              Save
+            </button>
+          )}
+          {isSuperAdmin && (
+            <button
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{
+                fontSize: "0.75rem",
+                height: "26px",
+                fontWeight: "bold",
+                color: "black",
+              }}
+            >
+              Delete
+            </button>
+          )}
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+            <button
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            >
+              Undo
+            </button>
+          )}
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+            <button
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+              onClick={handleBillPrint}
+            >
+              Bill
+            </button>
+          )}
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+            <button
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+            >
+              Com Bill
+            </button>
+          )}
           {/* <button
             className="btn btn-sm btn-light border shadow-sm"
             style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
@@ -4651,13 +4666,15 @@ ${formData.ChequeNo ? `<tr>
 
           {/* dev  */}
 
-          <button
-            className="btn btn-sm btn-light border shadow-sm"
-            style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
-            onClick={() => setShowSubDeptPopup(true)}
-          >
-            Dep Print
-          </button>
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry !== false) && (
+            <button
+              className="btn btn-sm btn-light border shadow-sm"
+              style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+              onClick={() => setShowSubDeptPopup(true)}
+            >
+              Dep Print
+            </button>
+          )}
 
           <button
             onClick={() => navigate(-1)}
@@ -4667,7 +4684,7 @@ ${formData.ChequeNo ? `<tr>
             Exit
           </button>
 
-          {formData.CaseId && (
+          {formData.CaseId && (isSuperAdmin || permissions?.diagnosis_caseFlowExplorer !== false) && (
             <button
               onClick={() => navigate(`/CaseFlowExplorer?caseId=${encodeURIComponent(formData.CaseId)}`)}
               className="btn btn-sm btn-info text-white border shadow-sm"

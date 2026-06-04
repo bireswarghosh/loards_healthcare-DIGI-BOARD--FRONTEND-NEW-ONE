@@ -3,8 +3,12 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import PaginationBar from "./DiagnosisMaster/PaginationBar";
 import axiosInstance from "../axiosInstance";
+import { useAuth } from "../context/AuthContext";
 
 const Discharge = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+
   const [dischargeList, setDischargeList] = useState([]);
   const getToday = () => new Date().toISOString().split("T")[0];
 
@@ -131,9 +135,11 @@ const Discharge = () => {
             <button className="btn btn-sm btn-outline-secondary" onClick={clearSearch} style={{ borderRadius: 6 }}>
               Clear
             </button>
-            <NavLink className="btn btn-sm btn-success" to="/discharge/add" style={{ borderRadius: 6, fontWeight: 600 }}>
-              <i className="fa-light fa-plus"></i> New Discharge
-            </NavLink>
+            {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+              <NavLink className="btn btn-sm btn-success" to="/discharge/add" style={{ borderRadius: 6, fontWeight: 600 }}>
+                <i className="fa-light fa-plus"></i> New Discharge
+              </NavLink>
+            )}
           </div>
         </div>
 
@@ -163,18 +169,26 @@ const Discharge = () => {
                   <tr key={index}>
                     <td>
                       <div className="d-flex gap-1 flex-wrap">
-                        <button className="btn btn-outline-info dis-action-btn" title="View" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}`)}>
-                          <i className="fa-light fa-eye" />
-                        </button>
-                        <button className="btn btn-outline-primary dis-action-btn" title="Edit" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}/edit`)}>
-                          <i className="fa-light fa-pen" />
-                        </button>
-                        <button className="btn btn-outline-danger dis-action-btn" title="Delete" onClick={() => { setDeleteId(item.DisCerId); setShowConfirm(true); }}>
-                          <i className="fa-light fa-trash" />
-                        </button>
-                        <button className="btn btn-success dis-action-btn" title="Print" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}/print`)}>
-                          🖨
-                        </button>
+                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+                          <button className="btn btn-outline-info dis-action-btn" title="View" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}`)}>
+                            <i className="fa-light fa-eye" />
+                          </button>
+                        )}
+                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+                          <button className="btn btn-outline-primary dis-action-btn" title="Edit" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}/edit`)}>
+                            <i className="fa-light fa-pen" />
+                          </button>
+                        )}
+                        {isSuperAdmin && (
+                          <button className="btn btn-outline-danger dis-action-btn" title="Delete" onClick={() => { setDeleteId(item.DisCerId); setShowConfirm(true); }}>
+                            <i className="fa-light fa-trash" />
+                          </button>
+                        )}
+                        {(isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
+                          <button className="btn btn-success" style={{ padding: "3px 8px", fontSize: "11px", borderRadius: "4px" }} title="Print" onClick={() => navigate(`/discharge/${encodeURIComponent(item.DisCerId)}/print`)}>
+                            🖨 Print
+                          </button>
+                        )}
                       </div>
                     </td>
                     <td><span className="dis-badge bg-primary text-white">{item.DisCerNo}</span></td>

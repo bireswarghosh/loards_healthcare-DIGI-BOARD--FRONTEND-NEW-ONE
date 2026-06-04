@@ -5,9 +5,12 @@ import axios from "axios";
 import { Modal, Button } from "react-bootstrap";
 import { toast } from "react-toastify";
 import axiosInstance from "../../../../axiosInstance";
+import { useAuth } from "../../../../context/AuthContext";
 
-;
 const OtherCharges = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+
   const location = useLocation();
   const navigate = useNavigate();
   const [admissionData, setAdmissionData] = useState({});
@@ -745,12 +748,14 @@ const OtherCharges = () => {
                 <span className="badge bg-success me-2">
                   {masterCharges.length} charges
                 </span>
-                <button
-                  className="btn btn-success"
-                  onClick={() => setShowAddModal(true)}
-                >
-                  Add
-                </button>
+                {(isSuperAdmin || permissions?.indoor_otherCharges !== false) && (
+                  <button
+                    className="btn btn-success"
+                    onClick={() => setShowAddModal(true)}
+                  >
+                    Add
+                  </button>
+                )}
               </div>
             </div>
 
@@ -790,25 +795,29 @@ const OtherCharges = () => {
                         return (
                           <tr key={i}>
                             <td className="d-flex">
-                              <button
-                                className="btn btn-sm btn-outline-info me-1"
-                                disabled={loading}
-                                onClick={() => {
-                                  handleSave(charge.Id, i);
-                                }}
-                              >
-                                <i className="fa-solid fa-pen"></i>
-                              </button>
-                              <button
-                                className="btn btn-sm btn-outline-danger"
-                                disabled={loading}
-                                onClick={() => {
-                                  setShowConfirm(true);
-                                  setDelId(charge.Id);
-                                }}
-                              >
-                                <i className="fa-solid fa-trash"></i>{" "}
-                              </button>
+                              {(isSuperAdmin || permissions?.indoor_otherCharges !== false) && (
+                                <button
+                                  className="btn btn-sm btn-outline-info me-1"
+                                  disabled={loading}
+                                  onClick={() => {
+                                    handleSave(charge.Id, i);
+                                  }}
+                                >
+                                  <i className="fa-solid fa-pen"></i>
+                                </button>
+                              )}
+                              {isSuperAdmin && (
+                                <button
+                                  className="btn btn-sm btn-outline-danger"
+                                  disabled={loading}
+                                  onClick={() => {
+                                    setShowConfirm(true);
+                                    setDelId(charge.Id);
+                                  }}
+                                >
+                                  <i className="fa-solid fa-trash"></i>{" "}
+                                </button>
+                              )}
                             </td>
                             <td>
                               {masterCharge?.OtherCharges ||

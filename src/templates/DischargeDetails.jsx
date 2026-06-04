@@ -10,9 +10,11 @@ import JsBarcode from "jsbarcode";
 import axiosInstance from "../axiosInstance";
 import AsyncApiSelect from "../components/indoor/PatientAdmissionDetail/Money-Receipt-LIst/SampleRe/AsyncApiSelect";
 import useAxiosFetch from "./DiagnosisMaster/Fetch";
-// import axiosInstance from "../axiosInstance";
+import { useAuth } from "../context/AuthContext";
 
 const DischargeDetails = ({ mode }) => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -805,7 +807,7 @@ const DischargeDetails = ({ mode }) => {
                     Next
                   </button>
                 )} */}
-                {mode !== "view" && (
+                {mode !== "view" && (isSuperAdmin || permissions?.indoor_dischargeAdvise !== false) && (
                   <div className="card p-3 shadow-sm border-0 mt-3">
                     <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                       <label className="fw-semibold text-muted mb-0">

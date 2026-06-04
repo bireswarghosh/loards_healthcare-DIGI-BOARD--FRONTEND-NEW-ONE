@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Footer from "../components/footer/Footer";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../context/AuthContext";
 // import useAxiosFetch from "./Fetch";
 // import OT from "./OT";
 
@@ -19,6 +20,8 @@ import useAxiosFetch from "./Fetch";
 import axiosInstance from "../axiosInstance";
 
 const OTBilling = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const { data: cashLessList } = useAxiosFetch
   ("/cashless");
@@ -1647,9 +1650,11 @@ useEffect(() => {
               Reset
             </button>
 
-            <button className="premium-btn-primary ms-2" onClick={openAdd}>
-              <i className="fa-solid fa-plus"></i> Add Invoice
-            </button>
+            {(isSuperAdmin || permissions?.indoor_otBillingList !== false) && (
+              <button className="premium-btn-primary ms-2" onClick={openAdd}>
+                <i className="fa-solid fa-plus"></i> Add Invoice
+              </button>
+            )}
           </div>
         </div>
 
@@ -1726,32 +1731,38 @@ useEffect(() => {
                       <tr key={item.OtBillId} className="premium-table-row">
                         <td>
                           <div className="action-button-group">
-                            <button
-                              className="action-icon-pill view"
-                              onClick={() => openView(item.OtBillId)}
-                              title="View Invoice"
-                            >
-                              <i className="fa-solid fa-eye"></i>
-                            </button>
+                            {(isSuperAdmin || permissions?.indoor_otBillingList !== false) && (
+                              <button
+                                className="action-icon-pill view"
+                                onClick={() => openView(item.OtBillId)}
+                                title="View Invoice"
+                              >
+                                <i className="fa-solid fa-eye"></i>
+                              </button>
+                            )}
 
-                            <button
-                              className="action-icon-pill edit"
-                              onClick={() => openEdit(item.OtBillId)}
-                              title="Edit Invoice"
-                            >
-                              <i className="fa-solid fa-pen-to-square"></i>
-                            </button>
+                            {(isSuperAdmin || permissions?.indoor_otBillingList !== false) && (
+                              <button
+                                className="action-icon-pill edit"
+                                onClick={() => openEdit(item.OtBillId)}
+                                title="Edit Invoice"
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                            )}
 
-                            <button
-                              className="action-icon-pill delete"
-                              onClick={() => {
-                                setDeleteId(item.OtBillId);
-                                setShowConfirm(true);
-                              }}
-                              title="Delete Invoice"
-                            >
-                              <i className="fa-solid fa-trash-can"></i>
-                            </button>
+                            {isSuperAdmin && (
+                              <button
+                                className="action-icon-pill delete"
+                                onClick={() => {
+                                  setDeleteId(item.OtBillId);
+                                  setShowConfirm(true);
+                                }}
+                                title="Delete Invoice"
+                              >
+                                <i className="fa-solid fa-trash-can"></i>
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td><span className="text-secondary">{(page - 1) * limit + i + 1}</span></td>

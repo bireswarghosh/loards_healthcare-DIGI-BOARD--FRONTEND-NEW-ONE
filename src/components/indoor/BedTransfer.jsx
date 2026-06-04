@@ -612,7 +612,7 @@ const BedTransfer = () => {
               {bedTransfers.length != 0 ? (
                 bedTransfers.map((bed, i) => {
                   const totalRows = bedTransfers.length;
-const isEditable = mode !== "view" && (isSuperAdmin || permissions?.indoor_bedTransfer_edit);
+const isEditable = mode !== "view" && (isSuperAdmin || permissions?.indoor_bedTransfer !== false);
 
 
 
@@ -750,7 +750,7 @@ const isEditable = mode !== "view" && (isSuperAdmin || permissions?.indoor_bedTr
               <button
                 className="btn btn-sm btn-success"
                 onClick={handleSave}
-                disabled={loadBtn || !(isSuperAdmin || permissions?.indoor_bedTransfer_create)}
+                disabled={loadBtn || !(isSuperAdmin || permissions?.indoor_bedTransfer !== false)}
               >
                 {!loadBtn ? "Add" : "Adding..."}
               </button>
@@ -761,7 +761,7 @@ const isEditable = mode !== "view" && (isSuperAdmin || permissions?.indoor_bedTr
                   onClick={() => {
                     handleUpdate(slNo);
                   }}
-                  disabled={loadBtn || !(isSuperAdmin || permissions?.indoor_bedTransfer_edit)}
+                  disabled={loadBtn || !(isSuperAdmin || permissions?.indoor_bedTransfer !== false)}
                 >
                   {!loadBtn ? "Update" : "Updating..."}
                 </button>

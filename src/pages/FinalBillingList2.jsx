@@ -2,10 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../axiosInstance";
 import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
 
 
 const FinalBillingListB = () => {
   const navigate = useNavigate();
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
 
 
   // UI State
@@ -106,13 +109,15 @@ const handleDelte = async (id) => {
           <div className="panel-header d-flex justify-content-between align-items-center">
             <div className="panel-title fw-bold">Final Billing</div>
             <div>
-              <button
-                className="btn btn-sm btn-primary me-2"
-                // onClick={() => navigate("/fina-bill-add")}
-                onClick={() => navigate("/fina-bill-add-copy")}
-              >
-                New
-              </button>
+              {(isSuperAdmin || permissions?.indoor_finalBillingList !== false) && (
+                <button
+                  className="btn btn-sm btn-primary me-2"
+                  // onClick={() => navigate("/fina-bill-add")}
+                  onClick={() => navigate("/fina-bill-add-copy")}
+                >
+                  New
+                </button>
+              )}
               <button
                     className="btn btn-sm btn-danger"
                     onClick={(e) => {
@@ -312,32 +317,37 @@ const handleDelte = async (id) => {
                     finalBillings.map((admission, i) => (
                       <tr key={admission.AdmitionId || i}>
                         <td>
-                          <button className="btn btn-sm btn-outline-info me-1"
+                          {(isSuperAdmin || permissions?.indoor_finalBillingList !== false) && (
+                            <button className="btn btn-sm btn-outline-info me-1"
+                              onClick={() => {
+                            navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/view`)  
+                            }
+                            }
+                            >
+                              <i className="fa-solid fa-eye"></i>
+                            </button>
+                          )}
+                          {(isSuperAdmin || permissions?.indoor_finalBillingList !== false) && (
+                            <button className="btn btn-sm btn-outline-warning me-1"
                             onClick={() => {
-                          navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/view`)  
-                          }
-                          }
-                          >
-                            <i className="fa-solid fa-eye"></i>
-                          </button>
-                          <button className="btn btn-sm btn-outline-warning me-1"
-                          onClick={() => {
-                          navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/edit`)  
-                          }
-                          }
-                          >
-                            <i className="fa-solid fa-pencil"></i>
-                          </button>
-                          <button className="btn btn-sm btn-outline-danger"
-                          onClick={() => {
-                            setDelId(admission.FinalBillId)
-                            setShowConfirm(true)
-                          }
-                          }
-                          >
-                            <i className="fa-solid fa-trash"></i>
-                           
-                          </button>
+                            navigate(`/fina-bill-copy/${encodeURIComponent(admission.FinalBillId)}/edit`)  
+                            }
+                            }
+                            >
+                              <i className="fa-solid fa-pencil"></i>
+                            </button>
+                          )}
+                          {isSuperAdmin && (
+                            <button className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              setDelId(admission.FinalBillId)
+                              setShowConfirm(true)
+                            }
+                            }
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                            </button>
+                          )}
                         </td>
                         <td>{admission.BillNo || "N/A"}</td>
                         <td>

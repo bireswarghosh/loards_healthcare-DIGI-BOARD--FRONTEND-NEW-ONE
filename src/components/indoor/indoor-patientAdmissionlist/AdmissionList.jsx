@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../axiosInstance';
+import { useAuth } from '../../../context/AuthContext';
 
 const AdmissionList = () => {
+  const { permissions, user } = useAuth();
+  const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
+
   const navigate = useNavigate();
   const printRef = useRef();
   const [admissions, setAdmissions] = useState([]);
@@ -293,8 +297,12 @@ const AdmissionList = () => {
         <div className="adm-header">
           <h4>🏥 Patient Registration List</h4>
           <div className="btn-group-custom">
-            <button className="btn btn-new" onClick={() => navigate('/PatientRegistrationDetail')}>+ New Patient</button>
-            <button className="btn btn-print" onClick={handlePrint}>📄 Print Report</button>
+            {(isSuperAdmin || permissions?.indoor_admissionList !== false) && (
+              <button className="btn btn-new" onClick={() => navigate('/PatientRegistrationDetail')}>+ New Patient</button>
+            )}
+            {(isSuperAdmin || permissions?.indoor_admissionList !== false) && (
+              <button className="btn btn-print" onClick={handlePrint}>📄 Print Report</button>
+            )}
             <button className="btn btn-refresh" onClick={fetchAdmissions}>⟳ Refresh</button>
           </div>
         </div>
@@ -373,11 +381,21 @@ const AdmissionList = () => {
                 admissions.map((a, i) => (
                   <tr key={a.AdmitionId || i}>
                     <td className="no-print" style={{whiteSpace:'nowrap'}}>
-                      <button className="btn-action btn-view me-1" onClick={() => navigate(`/PatientRegistrationDetail/${encodeURIComponent(a.AdmitionId)}?mode=view`)}>View</button>
-                      <button className="btn-action btn-edit me-1" onClick={() => navigate(`/PatientRegistrationDetail/${encodeURIComponent(a.AdmitionId)}?mode=edit`)}>Edit</button>
-                      <button className="btn-action btn-del me-1" onClick={() => handleDelete(a.AdmitionId)}>Del</button>
-                      <button className="btn-action me-1" style={{background:'linear-gradient(135deg,#4caf50,#388e3c)',color:'#fff'}} onClick={() => navigate(`/sampleReceipts`)}>MR</button>
-                      <button className="btn-action" style={{background:'linear-gradient(135deg,#9c27b0,#7b1fa2)',color:'#fff'}} onClick={() => navigate(`/initialFormData?admId=${a.AdmitionId}`)}>Receipt</button>
+                      {(isSuperAdmin || permissions?.indoor_admissionList !== false) && (
+                        <button className="btn-action btn-view me-1" onClick={() => navigate(`/PatientRegistrationDetail/${encodeURIComponent(a.AdmitionId)}?mode=view`)}>View</button>
+                      )}
+                      {(isSuperAdmin || permissions?.indoor_admissionList !== false) && (
+                        <button className="btn-action btn-edit me-1" onClick={() => navigate(`/PatientRegistrationDetail/${encodeURIComponent(a.AdmitionId)}?mode=edit`)}>Edit</button>
+                      )}
+                      {isSuperAdmin && (
+                        <button className="btn-action btn-del me-1" onClick={() => handleDelete(a.AdmitionId)}>Del</button>
+                      )}
+                      {(isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
+                        <button className="btn-action me-1" style={{background:'linear-gradient(135deg,#4caf50,#388e3c)',color:'#fff'}} onClick={() => navigate(`/sampleReceipts`)}>MR</button>
+                      )}
+                      {(isSuperAdmin || permissions?.indoor_moneyReceipt !== false) && (
+                        <button className="btn-action" style={{background:'linear-gradient(135deg,#9c27b0,#7b1fa2)',color:'#fff'}} onClick={() => navigate(`/initialFormData?admId=${a.AdmitionId}`)}>Receipt</button>
+                      )}
                     </td>
                     <td><span className="reg-no">{a.AdmitionNo}</span></td>
                     <td style={{whiteSpace:'nowrap'}}>{formatDate(a.AdmitionDate)}<br/><small style={{color:'#888'}}>{a.AdmitionTime || ''}</small></td>

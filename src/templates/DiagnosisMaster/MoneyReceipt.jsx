@@ -1580,7 +1580,7 @@ ${pagesHtml}
                 <i className="fa fa-plus me-2"></i>Add Receipt
               </button>
             )}
-            {(isSuperAdmin || permissions?.diagnosis_moneyReceipt_refund !== false) && (
+            {(isSuperAdmin || permissions?.diagnosis_moneyReceipt_create !== false) && (
               <button
                 className="btn btn-sm"
                 style={{ background: "rgba(244,67,54,0.8)", color: "#fff", border: "none", fontWeight: 600, borderRadius: "8px" }}
