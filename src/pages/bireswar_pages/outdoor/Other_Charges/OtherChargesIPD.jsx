@@ -57,6 +57,136 @@ const OtherCharges = () => {
   });
   const [companyWiseOCdata, setCompanyWiseOCdata] = useState([]);
 
+  const parseDateSafely = (dateVal) => {
+    if (!dateVal) return null;
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const getActivePackagesList = (adm) => {
+    if (!adm) return [];
+    let list = [];
+    try {
+      if (adm.PackagesList) {
+        list = JSON.parse(adm.PackagesList);
+      }
+    } catch (e) {
+      console.error("Error parsing PackagesList:", e);
+    }
+    
+    // Fallback for legacy columns if PackagesList was empty
+    if (list.length === 0) {
+      if (adm.PackageId && Number(adm.PackageId) !== 0) {
+        list.push({
+          PackageId: adm.PackageId,
+          PackageAmount: adm.PackageAmount || 0,
+          packagestart: adm.packagestart,
+          packagevalid: adm.packagevalid
+        });
+      }
+      if (adm.PackageId2 && Number(adm.PackageId2) !== 0) {
+        list.push({
+          PackageId: adm.PackageId2,
+          PackageAmount: adm.PackageAmount2 || 0,
+          packagestart: adm.packagestart2,
+          packagevalid: adm.packagevalid2
+        });
+      }
+      if (adm.PackageId3 && Number(adm.PackageId3) !== 0) {
+        list.push({
+          PackageId: adm.PackageId3,
+          PackageAmount: adm.PackageAmount3 || 0,
+          packagestart: adm.packagestart3,
+          packagevalid: adm.packagevalid3
+        });
+      }
+      if (adm.PackageId4 && Number(adm.PackageId4) !== 0) {
+        list.push({
+          PackageId: adm.PackageId4,
+          PackageAmount: adm.PackageAmount4 || 0,
+          packagestart: adm.packagestart4,
+          packagevalid: adm.packagevalid4
+        });
+      }
+    }
+    return list;
+  };
+
+  const isOtherChargePackageActive = (chargeDateStr) => {
+    if (!admissionData.AdmitionId || Number(admissionData.optotherchargeinc) !== 1) return false;
+    const chargeDate = parseDateSafely(chargeDateStr);
+    if (!chargeDate) return false;
+
+    const list = getActivePackagesList(admissionData);
+    for (const pkg of list) {
+      if (pkg.PackageId && Number(pkg.PackageId) !== 0) {
+        const s = parseDateSafely(pkg.packagestart);
+        const e = parseDateSafely(pkg.packagevalid);
+        if (s && e) {
+          const startDate = s < e ? s : e;
+          const endDate = s > e ? s : e;
+          if (chargeDate >= startDate && chargeDate <= endDate) return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // Sync newCharge rate when date or selected charge changes based on package status
+  useEffect(() => {
+    if (selectedCharge) {
+      const active = isOtherChargePackageActive(newCharge.EDate);
+      const targetRate = active ? 0 : (selectedCharge.Rate || 0);
+      if (newCharge.Rate !== targetRate) {
+        setNewCharge((prev) => ({
+          ...prev,
+          Rate: targetRate,
+          Amount: targetRate * prev.Qty,
+        }));
+      }
+    }
+  }, [newCharge.EDate, selectedCharge, admissionData.optotherchargeinc, admissionData.packagestart, admissionData.packagevalid, admissionData.packagestart2, admissionData.packagevalid2, admissionData.packagestart3, admissionData.packagevalid3, admissionData.packagestart4, admissionData.packagevalid4, admissionData.PackagesList]);
+
+  // Automatically force existing charges to 0 if package is active for their specific dates
+  useEffect(() => {
+    if (otherCharges.length === 0) return;
+    let changed = false;
+    const updated = otherCharges.map((charge) => {
+      let currentPackage = charge.Package;
+      if (currentPackage === undefined || currentPackage === null || currentPackage === "") {
+        currentPackage = isOtherChargePackageActive(charge.EDate) ? "Y" : "N";
+        changed = true;
+      }
+
+      if (currentPackage === "Y") {
+        if (Number(charge.Rate) !== 0 || Number(charge.Amount) !== 0 || charge.Package !== "Y") {
+          changed = true;
+          return {
+            ...charge,
+            Package: "Y",
+            Rate: 0,
+            Amount: 0,
+          };
+        }
+      } else {
+        if (charge.Package !== currentPackage) {
+          changed = true;
+          return {
+            ...charge,
+            Package: currentPackage,
+          };
+        }
+      }
+      return charge;
+    });
+
+    if (changed) {
+      setOtherCharges(updated);
+    }
+  }, [admissionData.optotherchargeinc, admissionData.packagestart, admissionData.packagevalid, admissionData.packagestart2, admissionData.packagevalid2, admissionData.packagestart3, admissionData.packagevalid3, admissionData.packagestart4, admissionData.packagevalid4, admissionData.PackagesList, otherCharges.length]);
+
   const handleChange = (e, i) => {
     const { name, value } = e.target;
 
@@ -68,10 +198,14 @@ const OtherCharges = () => {
     };
 
     // 🔥 Amount auto calculate
-    const rate = name === "Rate" ? value : updatedItem.Rate;
-    const qty = name === "Qty" ? value : updatedItem.Qty;
-
-    updatedItem.Amount = Number(rate) * Number(qty);
+    if (updatedItem.Package === "Y") {
+      updatedItem.Rate = 0;
+      updatedItem.Amount = 0;
+    } else {
+      const rate = name === "Rate" ? value : updatedItem.Rate;
+      const qty = name === "Qty" ? value : updatedItem.Qty;
+      updatedItem.Amount = Number(rate) * Number(qty);
+    }
 
     updatedCharges[i] = updatedItem;
 
@@ -241,7 +375,11 @@ const OtherCharges = () => {
         `/admission-charges/${admissionId}`,
       );
       if (response.data.success) {
-        setOtherCharges(response.data.data);
+        const mapped = response.data.data.map((charge) => ({
+          ...charge,
+          dbRate: charge.Rate,
+        }));
+        setOtherCharges(mapped);
       }
     } catch (error) {
       console.error("Error fetching charges:", error);
@@ -299,7 +437,11 @@ const OtherCharges = () => {
         `/admission-charges/${admission.AdmitionId}`,
       );
       if (response.data.success) {
-        setOtherCharges(response.data.data);
+        const mapped = response.data.data.map((charge) => ({
+          ...charge,
+          dbRate: charge.Rate,
+        }));
+        setOtherCharges(mapped);
       }
     } catch (error) {
       console.error("Error fetching charges for selected patient:", error);
@@ -341,14 +483,18 @@ const OtherCharges = () => {
   const addMultipleCharges = async () => {
     try {
       for (const charge of selectedCharges) {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const isActive = isOtherChargePackageActive(todayStr);
+        const rateVal = isActive ? 0 : (charge.Rate || 0);
         const chargeData = {
           OtherChargesId: charge.OtherChargesId,
-          Rate: charge.Rate || 0,
+          Rate: rateVal,
           Qty: 1,
-          Amount: charge.Rate || 0,
-          EDate: new Date().toISOString().split("T")[0],
+          Amount: rateVal,
+          EDate: todayStr,
           UserId: 1,
-          Remarks: "",
+          Remarks: isActive ? "Included in package" : "",
+          Package: isActive ? "Y" : "N",
         };
         await axiosInstance.post(
           `/admissions/${admissionId}/charges`,
@@ -369,9 +515,11 @@ const OtherCharges = () => {
 
   const addNewCharge = async () => {
     try {
+      const isActive = isOtherChargePackageActive(newCharge.EDate);
       const chargeData = {
         ...newCharge,
         Amount: newCharge.Rate * newCharge.Qty,
+        Package: isActive ? "Y" : "N",
       };
       await axiosInstance.post(
         `/admissions/${admissionId}/charges`,
@@ -822,6 +970,11 @@ const OtherCharges = () => {
                             <td>
                               {masterCharge?.OtherCharges ||
                                 `Charge ID: ${charge.OtherChargesId}`}
+                               {charge.Package === "Y" && (
+                                 <span className="badge bg-warning text-dark d-block mt-1" style={{ maxWidth: "max-content" }}>
+                                   Package Included (Covered)
+                                 </span>
+                               )}
                             </td>
                             <td>
                               <input
@@ -832,7 +985,6 @@ const OtherCharges = () => {
                                 onChange={(e) => {
                                   handleChange(e, i);
                                 }}
-                                // placeholder={charge.Rate}
                               />
                             </td>
                             <td>{masterCharge?.Unit || "-"}</td>
@@ -860,15 +1012,64 @@ const OtherCharges = () => {
                               />
                             </td>
                             <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={charge.Package}
-                                name="Package"
-                                onChange={(e) => {
-                                  handleChange(e, i);
-                                }}
-                              />
+                              <div className="form-check form-switch d-flex justify-content-center align-items-center mb-0">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  role="switch"
+                                  checked={charge.Package === "Y"}
+                                  disabled={loading}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    const pkgVal = isChecked ? "Y" : "N";
+                                    const masterCharge = masterCharges.find(
+                                      (mc) => mc.OtherChargesId === charge.OtherChargesId,
+                                    );
+                                    const originalRate = (charge.dbRate !== undefined && Number(charge.dbRate) > 0)
+                                      ? charge.dbRate
+                                      : (masterCharge?.Rate || 0);
+                                    
+                                    const rateVal = isChecked ? 0 : originalRate;
+                                    const amtVal = isChecked ? 0 : Number(originalRate) * Number(charge.Qty || 1);
+
+                                    const updatedItem = {
+                                      ...charge,
+                                      Package: pkgVal,
+                                      Rate: rateVal,
+                                      Amount: amtVal,
+                                    };
+
+                                    const updatedCharges = [...otherCharges];
+                                    updatedCharges[i] = updatedItem;
+                                    setOtherCharges(updatedCharges);
+                                    
+                                    // Trigger selOtherCharges update
+                                    setSelOtherCharges({
+                                      Qty: updatedItem.Qty,
+                                      Rate: updatedItem.Rate,
+                                      Amount: updatedItem.Amount,
+                                      Remarks: updatedItem.Remarks,
+                                      Package: updatedItem.Package,
+                                    });
+
+                                    // Save to database immediately
+                                    setLoading(true);
+                                    const { dbRate, ...saveData } = updatedItem;
+                                    axiosInstance.put(`/admissions/${admissionId}/charges/${charge.Id}`, saveData)
+                                      .then(() => {
+                                        fetchOtherCharges();
+                                        toast.success("Package status updated successfully");
+                                      })
+                                      .catch((err) => {
+                                        console.error("Error updating charge package status:", err);
+                                        toast.error("Failed to update package status");
+                                      })
+                                      .finally(() => {
+                                        setLoading(false);
+                                      });
+                                  }}
+                                />
+                              </div>
                             </td>
                             <td>{charge.EDate?.split("T")[0]}</td>
                           </tr>
@@ -1044,6 +1245,7 @@ const OtherCharges = () => {
                           type="number"
                           className="form-control"
                           value={newCharge.Rate}
+                          disabled={isOtherChargePackageActive(newCharge.EDate)}
                           onChange={(e) =>
                             setNewCharge({
                               ...newCharge,
@@ -1051,6 +1253,11 @@ const OtherCharges = () => {
                             })
                           }
                         />
+                        {isOtherChargePackageActive(newCharge.EDate) && (
+                          <span className="badge bg-warning text-dark d-block mt-1">
+                            Covered by active package
+                          </span>
+                        )}
                       </div>
                       <div className="col-md-3">
                         <label>Quantity</label>

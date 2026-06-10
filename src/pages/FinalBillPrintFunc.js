@@ -63,6 +63,16 @@ function mergeConsecutive(arr) {
 
 // this print final bill summary (done)
 export const handlePrint1 = (data) => {
+  const cleanNum = (val) => {
+    if (val === undefined || val === null) return 0;
+    const str = String(val).replace(/,/g, '');
+    const num = Number(str);
+    return isNaN(num) ? 0 : num;
+  };
+  const packageTotal = data.packages ? data.packages.reduce((sum, p) => sum + cleanNum(p.amount), 0) : 0;
+  const printedGrandTotal = (cleanNum(data.grandTotal) + packageTotal).toFixed(2);
+  const printedDue = (cleanNum(data.due) + packageTotal).toFixed(2);
+
   data.services.rows = sortRowsByDate(data.services.rows);
   data.doctorVisits.rows = sortRowsByDate(data.doctorVisits.rows);
   data.investigations.rows = sortRowsByDate(data.investigations.rows);
@@ -282,6 +292,23 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
 
   // --- RENDER SECTIONS ---
 
+  // Package Charges
+  if (data.packages && data.packages.length > 0 && packageTotal > 0) {
+    let pHtml = `<div class="section-title">PACKAGE CHARGES</div>`;
+    pHtml += `<table class="data-table"><thead><tr><th>PKG NAME</th><th>START DATE</th><th>END DATE</th><th class="text-right">PKG AMT</th></tr></thead><tbody>`;
+    data.packages.forEach(pkg => {
+      pHtml += `<tr class="important-row">`;
+      pHtml += `<td style="font-weight:600">${pkg.name}</td>`;
+      pHtml += `<td style="font-weight:600">${pkg.startDate}</td>`;
+      pHtml += `<td style="font-weight:600">${pkg.endDate}</td>`;
+      pHtml += `<td class="text-right" style="font-weight:600">${pkg.amount.toFixed(2)}</td>`;
+      pHtml += `</tr>`;
+    });
+    pHtml += `<tr><td colspan="3" class="text-right"><b>Total:</b></td><td class="text-right"><b>${packageTotal.toFixed(2)}</b></td></tr>`;
+    pHtml += `</tbody></table>`;
+    html += pHtml;
+  }
+
   // 1. Bed Charges
   html += buildTable(
     "BED CHARGES",
@@ -317,7 +344,7 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
     console.log("inside ot charges");
     html += buildTable(
       "O.T. CHARGES",
-      ["DATE", "O.T. Bill", "AMOUNT"],
+      ["DATE", "O.T. CHARGES", "AMOUNT"],
       data.otCharges.rows,
       data.otCharges.total,
     );
@@ -361,23 +388,23 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
     <div class="footer-totals">
       <div class="total-row">
         <span class="total-label">Grand Total :</span>
-        <span>${data.grandTotal}</span>
+        <span>${printedGrandTotal}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Less Advance Paid :</span>
-        <span>${data.advancePaid}</span>
+        <span>${cleanNum(data.advancePaid).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
-        <span>${data.insuranceApproval}</span>
+        <span>${cleanNum(data.insuranceApproval).toFixed(2)}</span>
       </div>
          <div class="total-row">
         <span class="total-label">Discount:</span>
-        <span>${data?.discount || 0}</span>
+        <span>${cleanNum(data?.discount).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Due:</span>
-        <span>${data?.due || 0}</span>
+        <span>${printedDue}</span>
       </div>
      
     </div>
@@ -653,6 +680,16 @@ export const handlePrint2 = (invoiceData) => {
 
 // this print final bill patient copy (done)
 export const handlePrint3 = (data) => {
+  const cleanNum = (val) => {
+    if (val === undefined || val === null) return 0;
+    const str = String(val).replace(/,/g, '');
+    const num = Number(str);
+    return isNaN(num) ? 0 : num;
+  };
+  const packageTotal = data.packages ? data.packages.reduce((sum, p) => sum + cleanNum(p.amount), 0) : 0;
+  const printedGrandTotal = (cleanNum(data.grandTotal) + packageTotal).toFixed(2);
+  const printedDue = (cleanNum(data.due) + packageTotal).toFixed(2);
+
   data.services.rows = sortRowsByDate(data.services.rows);
   data.doctorVisits.rows = sortRowsByDate(data.doctorVisits.rows);
   data.investigations.rows = sortRowsByDate(data.investigations.rows);
@@ -863,6 +900,23 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
 
   // --- RENDER SECTIONS ---
 
+  // Package Charges
+  if (data.packages && data.packages.length > 0 && packageTotal > 0) {
+    let pHtml = `<div class="section-title">PACKAGE CHARGES</div>`;
+    pHtml += `<table class="data-table"><thead><tr><th>PKG NAME</th><th>START DATE</th><th>END DATE</th><th class="text-right">PKG AMT</th></tr></thead><tbody>`;
+    data.packages.forEach(pkg => {
+      pHtml += `<tr>`;
+      pHtml += `<td>${pkg.name}</td>`;
+      pHtml += `<td>${pkg.startDate}</td>`;
+      pHtml += `<td>${pkg.endDate}</td>`;
+      pHtml += `<td class="text-right">${pkg.amount.toFixed(2)}</td>`;
+      pHtml += `</tr>`;
+    });
+    pHtml += `<tr><td colspan="3" class="text-right"><b>Total:</b></td><td class="text-right"><b>${packageTotal.toFixed(2)}</b></td></tr>`;
+    pHtml += `</tbody></table>`;
+    html += pHtml;
+  }
+
   // 1. Bed Charges
   html += buildTable(
     "BED CHARGES",
@@ -898,7 +952,7 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
     console.log("inside ot charges");
     html += buildTable(
       "O.T. CHARGES",
-      ["DATE", "O.T. Bill", "AMOUNT"],
+      ["DATE", "O.T. CHARGES", "AMOUNT"],
       data.otCharges.rows,
       data.otCharges.total,
     );
@@ -942,24 +996,24 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
     <div class="footer-totals">
       <div class="total-row">
         <span class="total-label">Grand Total :</span>
-        <span>${data.grandTotal}</span>
+        <span>${printedGrandTotal}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Less Advance Paid :</span>
-        <span>${data.advancePaid}</span>
+        <span>${cleanNum(data.advancePaid).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
-        <span>${data.insuranceApproval}</span>
+        <span>${cleanNum(data.insuranceApproval).toFixed(2)}</span>
       </div>
 
          <div class="total-row">
         <span class="total-label">Discount:</span>
-        <span>${data?.discount || 0}</span>
+        <span>${cleanNum(data?.discount).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Due:</span>
-        <span>${data?.due || 0}</span>
+        <span>${printedDue}</span>
       </div>
    
     </div>
@@ -999,6 +1053,16 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
 
 // this print final bill Indoor Copy (done)
 export const handlePrint4 = (data) => {
+  const cleanNum = (val) => {
+    if (val === undefined || val === null) return 0;
+    const str = String(val).replace(/,/g, '');
+    const num = Number(str);
+    return isNaN(num) ? 0 : num;
+  };
+  const packageTotal = data.packages ? data.packages.reduce((sum, p) => sum + cleanNum(p.amount), 0) : 0;
+  const printedGrandTotal = (cleanNum(data.grandTotal) + packageTotal).toFixed(2);
+  const printedDue = (cleanNum(data.due) + packageTotal).toFixed(2);
+
   data.services.rows = sortRowsByDate(data.services.rows);
   data.doctorVisits.rows = sortRowsByDate(data.doctorVisits.rows);
   data.investigations.rows = sortRowsByDate(data.investigations.rows);
@@ -1209,6 +1273,23 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
 
   // --- RENDER SECTIONS ---
 
+  // Package Charges
+  if (data.packages && data.packages.length > 0 && packageTotal > 0) {
+    let pHtml = `<div class="section-title">PACKAGE CHARGES</div>`;
+    pHtml += `<table class="data-table"><thead><tr><th>PKG NAME</th><th>START DATE</th><th>END DATE</th><th class="text-right">PKG AMT</th></tr></thead><tbody>`;
+    data.packages.forEach(pkg => {
+      pHtml += `<tr>`;
+      pHtml += `<td>${pkg.name}</td>`;
+      pHtml += `<td>${pkg.startDate}</td>`;
+      pHtml += `<td>${pkg.endDate}</td>`;
+      pHtml += `<td class="text-right">${pkg.amount.toFixed(2)}</td>`;
+      pHtml += `</tr>`;
+    });
+    pHtml += `<tr><td colspan="3" class="text-right"><b>Total:</b></td><td class="text-right"><b>${packageTotal.toFixed(2)}</b></td></tr>`;
+    pHtml += `</tbody></table>`;
+    html += pHtml;
+  }
+
   // 1. Bed Charges
   html += buildTable(
     "BED CHARGES",
@@ -1276,24 +1357,24 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
     <div class="footer-totals">
       <div class="total-row">
         <span class="total-label">Grand Total :</span>
-        <span>${data.grandTotal}</span>
+        <span>${printedGrandTotal}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Less Advance Paid :</span>
-        <span>${data.advancePaid}</span>
+        <span>${cleanNum(data.advancePaid).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
-        <span>${data.insuranceApproval}</span>
+        <span>${cleanNum(data.insuranceApproval).toFixed(2)}</span>
       </div>
 
          <div class="total-row">
         <span class="total-label">Discount:</span>
-        <span>${data?.discount || 0}</span>
+        <span>${cleanNum(data?.discount).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Due:</span>
-        <span>${data?.due || 0}</span>
+        <span>${printedDue}</span>
       </div>
 
    
@@ -1335,6 +1416,16 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
 // this is for new bill summary for add form
 // this print final bill summary
 export const handlePrint5 = (data) => {
+  const cleanNum = (val) => {
+    if (val === undefined || val === null) return 0;
+    const str = String(val).replace(/,/g, '');
+    const num = Number(str);
+    return isNaN(num) ? 0 : num;
+  };
+  const packageTotal = data.packages ? data.packages.reduce((sum, p) => sum + cleanNum(p.amount), 0) : 0;
+  const printedGrandTotal = (cleanNum(data.grandTotal) + packageTotal).toFixed(2);
+  const printedDue = (cleanNum(data.due) + packageTotal).toFixed(2);
+
   // CSS Styles to replicate the PDF look (A4, borders, fonts)
   console.log("data is : ", data);
   console.log("only bed data is:", data.bedCharges.rows);
@@ -1577,6 +1668,23 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
 
   // --- RENDER SECTIONS ---
 
+  // Package Charges
+  if (data.packages && data.packages.length > 0 && packageTotal > 0) {
+    let pHtml = `<div class="section-title">PACKAGE CHARGES</div>`;
+    pHtml += `<table class="data-table"><thead><tr><th>PKG NAME</th><th>START DATE</th><th>END DATE</th><th class="text-right">PKG AMT</th></tr></thead><tbody>`;
+    data.packages.forEach(pkg => {
+      pHtml += `<tr>`;
+      pHtml += `<td>${pkg.name}</td>`;
+      pHtml += `<td>${pkg.startDate}</td>`;
+      pHtml += `<td>${pkg.endDate}</td>`;
+      pHtml += `<td class="text-right">${pkg.amount.toFixed(2)}</td>`;
+      pHtml += `</tr>`;
+    });
+    pHtml += `<tr><td colspan="3" class="text-right"><b>Total:</b></td><td class="text-right"><b>${packageTotal.toFixed(2)}</b></td></tr>`;
+    pHtml += `</tbody></table>`;
+    html += pHtml;
+  }
+
   // 1. Bed Charges
   html += buildTable(
     "BED CHARGES",
@@ -1602,7 +1710,7 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
     console.log("inside ot charges");
     html += buildTable(
       "O.T. CHARGES",
-      ["DATE", "O.T. Bill", "AMOUNT"],
+      ["DATE", "O.T. CHARGES", "AMOUNT"],
       data.otCharges.rows,
       data.otCharges.total,
     );
@@ -1655,23 +1763,23 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
     <div class="footer-totals">
       <div class="total-row">
         <span class="total-label">Grand Total :</span>
-        <span>${data.grandTotal}</span>
+        <span>${printedGrandTotal}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Less Advance Paid :</span>
-        <span>${data.advancePaid}</span>
+        <span>${cleanNum(data.advancePaid).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">INSURANCE APPROVAL AMOUNT:</span>
-        <span>${data.insuranceApproval}</span>
+        <span>${cleanNum(data.insuranceApproval).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Discount:</span>
-        <span>${data?.discount || 0}</span>
+        <span>${cleanNum(data?.discount).toFixed(2)}</span>
       </div>
       <div class="total-row">
         <span class="total-label">Due:</span>
-        <span>${data?.due || 0}</span>
+        <span>${printedDue}</span>
       </div>
       
     </div>
@@ -1711,6 +1819,15 @@ Phone No.: 8272904444 | HELPLINE-7003378414 | Toll Free No:-1800-309-0895
 
 // Date-wise all charges print (sorted small date → big date, with per-date & overall totals)
 export const handlePrint7 = (data) => {
+  const cleanNum = (val) => {
+    if (val === undefined || val === null) return 0;
+    const str = String(val).replace(/,/g, '');
+    const num = Number(str);
+    return isNaN(num) ? 0 : num;
+  };
+  const packageTotal = data.packages ? data.packages.reduce((sum, p) => sum + cleanNum(p.amount), 0) : 0;
+  const printedDue = (cleanNum(data.due) + packageTotal).toFixed(2);
+
   let allRows = [];
 
   // Bed Charges
@@ -1764,6 +1881,7 @@ export const handlePrint7 = (data) => {
   });
 
   const overallTotal = allRows.reduce((s, r) => s + r.amount, 0);
+  const printedGrandTotal = (overallTotal + packageTotal).toFixed(2);
 
   const styles = `
     <style>
@@ -1820,6 +1938,23 @@ export const handlePrint7 = (data) => {
     </div>
   `;
 
+  // Package Charges
+  if (data.packages && data.packages.length > 0 && packageTotal > 0) {
+    let pHtml = `<div class="section-title">PACKAGE CHARGES</div>`;
+    pHtml += `<table class="data-table"><thead><tr><th>PKG NAME</th><th>START DATE</th><th>END DATE</th><th class="text-right">PKG AMT</th></tr></thead><tbody>`;
+    data.packages.forEach(pkg => {
+      pHtml += `<tr>`;
+      pHtml += `<td>${pkg.name}</td>`;
+      pHtml += `<td>${pkg.startDate}</td>`;
+      pHtml += `<td>${pkg.endDate}</td>`;
+      pHtml += `<td class="text-right">${pkg.amount.toFixed(2)}</td>`;
+      pHtml += `</tr>`;
+    });
+    pHtml += `<tr><td colspan="3" class="text-right"><b>Total:</b></td><td class="text-right"><b>${packageTotal.toFixed(2)}</b></td></tr>`;
+    pHtml += `</tbody></table>`;
+    html += pHtml;
+  }
+
   html += `<table class="data-table"><thead><tr><th>Section</th><th>Description</th><th>Qty</th><th class="text-right">Rate</th><th class="text-right">Amount</th></tr></thead><tbody>`;
 
   const sortedDates = Object.keys(grouped).sort((a, b) => parseDate(a) - parseDate(b));
@@ -1838,11 +1973,11 @@ export const handlePrint7 = (data) => {
 
   html += `
     <div class="footer-totals">
-      <div class="total-row"><span class="total-label">Grand Total :</span><span>${overallTotal.toFixed(2)}</span></div>
-      <div class="total-row"><span class="total-label">Less Advance Paid :</span><span>${data.advancePaid || 0}</span></div>
-      <div class="total-row"><span class="total-label">Insurance Approval :</span><span>${data.insuranceApproval || 0}</span></div>
-      <div class="total-row"><span class="total-label">Discount :</span><span>${data.discount || 0}</span></div>
-      <div class="total-row"><span class="total-label">Due :</span><span>${data.due || 0}</span></div>
+      <div class="total-row"><span class="total-label">Grand Total :</span><span>${printedGrandTotal}</span></div>
+      <div class="total-row"><span class="total-label">Less Advance Paid :</span><span>${cleanNum(data.advancePaid).toFixed(2)}</span></div>
+      <div class="total-row"><span class="total-label">Insurance Approval :</span><span>${cleanNum(data.insuranceApproval).toFixed(2)}</span></div>
+      <div class="total-row"><span class="total-label">Discount :</span><span>${cleanNum(data.discount).toFixed(2)}</span></div>
+      <div class="total-row"><span class="total-label">Due :</span><span>${printedDue}</span></div>
     </div>
   `;
 

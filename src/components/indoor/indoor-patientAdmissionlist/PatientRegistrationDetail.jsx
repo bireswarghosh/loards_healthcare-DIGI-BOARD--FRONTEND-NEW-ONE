@@ -150,6 +150,9 @@ const PatientAdmission = () => {
     empcode: "",
     RefDoctorId2: 0,
     packagevalid: new Date().toISOString().split("T")[0],
+    packagevalid2: "",
+    packagevalid3: "",
+    packagevalid4: "",
     optdiagoinc: 0,
     optmediinc: 0,
     optotherchargeinc: 0,
@@ -162,6 +165,9 @@ const PatientAdmission = () => {
     AgeTypeN: "D",
     URN: "",
     packagestart: new Date().toISOString().split("T")[0],
+    packagestart2: "",
+    packagestart3: "",
+    packagestart4: "",
     AcGenLedCompany: 0,
     optotinc: 0,
     MEXECUTIVE: "",
@@ -173,6 +179,8 @@ const PatientAdmission = () => {
     PackageAmount4: null,
     Dob: "", // Calculated field
   });
+
+  const [selectedPackages, setSelectedPackages] = useState([]);
 
   // --- Handlers & Effects from File A ---
 
@@ -629,8 +637,71 @@ const PatientAdmission = () => {
           packagestart: apiData.packagestart
             ? apiData.packagestart.substring(0, 10)
             : "",
+          packagevalid2: apiData.packagevalid2
+            ? apiData.packagevalid2.substring(0, 10)
+            : "",
+          packagestart2: apiData.packagestart2
+            ? apiData.packagestart2.substring(0, 10)
+            : "",
+          packagevalid3: apiData.packagevalid3
+            ? apiData.packagevalid3.substring(0, 10)
+            : "",
+          packagestart3: apiData.packagestart3
+            ? apiData.packagestart3.substring(0, 10)
+            : "",
+          packagevalid4: apiData.packagevalid4
+            ? apiData.packagevalid4.substring(0, 10)
+            : "",
+          packagestart4: apiData.packagestart4
+            ? apiData.packagestart4.substring(0, 10)
+            : "",
           refdate: apiData.refdate ? apiData.refdate.substring(0, 10) : "",
         });
+
+        let parsedPackages = [];
+        try {
+          if (apiData.PackagesList) {
+            parsedPackages = JSON.parse(apiData.PackagesList);
+          }
+        } catch (e) {
+          console.error("Error parsing PackagesList:", e);
+        }
+
+        // Fallback for legacy database records that only have individual columns
+        if (parsedPackages.length === 0 && apiData.PackageId && Number(apiData.PackageId) !== 0) {
+          parsedPackages.push({
+            PackageId: apiData.PackageId,
+            PackageAmount: apiData.PackageAmount || 0,
+            packagestart: apiData.packagestart ? apiData.packagestart.substring(0, 10) : "",
+            packagevalid: apiData.packagevalid ? apiData.packagevalid.substring(0, 10) : ""
+          });
+          if (apiData.PackageId2 && Number(apiData.PackageId2) !== 0) {
+            parsedPackages.push({
+              PackageId: apiData.PackageId2,
+              PackageAmount: apiData.PackageAmount2 || 0,
+              packagestart: apiData.packagestart2 ? apiData.packagestart2.substring(0, 10) : "",
+              packagevalid: apiData.packagevalid2 ? apiData.packagevalid2.substring(0, 10) : ""
+            });
+          }
+          if (apiData.PackageId3 && Number(apiData.PackageId3) !== 0) {
+            parsedPackages.push({
+              PackageId: apiData.PackageId3,
+              PackageAmount: apiData.PackageAmount3 || 0,
+              packagestart: apiData.packagestart3 ? apiData.packagestart3.substring(0, 10) : "",
+              packagevalid: apiData.packagevalid3 ? apiData.packagevalid3.substring(0, 10) : ""
+            });
+          }
+          if (apiData.PackageId4 && Number(apiData.PackageId4) !== 0) {
+            parsedPackages.push({
+              PackageId: apiData.PackageId4,
+              PackageAmount: apiData.PackageAmount4 || 0,
+              packagestart: apiData.packagestart4 ? apiData.packagestart4.substring(0, 10) : "",
+              packagevalid: apiData.packagevalid4 ? apiData.packagevalid4.substring(0, 10) : ""
+            });
+          }
+        }
+
+        setSelectedPackages(parsedPackages);
 
         // Trigger fetches for edit mode
         fetchDietChart();
@@ -679,7 +750,68 @@ const PatientAdmission = () => {
   // Input Handling
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    let updatedFields = { [name]: value };
+
+    // Auto-update Package Amount when Package is selected
+    if (name === "PackageId") {
+      const pkg = packages.find((p) => p.PackageId == value);
+      updatedFields.PackageAmount = pkg ? pkg.Rate : 0;
+    } else if (name === "PackageId2") {
+      const pkg = packages.find((p) => p.PackageId == value);
+      updatedFields.PackageAmount2 = pkg ? pkg.Rate : 0;
+    } else if (name === "PackageId3") {
+      const pkg = packages.find((p) => p.PackageId == value);
+      updatedFields.PackageAmount3 = pkg ? pkg.Rate : 0;
+    } else if (name === "PackageId4") {
+      const pkg = packages.find((p) => p.PackageId == value);
+      updatedFields.PackageAmount4 = pkg ? pkg.Rate : 0;
+    }
+
+    // Date range warnings for Package 1
+    if (name === "packagestart") {
+      if (formData.packagevalid && value > formData.packagevalid) {
+        toast.warning("Start Date cannot be after Valid Till Date");
+      }
+    } else if (name === "packagevalid") {
+      if (formData.packagestart && value < formData.packagestart) {
+        toast.warning("Valid Till Date cannot be before Start Date");
+      }
+    }
+
+    // Date range warnings for Package 2
+    if (name === "packagestart2") {
+      if (formData.packagevalid2 && value > formData.packagevalid2) {
+        toast.warning("Package 2 Start Date cannot be after Valid Till Date");
+      }
+    } else if (name === "packagevalid2") {
+      if (formData.packagestart2 && value < formData.packagestart2) {
+        toast.warning("Package 2 Valid Till Date cannot be before Start Date");
+      }
+    }
+
+    // Date range warnings for Package 3
+    if (name === "packagestart3") {
+      if (formData.packagevalid3 && value > formData.packagevalid3) {
+        toast.warning("Package 3 Start Date cannot be after Valid Till Date");
+      }
+    } else if (name === "packagevalid3") {
+      if (formData.packagestart3 && value < formData.packagestart3) {
+        toast.warning("Package 3 Valid Till Date cannot be before Start Date");
+      }
+    }
+
+    // Date range warnings for Package 4
+    if (name === "packagestart4") {
+      if (formData.packagevalid4 && value > formData.packagevalid4) {
+        toast.warning("Package 4 Start Date cannot be after Valid Till Date");
+      }
+    } else if (name === "packagevalid4") {
+      if (formData.packagestart4 && value < formData.packagestart4) {
+        toast.warning("Package 4 Valid Till Date cannot be before Start Date");
+      }
+    }
+
+    setFormData((prev) => ({ ...prev, ...updatedFields }));
   };
 
   const handleDobChange = (value) => {
@@ -740,9 +872,96 @@ const PatientAdmission = () => {
     if (!formData.DiseaseId || formData.DiseaseId == 0) return toast.error("Disease is required");
     if (!formData.RMOId || formData.RMOId == 0) return toast.error("R.M.O. is required");
 
+    if (formData.Package === "Y") {
+      if (selectedPackages.length === 0) {
+        return toast.error("Please add at least one package or set Package [Y/N] to N");
+      }
+      for (let idx = 0; idx < selectedPackages.length; idx++) {
+        const pkg = selectedPackages[idx];
+        const label = `Package ${idx + 1}`;
+        if (!pkg.PackageId || pkg.PackageId == 0) {
+          return toast.error(`Please select a package name for ${label}`);
+        }
+        if (!pkg.packagestart) {
+          return toast.error(`${label} Start Date is required`);
+        }
+        if (!pkg.packagevalid) {
+          return toast.error(`${label} Valid Till Date is required`);
+        }
+        if (pkg.packagestart > pkg.packagevalid) {
+          return toast.error(`${label} Start Date cannot be after Valid Till Date`);
+        }
+      }
+    }
+
     try {
       setLoading(true);
       const cleanData = { ...formData };
+      
+      // Serialize dynamic packages array list and map back to columns
+      if (formData.Package === "Y" && selectedPackages.length > 0) {
+        cleanData.PackageId = selectedPackages[0].PackageId || null;
+        cleanData.PackageAmount = selectedPackages[0].PackageAmount || 0;
+        cleanData.packagestart = selectedPackages[0].packagestart || null;
+        cleanData.packagevalid = selectedPackages[0].packagevalid || null;
+
+        if (selectedPackages.length > 1) {
+          cleanData.PackageId2 = selectedPackages[1].PackageId || null;
+          cleanData.PackageAmount2 = selectedPackages[1].PackageAmount || 0;
+          cleanData.packagestart2 = selectedPackages[1].packagestart || null;
+          cleanData.packagevalid2 = selectedPackages[1].packagevalid || null;
+        } else {
+          cleanData.PackageId2 = null;
+          cleanData.PackageAmount2 = null;
+          cleanData.packagestart2 = null;
+          cleanData.packagevalid2 = null;
+        }
+
+        if (selectedPackages.length > 2) {
+          cleanData.PackageId3 = selectedPackages[2].PackageId || null;
+          cleanData.PackageAmount3 = selectedPackages[2].PackageAmount || 0;
+          cleanData.packagestart3 = selectedPackages[2].packagestart || null;
+          cleanData.packagevalid3 = selectedPackages[2].packagevalid || null;
+        } else {
+          cleanData.PackageId3 = null;
+          cleanData.PackageAmount3 = null;
+          cleanData.packagestart3 = null;
+          cleanData.packagevalid3 = null;
+        }
+
+        if (selectedPackages.length > 3) {
+          cleanData.PackageId4 = selectedPackages[3].PackageId || null;
+          cleanData.PackageAmount4 = selectedPackages[3].PackageAmount || 0;
+          cleanData.packagestart4 = selectedPackages[3].packagestart || null;
+          cleanData.packagevalid4 = selectedPackages[3].packagevalid || null;
+        } else {
+          cleanData.PackageId4 = null;
+          cleanData.PackageAmount4 = null;
+          cleanData.packagestart4 = null;
+          cleanData.packagevalid4 = null;
+        }
+
+        cleanData.PackagesList = JSON.stringify(selectedPackages);
+      } else {
+        cleanData.PackageId = null;
+        cleanData.PackageAmount = 0;
+        cleanData.packagestart = null;
+        cleanData.packagevalid = null;
+        cleanData.PackageId2 = null;
+        cleanData.PackageAmount2 = null;
+        cleanData.packagestart2 = null;
+        cleanData.packagevalid2 = null;
+        cleanData.PackageId3 = null;
+        cleanData.PackageAmount3 = null;
+        cleanData.packagestart3 = null;
+        cleanData.packagevalid3 = null;
+        cleanData.PackageId4 = null;
+        cleanData.PackageAmount4 = null;
+        cleanData.packagestart4 = null;
+        cleanData.packagevalid4 = null;
+        cleanData.PackagesList = null;
+      }
+
       // Clean up fields not in DB
       delete cleanData.Dob;
       delete cleanData.District;
@@ -2176,7 +2395,21 @@ window.onload = function () {
                       <select
                         name="Package"
                         value={formData.Package}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          if (e.target.value === "Y") {
+                            if (selectedPackages.length === 0) {
+                              setSelectedPackages([{
+                                PackageId: "",
+                                PackageAmount: 0,
+                                packagestart: new Date().toISOString().split("T")[0],
+                                packagevalid: new Date().toISOString().split("T")[0]
+                              }]);
+                            }
+                          } else {
+                            setSelectedPackages([]);
+                          }
+                        }}
                         style={{
                           ...inputStyle,
                           width: "50px",
@@ -2187,49 +2420,106 @@ window.onload = function () {
                         <option value="Y">Y</option>
                         <option value="N">N</option>
                       </select>
+                    </div>
 
-                      {formData.Package == "Y" ? (
-                        <select
-                          name="PackageId"
-                          value={formData.PackageId}
-                          onChange={handleInputChange}
-                          className="form-select form-select-sm rounded-0 w-50"
-                          style={{ ...inputStyle, padding: "0 2px" }}
-                        >
-                          {packages.map((d, i) => (
-                            <option key={i} value={d.PackageId}>
-                              {d.Package}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          className="form-select form-select-sm rounded-0 w-50"
-                          style={{ ...inputStyle, padding: "0 2px" }}
-                          readOnly
-                        ></input>
-                      )}
-                    </div>
-                    <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
-                      <label style={{ ...labelStyle, width: "90px" }}>
-                        valid till
-                      </label>
-                      <input
-                        type="date"
-                        name="packagevalid"
-                        value={formData.packagevalid}
-                        onChange={handleInputChange}
-                        style={{ ...inputStyle, width: "120px" }}
-                      />
-                      <label style={labelStyle}>Start</label>
-                      <input
-                        type="date"
-                        name="packagestart"
-                        value={formData.packagestart}
-                        onChange={handleInputChange}
-                        style={{ ...inputStyle, width: "120px" }}
-                      />
-                    </div>
+                    {formData.Package === "Y" && (
+                      <div className="w-100 my-2 p-2 border border-secondary-subtle bg-light-subtle rounded ms-1">
+                        {selectedPackages.map((pkg, index) => (
+                          <div key={index} className="mb-3 p-2 border-bottom border-light" style={{ background: '#fcfcfc', borderRadius: '4px' }}>
+                            <div className="d-flex align-items-center justify-content-between mb-1">
+                              <span className="fw-bold text-primary" style={{ fontSize: "0.75rem" }}>
+                                Package {index + 1}
+                              </span>
+                              {index > 0 && (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-danger py-0 px-1"
+                                  style={{ fontSize: "0.65rem" }}
+                                  onClick={() => {
+                                    const updated = selectedPackages.filter((_, i) => i !== index);
+                                    setSelectedPackages(updated);
+                                  }}
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                            <div className="d-flex align-items-center gap-1 mb-1">
+                              <label style={{ ...labelStyle, width: "90px" }}>Name</label>
+                              <select
+                                value={pkg.PackageId || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const selectedPkg = packages.find((p) => p.PackageId == val);
+                                  const updated = [...selectedPackages];
+                                  updated[index].PackageId = val;
+                                  updated[index].PackageAmount = selectedPkg ? selectedPkg.Rate : 0;
+                                  setSelectedPackages(updated);
+                                }}
+                                className="form-select form-select-sm rounded-0 w-50"
+                                style={{ ...inputStyle, padding: "0 2px" }}
+                              >
+                                <option value="">--- Select ---</option>
+                                {packages.filter(p => p.PackageId !== 0).map((d, i) => (
+                                  <option key={i} value={d.PackageId}>
+                                    {d.Package}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="d-flex flex-wrap align-items-center gap-1 mb-1">
+                              <label style={{ ...labelStyle, width: "90px" }}>Start</label>
+                              <input
+                                type="date"
+                                value={pkg.packagestart || ""}
+                                onChange={(e) => {
+                                  const updated = [...selectedPackages];
+                                  updated[index].packagestart = e.target.value;
+                                  setSelectedPackages(updated);
+                                }}
+                                style={{ ...inputStyle, width: "120px" }}
+                              />
+                              <label style={labelStyle}>valid till</label>
+                              <input
+                                type="date"
+                                value={pkg.packagevalid || ""}
+                                onChange={(e) => {
+                                  const updated = [...selectedPackages];
+                                  updated[index].packagevalid = e.target.value;
+                                  setSelectedPackages(updated);
+                                }}
+                                style={{ ...inputStyle, width: "120px" }}
+                              />
+                              {pkg.packagestart && pkg.packagevalid && pkg.packagestart > pkg.packagevalid && (
+                                <div className="text-danger small fw-bold w-100 ms-5 ps-4 mt-1" style={{ fontSize: "0.7rem" }}>
+                                  ⚠️ Start Date must be less than or equal to Valid Till Date!
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        <div className="text-end mt-1">
+                          <button
+                            type="button"
+                            className="btn btn-sm btn-primary py-0 px-2 fw-bold"
+                            style={{ fontSize: "0.7rem" }}
+                            onClick={() => {
+                              setSelectedPackages([
+                                ...selectedPackages,
+                                {
+                                  PackageId: "",
+                                  PackageAmount: 0,
+                                  packagestart: new Date().toISOString().split("T")[0],
+                                  packagevalid: new Date().toISOString().split("T")[0]
+                                }
+                              ]);
+                            }}
+                          >
+                            + Add Another Package
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         CashLess [Y/N]
@@ -2531,26 +2821,50 @@ window.onload = function () {
                         ))}
                       </select>
                     </div> */}
-                    <div className="d-flex align-items-center gap-1 mb-1">
-                      <label style={{ ...labelStyle, width: "90px" }}>
-                        Pkg Amount
-                      </label>
-                      <input
-                        type="text"
-                        name="PackageAmount"
-                        value={formData.PackageAmount}
-                        onChange={handleInputChange}
-                        style={inputStyle}
-                      />
-                    </div>
+                    {formData.Package === "Y" ? (
+                      selectedPackages.map((pkg, idx) => (
+                        <div key={idx} className="d-flex align-items-center gap-1 mb-1">
+                          <label style={{ ...labelStyle, width: "90px" }}>
+                            Pkg {idx + 1} Amount
+                          </label>
+                          <input
+                            type="text"
+                            value={pkg.PackageAmount}
+                            onChange={(e) => {
+                              const updated = [...selectedPackages];
+                              updated[idx].PackageAmount = Number(e.target.value) || 0;
+                              setSelectedPackages(updated);
+                            }}
+                            style={inputStyle}
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="d-flex align-items-center gap-1 mb-1">
+                        <label style={{ ...labelStyle, width: "90px" }}>
+                          Pkg 1 Amount
+                        </label>
+                        <input
+                          type="text"
+                          value={0}
+                          readOnly
+                          style={inputStyle}
+                        />
+                      </div>
+                    )}
+
                     <div className="d-flex align-items-center gap-1 mb-1">
                       <label style={{ ...labelStyle, width: "90px" }}>
                         Total Pkg
                       </label>
                       <input
                         type="text"
-                        name="PackageAmount"
-                        value={formData.PackageAmount}
+                        disabled
+                        value={
+                          formData.Package === "Y"
+                            ? selectedPackages.reduce((sum, p) => sum + Number(p.PackageAmount || 0), 0)
+                            : 0
+                        }
                         style={inputStyle}
                       />
                     </div>
@@ -2759,7 +3073,7 @@ window.onload = function () {
                       className="small fw-bold ms-1"
                       style={{ fontSize: "0.7rem", lineHeight: "1" }}
                     >
-                      Medi inc in pkg
+                      Bed inc in pkg
                     </label>
                   </div>
                   <div

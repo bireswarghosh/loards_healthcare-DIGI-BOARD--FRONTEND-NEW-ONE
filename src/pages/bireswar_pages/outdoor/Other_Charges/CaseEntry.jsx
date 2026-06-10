@@ -432,6 +432,9 @@ const CaseEntry = () => {
     reportdone: "",
     DueBillPrint: "",
     PrintYN: "0",
+    optdiagoinc: 0,
+    packagestart: "",
+    packagevalid: "",
   });
 
   const [barcodeCopies, setBarcodeCopies] = useState(1);
@@ -459,6 +462,83 @@ const CaseEntry = () => {
 
   const [show, setShow] = useState(false);
   const [receiptDetailData, setReceiptDetailData] = useState([]);
+
+  const parseDateSafely = (dateVal) => {
+    if (!dateVal) return null;
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const getActivePackagesList = (adm) => {
+    if (!adm) return [];
+    let list = [];
+    try {
+      if (adm.PackagesList) {
+        list = JSON.parse(adm.PackagesList);
+      }
+    } catch (e) {
+      console.error("Error parsing PackagesList:", e);
+    }
+    
+    // Fallback for legacy columns if PackagesList was empty
+    if (list.length === 0) {
+      if (adm.PackageId && Number(adm.PackageId) !== 0) {
+        list.push({
+          PackageId: adm.PackageId,
+          PackageAmount: adm.PackageAmount || 0,
+          packagestart: adm.packagestart,
+          packagevalid: adm.packagevalid
+        });
+      }
+      if (adm.PackageId2 && Number(adm.PackageId2) !== 0) {
+        list.push({
+          PackageId: adm.PackageId2,
+          PackageAmount: adm.PackageAmount2 || 0,
+          packagestart: adm.packagestart2,
+          packagevalid: adm.packagevalid2
+        });
+      }
+      if (adm.PackageId3 && Number(adm.PackageId3) !== 0) {
+        list.push({
+          PackageId: adm.PackageId3,
+          PackageAmount: adm.PackageAmount3 || 0,
+          packagestart: adm.packagestart3,
+          packagevalid: adm.packagevalid3
+        });
+      }
+      if (adm.PackageId4 && Number(adm.PackageId4) !== 0) {
+        list.push({
+          PackageId: adm.PackageId4,
+          PackageAmount: adm.PackageAmount4 || 0,
+          packagestart: adm.packagestart4,
+          packagevalid: adm.packagevalid4
+        });
+      }
+    }
+    return list;
+  };
+
+  const isDiagPackageActive = () => {
+    if (!formData.AdmitionId || Number(formData.optdiagoinc) !== 1) return false;
+    const caseDate = parseDateSafely(formData.CaseDate);
+    if (!caseDate) return false;
+
+    const list = getActivePackagesList(formData);
+    for (const pkg of list) {
+      if (pkg.PackageId && Number(pkg.PackageId) !== 0) {
+        const s = parseDateSafely(pkg.packagestart);
+        const e = parseDateSafely(pkg.packagevalid);
+        if (s && e) {
+          const startDate = s < e ? s : e;
+          const endDate = s > e ? s : e;
+          if (caseDate >= startDate && caseDate <= endDate) return true;
+        }
+      }
+    }
+    return false;
+  };
 
   const [dWorkTests, setDWorkTests] = useState([]);
 
@@ -630,6 +710,23 @@ const CaseEntry = () => {
                 const label = `${admission.PatientName} (${admission.AdmitionNo})`;
 
                 setSelectedTest({ value, label });
+                setFormData((prev) => ({
+                  ...prev,
+                  optdiagoinc: admission.optdiagoinc || 0,
+                  packagestart: admission.packagestart || "",
+                  packagevalid: admission.packagevalid || "",
+                  packagestart2: admission.packagestart2 || "",
+                  packagevalid2: admission.packagevalid2 || "",
+                  packagestart3: admission.packagestart3 || "",
+                  packagevalid3: admission.packagevalid3 || "",
+                  packagestart4: admission.packagestart4 || "",
+                  packagevalid4: admission.packagevalid4 || "",
+                  PackageId: admission.PackageId || null,
+                  PackageId2: admission.PackageId2 || null,
+                  PackageId3: admission.PackageId3 || null,
+                  PackageId4: admission.PackageId4 || null,
+                  PackagesList: admission.PackagesList || null,
+                }));
               }
             } catch (error) {
               console.log(error);
@@ -835,18 +932,20 @@ const CaseEntry = () => {
     //   CancelTast: 0,
     // };
 
+    const active = isDiagPackageActive();
     const newTest = {
       id: Date.now(),
       TestId: test.TestId,
       TestName: test.Test,
       SubDepartmentId: test.SubDepartmentId, // ⭐ ADD THIS
-      Rate: rate,
-      NetRate: rate,
+      Rate: active ? 0 : rate,
+      NetRate: active ? 0 : rate,
+      originalRate: rate,
       // DeliveryDate: new Date().toISOString().slice(0, 10),
       DeliveryDate: utcToISTDateOnly(new Date()),
       DeliveryTime: "07:00 PM",
       Profile: "N",
-      ComYN: "Y",
+      ComYN: active ? "Y" : "N",
       // CancelTast: 0,
       CancelTast: 2,
       DescFormat: test.DescFormat,
@@ -1023,6 +1122,7 @@ const CaseEntry = () => {
             let subDeptId = null;
             let Descf = null;
             let html = null;
+            let originalRateVal = t.Rate || 0;
 
             if (t.TestId) {
               try {
@@ -1033,6 +1133,7 @@ const CaseEntry = () => {
                   subDeptId = testRes.data.data.SubDepartmentId; // ⭐ IMPORTANT
                   Descf = testRes.data.data.DescFormat;
                   html = testRes.data.data.html_content;
+                  originalRateVal = indoor ? Number(testRes.data.data.BRate || 0) : Number(testRes.data.data.Rate || 0);
                 }
               } catch (err) {
                 console.log("Error fetching test name:", err);
@@ -1046,6 +1147,8 @@ const CaseEntry = () => {
               SubDepartmentId: subDeptId, // ⭐ ADD THIS LINE
               Rate: t.Rate || 0,
               NetRate: t.NetRate || t.Rate || 0,
+              originalRate: originalRateVal,
+              dbRate: t.Rate || 0,
               // DeliveryDate: t.DeliveryDate
               //   ? new Date(t.DeliveryDate).toISOString().slice(0, 10)
               //   : new Date().toISOString().slice(0, 10),
@@ -1054,7 +1157,7 @@ const CaseEntry = () => {
                 : utcToISTDateOnly(new Date()),
               DeliveryTime: t.DeliveryTime || "07:00 PM",
               Profile: t.Profile || "N",
-              ComYN: t.ComYN || "Y",
+              ComYN: t.ComYN || (isDiagPackageActive() ? "Y" : "N"),
               // CancelTast: t.CancelTast || 0,
               CancelTast: t.CancelTast || 2,
               DescFormat: Descf,
@@ -1573,6 +1676,9 @@ const CaseEntry = () => {
       reportdone: "",
       DueBillPrint: "",
       PrintYN: "0",
+      optdiagoinc: 0,
+      packagestart: "",
+      packagevalid: "",
     });
     setIndoor(false);
     setSelectedTest("");
@@ -1760,6 +1866,34 @@ window.onload = function(){
     }
   }, []);
 
+  useEffect(() => {
+    const active = isDiagPackageActive();
+    let changed = false;
+    const updated = tests.map(t => {
+      let currentComYN = t.ComYN;
+      if (currentComYN === undefined || currentComYN === null || currentComYN === "") {
+        currentComYN = active ? "Y" : "N";
+        changed = true;
+      }
+      
+      const targetRate = currentComYN === "Y" ? 0 : (t.dbRate !== undefined ? t.dbRate : (t.originalRate !== undefined ? t.originalRate : t.Rate));
+      if (t.Rate !== targetRate || t.NetRate !== targetRate || t.ComYN !== currentComYN) {
+        changed = true;
+        return {
+          ...t,
+          ComYN: currentComYN,
+          Rate: targetRate,
+          NetRate: targetRate
+        };
+      }
+      return t;
+    });
+    if (changed) {
+      setTests(updated);
+      calculateTotal(updated);
+    }
+  }, [formData.CaseDate, formData.AdmitionId, formData.optdiagoinc, formData.packagestart, formData.packagevalid, formData.packagestart2, formData.packagevalid2, formData.packagestart3, formData.packagevalid3, formData.packagestart4, formData.packagevalid4, formData.PackagesList, tests]);
+
   // this is for IPD
   useEffect(() => {
     const id = selectedTest?.value;
@@ -1884,6 +2018,20 @@ window.onload = function(){
           AgeType: p.AgeType || "Y",
 
           DoctorId: p.UCDoctor1Id || p.UCDoctor2Id || p.UCDoctor3Id || "",
+          optdiagoinc: p.optdiagoinc || 0,
+          packagestart: p.packagestart || "",
+          packagevalid: p.packagevalid || "",
+          packagestart2: p.packagestart2 || "",
+          packagevalid2: p.packagevalid2 || "",
+          packagestart3: p.packagestart3 || "",
+          packagevalid3: p.packagevalid3 || "",
+          packagestart4: p.packagestart4 || "",
+          packagevalid4: p.packagevalid4 || "",
+          PackageId: p.PackageId || null,
+          PackageId2: p.PackageId2 || null,
+          PackageId3: p.PackageId3 || null,
+          PackageId4: p.PackageId4 || null,
+          PackagesList: p.PackagesList || null,
 
           // ADDRESS
           Add1: p.Add1 || "",
@@ -4033,6 +4181,11 @@ ${formData.ChequeNo ? `<tr>
             <div className="row g-1 mb-1" style={{ Height: "220px" }}>
               {/* SECTION 8: TEST ENTRY TABLE */}
               <div className="col-12 col-md-6">
+                {isDiagPackageActive() && (
+                  <div className="alert alert-info py-1 px-2 mb-1 text-center" style={{ fontSize: "11px", fontWeight: "bold", border: "1px solid #00f" }}>
+                    ℹ️ Diag inc in pkg : Rates are set to 0.
+                  </div>
+                )}
                 <div
                   className="table-responsive flex-grow-1"
                   style={{ overflowY: "auto" }}
@@ -4053,7 +4206,8 @@ ${formData.ChequeNo ? `<tr>
                         <th style={{ ...tableHeaderStyle }}>Rate</th>
                         <th style={tableHeaderStyle}>Delivery Date</th>
                         <th style={tableHeaderStyle}>Delivery Time</th>
-                        <th style={tableHeaderStyle}>Net Rate</th>
+                        <th style={tableHeaderStyle}>In Pkg</th>
+                        <th style={{ ...tableHeaderStyle }}>Net Rate</th>
                         <th style={{ ...tableHeaderStyle }}>IsisDisc</th>
                         <th style={{ ...tableHeaderStyle }}>Type</th>
                       </tr>
@@ -4115,6 +4269,36 @@ ${formData.ChequeNo ? `<tr>
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               {test.DeliveryTime}
                             </td>
+                             <td style={{ ...tableCellStyle, color: "black" }}>
+                               <div className="form-check form-switch d-flex justify-content-center align-items-center mb-0">
+                                 <input
+                                   className="form-check-input"
+                                   type="checkbox"
+                                   role="switch"
+                                   checked={test.ComYN === "Y"}
+                                   disabled={mode === "view"}
+                                   onChange={(e) => {
+                                     const isChecked = e.target.checked;
+                                     const val = isChecked ? "Y" : "N";
+                                     const updatedTests = [...tests];
+                                     const t = { ...updatedTests[index], ComYN: val };
+                                     if (isChecked) {
+                                       t.Rate = 0;
+                                       t.NetRate = 0;
+                                     } else {
+                                       const originalRate = (t.dbRate !== undefined && Number(t.dbRate) > 0)
+                                         ? t.dbRate
+                                         : (t.originalRate || 0);
+                                       t.Rate = originalRate;
+                                       t.NetRate = originalRate;
+                                     }
+                                     updatedTests[index] = t;
+                                     setTests(updatedTests);
+                                     calculateTotal(updatedTests);
+                                   }}
+                                 />
+                               </div>
+                             </td>
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               <input
                                 type="number"
@@ -4601,6 +4785,7 @@ ${formData.ChequeNo ? `<tr>
         >
           {(isSuperAdmin || permissions?.diagnosis_caseEntry_create !== false) && (
             <button
+              onClick={handleNew}
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
             >
@@ -4609,8 +4794,15 @@ ${formData.ChequeNo ? `<tr>
           )}
           {(isSuperAdmin || permissions?.diagnosis_caseEntry_edit !== false) && (
             <button
+              onClick={() => {
+                if (orgId && orgId !== "undefined") {
+                  navigate(`/CaseEntry/${encodeURIComponent(orgId)}/edit`);
+                  setMode("edit");
+                }
+              }}
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+              disabled={mode === "edit" || !orgId || orgId === "undefined"}
             >
               Edit
             </button>
@@ -4630,8 +4822,9 @@ ${formData.ChequeNo ? `<tr>
               Save
             </button>
           )}
-          {isSuperAdmin && (
+          {(isSuperAdmin || permissions?.diagnosis_caseEntry_delete !== false) && (
             <button
+              onClick={handleDelete}
               className="btn btn-sm btn-light border shadow-sm"
               style={{
                 fontSize: "0.75rem",
@@ -4639,14 +4832,17 @@ ${formData.ChequeNo ? `<tr>
                 fontWeight: "bold",
                 color: "black",
               }}
+              disabled={loading || !orgId || orgId === "undefined"}
             >
               Delete
             </button>
           )}
           {(isSuperAdmin || permissions?.diagnosis_caseEntry_create !== false || permissions?.diagnosis_caseEntry_edit !== false) && (
             <button
+              onClick={fetchData}
               className="btn btn-sm btn-light border shadow-sm"
               style={{ fontSize: "0.75rem", height: "26px", fontWeight: "bold" }}
+              disabled={!orgId || orgId === "undefined"}
             >
               Undo
             </button>

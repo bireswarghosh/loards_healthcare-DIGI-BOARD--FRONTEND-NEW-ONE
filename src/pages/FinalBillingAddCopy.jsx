@@ -437,6 +437,7 @@ const FinalBillingAdd = () => {
   const [selectedBillHead, setSelectedBillHead] = useState("");
 
   const [allDoctors, setAllDoctors] = useState([]);
+  const [packagesListMaster, setPackagesListMaster] = useState([]);
 
   const [bedDetails, setBedDetails] = useState([]);
   const [ocDeatails, setOcDeatails] = useState([]);
@@ -539,6 +540,9 @@ const FinalBillingAdd = () => {
   const [ocServiceChrg, setOcServiceChrg] = useState(0);
 
   const [allTests, setAllTests] = useState({});
+  const [caseDtlData, setCaseDtlData] = useState([]);
+  const [otDetailsList, setOtDetailsList] = useState([]);
+  const [otItemsMap, setOtItemsMap] = useState({});
 
   const [larAlertShow, setLarAlertShow] = useState(false);
   const [larAlertOk, setLarAlertOk] = useState(false);
@@ -585,6 +589,23 @@ const FinalBillingAdd = () => {
       // console.log("All test data: ", data);
     } catch (error) {
       console.log("error fetching test: ", error);
+    }
+  };
+
+  // fetch all ot-items for package calculations
+  const fetchAllOtItems = async () => {
+    try {
+      const res = await axiosInstance.get("/otItem");
+      if (res.data.success) {
+        const arr = res.data.data || [];
+        const obj = {};
+        for (let i = 0; i < arr.length; i++) {
+          obj[arr[i].OtItemId] = arr[i];
+        }
+        setOtItemsMap(obj);
+      }
+    } catch (error) {
+      console.log("error fetching all ot items:", error);
     }
   };
 
@@ -720,6 +741,15 @@ const FinalBillingAdd = () => {
     }
   };
 
+  const fetchAllPackages = async () => {
+    try {
+      const res = await axiosInstance.get("/packages");
+      res.data.success ? setPackagesListMaster(res.data.data) : setPackagesListMaster([]);
+    } catch (error) {
+      console.log("error fetching packages master: ", error);
+    }
+  };
+
   // this will fetch all the ipd other charges
   const fetchAllIPDOtherCharges = async () => {
     try {
@@ -743,26 +773,64 @@ const FinalBillingAdd = () => {
 
       if (res.data.data.length != 0) {
         const arr = res.data.data;
-        const newArr = arr.map((item) => ({
-          slno: 400,
-          PatientName: item.PatientName,
-          Diseasecode: "",
-          Disease: ".",
-          Add1: "",
-          Add2: "",
-          Add3: "",
-          Age: item.Age,
-          AgeType: "",
-          Sex: item.Sex,
-          AdmitionDate: item.BillDate,
-          PrintHead: "O.T. CHARGES",
-          SubHead: item.OtBillNo,
-          Particular: "",
-          Amount: item.TotalAmt,
-          TotAmount: item.TotalAmt,
-          MyPic: "",
-          scharge: 0,
-        }));
+
+        // Fetch detailed items for each OT bill first (to check Package flags)
+        let allDetails = [];
+        try {
+          const detailPromises = arr.map((item) =>
+            axiosInstance.get(`/ot-bills/${encodeURIComponent(item.OtBillId)}`)
+          );
+          const detailResults = await Promise.all(detailPromises);
+          allDetails = detailResults
+            .filter(r => r.data && r.data.success)
+            .map(r => r.data.data.otBillDetails || [])
+            .flat();
+          setOtDetailsList(allDetails);
+          if (arr[0]?.OtBillNo) {
+            fetchOTchargesDetail(arr[0].OtBillNo);
+          }
+        } catch (detailErr) {
+          console.log("error fetching individual ot details:", detailErr);
+        }
+
+        // Build a map: OtBillId => package-covered sum from detail items
+        const packageCoveredByBill = {};
+        allDetails.forEach(detail => {
+          if (detail.Package === 'Y') {
+            const billId = detail.OtBillId;
+            packageCoveredByBill[billId] = (packageCoveredByBill[billId] || 0) + Number(detail.Amount || 0);
+          }
+        });
+
+        // Check if OT charges are included in package (optotinc flag)
+        const isOtIncluded = Number(admData?.optotinc) === 1;
+
+        const newArr = arr.map((item) => {
+          const pkgCovered = isOtIncluded ? (packageCoveredByBill[item.OtBillId] || 0) : 0;
+          const effectiveAmt = Number(item.TotalAmt || 0) - pkgCovered;
+          return {
+            slno: 400,
+            PatientName: item.PatientName,
+            Diseasecode: "",
+            Disease: ".",
+            Add1: "",
+            Add2: "",
+            Add3: "",
+            Age: item.Age,
+            AgeType: "",
+            Sex: item.Sex,
+            AdmitionDate: item.BillDate,
+            PrintHead: "O.T. CHARGES",
+            SubHead: item.OtBillNo,
+            Particular: "",
+            Amount: effectiveAmt,
+            originalAmount: Number(item.TotalAmt || 0),
+            packageCoveredAmt: pkgCovered,
+            TotAmount: effectiveAmt,
+            MyPic: "",
+            scharge: 0,
+          };
+        });
 
         const totalOTCAmt = newArr.reduce((sum, item) => sum + item.Amount, 0);
 
@@ -904,18 +972,35 @@ const FinalBillingAdd = () => {
           (sum, item) => sum + Number(item.CTestAmt || 0),
           0,
         );
-        // console.log("total ctest:", totalCancelTest);
-        let totalDiag = arr.reduce(
-          (sum, item) => sum + Number(item.GrossAmt || 0),
-          0,
+
+        // Fetch all case detail lines first (to check ComYN package flags)
+        const caseIdArr = arr.map((item) => item.CaseId);
+        const resCaseDtl = caseIdArr.map((item) =>
+          axiosInstance(`/case-dtl-01/case/${item}`),
         );
+        const resCaseDtlPromises = await Promise.all(resCaseDtl);
+        let caseDtlDataFetched = resCaseDtlPromises
+          .map((item) => item.data.data)
+          .flat();
+        setCaseDtlData(caseDtlDataFetched);
+
+        // Calculate package covered diagnostic amount (ComYN='Y' means included in package)
+        const isDiagIncluded = Number(admData?.optdiagoinc) === 1;
+        let totalPackageCoveredDiag = 0;
+        if (isDiagIncluded) {
+          caseDtlDataFetched.forEach(dtlItem => {
+            if (dtlItem.ComYN === 'Y') {
+              totalPackageCoveredDiag += Number(dtlItem.Rate || 0);
+            }
+          });
+        }
 
         // console.log("totalDiag:", totalDiag);
         // console.log("totalCancelTest:", totalCancelTest);
         // console.log("totalMr:", totalMr);
         // console.log("total discount:", totalDiscount);
 
-        totalDiag = arr.reduce(
+        let totalDiag = arr.reduce(
           (sum, item) => {
             const total = Number(item.GrossAmt || 0);
             const payment = total - Number(item.Balance || 0);
@@ -925,14 +1010,10 @@ const FinalBillingAdd = () => {
           },
           0,
         );
-        // const totalDiag = arr.reduce(
-        //   (sum, item) =>
-        //     sum +
-        //     (Number(item.Balance || 0) -
-        //       Number(item.CTestAmt || 0) -
-        //       Number(totalMr || 0)),
-        //   0,
-        // );
+
+        // Deduct the package-covered diagnostic amount
+        totalDiag = Math.max(0, totalDiag - totalPackageCoveredDiag);
+
         // console.log("total diag chrgs; ", totalDiag);
 
         let diagObj = {};
@@ -993,32 +1074,7 @@ const FinalBillingAdd = () => {
           ),
         );
 
-        const caseIdArr = res.data.data.map((item) => item.CaseId);
-        // console.log("case Id", caseIdArr);
-
-        const resCaseDtl = caseIdArr.map((item) =>
-          axiosInstance(`/case-dtl-01/case/${item}`),
-        );
-
-        const resCaseDtlPromises = await Promise.all(resCaseDtl);
-        let caseDtlData = resCaseDtlPromises
-          .map((item) => item.data.data)
-          .flat();
-        // console.log("case dtls: ", caseDtlData);
-
-        // this describes all tests present in the diag
-        // const dtls = caseDtlData.map((item) => [
-        //   diagObj[item.CaseId]?.CaseDate?.split("T")[0]
-        //     ?.split("-")
-        //     ?.reverse()
-        //     ?.join("/") || "",
-        //   allTests[item.TestId].Test || "",
-        //   1,
-        //   item.Rate || 0,
-        //   item.Rate || 0,
-        // ]);
-
-        // this is only breif data
+        // this is only brief data
         // console.log("diagData:", arr);
         const dtls = arr.map((item) => [
           item.CaseDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
@@ -1133,6 +1189,11 @@ const FinalBillingAdd = () => {
                     </td>
                     <td className="text-end">
                       {row?.BedRate || row?.ToDayRate || 0}
+                      {isBedPackageActive(row.MyDate) && (
+                        <span className="badge bg-warning text-dark ms-1" style={{ fontSize: '9px', padding: '1px 3px' }}>
+                          Pkg
+                        </span>
+                      )}
                     </td>
                     <td className="text-end">
                       {bedDetails.find((item) => item.BedId == row.BedId)
@@ -1194,7 +1255,19 @@ const FinalBillingAdd = () => {
                     <td>{row.Particular?.trim()?.split("x")[1] || ""}</td>
                     <td>{row.Particular?.trim()?.split("x")[0] || ""}</td>
                     <td className="text-end">
-                      {Number(row.Amount || 0).toFixed(2)}
+                      {row.Package === 'Y' ? (
+                        <>
+                          <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '10px', marginRight: '3px' }}>
+                            ₹{Number(row.originalAmount || 0).toFixed(2)}
+                          </span>
+                          0.00
+                          <span className="badge bg-warning text-dark ms-1" style={{ fontSize: '9px', padding: '1px 3px' }}>
+                            Pkg
+                          </span>
+                        </>
+                      ) : (
+                        Number(row.Amount || 0).toFixed(2)
+                      )}
                     </td>
                     <td className="text-center">
                       {row.scharge === 1 ? "Y" : "N"}
@@ -1242,29 +1315,23 @@ const FinalBillingAdd = () => {
           >
             <thead>
               <tr>
-                <th style={styles.tableHeader}>OT Bill</th>
-                <th style={styles.tableHeader}>Bill Date</th>
+                <th style={styles.tableHeader}>OT Charge Name</th>
+                <th style={styles.tableHeader}>Date</th>
                 <th style={styles.tableHeader}>Amount</th>
               </tr>
             </thead>
             <tbody>
-              {/* {console.log("hi: ", otcDetails)} */}
-              {otcDetails ? (
-                otcDetails.map((row, idx) => (
+              {mappedOTChargesDetails && mappedOTChargesDetails.length > 0 ? (
+                mappedOTChargesDetails.map((row, idx) => (
                   <tr key={idx} style={styles.tableRowSelected}>
-                    <td>{row.OtBillNo || ""}</td>
-                    <td>
-                      {row.BillDate?.split("T")[0]
-                        ?.split("-")
-                        ?.reverse()
-                        ?.join("/") || ""}
-                    </td>
-                    <td>{row.TotalAmt || 0}</td>
+                    <td>{row.name || ""}</td>
+                    <td>{row.date || ""}</td>
+                    <td>{row.amount || 0}</td>
                   </tr>
                 ))
               ) : (
-                <tr colSpan="2" className="text-end text-white">
-                  No data found.
+                <tr className="text-end text-white">
+                  <td colSpan="3">No data found.</td>
                 </tr>
               )}
             </tbody>
@@ -1565,11 +1632,17 @@ const fetchOtSlots = async () => {
         console.log("Rest is ", rest)
         setOtObjDetails(rest || {});
         if (data?.otBillDetails.length > 0) {
-          let arr = data?.otBillDetails.map((item) => ({
-            ...item,
-            name: allOTitemsMap[item.OtItemId]?.OtItem || "",
-            category: allOTitemsMap[item.OtItemId]?.OtCategory || "",
-          }));
+          const isOtIncluded = Number(admData?.optotinc) === 1;
+          let arr = data?.otBillDetails.map((item) => {
+            const isCovered = item.Package === 'Y' && isOtIncluded;
+            return {
+              ...item,
+              name: allOTitemsMap[item.OtItemId]?.OtItem || "",
+              category: allOTitemsMap[item.OtItemId]?.OtCategory || "",
+              Rate: isCovered ? 0 : Number(item.Rate || 0),
+              Amount: isCovered ? 0 : Number(item.Amount || 0),
+            };
+          });
           console.log("obj is", rest);
           console.log("arr is", arr);
           setOtChargeDetails(arr);
@@ -1749,6 +1822,83 @@ const fetchOtSlots = async () => {
     );
   }
 
+  const parseDateSafely = (dateVal) => {
+    if (!dateVal) return null;
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const getActivePackagesList = (adm) => {
+    if (!adm) return [];
+    let list = [];
+    try {
+      if (adm.PackagesList) {
+        list = JSON.parse(adm.PackagesList);
+      }
+    } catch (e) {
+      console.error("Error parsing PackagesList:", e);
+    }
+    
+    // Fallback for legacy columns if PackagesList was empty
+    if (list.length === 0) {
+      if (adm.PackageId && Number(adm.PackageId) !== 0) {
+        list.push({
+          PackageId: adm.PackageId,
+          PackageAmount: adm.PackageAmount || 0,
+          packagestart: adm.packagestart,
+          packagevalid: adm.packagevalid
+        });
+      }
+      if (adm.PackageId2 && Number(adm.PackageId2) !== 0) {
+        list.push({
+          PackageId: adm.PackageId2,
+          PackageAmount: adm.PackageAmount2 || 0,
+          packagestart: adm.packagestart2,
+          packagevalid: adm.packagevalid2
+        });
+      }
+      if (adm.PackageId3 && Number(adm.PackageId3) !== 0) {
+        list.push({
+          PackageId: adm.PackageId3,
+          PackageAmount: adm.PackageAmount3 || 0,
+          packagestart: adm.packagestart3,
+          packagevalid: adm.packagevalid3
+        });
+      }
+      if (adm.PackageId4 && Number(adm.PackageId4) !== 0) {
+        list.push({
+          PackageId: adm.PackageId4,
+          PackageAmount: adm.PackageAmount4 || 0,
+          packagestart: adm.packagestart4,
+          packagevalid: adm.packagevalid4
+        });
+      }
+    }
+    return list;
+  };
+
+  const isBedPackageActive = (bedDateStr) => {
+    if (!admData || Number(admData.optmediinc) !== 1) return false;
+    const bedDate = parseDateSafely(bedDateStr);
+    if (!bedDate) return false;
+
+    const list = getActivePackagesList(admData);
+    for (const pkg of list) {
+      if (pkg.PackageId && Number(pkg.PackageId) !== 0) {
+        const s = parseDateSafely(pkg.packagestart);
+        const e = parseDateSafely(pkg.packagevalid);
+        if (s && e) {
+          const startDate = s < e ? s : e;
+          const endDate = s > e ? s : e;
+          if (bedDate >= startDate && bedDate <= endDate) return true;
+        }
+      }
+    }
+    return false;
+  };
+
   // fetch bed detail by Id
   const fetchBedsById = async (admId, billDate, releaseTime) => {
     try {
@@ -1810,7 +1960,29 @@ const fetchOtSlots = async () => {
         sortedArr,
         billDate,
         releaseTime,
-      );
+      ).map((item) => {
+        const bedMaster = allBedsDataMap[item.BedId];
+        const originalBedRate = Number(
+          item.BedRate || item.ToDayRate || item.Rate || bedMaster?.BedCh || 0
+        );
+        const active = isBedPackageActive(item.MyDate);
+        if (active) {
+          return {
+            ...item,
+            BedRate: 0,
+            ToDayRate: 0,
+            Rate: 0,
+            originalRate: originalBedRate,
+          };
+        }
+        return {
+          ...item,
+          BedRate: originalBedRate,
+          ToDayRate: originalBedRate,
+          Rate: originalBedRate,
+          originalRate: originalBedRate,
+        };
+      });
       console.log("Calculated bed array: ", newBedArr);
       const totalBedRate = newBedArr.reduce(
         (sum, item) => sum + Number(item.ToDayRate),
@@ -1882,6 +2054,7 @@ const fetchOtSlots = async () => {
     const ocWithFullDetails = otherChargesByAdmId.map((item) => ({
       ...allOtherCharges1[item.OtherChargesId],
       calAmount: item.Amount,
+      Package: item.Package,
     }));
     // const ocWithFullDetails = otherChargesByAdmId
     const ocWithServiceChrgOn = ocWithFullDetails.filter(
@@ -1891,8 +2064,10 @@ const fetchOtSlots = async () => {
     // console.log("oc with service chrg on: ", ocWithServiceChrgOn);
 
     let ocServiceChargeCalculated = ocWithServiceChrgOn.reduce(
-      (sum, item) =>
-        sum + Number(item.calAmount) * (Number(serviceCharge) / 100),
+      (sum, item) => {
+        const isPackageCovered = item.Package === 'Y' && Number(patientInfo?.optotherchargeinc) === 1;
+        return sum + (isPackageCovered ? 0 : Number(item.calAmount) * (Number(serviceCharge) / 100));
+      },
       0,
     );
 
@@ -1901,11 +2076,12 @@ const fetchOtSlots = async () => {
     ocServiceChargeCalculated = Number(ocServiceChargeCalculated).toFixed(2);
     setOcServiceChrg(Number(ocServiceChargeCalculated));
     return otherChargesByAdmId.map((item, index) => {
-      // const matched = allOtherCharges.find(
-      //   (oc) => oc.OtherChargesId == item.OtherChargesId,
-      // );
+      // If this charge is marked as Package='Y' AND admission has optotherchargeinc=1,
+      // set Amount to 0 (package covered), else keep original Amount
+      const isPackageCovered = item.Package === 'Y' && Number(patientInfo?.optotherchargeinc) === 1;
+      const effectiveAmount = isPackageCovered ? 0 : Number(item.Amount || 0);
+      const originalAmount = Number(item.Amount || 0);
 
-      // console.log("matched", matched);
       return {
         slno: index + 1,
         PatientName: patientInfo?.PatientName || "",
@@ -1922,20 +2098,62 @@ const fetchOtSlots = async () => {
         PrintHead: " ",
         // SubHead: matched?.OtherCharges || "",
         SubHead: allOtherCharges1[item.OtherChargesId]?.OtherCharges || "",
-        Particular: `   ${item.Qty} x Rs. ${item.Rate.toFixed(2)} `,
-        Amount: item.Amount,
+        Particular: `   ${item.Qty} x Rs. ${Number(item.Rate || 0).toFixed(2)} `,
+        Amount: effectiveAmount,
+        originalAmount: originalAmount,
+        Package: item.Package || 'N',
         TotAmount: 0,
         MyPic: "",
         scharge:
-          allOtherCharges1[item.OtherChargesId]?.ServiceCh === "Y" ? 1 : 0,
+          // If package covered, service charge should also be 0
+          isPackageCovered ? 0 : (allOtherCharges1[item.OtherChargesId]?.ServiceCh === "Y" ? 1 : 0),
         // scharge: matched?.ServiceCh === "Y" ? 1 : 0,
       };
     });
   }
 
+  const isOtIncluded = Number(admData?.optotinc) === 1;
+  const mappedOTChargesDetails = (otDetailsList || []).map((detail) => {
+    const parentBill = otcDetails.find(b => b.OtBillId === detail.OtBillId);
+    const dateStr = parentBill?.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "";
+    const itemName = otItemsMap[detail.OtItemId]?.OtItem || detail.OtItemId || "";
+    const isCovered = detail.Package === 'Y' && isOtIncluded;
+    return {
+      date: dateStr,
+      name: itemName,
+      amount: isCovered ? 0 : Number(detail.Amount || 0),
+      billNo: parentBill?.OtBillNo || ""
+    };
+  });
+
+  const activePackagesMapped = getActivePackagesList(admData).map(pkg => {
+    const matchedMaster = packagesListMaster.find(p => p.PackageId == pkg.PackageId);
+    const date1 = parseDateSafely(pkg.packagestart);
+    const date2 = parseDateSafely(pkg.packagevalid);
+    let startStr = pkg.packagestart?.substring(0, 10);
+    let endStr = pkg.packagevalid?.substring(0, 10);
+    if (date1 && date2 && date1 > date2) {
+      startStr = pkg.packagevalid?.substring(0, 10);
+      endStr = pkg.packagestart?.substring(0, 10);
+    }
+    const formatStr = (s) => {
+      if (!s) return "";
+      const parts = s.split("-");
+      if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      return s;
+    };
+    return {
+      name: matchedMaster?.Package || `Package ID: ${pkg.PackageId}`,
+      startDate: formatStr(startStr),
+      endDate: formatStr(endStr),
+      amount: Number(pkg.PackageAmount) || 0
+    };
+  });
+
   // this is for handlePrint5
   // this print final bill summary
   const billData1 = {
+    packages: activePackagesMapped,
     hospitalName: "LORDS HEALTH CARE",
     address:
       "13/3, Circular 2nd Bye Lane, Kona Expressway, Shibpur, Howrah-711 102, W.B.",
@@ -1986,11 +2204,13 @@ const fetchOtSlots = async () => {
     },
 
     otCharges: {
-      rows: otcDetails?.map((row, idx) => [
-        row.BillDate?.split("T")[0]?.split("-")?.reverse()?.join("/") || "",
-        row.OtBillNo || "",
-        row.TotalAmt || 0,
-      ]) || [["", "", ""]],
+      rows: mappedOTChargesDetails.length > 0 
+        ? mappedOTChargesDetails.map((item) => [
+            item.date,
+            item.name,
+            item.amount,
+          ]) 
+        : [["", "", ""]],
       total:
         finalBillDetail.find((item) => item.HeadName == "O.T. Charges")
           ?.Amount1 || "0",
@@ -2123,6 +2343,7 @@ const fetchOtSlots = async () => {
 
   useEffect(() => {
     fetchAllTests();
+    fetchAllOtItems();
     fetchServiceChargeValue();
     fetchAuthUsers();
     // fetchFB(id);
@@ -2130,6 +2351,7 @@ const fetchOtSlots = async () => {
     fetchAllDoctors();
     fetchDept();
     fetchCashLess();
+    fetchAllPackages();
 
     // Edit mode: load saved bill then trigger live re-calculation
     if ((mode === "edit" || mode === "view") && id) {
@@ -2290,6 +2512,277 @@ const fetchOtSlots = async () => {
     );
   }, [serviceChrgCalculated]);
 
+  const getActivePackagesMessage = () => {
+    if (!admData || !admData.AdmitionId) return null;
+    const inclusions = [];
+    if (Number(admData.optmediinc) === 1) inclusions.push("Bed Charges");
+    if (Number(admData.optdiagoinc) === 1) inclusions.push("Diagnostic/Case Entry");
+    if (Number(admData.optotherchargeinc) === 1) inclusions.push("Other Charges");
+    if (Number(admData.optotinc) === 1) inclusions.push("OT Charges");
+
+    if (inclusions.length === 0) return null;
+
+    const list = getActivePackagesList(admData);
+    if (list.length === 0) return null;
+
+    return (
+      <div className="alert alert-info border-0 shadow-sm d-flex align-items-start gap-2 m-2" style={{ borderRadius: '8px', background: '#e3f2fd', color: '#0d47a1', fontSize: '12px' }}>
+        <i className="fa-solid fa-gift mt-1" style={{ fontSize: '1.25rem' }}></i>
+        <div>
+          <strong>Active Package Benefits:</strong> The following are included in this patient's active packages ({inclusions.join(", ")}). Covered days/rates are automatically set to 0.
+          <div className="mt-2 fw-semibold">
+            {list.map((pkg, index) => {
+              const date1 = parseDateSafely(pkg.packagestart);
+              const date2 = parseDateSafely(pkg.packagevalid);
+              let startStr = pkg.packagestart?.substring(0, 10);
+              let endStr = pkg.packagevalid?.substring(0, 10);
+              if (date1 && date2 && date1 > date2) {
+                startStr = pkg.packagevalid?.substring(0, 10);
+                endStr = pkg.packagestart?.substring(0, 10);
+              }
+              return (
+                <div key={index} style={{ marginLeft: "10px" }}>
+                  • Package {index + 1}: <strong>{startStr}</strong> to <strong>{endStr}</strong>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderPackageSummaryBlock = () => {
+    const list = getActivePackagesList(admData);
+    const packageAmt = list.reduce((sum, p) => sum + Number(p.PackageAmount || 0), 0);
+
+    if (!admData || !admData.AdmitionId || packageAmt <= 0) return null;
+
+    // 1. Bed charges
+    let bedOriginalTotal = 0;
+    let bedCoveredTotal = 0;
+    bedChargesData.forEach(item => {
+      const orig = Number(item.originalRate || item.ToDayRate || item.BedRate || item.Rate || 0);
+      bedOriginalTotal += orig;
+      if (isBedPackageActive(item.MyDate)) {
+        bedCoveredTotal += orig;
+      }
+    });
+
+    // 2. Other charges
+    let otherChargesOriginalTotal = 0;
+    let otherChargesCoveredTotal = 0;
+    otherChargesByAdmId.forEach(item => {
+      const masterRate = allOtherCharges1[item.OtherChargesId]?.Rate || item.Rate || 0;
+      const origAmt = Number(masterRate) * Number(item.Qty || 1);
+      otherChargesOriginalTotal += origAmt;
+      if (item.Package === 'Y') {
+        otherChargesCoveredTotal += origAmt;
+      }
+    });
+
+    // 3. Diagnostic tests (case entry)
+    let diagOriginalTotal = 0;
+    let diagCoveredTotal = 0;
+    caseDtlData.forEach(item => {
+      const masterRate = allTests[item.TestId]?.BRate || allTests[item.TestId]?.Rate || item.Rate || 0;
+      const origAmt = Number(masterRate);
+      diagOriginalTotal += origAmt;
+      if (item.ComYN === 'Y') {
+        diagCoveredTotal += origAmt;
+      }
+    });
+
+    // 4. OT consumables
+    let otOriginalTotal = 0;
+    let otCoveredTotal = 0;
+    otDetailsList.forEach(item => {
+      const masterRate = otItemsMap[item.OtItemId]?.Rate || item.Rate || 0;
+      const origAmt = Number(masterRate) * Number(item.Qty || 1);
+      otOriginalTotal += origAmt;
+      if (item.Package === 'Y') {
+        otCoveredTotal += origAmt;
+      }
+    });
+
+    const totalBillOriginal = bedOriginalTotal + otherChargesOriginalTotal + diagOriginalTotal + otOriginalTotal;
+    const totalCovered = bedCoveredTotal + otherChargesCoveredTotal + diagCoveredTotal + otCoveredTotal;
+    const patientPayable = totalBillOriginal - totalCovered;
+
+    return (
+      <div 
+        style={{
+          background: '#ffffff',
+          border: '2px solid #0d6efd',
+          borderRadius: '12px',
+          padding: '20px',
+          margin: '20px 0',
+          boxShadow: '0 4px 20px rgba(13, 110, 253, 0.08)'
+        }}
+      >
+        <h5 style={{ color: '#0d6efd', fontWeight: 'bold', marginBottom: '18px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <i className="fa-solid fa-gift" style={{ animation: 'pulse 2s infinite' }}></i> Hospital Package Detailed Summary
+        </h5>
+        
+        {/* Banner showing zeroed out money */}
+        <div 
+          className="p-3 mb-4 d-flex align-items-center gap-3" 
+          style={{ 
+            background: '#e6f4ea', 
+            borderLeft: '5px solid #137333', 
+            borderRadius: '6px', 
+            fontSize: '14.5px', 
+            fontWeight: '600', 
+            color: '#137333',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.02)'
+          }}
+        >
+          <i className="fa-solid fa-circle-check" style={{ fontSize: '20px' }}></i>
+          <div>
+            Package has zeroed out <strong>₹{totalCovered.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong> total money from your bill.
+          </div>
+        </div>
+
+        {/* 4 Cards Summary */}
+        <div className="row text-center mb-4">
+          <div className="col-md-3 border-end">
+            <div style={{ fontSize: '12.5px', color: '#6c757d', fontWeight: '500' }}>Admission Package Amount</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#0d6efd', marginTop: '4px' }}>
+              ₹{packageAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+          <div className="col-md-3 border-end">
+            <div style={{ fontSize: '12.5px', color: '#6c757d', fontWeight: '500' }}>Original/Actual Bill Total</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#343a40', marginTop: '4px' }}>
+              ₹{totalBillOriginal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+          <div className="col-md-3 border-end">
+            <div style={{ fontSize: '12.5px', color: '#6c757d', fontWeight: '500' }}>Package Covered Amount</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#198754', marginTop: '4px' }}>
+              ₹{totalCovered.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+          <div className="col-md-3">
+            <div style={{ fontSize: '12.5px', color: '#6c757d', fontWeight: '500' }}>Patient Payable (Excluded Items)</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#dc3545', marginTop: '4px' }}>
+              ₹{patientPayable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+        </div>
+
+        {/* Breakdown Table */}
+        <div className="table-responsive mb-4" style={{ borderRadius: '8px', border: '1px solid #dee2e6', overflow: 'hidden' }}>
+          <table className="table table-hover align-middle mb-0" style={{ fontSize: '13px' }}>
+            <thead className="table-light" style={{ borderBottom: '2px solid #dee2e6' }}>
+              <tr className="fw-bold">
+                <th style={{ padding: '12px 15px' }}>Charge Category</th>
+                <th style={{ padding: '12px 15px' }} className="text-end">Original Amount</th>
+                <th style={{ padding: '12px 15px' }} className="text-end">Package Covered (Set to ₹0)</th>
+                <th style={{ padding: '12px 15px' }} className="text-end">Patient Payable (Excluded)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ padding: '12px 15px', fontWeight: '500' }}>
+                  <i className="fa-solid fa-bed text-muted me-2"></i> Bed Charges
+                </td>
+                <td style={{ padding: '12px 15px' }} className="text-end">
+                  ₹{bedOriginalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#198754', fontWeight: '500' }} className="text-end">
+                  ₹{bedCoveredTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#dc3545', fontWeight: '500' }} className="text-end">
+                  ₹{(bedOriginalTotal - bedCoveredTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '12px 15px', fontWeight: '500' }}>
+                  <i className="fa-solid fa-file-invoice-dollar text-muted me-2"></i> Others Charges
+                </td>
+                <td style={{ padding: '12px 15px' }} className="text-end">
+                  ₹{otherChargesOriginalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#198754', fontWeight: '500' }} className="text-end">
+                  ₹{otherChargesCoveredTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#dc3545', fontWeight: '500' }} className="text-end">
+                  ₹{(otherChargesOriginalTotal - otherChargesCoveredTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '12px 15px', fontWeight: '500' }}>
+                  <i className="fa-solid fa-square-h text-muted me-2"></i> O.T. Charges
+                </td>
+                <td style={{ padding: '12px 15px' }} className="text-end">
+                  ₹{otOriginalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#198754', fontWeight: '500' }} className="text-end">
+                  ₹{otCoveredTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#dc3545', fontWeight: '500' }} className="text-end">
+                  ₹{(otOriginalTotal - otCoveredTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: '12px 15px', fontWeight: '500' }}>
+                  <i className="fa-solid fa-microscope text-muted me-2"></i> Diagnostic Charges
+                </td>
+                <td style={{ padding: '12px 15px' }} className="text-end">
+                  ₹{diagOriginalTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#198754', fontWeight: '500' }} className="text-end">
+                  ₹{diagCoveredTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#dc3545', fontWeight: '500' }} className="text-end">
+                  ₹{(diagOriginalTotal - diagCoveredTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot className="table-light" style={{ borderTop: '2px solid #dee2e6', fontWeight: 'bold' }}>
+              <tr>
+                <td style={{ padding: '12px 15px' }}>Total Summary</td>
+                <td style={{ padding: '12px 15px' }} className="text-end">
+                  ₹{totalBillOriginal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#198754' }} className="text-end">
+                  ₹{totalCovered.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+                <td style={{ padding: '12px 15px', color: '#dc3545' }} className="text-end">
+                  ₹{patientPayable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* Detailed Explanation Alert */}
+        <div 
+          className="p-3" 
+          style={{ 
+            background: '#e8f0fe', 
+            borderLeft: '4px solid #1a73e8', 
+            borderRadius: '6px', 
+            fontSize: '13.5px', 
+            fontWeight: '500', 
+            color: '#1a73e8',
+            lineHeight: '1.6'
+          }}
+        >
+          <div className="d-flex align-items-start gap-2">
+            <i className="fa-solid fa-circle-info mt-1" style={{ fontSize: '14px' }}></i>
+            <div>
+              Your package amount is <strong>₹{packageAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>. 
+              The package includes services valued at <strong>₹{totalCovered.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>, 
+              which have been zeroed out. Any excluded items (payable at actuals) total <strong>₹{patientPayable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-vh-100 ">
       {/* Top Header */}
@@ -2338,6 +2831,7 @@ const fetchOtSlots = async () => {
           </button>
         </div>
       </div>
+      {getActivePackagesMessage()}
       <div className="min-vh-80 container-fluid p-0">
         <div className="row g-1 min-vh-80 ms-2">
           {/* LEFT MAIN PANEL */}
@@ -3020,6 +3514,8 @@ const fetchOtSlots = async () => {
                 </div>
               </div>
             </div>
+
+            {renderPackageSummaryBlock()}
 
             {/* 6. MODE OF PAYMENT */}
             <div style={styles.sectionGroup}>

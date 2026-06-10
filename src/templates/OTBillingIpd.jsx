@@ -29,6 +29,8 @@ const OTBilling = () => {
 
   const [chargeItems, setChargeItems] = useState([]);
   const [availableCharges, setAvailableCharges] = useState([]);
+  const [admissionDetails, setAdmissionDetails] = useState(null);
+
 
   /* ================= LIST STATE ================= */
   const [items, setItems] = useState([]);
@@ -109,6 +111,167 @@ const OTBilling = () => {
       value: formData.AdmitionId,
     });
   }, [formData.AdmitionId]);
+
+  // Fetch full admission details when AdmitionId changes to get package info
+  useEffect(() => {
+    if (!formData.AdmitionId) {
+      setAdmissionDetails(null);
+      return;
+    }
+    const fetchFullAdmission = async () => {
+      try {
+        const response = await axiosInstance.get(`/admissions/${formData.AdmitionId}`);
+        if (response.data.success) {
+          const adm = response.data.data.admission;
+          setAdmissionDetails(adm);
+          setFormData((prev) => ({
+            ...prev,
+            PatientName: adm.PatientName || prev.PatientName,
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching full admission details for OT package:", err);
+      }
+    };
+    fetchFullAdmission();
+  }, [formData.AdmitionId]);
+
+  const parseDateSafely = (dateVal) => {
+    if (!dateVal) return null;
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const getActivePackagesList = (adm) => {
+    if (!adm) return [];
+    let list = [];
+    try {
+      if (adm.PackagesList) {
+        list = JSON.parse(adm.PackagesList);
+      }
+    } catch (e) {
+      console.error("Error parsing PackagesList:", e);
+    }
+    
+    // Fallback for legacy columns if PackagesList was empty
+    if (list.length === 0) {
+      if (adm.PackageId && Number(adm.PackageId) !== 0) {
+        list.push({
+          PackageId: adm.PackageId,
+          PackageAmount: adm.PackageAmount || 0,
+          packagestart: adm.packagestart,
+          packagevalid: adm.packagevalid
+        });
+      }
+      if (adm.PackageId2 && Number(adm.PackageId2) !== 0) {
+        list.push({
+          PackageId: adm.PackageId2,
+          PackageAmount: adm.PackageAmount2 || 0,
+          packagestart: adm.packagestart2,
+          packagevalid: adm.packagevalid2
+        });
+      }
+      if (adm.PackageId3 && Number(adm.PackageId3) !== 0) {
+        list.push({
+          PackageId: adm.PackageId3,
+          PackageAmount: adm.PackageAmount3 || 0,
+          packagestart: adm.packagestart3,
+          packagevalid: adm.packagevalid3
+        });
+      }
+      if (adm.PackageId4 && Number(adm.PackageId4) !== 0) {
+        list.push({
+          PackageId: adm.PackageId4,
+          PackageAmount: adm.PackageAmount4 || 0,
+          packagestart: adm.packagestart4,
+          packagevalid: adm.packagevalid4
+        });
+      }
+    }
+    return list;
+  };
+
+  const isOtPackageActive = () => {
+    if (!admissionDetails || Number(admissionDetails.optotinc) !== 1) return false;
+    const billDate = parseDateSafely(formData.BillDate);
+    if (!billDate) return false;
+
+    const list = getActivePackagesList(admissionDetails);
+    for (const pkg of list) {
+      if (pkg.PackageId && Number(pkg.PackageId) !== 0) {
+        const s = parseDateSafely(pkg.packagestart);
+        const e = parseDateSafely(pkg.packagevalid);
+        if (s && e) {
+          const startDate = s < e ? s : e;
+          const endDate = s > e ? s : e;
+          if (billDate >= startDate && billDate <= endDate) return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  // Sync rates to 0 when package is active
+  useEffect(() => {
+    if (isOtPackageActive()) {
+      setFormData((prev) => {
+        const needsUpdate =
+          Number(prev.AnesthesiaAmt) !== 0 ||
+          Number(prev.SergonDocAmt) !== 0 ||
+          Number(prev.OthersDocAmt) !== 0 ||
+          Number(prev.OTAmt) !== 0 ||
+          Number(prev.ConsumableAmt) !== 0 ||
+          Number(prev.InstrumentAmt) !== 0 ||
+          Number(prev.MedicineAmt) !== 0 ||
+          Number(prev.OthersCh) !== 0 ||
+          Number(prev.TotalAmt) !== 0 ||
+          Number(prev.ServiceCharge) !== 0;
+
+        if (needsUpdate) {
+          return {
+            ...prev,
+            AnesthesiaAmt: 0,
+            SergonDocAmt: 0,
+            OthersDocAmt: 0,
+            OTAmt: 0,
+            ConsumableAmt: 0,
+            InstrumentAmt: 0,
+            MedicineAmt: 0,
+            OthersCh: 0,
+            TotalAmt: 0,
+            ServiceCharge: 0,
+          };
+        }
+        return prev;
+      });
+
+      let itemsChanged = false;
+      const updatedItems = chargeItems.map((item) => {
+        let currentPackage = item.Package;
+        if (currentPackage === undefined || currentPackage === null || currentPackage === "") {
+          currentPackage = isOtPackageActive() ? "Y" : "N";
+          itemsChanged = true;
+        }
+
+        const targetRate = currentPackage === "Y" ? 0 : (item.originalRate !== undefined ? item.originalRate : item.Rate);
+        if (Number(item.Rate) !== targetRate || Number(item.Amount) !== (targetRate * Number(item.Qty || 1)) || item.Package !== currentPackage) {
+          itemsChanged = true;
+          return {
+            ...item,
+            Package: currentPackage,
+            Rate: targetRate,
+            Amount: targetRate * Number(item.Qty || 1),
+          };
+        }
+        return item;
+      });
+      if (itemsChanged) {
+        setChargeItems(updatedItems);
+      }
+    }
+  }, [formData.BillDate, admissionDetails, chargeItems]);
 
   // useEffect(() => {
   //   const consumableTotal = formData.Consumables.reduce(
@@ -240,18 +403,37 @@ const OTBilling = () => {
 
         if (chargesResponse.data.success) {
           console.log(chargesResponse.data.data);
-
           setAvailableCharges(chargesResponse.data.data);
+          
+          setChargeItems(
+            (item.otBillDetails || []).map((d) => {
+              const masterCharge = chargesResponse.data.data.find(c => c.OtItemId == d.OtItemId);
+              return {
+                OtItemId: d.OtItemId,
+                Rate: d.Rate,
+                Unit: d.Unit,
+                Qty: d.Qty,
+                Amount: d.Amount,
+                Package: d.Package || (isOtPackageActive() ? "Y" : "N"),
+                originalRate: masterCharge?.Rate || d.Rate,
+                dbRate: d.Rate,
+              };
+            })
+          );
+        } else {
+          setChargeItems(
+            (item.otBillDetails || []).map((d) => ({
+              OtItemId: d.OtItemId,
+              Rate: d.Rate,
+              Unit: d.Unit,
+              Qty: d.Qty,
+              Amount: d.Amount,
+              Package: d.Package || (isOtPackageActive() ? "Y" : "N"),
+              originalRate: d.Rate,
+              dbRate: d.Rate,
+            }))
+          );
         }
-        setChargeItems(
-          (item.otBillDetails || []).map((d) => ({
-            OtItemId: d.OtItemId,
-            Rate: d.Rate,
-            Unit: d.Unit,
-            Qty: d.Qty,
-            Amount: d.Amount,
-          }))
-        );
         setIsInitialLoad(false);
       } catch (err) {
         console.error("Fetch OT bill error:", err);
@@ -376,13 +558,19 @@ const OTBilling = () => {
 
       // 🔥 Charge Items
       setChargeItems(
-        (item.otBillDetails || []).map((d) => ({
-          OtItemId: d.OtItemId,
-          Rate: d.Rate,
-          Unit: d.Unit,
-          Qty: d.Qty,
-          Amount: d.Amount,
-        }))
+        (item.otBillDetails || []).map((d) => {
+          const masterCharge = availableCharges.find(c => c.OtItemId == d.OtItemId);
+          return {
+            OtItemId: d.OtItemId,
+            Rate: d.Rate,
+            Unit: d.Unit,
+            Qty: d.Qty,
+            Amount: d.Amount,
+            Package: d.Package || (isOtPackageActive() ? "Y" : "N"),
+            originalRate: masterCharge?.Rate || d.Rate,
+            dbRate: d.Rate,
+          };
+        })
       );
     } catch (err) {
       console.error(err);
@@ -434,13 +622,19 @@ const OTBilling = () => {
 
       // 🔥 Charge Items
       setChargeItems(
-        (item.otBillDetails || []).map((d) => ({
-          OtItemId: d.OtItemId,
-          Rate: d.Rate,
-          Unit: d.Unit,
-          Qty: d.Qty,
-          Amount: d.Amount,
-        }))
+        (item.otBillDetails || []).map((d) => {
+          const masterCharge = availableCharges.find(c => c.OtItemId == d.OtItemId);
+          return {
+            OtItemId: d.OtItemId,
+            Rate: d.Rate,
+            Unit: d.Unit,
+            Qty: d.Qty,
+            Amount: d.Amount,
+            Package: d.Package || (isOtPackageActive() ? "Y" : "N"),
+            originalRate: masterCharge?.Rate || d.Rate,
+            dbRate: d.Rate,
+          };
+        })
       );
     } catch (err) {
       console.error(err);
@@ -459,10 +653,10 @@ const OTBilling = () => {
       Rate: Number(item.Rate),
 
       Unit: item.Unit,
-      // Amount: Number(item.Amount),
       Amount: Number(item.Rate * item.Qty),
       SlNo: index + 1,
       Qty: Number(item.Qty),
+      Package: item.Package || 'N',
     })),
   });
 
@@ -530,6 +724,7 @@ const OTBilling = () => {
 
   // chargeitem fnc-----
   const addChargeItem = () => {
+    const active = isOtPackageActive();
     setChargeItems((prev) => [
       ...prev,
       {
@@ -539,6 +734,7 @@ const OTBilling = () => {
         Qty: 1,
         Amount: 0,
         Unit: "",
+        Package: active ? "Y" : "N",
       },
     ]);
   };
@@ -557,7 +753,25 @@ const OTBilling = () => {
     const updated = [...chargeItems];
     updated[index][field] = value;
 
+    if (field === "Package") {
+      const isPkgActive = isOtPackageActive();
+      const pkgVal = value; // "Y" or "N"
+      const defaultRate = updated[index].originalRate || 0;
+      const originalRate = (updated[index].dbRate !== undefined && Number(updated[index].dbRate) > 0)
+        ? updated[index].dbRate
+        : defaultRate;
+      const targetRate = pkgVal === "Y" ? 0 : originalRate;
+      
+      updated[index].Rate = targetRate;
+      updated[index].Amount = Number(targetRate) * Number(updated[index].Qty || 1);
+    }
+
     if (field === "Rate" || field === "Qty") {
+      const isPkgActive = isOtPackageActive();
+      const currentPackage = updated[index].Package || (isPkgActive ? "Y" : "N");
+      if (field === "Rate" && currentPackage !== "Y") {
+        updated[index].originalRate = value;
+      }
       updated[index].Amount =
         (updated[index].Rate || 0) * (updated[index].Qty || 1);
     }
@@ -567,12 +781,17 @@ const OTBilling = () => {
 
       if (selected) {
         updated[index].OtItem = selected.OtItem;
-        updated[index].Rate = selected.Rate;
+        updated[index].originalRate = selected.Rate;
+        
+        const isPkgActive = isOtPackageActive();
+        const currentPackage = updated[index].Package || (isPkgActive ? "Y" : "N");
+        updated[index].Package = currentPackage;
+        
+        const rate = currentPackage === "Y" ? 0 : selected.Rate;
+        updated[index].Rate = rate;
         updated[index].Unit = selected.Unit;
         const qty = Number(updated[index].Qty || 1);
-        updated[index].Amount = Number(selected.Rate) * qty;
-        // updated[index].Qty = selected.Qty;
-        // updated[index].Amount = selected.Rate * (updated[index].Qty || 1);
+        updated[index].Amount = Number(rate) * qty;
       }
     }
 
@@ -1848,6 +2067,14 @@ useEffect(() => {
               >
                 <div className="p-4 mx-auto" style={{ maxWidth: "1280px" }}>
                   <form onSubmit={handleSubmit}>
+                    {isOtPackageActive() && (
+                      <div className="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-2 mb-4" style={{ borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24' }}>
+                        <i className="fa-solid fa-triangle-exclamation" style={{ fontSize: '1.2rem' }}></i>
+                        <div>
+                          <strong>OT Package Inclusion Active:</strong> All surgical team fees, OT charges, and consumable rates are covered (set to ₹0) for this patient during the package validity range ({admissionDetails?.packagestart?.substring(0, 10)} to {admissionDetails?.packagevalid?.substring(0, 10)}).
+                        </div>
+                      </div>
+                    )}
                     
                     {/* ================= BASIC INFO CARD ================= */}
                     <div className="premium-section-card">
@@ -1994,7 +2221,7 @@ useEffect(() => {
                             className="form-control premium-input-field text-end"
                             name="AnesthesiaAmt"
                             value={formData.AnesthesiaAmt || 0}
-                            disabled={modalType === "view"}
+                            disabled={modalType === "view" || isOtPackageActive()}
                             placeholder="0.00"
                             onChange={(e) => {
                               const value = Number(e.target.value || 0);
@@ -2038,7 +2265,7 @@ useEffect(() => {
                             className="form-control premium-input-field text-end"
                             name="SergonDocAmt"
                             value={formData.SergonDocAmt || 0}
-                            disabled={modalType === "view"}
+                            disabled={modalType === "view" || isOtPackageActive()}
                             placeholder="0.00"
                             onChange={(e) => {
                               const value = Number(e.target.value || 0);
@@ -2079,7 +2306,7 @@ useEffect(() => {
                             className="form-control premium-input-field text-end"
                             name="OthersDocAmt"
                             value={formData.OthersDocAmt || 0}
-                            disabled={modalType === "view"}
+                            disabled={modalType === "view" || isOtPackageActive()}
                             placeholder="0.00"
                             onChange={(e) => {
                               const value = Number(e.target.value || 0);
@@ -2161,7 +2388,7 @@ useEffect(() => {
                             className="form-control premium-input-field text-end"
                             name="OTAmt"
                             value={formData.OTAmt || ""}
-                            disabled={modalType === "view"}
+                            disabled={modalType === "view" || isOtPackageActive()}
                             placeholder="0.00"
                             onChange={(e) => {
                               const value = Number(e.target.value || 0);
@@ -2247,10 +2474,11 @@ useEffect(() => {
                         <table className="table charge-item-table mb-0" style={{ tableLayout: "fixed" }}>
                           <thead>
                             <tr>
-                              <th style={{ width: "40%" }}>Item Description</th>
-                              <th style={{ width: "15%" }} className="text-center">Unit</th>
-                              <th style={{ width: "15%" }} className="text-end">Rate (₹)</th>
-                              <th style={{ width: "12%" }} className="text-center">Qty</th>
+                              <th style={{ width: "35%" }}>Item Description</th>
+                              <th style={{ width: "12%" }} className="text-center">Unit</th>
+                              <th style={{ width: "13%" }} className="text-end">Rate (₹)</th>
+                              <th style={{ width: "10%" }} className="text-center">Qty</th>
+                              <th style={{ width: "12%" }} className="text-center">In Pkg</th>
                               <th style={{ width: "18%" }} className="text-end">Amount (₹)</th>
                               {modalType !== "view" && (
                                 <th style={{ width: "10%" }} className="text-center">Action</th>
@@ -2261,7 +2489,7 @@ useEffect(() => {
                           <tbody>
                             {chargeItems.length === 0 ? (
                               <tr>
-                                <td colSpan={modalType !== "view" ? 6 : 5} className="text-center text-muted py-4 small">
+                                <td colSpan={modalType !== "view" ? 7 : 6} className="text-center text-muted py-4 small">
                                   <i className="fa-light fa-receipt d-block mb-1" style={{ fontSize: '1.3rem' }}></i>
                                   No additional item charges added. Click 'Add Item Row' to select items.
                                 </td>
@@ -2304,7 +2532,7 @@ useEffect(() => {
                                       type="number"
                                       className="form-control premium-input-field form-control-sm text-end"
                                       value={item.Rate || 0}
-                                      disabled={modalType === "view"}
+                                      disabled={modalType === "view" || item.Package === "Y"}
                                       onChange={(e) =>
                                         updateChargeItem(
                                           index,
@@ -2333,6 +2561,24 @@ useEffect(() => {
                                       style={{ padding: '4px 8px !important' }}
                                     />
                                   </td>
+
+                                   {/* In Pkg Switch Toggle */}
+                                   <td>
+                                     <div className="form-check form-switch d-flex justify-content-center align-items-center mb-0">
+                                       <input
+                                         className="form-check-input"
+                                         type="checkbox"
+                                         role="switch"
+                                         checked={item.Package === "Y"}
+                                         disabled={modalType === "view"}
+                                         onChange={(e) => {
+                                           const isChecked = e.target.checked;
+                                           const pkgVal = isChecked ? "Y" : "N";
+                                           updateChargeItem(index, "Package", pkgVal);
+                                         }}
+                                       />
+                                     </div>
+                                   </td>
 
                                   {/* Amount */}
                                   <td className="text-end">
@@ -2390,7 +2636,7 @@ useEffect(() => {
                                 className="form-control premium-input-field text-end fw-semibold"
                                 name="ServiceCharge"
                                 value={formData.ServiceCharge || ""}
-                                disabled={modalType === "view"}
+                                disabled={modalType === "view" || isOtPackageActive()}
                                 onChange={(e) => {
                                   const value = Number(e.target.value || 0);
                                   setFormData((prev) => ({

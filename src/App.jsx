@@ -173,6 +173,7 @@ import CashlessMaster from "./components/indoor-master/CashlessMaster.jsx";
 import ConsentMaster from "./components/indoor-master/ConsentMaster.jsx";
 import BillPrintHeadMaster from "./components/indoor-master/BillPrintHeadMaster.jsx";
 import AgentMaster from "./components/indoor-master/AgentMaster.jsx";
+import IndoorPackageMaster from "./components/indoor-master/IndoorPackageMaster.jsx";
 
 
 
@@ -819,6 +820,7 @@ function App() {
           <Route path="/ConsentMaster" element={<ProtectedRoute><ConsentMaster/></ProtectedRoute>}/>
           <Route path="/BillPrintHeadMaster" element={<ProtectedRoute><BillPrintHeadMaster/></ProtectedRoute>}/>
           <Route path="/AgentMaster" element={<ProtectedRoute><AgentMaster/></ProtectedRoute>}/>
+          <Route path="/IndoorPackageMaster" element={<PermissionRoute section="indoorMaster_packageMaster"><IndoorPackageMaster /></PermissionRoute>} />
 
 
 

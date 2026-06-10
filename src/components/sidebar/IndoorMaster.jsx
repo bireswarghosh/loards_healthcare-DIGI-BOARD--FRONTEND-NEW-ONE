@@ -209,6 +209,15 @@ const IndoorMaster = () => {
           </li>
         )}
 
+        {(isSuperAdmin || permissions?.indoorMaster_packageMaster !== false) && (
+          <li className="sidebar-dropdown-item">
+            <NavLink to="/IndoorPackageMaster" className="sidebar-link">
+              <span className="nav-icon"><i className="fa-light fa-box-open"></i></span>
+              <span className="sidebar-txt">Indoor Package Master</span>
+            </NavLink>
+          </li>
+        )}
+
         {(isSuperAdmin || permissions?.indoorMaster_companyBedRate !== false) && (
           <li className="sidebar-dropdown-item">
             <NavLink to="/CompanyWiseBedRateNew" className="sidebar-link">

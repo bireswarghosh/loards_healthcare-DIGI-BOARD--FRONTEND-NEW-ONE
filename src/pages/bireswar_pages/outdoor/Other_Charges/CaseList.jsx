@@ -313,7 +313,7 @@ const CaseList = () => {
                     <i className="fa-light fa-file"></i>
                   </button>
 
-                  {isSuperAdmin && (
+                  {(isSuperAdmin || permissions?.diagnosis_caseEntry_delete !== false) && (
                     <button
                       className="btn btn-sm text-danger"
                       title="Delete"
