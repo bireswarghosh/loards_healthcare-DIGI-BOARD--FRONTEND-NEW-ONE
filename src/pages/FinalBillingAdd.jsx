@@ -3755,13 +3755,10 @@ const FinalBillingAdd = () => {
                     </td>
                     <td className="text-end">{row?.BedRate}</td>
                     <td className="text-end">
-                      {bedDetails.find((item) => item.BedId == row.BedId)
-                        ?.AtttndantCh || 0}
+                      {row.AtttndantCh || 0}
                     </td>
                     <td className="text-end">
-                      {fetchedAdmBedDetail.find(
-                        (item) => item.BedId == row.BedId,
-                      )?.RMOCh || 0}
+                      {row.RMOCh || 0}
                     </td>
                     {/* <td className="text-end">{row.rmo}</td> */}
                   </tr>
@@ -4134,6 +4131,8 @@ const FinalBillingAdd = () => {
             BedRate: item.ToDayRate,
             CGST: 0,
             SGST: 0,
+            AtttndantCh: item.AtttndantCh || 0,
+            RMOCh: item.RMOCh || 0,
           },
           newA[index],
         ),

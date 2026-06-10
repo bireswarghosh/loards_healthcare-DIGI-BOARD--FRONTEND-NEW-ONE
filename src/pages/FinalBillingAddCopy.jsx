@@ -518,7 +518,6 @@ const FinalBillingAdd = () => {
   const [netBal, setNetBal] = useState(0);
 
   const [bedChargesData, setBedChargesData] = useState([]);
-  const [firstBedRate, setFirstBedRate] = useState(null);
   const [fetchedAdmBedDetail, setFetchedAdmBedDetail] = useState([]);
 
   const [allOtherCharges, setAllOtherCharges] = useState([]);
@@ -1196,13 +1195,10 @@ const FinalBillingAdd = () => {
                       )}
                     </td>
                     <td className="text-end">
-                      {bedDetails.find((item) => item.BedId == row.BedId)
-                        ?.AtttndantCh || 0}
+                      {row.AtttndantCh || 0}
                     </td>
                     <td className="text-end">
-                      {fetchedAdmBedDetail.find(
-                        (item) => item.BedId == row.BedId,
-                      )?.RMOCh || 0}
+                      {row.RMOCh || 0}
                     </td>
                     {/* <td className="text-end">{row.rmo}</td> */}
                   </tr>
@@ -1917,30 +1913,6 @@ const fetchOtSlots = async () => {
         return tA - tB;
       });
 
-      // 1st bed rate from admission BedRate (set once on load)
-      if (firstBedRate === null && sortedArr.length > 0) {
-        setFirstBedRate(
-          Number(
-            admData?.BedRate ||
-              sortedArr[0].ToDayRate ||
-              sortedArr[0].Rate ||
-              0,
-          ),
-        );
-      }
-
-      // override 1st bed rate with editable firstBedRate
-      const rateToUse =
-        firstBedRate ??
-        Number(sortedArr[0]?.ToDayRate || sortedArr[0]?.Rate || 0);
-      if (sortedArr.length > 0) {
-        sortedArr[0] = {
-          ...sortedArr[0],
-          Rate: rateToUse,
-          ToDayRate: rateToUse,
-        };
-      }
-
       const promises = sortedArr.map((item) =>
         axiosInstance.get(`/bedMaster/${item.BedId}`),
       );
@@ -1962,9 +1934,16 @@ const fetchOtSlots = async () => {
         releaseTime,
       ).map((item) => {
         const bedMaster = allBedsDataMap[item.BedId];
-        const originalBedRate = Number(
-          item.BedRate || item.ToDayRate || item.Rate || bedMaster?.BedCh || 0
-        );
+        let originalBedRate = 0;
+        if (item.Rate !== null && item.Rate !== undefined && item.Rate !== "NA") {
+          originalBedRate = Number(item.Rate);
+        } else if (item.ToDayRate !== null && item.ToDayRate !== undefined) {
+          originalBedRate = Number(item.ToDayRate);
+        } else if (item.BedRate !== null && item.BedRate !== undefined) {
+          originalBedRate = Number(item.BedRate);
+        } else {
+          originalBedRate = 0;
+        }
         const active = isBedPackageActive(item.MyDate);
         if (active) {
           return {
@@ -1972,7 +1951,11 @@ const fetchOtSlots = async () => {
             BedRate: 0,
             ToDayRate: 0,
             Rate: 0,
+            RMOCh: 0,
+            AtttndantCh: 0,
             originalRate: originalBedRate,
+            originalRMOCh: Number(item.RMOCh || 0),
+            originalAtttndantCh: Number(item.AtttndantCh || 0),
           };
         }
         return {
@@ -1981,6 +1964,10 @@ const fetchOtSlots = async () => {
           ToDayRate: originalBedRate,
           Rate: originalBedRate,
           originalRate: originalBedRate,
+          RMOCh: Number(item.RMOCh || 0),
+          AtttndantCh: Number(item.AtttndantCh || 0),
+          originalRMOCh: Number(item.RMOCh || 0),
+          originalAtttndantCh: Number(item.AtttndantCh || 0),
         };
       });
       console.log("Calculated bed array: ", newBedArr);
@@ -2309,7 +2296,7 @@ const fetchOtSlots = async () => {
     console.log("ot charge:", otcDetails);
   }, [otcDetails]);
 
-  // re-run bed calculation when discharge date/time or 1st bed rate changes
+  // re-run bed calculation when discharge date/time changes
   useEffect(() => {
     if (
       Object.keys(admData).length &&
@@ -2322,7 +2309,7 @@ const fetchOtSlots = async () => {
         formData.ReleaseTime,
       );
     }
-  }, [formData.BillDate, formData.ReleaseTime, firstBedRate]);
+  }, [formData.BillDate, formData.ReleaseTime]);
 
   useEffect(() => {
     if (Object.keys(admData).length) {
