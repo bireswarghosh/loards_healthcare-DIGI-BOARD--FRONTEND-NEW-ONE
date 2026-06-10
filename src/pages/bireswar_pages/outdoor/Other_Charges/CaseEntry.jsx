@@ -540,6 +540,7 @@ const CaseEntry = () => {
     return false;
   };
 
+  const [lastActive, setLastActive] = useState(false);
   const [dWorkTests, setDWorkTests] = useState([]);
 
   // this function is only for searching the IPD (Admission)
@@ -1868,31 +1869,24 @@ window.onload = function(){
 
   useEffect(() => {
     const active = isDiagPackageActive();
-    let changed = false;
-    const updated = tests.map(t => {
-      let currentComYN = t.ComYN;
-      if (currentComYN === undefined || currentComYN === null || currentComYN === "") {
-        currentComYN = active ? "Y" : "N";
-        changed = true;
-      }
-      
-      const targetRate = currentComYN === "Y" ? 0 : (t.dbRate !== undefined ? t.dbRate : (t.originalRate !== undefined ? t.originalRate : t.Rate));
-      if (t.Rate !== targetRate || t.NetRate !== targetRate || t.ComYN !== currentComYN) {
-        changed = true;
-        return {
-          ...t,
-          ComYN: currentComYN,
-          Rate: targetRate,
-          NetRate: targetRate
-        };
-      }
-      return t;
-    });
-    if (changed) {
-      setTests(updated);
-      calculateTotal(updated);
+    if (active !== lastActive) {
+      setLastActive(active);
+      setTests((prevTests) => {
+        const updated = prevTests.map((t) => {
+          const targetComYN = active ? "Y" : "N";
+          const targetRate = active ? 0 : (t.dbRate !== undefined ? t.dbRate : (t.originalRate !== undefined ? t.originalRate : t.Rate));
+          return {
+            ...t,
+            ComYN: targetComYN,
+            Rate: targetRate,
+            NetRate: targetRate,
+          };
+        });
+        calculateTotal(updated);
+        return updated;
+      });
     }
-  }, [formData.CaseDate, formData.AdmitionId, formData.optdiagoinc, formData.packagestart, formData.packagevalid, formData.packagestart2, formData.packagevalid2, formData.packagestart3, formData.packagevalid3, formData.packagestart4, formData.packagevalid4, formData.PackagesList, tests]);
+  }, [lastActive, formData.CaseDate, formData.AdmitionId, formData.optdiagoinc, formData.packagestart, formData.packagevalid, formData.packagestart2, formData.packagevalid2, formData.packagestart3, formData.packagevalid3, formData.packagestart4, formData.packagevalid4, formData.PackagesList]);
 
   // this is for IPD
   useEffect(() => {
@@ -4251,7 +4245,7 @@ ${formData.ChequeNo ? `<tr>
                             <td style={{ ...tableCellStyle, color: "black" }}>
                               <input
                                 style={{ textAlign: "center" }}
-                                disabled={mode != "create"}
+                                disabled={mode === "view" || (mode === "edit" && isFormLocked)}
                                 type="number"
                                 value={test.Rate}
                                 onChange={(e) => {
@@ -4303,7 +4297,7 @@ ${formData.ChequeNo ? `<tr>
                               <input
                                 type="number"
                                 style={{ textAlign: "center" }}
-                                disabled={mode != "create"}
+                                disabled={mode === "view" || (mode === "edit" && isFormLocked)}
                                 value={test.NetRate}
                                 onChange={(e) => {
                                   handleModifyTest(
