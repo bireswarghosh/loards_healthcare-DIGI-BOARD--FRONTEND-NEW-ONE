@@ -17,11 +17,6 @@ const OutDoor = () => {
   // Check if user is super admin
   const isSuperAdmin = user?.username === 'lordsYou' || user?.username === 'lords' || user?.email === 'lords@kol';
   
-  // Hide entire section if no outdoor permission and not super admin
-  if (!isSuperAdmin && !permissions?.outdoor) {
-    return null;
-  }
-
   return (
     <li className="sidebar-item" ref={layoutPosition.horizontal ? mainOutdoorRef : null}>
       <Link
@@ -33,17 +28,15 @@ const OutDoor = () => {
       </Link>
       <ul className={`sidebar-link-group ${layoutPosition.horizontal ? (dropdownOpen.outdoor ? 'd-block' : '') : (isMainDropdownOpen ? 'd-none' : '')}`}>      
 
-        {/* Visit Entry */}
-        {(isSuperAdmin || permissions?.outdoor_visitEntry !== false) && (
-          <li className="sidebar-dropdown-item">
-            <NavLink to="/visit_entry" className="sidebar-link">
-              <span className="nav-icon">
-                <i className="fa-light fa-user-headset"></i>
-              </span>{" "}
-              <span className="sidebar-txt">Visit Entry</span>
-            </NavLink>
-          </li>
-        )}
+        {/* Visit Entry - Accessible to all logged-in users */}
+        <li className="sidebar-dropdown-item">
+          <NavLink to="/visit_entry" className="sidebar-link">
+            <span className="nav-icon">
+              <i className="fa-light fa-user-headset"></i>
+            </span>{" "}
+            <span className="sidebar-txt">Visit Entry</span>
+          </NavLink>
+        </li>
 
         {/* Visit List */}
         {(isSuperAdmin || permissions?.outdoor_visitList !== false) && (

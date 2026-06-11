@@ -475,7 +475,7 @@ function App() {
        
 
           {/* newly added routes */}
-          <Route path="/visit_entry" element={<PermissionRoute section="outdoor_visitEntry"><VisitEntry /></PermissionRoute>} />
+          <Route path="/visit_entry" element={<ProtectedRoute><VisitEntry /></ProtectedRoute>} />
           <Route path="/table-data" element={<PermissionRoute section="outdoor_visitList"><VisitList /></PermissionRoute>} />
           <Route path="/dr-rect-visit-detail" element={<PermissionRoute section="outdoor_drRectVisit"><DrRectVisitDetail /></PermissionRoute>} />
           <Route path="/opd-report-section" element={<PermissionRoute section="outdoorReport_opdReportCenter"><OpdReportSection /></PermissionRoute>} />

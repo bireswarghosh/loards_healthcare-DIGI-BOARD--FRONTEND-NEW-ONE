@@ -707,10 +707,7 @@ const AccessControl = () => {
     try {
       const response = await axiosInstance.get(`/auth/users/${user.UserId}/permissions`);
       if (response.data.success) {
-        setPermissions({
-          ...DEFAULT_PERMISSIONS,
-          ...response.data.data
-        });
+        setPermissions(response.data.data || DEFAULT_PERMISSIONS);
       }
     } catch (err) {
       console.log('No permissions found, using defaults');
@@ -727,15 +724,18 @@ const AccessControl = () => {
   const handlePermissionChange = (section) => {
     setPermissions(prev => {
       const newPerms = { ...prev };
-      const targetVal = !prev[section];
+      const isCurrentlyChecked = prev[section] !== false;
+      const targetVal = !isCurrentlyChecked;
       newPerms[section] = targetVal;
       
-      // Cascade down recursively: turn ON or OFF all children & grandchildren
-      Object.keys(newPerms).forEach(key => {
-        if (key.startsWith(section + '_')) {
-          newPerms[key] = targetVal;
-        }
-      });
+      // Cascade down recursively: only turn OFF all children & grandchildren
+      if (!targetVal) {
+        Object.keys(newPerms).forEach(key => {
+          if (key.startsWith(section + '_')) {
+            newPerms[key] = false;
+          }
+        });
+      }
       
       // Cascade up recursively: turn on all parent levels
       if (targetVal) {

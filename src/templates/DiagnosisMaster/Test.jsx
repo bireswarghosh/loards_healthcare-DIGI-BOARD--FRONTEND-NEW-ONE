@@ -97,6 +97,93 @@ const TestMaster = () => {
   const [htmlContent, setHtmlContent] = useState("");
   const [currentTestForHtml, setCurrentTestForHtml] = useState(null);
 
+  // Google integration states inside modal
+  const [googleDocId, setGoogleDocId] = useState(null);
+  const [driveFiles, setDriveFiles] = useState([]);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("existing");
+  const [selectedDocId, setSelectedDocId] = useState("");
+  const [newDocTitle, setNewDocTitle] = useState("");
+
+  const [showGoogleWizard, setShowGoogleWizard] = useState(false);
+  const [googleStatus, setGoogleStatus] = useState({
+    oauthConfigured: false,
+    googleConnected: false,
+    config: { googleClientId: "", googleClientSecret: "", googleRedirectUri: "" }
+  });
+  const [googleClientInput, setGoogleClientInput] = useState({
+    googleClientId: "",
+    googleClientSecret: "",
+    googleRedirectUri: ""
+  });
+
+  const fetchGoogleStatus = async () => {
+    try {
+      const res = await axiosInstance.get('/auth/google/status');
+      if (res.data.success) {
+        setGoogleStatus(res.data);
+        setGoogleClientInput({
+          googleClientId: res.data.config.googleClientId || "",
+          googleClientSecret: "",
+          googleRedirectUri: res.data.config.googleRedirectUri || "http://localhost:5000/api/v1/auth/google/callback"
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching Google status:", err);
+    }
+  };
+
+  const handleSaveGoogleConfig = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = { ...googleClientInput };
+      if (!payload.googleClientSecret) {
+        delete payload.googleClientSecret;
+      }
+      const res = await axiosInstance.post('/auth/google/config', payload);
+      if (res.data.success) {
+        toast.success("Google configuration saved successfully!");
+        fetchGoogleStatus();
+      }
+    } catch (err) {
+      console.error("Error saving Google config:", err);
+      toast.error("Failed to save Google configuration");
+    }
+  };
+
+  const handleConnectGoogle = async () => {
+    try {
+      const currentOrigin = window.location.origin;
+      let redirectUrl = `${currentOrigin}/TestMaster`;
+      if (currentTestForHtml?.TestId) {
+        redirectUrl += `?open_test_id=${currentTestForHtml.TestId}`;
+      }
+      const res = await axiosInstance.get(`/auth/google/url?frontend_url=${encodeURIComponent(redirectUrl)}`);
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error("Failed to get authorization URL");
+      }
+    } catch (err) {
+      console.error("Error getting auth URL:", err);
+      toast.error("Failed to connect with Google");
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    if (window.confirm("Are you sure you want to disconnect your Google account?")) {
+      try {
+        const res = await axiosInstance.post('/auth/google/disconnect');
+        if (res.data.success) {
+          toast.success("Google account disconnected successfully");
+          fetchGoogleStatus();
+        }
+      } catch (err) {
+        console.error("Error disconnecting Google:", err);
+        toast.error("Failed to disconnect Google account");
+      }
+    }
+  };
 
   const editorContentRef = useRef("");
 
@@ -106,19 +193,61 @@ const TestMaster = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(`/tests/${test.TestId}/html-content`);
+      const testRes = await axiosInstance.get(`/tests/${test.TestId}`);
 
-      if (response.data.success && response.data.data) {
+      if (response.data.success && response.data.data && testRes.data?.data) {
         const { htmlContent: content, fileName, source } = response.data.data;
+        const fetchedTest = testRes.data.data;
+
         setHtmlContent(content || "");
         editorContentRef.current = content || "";
-        setCurrentTestForHtml({ ...test, file_name: fileName || test.file_name });
+        
+        let currentDocId = fetchedTest.google_doc_id || null;
+
+        // Fetch latest Google connection status
+        let isConnected = false;
+        try {
+          const statusRes = await axiosInstance.get('/auth/google/status');
+          isConnected = statusRes.data?.success && statusRes.data.googleConnected;
+        } catch (e) {
+          console.error("Error checking Google status:", e);
+        }
+
+        if (!currentDocId && isConnected) {
+          try {
+            toast.info("Auto-provisioning Google Doc template...");
+            const title = `${fetchedTest.Test} Template`;
+            const createRes = await axiosInstance.post('/google-docs/create', { 
+              title, 
+              testId: fetchedTest.TestId 
+            });
+            if (createRes.data.success && createRes.data.data?.id) {
+              currentDocId = createRes.data.data.id;
+              toast.success("Google Document auto-created & linked!");
+              setGoogleDocId(currentDocId);
+              setCurrentTestForHtml({ ...fetchedTest, google_doc_id: currentDocId, file_name: fileName || fetchedTest.file_name });
+              fetchTests(page);
+            } else {
+              setGoogleDocId(null);
+              setCurrentTestForHtml({ ...fetchedTest, file_name: fileName || fetchedTest.file_name });
+            }
+          } catch (createErr) {
+            console.error("Auto-creation of Google Doc failed:", createErr);
+            setGoogleDocId(null);
+            setCurrentTestForHtml({ ...fetchedTest, file_name: fileName || fetchedTest.file_name });
+          }
+        } else {
+          setGoogleDocId(currentDocId);
+          setCurrentTestForHtml({ ...fetchedTest, file_name: fileName || fetchedTest.file_name });
+        }
+
         setShowHtmlEditor(true);
 
-        if (source === 'converted') {
+        if (source === 'converted' && !currentDocId) {
           toast.success("DOCX converted to HTML successfully!");
-        } else if (source === 'r2_not_found') {
+        } else if (source === 'r2_not_found' && !currentDocId) {
           toast.warn("No DOCX file found in R2 for this test");
-        } else if (source === 'empty') {
+        } else if (source === 'empty' && !currentDocId) {
           toast.info("No file linked to this test");
         }
       } else {
@@ -132,8 +261,6 @@ const TestMaster = () => {
     }
   };
 
-
-
   const handleSaveHtmlContent = async (data) => {
     if (!currentTestForHtml?.TestId) return;
 
@@ -145,11 +272,115 @@ const TestMaster = () => {
         htmlContent: exportedContent,
       });
       toast.success("HTML content updated successfully!");
-      setShowHtmlEditor(false);
       fetchTests(page);
     } catch (error) {
       console.error("Error saving HTML:", error);
       toast.error("Failed to save HTML content");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDriveFiles = async () => {
+    try {
+      const res = await axiosInstance.get('/google-docs/list');
+      if (res.data.success) {
+        setDriveFiles(res.data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching Google Drive files:", err);
+    }
+  };
+
+  const handleLinkDoc = async (docId) => {
+    if (!docId || !currentTestForHtml?.TestId) return;
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post('/google-docs/link', { 
+        testId: currentTestForHtml.TestId, 
+        docId 
+      });
+      if (res.data.success) {
+        toast.success("Google Document linked successfully!");
+        setGoogleDocId(docId);
+        setCurrentTestForHtml(prev => ({ ...prev, google_doc_id: docId }));
+        setShowLinkModal(false);
+        fetchTests(page);
+      }
+    } catch (err) {
+      console.error("Error linking Google Doc:", err);
+      toast.error("Failed to link Google Document");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnlinkDoc = async () => {
+    if (!currentTestForHtml?.TestId) return;
+    if (!window.confirm("Are you sure you want to unlink this Google Doc from the test? The local HTML template will remain saved, but editing changes in Google Doc will no longer sync until linked again.")) return;
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post('/google-docs/unlink', { 
+        testId: currentTestForHtml.TestId 
+      });
+      if (res.data.success) {
+        toast.success("Google Document unlinked successfully!");
+        setGoogleDocId(null);
+        setCurrentTestForHtml(prev => ({ ...prev, google_doc_id: null }));
+        fetchTests(page);
+      }
+    } catch (err) {
+      console.error("Error unlinking Google Doc:", err);
+      toast.error("Failed to unlink Google Document");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateDoc = async () => {
+    if (!currentTestForHtml?.TestId) return;
+    const title = newDocTitle.trim() || `${currentTestForHtml.Test} Template`;
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post('/google-docs/create', { 
+        title, 
+        testId: currentTestForHtml.TestId 
+      });
+      if (res.data.success && res.data.data?.id) {
+        toast.success(`Google Document "${title}" created and linked!`);
+        setGoogleDocId(res.data.data.id);
+        setCurrentTestForHtml(prev => ({ ...prev, google_doc_id: res.data.data.id }));
+        setNewDocTitle("");
+        setShowLinkModal(false);
+        fetchTests(page);
+      }
+    } catch (err) {
+      console.error("Error creating Google Doc:", err);
+      toast.error("Failed to create Google Document");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncFromGoogle = async () => {
+    if (!googleDocId || !currentTestForHtml?.TestId) return;
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post('/google-docs/sync', { 
+        testId: currentTestForHtml.TestId, 
+        docId: googleDocId 
+      });
+      if (res.data.success) {
+        toast.success("Successfully synchronized latest changes from Google Docs!");
+        const response = await axiosInstance.get(`/tests/${currentTestForHtml.TestId}/html-content`);
+        if (response.data.success && response.data.data) {
+          setHtmlContent(response.data.data.htmlContent || "");
+          editorContentRef.current = response.data.data.htmlContent || "";
+        }
+      }
+    } catch (err) {
+      console.error("Error syncing from Google Docs:", err);
+      toast.error("Failed to sync from Google Docs. Ensure your Google account is connected.");
     } finally {
       setLoading(false);
     }
@@ -281,8 +512,30 @@ const getDepartmentName = (subDeptId) => {
     fetchSubDepartments();
     fetchSampleTypes();
     fetchTests(1);
+    fetchGoogleStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showInactive]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("google_connected") === "true") {
+      toast.success("Google Account connected successfully!");
+      const openTestId = params.get("open_test_id");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      fetchGoogleStatus();
+      if (openTestId) {
+        axiosInstance.get(`/tests/${openTestId}`)
+          .then((res) => {
+            if (res.data?.data) {
+              handleViewHtml(res.data.data);
+            }
+          })
+          .catch((err) => {
+            console.error("Error fetching test on reconnect:", err);
+          });
+      }
+    }
+  }, []);
 
   // drawer openers
   const openDrawerAdd = () => {
@@ -512,6 +765,13 @@ const getDepartmentName = (subDeptId) => {
 
           <div className="d-flex gap-2">
             <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setShowGoogleWizard(true)}
+              title="Google Docs Setup"
+            >
+              <i className="fa-brands fa-google me-1"></i> Google Docs Setup
+            </button>
+            <button
               className={`btn btn-sm ${showInactive ? "btn-secondary" : "btn-warning"}`}
               onClick={() => setShowInactive(!showInactive)}
             >
@@ -567,6 +827,11 @@ const getDepartmentName = (subDeptId) => {
                                 <i className="fa fa-file-text-o me-1"></i>{t.file_name}
                               </span>
                             )}
+                            {t.google_doc_id && (
+                              <span className="badge bg-success text-white ms-1" style={{ fontSize: "10px", fontWeight: "normal" }}>
+                                <i className="fa-brands fa-google me-1"></i>Google Doc
+                              </span>
+                            )}
                           </td>
                           <td>{getSubDeptName(t.SubDepartmentId)}</td>
                           <td>{t.TestCode}</td>
@@ -585,7 +850,7 @@ const getDepartmentName = (subDeptId) => {
                             <div className="d-flex gap-2">
                               <button
                                 className="btn btn-sm btn-outline-success"
-                                onClick={() => navigate(`/test-editor/${t.TestId}`)}
+                                onClick={() => handleViewHtml(t)}
                                 title="View/Edit HTML"
                               >
                                 <i className="fa-light fa-file-code" />
@@ -1465,7 +1730,7 @@ const getDepartmentName = (subDeptId) => {
         </>
       )}
 
-      {/* ---------- HTML Editor Modal (CKEditor + Preview) ---------- */}
+      {/* ---------- HTML Editor Modal (CKEditor / Google Docs + Preview) ---------- */}
       {showHtmlEditor && (
         <PortalModal>
           <>
@@ -1483,17 +1748,78 @@ const getDepartmentName = (subDeptId) => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="modal-content" style={{ height: "100%", overflow: "hidden" }}>
-                  <div className="modal-header py-2">
-                    <h5 className="modal-title">
+                  <div className="modal-header py-2 d-flex justify-content-between align-items-center">
+                    <h5 className="modal-title m-0 d-flex align-items-center">
                       <i className="fa-light fa-file-lines me-2"></i>
-                      HTML Content - {currentTestForHtml?.Test}
+                      Template Editor - {currentTestForHtml?.Test}
                       {currentTestForHtml?.file_name && (
-                        <span className="ms-2 badge bg-secondary fw-normal" style={{ fontSize: "12px" }}>
+                        <span className="ms-2 badge bg-secondary fw-normal" style={{ fontSize: "11px" }}>
                           <i className="fa-light fa-file me-1"></i>
                           {currentTestForHtml.file_name}
                         </span>
                       )}
+                      {googleDocId && (
+                        <span className="ms-2 badge bg-success text-white fw-normal" style={{ fontSize: "11px" }}>
+                          <i className="fa-brands fa-google me-1"></i>Linked to Google Doc
+                        </span>
+                      )}
                     </h5>
+                    <div className="d-flex gap-2 align-items-center me-3">
+                      {googleDocId ? (
+                        <>
+                          <a 
+                            href={`https://docs.google.com/document/d/${googleDocId}/edit`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="btn btn-xs btn-outline-primary py-1 px-2"
+                            style={{ fontSize: "12px" }}
+                          >
+                            <i className="fa-solid fa-up-right-from-square me-1"></i> Open Google Doc
+                          </a>
+                          <button 
+                            className="btn btn-xs btn-success py-1 px-2" 
+                            onClick={handleSyncFromGoogle} 
+                            disabled={loading}
+                            style={{ fontSize: "12px" }}
+                          >
+                            <i className="fa-solid fa-rotate me-1"></i> Sync from Google Docs
+                          </button>
+                          <button 
+                            className="btn btn-xs btn-outline-danger py-1 px-2" 
+                            onClick={handleUnlinkDoc} 
+                            disabled={loading}
+                            style={{ fontSize: "12px" }}
+                          >
+                            <i className="fa-solid fa-link-slash me-1"></i> Unlink
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {googleStatus.googleConnected ? (
+                            <button 
+                              className="btn btn-xs btn-outline-success py-1 px-2" 
+                              onClick={() => {
+                                fetchDriveFiles();
+                                setShowLinkModal(true);
+                              }}
+                              disabled={loading}
+                              style={{ fontSize: "12px" }}
+                            >
+                              <i className="fa-brands fa-google me-1"></i> Link Google Doc
+                            </button>
+                          ) : (
+                            <button 
+                              className="btn btn-xs btn-success py-1 px-2" 
+                              onClick={handleConnectGoogle}
+                              disabled={loading}
+                              style={{ fontSize: "12px" }}
+                            >
+                              <i className="fa-brands fa-google me-1"></i> Connect Google Account
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                     <button
                       className="btn-close"
                       onClick={() => setShowHtmlEditor(false)}
@@ -1509,29 +1835,42 @@ const getDepartmentName = (subDeptId) => {
                       flexDirection: "column",
                     }}
                   >
-                    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-                      <DocumentEditor
-                        initialContent={htmlContent}
-                        documentTitle={currentTestForHtml?.Test || "Document"}
-                        onSave={(data) => {
-                          editorContentRef.current = data.html;
-                          handleSaveHtmlContent(data);
-                        }}
-                      />
-                    </div>
+                    {googleDocId ? (
+                      <div style={{ flex: 1, position: "relative", overflow: "hidden", background: "#f1f3f4", height: "100%" }}>
+                        <iframe
+                          src={`https://docs.google.com/document/d/${googleDocId}/edit?embedded=true`}
+                          style={{ width: "100%", height: "100%", border: "none" }}
+                          allow="autoplay; encrypted-media"
+                          title="Google Docs Editor"
+                        />
+                      </div>
+                    ) : (
+                      <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                        <DocumentEditor
+                          initialContent={htmlContent}
+                          documentTitle={currentTestForHtml?.Test || "Document"}
+                          onSave={(data) => {
+                            editorContentRef.current = data.html;
+                            handleSaveHtmlContent(data);
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="modal-footer py-2 d-flex justify-content-between">  
                     <div className="d-flex gap-2">
-                      <button
-                        className="btn btn-sm btn-warning"    
-                        onClick={handleReconvert}
-                        disabled={loading}
-                        title="Re-download DOCX from R2 and convert again"
-                      >
-                        <i className="fa-light fa-rotate me-1"></i>
-                        {loading ? "Converting..." : "Re-convert DOCX"}
-                      </button>
+                      {!googleDocId && (
+                        <button
+                          className="btn btn-sm btn-warning"    
+                          onClick={handleReconvert}
+                          disabled={loading}
+                          title="Re-download DOCX from R2 and convert again"
+                        >
+                          <i className="fa-light fa-rotate me-1"></i>
+                          {loading ? "Converting..." : "Re-convert DOCX"}
+                        </button>
+                      )}
                     </div>
                     <div className="d-flex gap-2">
                       <button
@@ -1541,6 +1880,109 @@ const getDepartmentName = (subDeptId) => {
                         Close
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        </PortalModal>
+      )}
+
+      {/* ---------- Link Google Doc Sub-Modal ---------- */}
+      {showLinkModal && (
+        <PortalModal>
+          <>
+            <div 
+              className="modal-backdrop fade show" 
+              style={{ zIndex: 100005 }}
+              onClick={() => setShowLinkModal(false)}
+            ></div>
+            <div 
+              className="modal d-block" 
+              style={{ zIndex: 100010, overflow: "hidden" }}
+              onClick={() => setShowLinkModal(false)}
+            >
+              <div 
+                className="modal-dialog modal-dialog-centered"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-content">
+                  <div className="modal-header py-2">
+                    <h5 className="modal-title">Link to Google Document</h5>
+                    <button type="button" className="btn-close" onClick={() => setShowLinkModal(false)}></button>
+                  </div>
+                  <div className="modal-body">
+                    <ul className="nav nav-tabs mb-3">
+                      <li className="nav-item">
+                        <button 
+                          className={`nav-link btn-sm py-1 px-3 ${activeTab === "existing" ? "active" : ""}`}
+                          onClick={() => setActiveTab("existing")}
+                          type="button"
+                        >
+                          Link Existing Doc
+                        </button>
+                      </li>
+                      <li className="nav-item">
+                        <button 
+                          className={`nav-link btn-sm py-1 px-3 ${activeTab === "new" ? "active" : ""}`}
+                          onClick={() => setActiveTab("new")}
+                          type="button"
+                        >
+                          Create New Doc
+                        </button>
+                      </li>
+                    </ul>
+                    <div className="tab-content">
+                      {activeTab === "existing" ? (
+                        <div>
+                          <div className="mb-3">
+                            <label className="form-label small fw-bold">Select Document from Drive</label>
+                            <select 
+                              className="form-select form-select-sm"
+                              value={selectedDocId}
+                              onChange={(e) => setSelectedDocId(e.target.value)}
+                            >
+                              <option value="">-- Choose a Google Doc --</option>
+                              {driveFiles.map(file => (
+                                <option key={file.id} value={file.id}>{file.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <button 
+                            type="button" 
+                            className="btn btn-sm btn-primary w-100" 
+                            onClick={() => handleLinkDoc(selectedDocId)}
+                            disabled={!selectedDocId || loading}
+                          >
+                            Link Selected Document
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="mb-3">
+                            <label className="form-label small fw-bold">New Document Title</label>
+                            <input 
+                              type="text" 
+                              className="form-control form-control-sm"
+                              placeholder="E.g., Glucose Test Template"
+                              value={newDocTitle}
+                              onChange={(e) => setNewDocTitle(e.target.value)}
+                            />
+                          </div>
+                          <button 
+                            type="button" 
+                            className="btn btn-sm btn-success w-100" 
+                            onClick={handleCreateDoc}
+                            disabled={loading}
+                          >
+                            Create and Link Document
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="modal-footer py-2">
+                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowLinkModal(false)}>Cancel</button>
                   </div>
                 </div>
               </div>
@@ -1603,6 +2045,77 @@ const getDepartmentName = (subDeptId) => {
             </div>
           </div>
         </>
+      )}
+
+      {/* ---------- Google Docs Setup Wizard Modal ---------- */}
+      {showGoogleWizard && (
+        <PortalModal>
+          <>
+            <div
+              className="modal-backdrop fade show"
+              style={{ zIndex: 99999 }}
+            ></div>
+            <div
+              className="modal d-block"
+              style={{ zIndex: 100000, overflowY: "auto" }}
+            >
+              <div
+                className="modal-dialog modal-dialog-centered"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <i className="fa-brands fa-google text-primary me-2"></i>
+                      Google Docs Integration
+                    </h5>
+                    <button
+                      className="btn-close"
+                      onClick={() => setShowGoogleWizard(false)}
+                    ></button>
+                  </div>
+                  <div className="modal-body p-4 text-center">
+                    {/* Connection Status Section */}
+                    <div className="mb-4 p-4 border rounded bg-light">
+                      <div className="auth-icon-badge mb-3">
+                        <i className={`fa-brands fa-google fs-1 ${googleStatus.googleConnected ? 'text-success' : 'text-muted'}`}></i>
+                      </div>
+                      <h5>Google Account Connection</h5>
+                      <p className="text-muted small mt-2">
+                        {googleStatus.googleConnected 
+                          ? 'Your Google Account is connected. Google Docs and Google Drive features are ready.' 
+                          : 'Google API credentials are configured in the backend environment. Connect your Google account below to start linking templates.'}
+                      </p>
+                      <div className="mt-4">
+                        {googleStatus.googleConnected ? (
+                          <button className="btn btn-danger w-100" onClick={handleDisconnectGoogle}>
+                            <i className="fa-solid fa-sign-out-alt me-2"></i> Disconnect Google Account
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn btn-success w-100" 
+                            onClick={handleConnectGoogle}
+                            disabled={!googleStatus.oauthConfigured}
+                          >
+                            <i className="fa-brands fa-google me-2"></i> Connect Google Account
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary px-4"
+                      onClick={() => setShowGoogleWizard(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        </PortalModal>
       )}
 
       <Footer />
